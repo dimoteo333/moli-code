@@ -39,9 +39,9 @@ export function isAutoLanguage(value: string | undefined | null): boolean {
 export function normalizeOutputLanguage(language: string): string {
   const lowered = language.toLowerCase();
   const fullName = getLanguageNameFromLocale(lowered);
-  // getLanguageNameFromLocale returns 'Korean' as default for unknown codes.
-  // Only use the result if it's a known code or explicitly 'ko'.
-  if (fullName !== 'Korean' || lowered === 'ko') {
+  // getLanguageNameFromLocale returns 'English' as default for unknown codes.
+  // Only use the result if it's a known code or explicitly 'en'.
+  if (fullName !== 'English' || lowered === 'en') {
     return fullName;
   }
   return language;

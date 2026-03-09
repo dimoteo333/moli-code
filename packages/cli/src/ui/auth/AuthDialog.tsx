@@ -8,7 +8,7 @@ import type React from 'react';
 import { useState, useEffect } from 'react';
 import { AuthType } from '@dobby/moli-code-core';
 import { Box, Text } from 'ink';
-import Link from 'ink-link';
+
 import { theme } from '../semantic-colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { DescriptiveRadioButtonSelect } from '../components/shared/DescriptiveRadioButtonSelect.js';
@@ -50,9 +50,9 @@ export function AuthDialog(): React.JSX.Element {
     },
     {
       key: 'LOCAL_ENV',
-      title: '로컬 환경에서 실행',
-      label: '로컬 환경에서 실행',
-      description: '로컬 설정을 구성하세요',
+      title: '수동으로 모델 설정하기',
+      label: '수동으로 모델 설정하기',
+      description: '로컬 환경에서 모델을 설정하세요',
       value: 'LOCAL_ENV' as MainOption,
     },
   ];
@@ -243,19 +243,19 @@ export function AuthDialog(): React.JSX.Element {
     <Box flexDirection="column" marginTop={1}>
       {localEnvStep === 0 && (
         <>
-          <Text>Enter the Model Endpoint (baseUrl):</Text>
+          <Text>모델 엔드포인트 (baseUrl)를 입력해주세요:</Text>
           <TextInput value={baseUrl} onChange={setBaseUrl} placeholder="https://api.example.com" />
         </>
       )}
       {localEnvStep === 1 && (
         <>
-          <Text>Enter the Model Name (name):</Text>
+          <Text>모델명 (name)을 입력해주세요:</Text>
           <TextInput value={modelName} onChange={setModelName} placeholder="gpt-4o" />
         </>
       )}
       {localEnvStep === 2 && (
         <>
-          <Text>Enter your API Key:</Text>
+          <Text>API 키를 입력해주세요:</Text>
           <TextInput value={apiKey} onChange={setApiKey} />
         </>
       )}
@@ -312,11 +312,9 @@ export function AuthDialog(): React.JSX.Element {
             <Text color={theme.text.primary}>이용약관 및 개인정보처리방침:</Text>
           </Box>
           <Box>
-            <Link url="https://dimoteo333.github.io/moli-code-docs/en/users/support/tos-privacy/" fallback={false}>
-              <Text color={theme.text.secondary} underline>
-                https://dimoteo333.github.io/moli-code-docs/en/users/support/tos-privacy/
-              </Text>
-            </Link>
+            <Text color={theme.text.secondary} underline>
+              자세한 내용은 몰리코드 홈페이지에서 확인하세요.
+            </Text>
           </Box>
         </>
       )}

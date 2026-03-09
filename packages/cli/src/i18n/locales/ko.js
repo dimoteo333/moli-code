@@ -610,7 +610,7 @@ export default {
   'Set UI language': 'UI 언어 설정',
   'Set LLM output language': 'LLM 출력 언어 설정',
   'Usage: /language ui [{{options}}]': '사용법: /language ui [{{options}}]',
-  'Usage: /language output <language>': '사용법: /language output <language>',
+  'Usage: /language output <language>': '사용법: /language output 한국어',
   'Example: /language output 中文': '예: /language output 中文',
   'Example: /language output English': '예: /language output English',
   'Example: /language output 日本語': '예: /language output 日本語',
@@ -1126,7 +1126,7 @@ export default {
   'Switch auth type quickly with /auth.':
     '/auth로 인증 유형을 빠르게 전환하세요.',
   'You can run any shell commands from Moli Code using ! (e.g. !ls).':
-    '!를 사용하여 Moli Code에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
+    '!를 사용하여 몰리코드에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
   'Type / to open the command popup; Tab autocompletes slash commands and saved prompts.':
     '/를 입력하여 명령 팝업을 엽니다. Tab은 슬래시 명령과 저장된 프롬프트를 자동 완성해요.',
   'You can resume a previous conversation by running moli --continue or moli --resume.':
@@ -1247,7 +1247,12 @@ export default {
     '땡겨요를 키는 중...',
     '시청역을 걷는 중...',
     '오늘의 운세를 보는 중...',
-    '강아지를 쓰다듬는 중...'
+    '강아지를 쓰다듬는 중...',
+    '에너지바를 먹는 중...',
+    '구운 계란을 시키는 중...',
+    '테스트 장표를 작성하는 중...',
+    '낙타를 타러가는 중...',
+    '와인 품종을 찾는 중...'
   ],
 
   // ============================================================================

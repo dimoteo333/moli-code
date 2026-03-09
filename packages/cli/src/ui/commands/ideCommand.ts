@@ -13,7 +13,6 @@ import {
   IdeConnectionType,
 } from '@dobby/moli-code-core';
 import {
-  MOLI_CODE_COMPANION_EXTENSION_NAME,
   getIdeInstaller,
   IDEConnectionStatus,
   ideContextStore,
@@ -207,7 +206,7 @@ export const ideCommand = async (): Promise<SlashCommand> => {
         context.ui.addItem(
           {
             type: 'error',
-            text: `Automatic installation is not supported for ${ideName}. Please install the '${MOLI_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
+            text: `현재는 ${ideName}에 대해 자동 설치가 지원되지 않아요. 추후 확장 프로그램을 사이트를 통해 배포할 예정이에요.`,
           },
           Date.now(),
         );

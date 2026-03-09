@@ -11,15 +11,15 @@ import { aboutCommand } from '../ui/commands/aboutCommand.js';
 import { agentsCommand } from '../ui/commands/agentsCommand.js';
 import { approvalModeCommand } from '../ui/commands/approvalModeCommand.js';
 import { authCommand } from '../ui/commands/authCommand.js';
-import { bugCommand } from '../ui/commands/bugCommand.js';
+// import { bugCommand } from '../ui/commands/bugCommand.js';
 import { clearCommand } from '../ui/commands/clearCommand.js';
 import { compressCommand } from '../ui/commands/compressCommand.js';
 import { copyCommand } from '../ui/commands/copyCommand.js';
-import { docsCommand } from '../ui/commands/docsCommand.js';
+// import { docsCommand } from '../ui/commands/docsCommand.js';
 import { directoryCommand } from '../ui/commands/directoryCommand.js';
 import { editorCommand } from '../ui/commands/editorCommand.js';
 import { exportCommand } from '../ui/commands/exportCommand.js';
-import { extensionsCommand } from '../ui/commands/extensionsCommand.js';
+// import { extensionsCommand } from '../ui/commands/extensionsCommand.js';
 import { helpCommand } from '../ui/commands/helpCommand.js';
 import { ideCommand } from '../ui/commands/ideCommand.js';
 import { initCommand } from '../ui/commands/initCommand.js';
@@ -39,7 +39,7 @@ import { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';
 import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
 import { vimCommand } from '../ui/commands/vimCommand.js';
-import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
+//import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
 import { insightCommand } from '../ui/commands/insightCommand.js';
 
 /**
@@ -47,7 +47,7 @@ import { insightCommand } from '../ui/commands/insightCommand.js';
  * of the Moli Code application.
  */
 export class BuiltinCommandLoader implements ICommandLoader {
-  constructor(private config: Config | null) {}
+  constructor(private config: Config | null) { }
 
   /**
    * Gathers all raw built-in command definitions, injects dependencies where
@@ -62,15 +62,15 @@ export class BuiltinCommandLoader implements ICommandLoader {
       agentsCommand,
       approvalModeCommand,
       authCommand,
-      bugCommand,
+      // bugCommand,
       clearCommand,
       compressCommand,
       copyCommand,
-      docsCommand,
+      // docsCommand,
       directoryCommand,
       editorCommand,
       exportCommand,
-      extensionsCommand,
+      // extensionsCommand,
       helpCommand,
       await ideCommand(),
       initCommand,
@@ -89,7 +89,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       toolsCommand,
       settingsCommand,
       vimCommand,
-      setupGithubCommand,
+      // setupGithubCommand,
       terminalSetupCommand,
       insightCommand,
     ];

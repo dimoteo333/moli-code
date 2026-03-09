@@ -259,7 +259,7 @@ export class MCPServerConfig {
     readonly targetServiceAccount?: string,
     // SDK MCP server type - 'sdk' indicates server runs in SDK process
     readonly type?: 'sdk',
-  ) {}
+  ) { }
 }
 
 /**
@@ -1664,7 +1664,7 @@ export class Config {
         // Log warning and skip this tool instead of crashing
         this.debugLogger.warn(
           `Skipping tool registration: ${className} is missing static Name property. ` +
-            `Tools must define a static Name property to be registered.`,
+          `Tools must define a static Name property to be registered.`,
         );
         return;
       }
