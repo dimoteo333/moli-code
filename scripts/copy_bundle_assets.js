@@ -27,6 +27,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
 const coreVendorDir = join(root, 'packages', 'core', 'vendor');
+const cliLocalesDir = join(root, 'packages', 'cli', 'dist', 'src', 'i18n', 'locales');
+const distLocalesDir = join(distDir, 'src', 'i18n', 'locales');
 
 // Create the dist directory if it doesn't exist
 if (!existsSync(distDir)) {
@@ -49,6 +51,15 @@ if (existsSync(coreVendorDir)) {
   console.log('Copied vendor directory to dist/');
 } else {
   console.warn(`Warning: Vendor directory not found at ${coreVendorDir}`);
+}
+
+// Copy locale files
+console.log('Copying locale files...');
+if (existsSync(cliLocalesDir)) {
+  copyRecursiveSync(cliLocalesDir, distLocalesDir);
+  console.log('Copied locale files to dist/');
+} else {
+  console.warn(`Warning: Locale directory not found at ${cliLocalesDir}`);
 }
 
 console.log('\n✅ All bundle assets copied to dist/');

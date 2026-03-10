@@ -52,6 +52,23 @@ esbuild
     target: 'node20',
     external,
     packages: 'bundle',
+    // Bundle locale files to ensure they are included in the distribution
+    define: {
+      // Override dynamic locale imports with bundled versions
+      // This ensures all locale files are included in the bundle
+      'process.env.BUNDLE_LOCALES': 'true',
+    },
+    loader: {
+      '.node': 'file',
+      // Ensure locale files are treated as JavaScript
+      './locales/ko.js': 'js',
+      './locales/en.js': 'js',
+      './locales/ja.js': 'js',
+      './locales/de.js': 'js',
+      './locales/pt.js': 'js',
+      './locales/ru.js': 'js',
+      './locales/zh.js': 'js',
+    },
     inject: [path.resolve(__dirname, 'scripts/esbuild-shims.js')],
     banner: {
       js: `// Force strict mode and setup for ESM
