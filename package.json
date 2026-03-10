@@ -67,7 +67,8 @@
     "baseline-browser-mapping": "^2.9.19"
   },
   "bin": {
-    "moli": "dist/cli.js"
+    "moli": "dist/cli.js",
+    "moli-code": "dist/cli.js"
   },
   "files": [
     "dist/",

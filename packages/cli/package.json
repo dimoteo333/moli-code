@@ -10,7 +10,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "moli": "dist/index.js"
+    "moli": "dist/index.js",
+    "moli-code": "dist/index.js"
   },
   "exports": {
     ".": {
