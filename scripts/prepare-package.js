@@ -155,21 +155,9 @@ const distPackageJson = {
   files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
   config: rootPackageJson.config,
   dependencies: {},
-  optionalDependencies: {
-    '@lydell/node-pty': '1.1.0',
-    '@lydell/node-pty-darwin-arm64': '1.1.0',
-    '@lydell/node-pty-darwin-x64': '1.1.0',
-    '@lydell/node-pty-linux-x64': '1.1.0',
-    '@lydell/node-pty-win32-arm64': '1.1.0',
-    '@lydell/node-pty-win32-x64': '1.1.0',
-    '@teddyzhu/clipboard': '0.0.5',
-    '@teddyzhu/clipboard-darwin-arm64': '0.0.5',
-    '@teddyzhu/clipboard-darwin-x64': '0.0.5',
-    '@teddyzhu/clipboard-linux-x64-gnu': '0.0.5',
-    '@teddyzhu/clipboard-linux-arm64-gnu': '0.0.5',
-    '@teddyzhu/clipboard-win32-x64-msvc': '0.0.5',
-    '@teddyzhu/clipboard-win32-arm64-msvc': '0.0.5',
-  },
+  // Removed optionalDependencies for offline installation
+  // These will be skipped in offline mode and CLI will work with reduced functionality
+  // optionalDependencies: { ... },
   engines: rootPackageJson.engines,
 };
 
