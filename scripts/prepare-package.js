@@ -150,6 +150,7 @@ const distPackageJson = {
   main: 'cli.js',
   bin: {
     moli: 'cli.js',
+    'moli-code': 'cli.js',
   },
   files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
   config: rootPackageJson.config,

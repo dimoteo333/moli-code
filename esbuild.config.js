@@ -52,23 +52,11 @@ esbuild
     target: 'node20',
     external,
     packages: 'bundle',
-    // Bundle locale files to ensure they are included in the distribution
     define: {
-      // Override dynamic locale imports with bundled versions
-      // This ensures all locale files are included in the bundle
-      'process.env.BUNDLE_LOCALES': 'true',
+      'process.env.CLI_VERSION': JSON.stringify(pkg.version),
+      global: 'globalThis',
     },
-    loader: {
-      '.node': 'file',
-      // Ensure locale files are treated as JavaScript
-      './locales/ko.js': 'js',
-      './locales/en.js': 'js',
-      './locales/ja.js': 'js',
-      './locales/de.js': 'js',
-      './locales/pt.js': 'js',
-      './locales/ru.js': 'js',
-      './locales/zh.js': 'js',
-    },
+    loader: { '.node': 'file' },
     inject: [path.resolve(__dirname, 'scripts/esbuild-shims.js')],
     banner: {
       js: `// Force strict mode and setup for ESM
@@ -80,12 +68,6 @@ esbuild
         'packages/cli/src/patches/is-in-ci.ts',
       ),
     },
-    define: {
-      'process.env.CLI_VERSION': JSON.stringify(pkg.version),
-      // Make global available for compatibility
-      global: 'globalThis',
-    },
-    loader: { '.node': 'file' },
     metafile: true,
     write: true,
     keepNames: true,
