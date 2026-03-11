@@ -70,3 +70,5 @@ Thumbs.db
 # User specific settings
 settings.json
 *.local.*
+
+moli-code-offline-dev.tar.gz
