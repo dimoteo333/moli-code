@@ -221,7 +221,7 @@ export function validateModelConfig(
 ): ModelConfigValidationResult {
   const errors: Error[] = [];
 
-  // Qwen OAuth doesn't need validation - it uses dynamic tokens
+  // Moli OAuth doesn't need validation - it uses dynamic tokens
   if (config.authType === AuthType.MOLI_OAUTH) {
     return { valid: true, errors: [] };
   }
@@ -312,20 +312,21 @@ export async function createContentGenerator(
     );
     baseGenerator = createOpenAIContentGenerator(generatorConfig, config);
   } else if (authType === AuthType.MOLI_OAUTH) {
-    const { getQwenOAuthClient: getQwenOauthClient } = await import(
-      '../qwen/qwenOAuth2.js'
+    // MOLI: Use MoliContentGenerator for enterprise OAuth2
+    const { getMoliOAuthClient: getMoliOauthClient } = await import(
+      '../moli/moliOAuth2.js'
     );
-    const { QwenContentGenerator } = await import(
-      '../qwen/qwenContentGenerator.js'
+    const { MoliContentGenerator } = await import(
+      '../moli/moliContentGenerator.js'
     );
 
     try {
-      const qwenClient = await getQwenOauthClient(
+      const moliClient = await getMoliOauthClient(
         config,
         isInitialAuth ? { requireCachedCredentials: true } : undefined,
       );
-      baseGenerator = new QwenContentGenerator(
-        qwenClient,
+      baseGenerator = new MoliContentGenerator(
+        moliClient,
         generatorConfig,
         config,
       );
