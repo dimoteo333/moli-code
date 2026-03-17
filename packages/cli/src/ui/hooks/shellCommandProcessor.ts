@@ -15,12 +15,12 @@ import type {
   Config,
   GeminiClient,
   ShellExecutionResult,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import {
   createDebugLogger,
   isBinary,
   ShellExecutionService,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import { type PartListUnion } from '@google/genai';
 import type { UseHistoryManagerReturn } from './useHistoryManager.js';
 import { SHELL_COMMAND_NAME } from '../constants.js';

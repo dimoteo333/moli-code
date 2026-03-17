@@ -8,8 +8,8 @@ import {
   AuthType,
   type Config,
   type AvailableModel as CoreAvailableModel,
-  QWEN_OAUTH_MODELS,
-} from '@qwen-code/qwen-code-core';
+  MOLI_OAUTH_MODELS,
+} from '@dobby/moli-code-core';
 import { t } from '../../i18n/index.js';
 
 export type AvailableModel = {
@@ -19,7 +19,7 @@ export type AvailableModel = {
   isVision?: boolean;
 };
 
-const CACHED_QWEN_OAUTH_MODELS: AvailableModel[] = QWEN_OAUTH_MODELS.map(
+const CACHED_MOLI_OAUTH_MODELS: AvailableModel[] = MOLI_OAUTH_MODELS.map(
   (model) => ({
     id: model.id,
     label: model.name ?? model.id,
@@ -29,7 +29,7 @@ const CACHED_QWEN_OAUTH_MODELS: AvailableModel[] = QWEN_OAUTH_MODELS.map(
 );
 
 function getQwenOAuthModels(): readonly AvailableModel[] {
-  return CACHED_QWEN_OAUTH_MODELS;
+  return CACHED_MOLI_OAUTH_MODELS;
 }
 
 /**
@@ -112,7 +112,7 @@ export function getAvailableModelsForAuthType(
 
   // Fall back to environment variables for specific auth types (no config provided)
   switch (authType) {
-    case AuthType.QWEN_OAUTH: {
+    case AuthType.MOLI_OAUTH: {
       return [...getQwenOAuthModels()];
     }
     case AuthType.USE_OPENAI: {

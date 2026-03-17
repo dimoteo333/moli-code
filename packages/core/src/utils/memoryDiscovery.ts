@@ -11,7 +11,7 @@ import { homedir } from 'node:os';
 import { getAllGeminiMdFilenames } from '../tools/memoryTool.js';
 import type { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import { processImports } from './memoryImportProcessor.js';
-import { QWEN_DIR } from './paths.js';
+import { MOLI_DIR } from './paths.js';
 import { createDebugLogger } from './debugLogger.js';
 
 const logger = createDebugLogger('MEMORY_DISCOVERY');
@@ -127,7 +127,7 @@ async function getGeminiMdFilePathsInternalForEachDir(
     const resolvedHome = path.resolve(userHomePath);
     const globalMemoryPath = path.join(
       resolvedHome,
-      QWEN_DIR,
+      MOLI_DIR,
       geminiMdFilename,
     );
 
@@ -178,7 +178,7 @@ async function getGeminiMdFilePathsInternalForEachDir(
         : path.dirname(resolvedHome);
 
       while (currentDir && currentDir !== path.dirname(currentDir)) {
-        if (currentDir === path.join(resolvedHome, QWEN_DIR)) {
+        if (currentDir === path.join(resolvedHome, MOLI_DIR)) {
           break;
         }
 

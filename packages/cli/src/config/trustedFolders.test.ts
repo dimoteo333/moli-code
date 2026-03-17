@@ -5,7 +5,7 @@
  */
 
 import * as osActual from 'node:os';
-import { FatalConfigError, ideContextStore } from '@qwen-code/qwen-code-core';
+import { FatalConfigError, ideContextStore } from '@dobby/moli-code-core';
 import {
   describe,
   it,

@@ -6,17 +6,17 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import type { DeviceAuthorizationData } from '@qwen-code/qwen-code-core';
+import type { DeviceAuthorizationData } from '@dobby/moli-code-core';
 import { useQwenAuth } from './useQwenAuth.js';
 import {
   AuthType,
   qwenOAuth2Events,
   QwenOAuth2Event,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 // Mock the qwenOAuth2Events
-vi.mock('@qwen-code/qwen-code-core', async () => {
-  const actual = await vi.importActual('@qwen-code/qwen-code-core');
+vi.mock('@dobby/moli-code-core', async () => {
+  const actual = await vi.importActual('@dobby/moli-code-core');
   const mockEmitter = {
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),
@@ -66,7 +66,7 @@ describe('useQwenAuth', () => {
 
   it('should initialize with default state when Qwen auth but not authenticating', () => {
     const { result } = renderHook(() =>
-      useQwenAuth(AuthType.QWEN_OAUTH, false),
+      useQwenAuth(AuthType.MOLI_OAUTH, false),
     );
 
     expect(result.current.qwenAuthState).toEqual({
@@ -78,7 +78,7 @@ describe('useQwenAuth', () => {
   });
 
   it('should set up event listeners when Qwen auth and authenticating', () => {
-    renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     expect(mockQwenOAuth2Events.on).toHaveBeenCalledWith(
       QwenOAuth2Event.AuthUri,
@@ -100,7 +100,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleDeviceAuth!(mockDeviceAuth);
@@ -123,7 +123,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleAuthProgress!('success', 'Authentication successful!');
@@ -148,7 +148,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleAuthProgress!('error', 'Authentication failed');
@@ -173,7 +173,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleAuthProgress!('polling', 'Waiting for user authorization...');
@@ -198,7 +198,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleAuthProgress!(
@@ -226,7 +226,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     act(() => {
       handleAuthProgress!('success');
@@ -242,7 +242,7 @@ describe('useQwenAuth', () => {
         useQwenAuth(pendingAuthType, isAuthenticating),
       {
         initialProps: {
-          pendingAuthType: AuthType.QWEN_OAUTH,
+          pendingAuthType: AuthType.MOLI_OAUTH,
           isAuthenticating: true,
         },
       },
@@ -264,7 +264,7 @@ describe('useQwenAuth', () => {
   it('should clean up event listeners when authentication stops', () => {
     const { rerender } = renderHook(
       ({ isAuthenticating }) =>
-        useQwenAuth(AuthType.QWEN_OAUTH, isAuthenticating),
+        useQwenAuth(AuthType.MOLI_OAUTH, isAuthenticating),
       { initialProps: { isAuthenticating: true } },
     );
 
@@ -283,7 +283,7 @@ describe('useQwenAuth', () => {
 
   it('should clean up event listeners on unmount', () => {
     const { unmount } = renderHook(() =>
-      useQwenAuth(AuthType.QWEN_OAUTH, true),
+      useQwenAuth(AuthType.MOLI_OAUTH, true),
     );
 
     unmount();
@@ -313,7 +313,7 @@ describe('useQwenAuth', () => {
         useQwenAuth(pendingAuthType, isAuthenticating),
       {
         initialProps: {
-          pendingAuthType: AuthType.QWEN_OAUTH,
+          pendingAuthType: AuthType.MOLI_OAUTH,
           isAuthenticating: true,
         },
       },
@@ -347,7 +347,7 @@ describe('useQwenAuth', () => {
 
     const { result, rerender } = renderHook(
       ({ isAuthenticating }) =>
-        useQwenAuth(AuthType.QWEN_OAUTH, isAuthenticating),
+        useQwenAuth(AuthType.MOLI_OAUTH, isAuthenticating),
       { initialProps: { isAuthenticating: true } },
     );
 
@@ -377,7 +377,7 @@ describe('useQwenAuth', () => {
       return mockQwenOAuth2Events;
     });
 
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     // Set up some state
     act(() => {
@@ -399,7 +399,7 @@ describe('useQwenAuth', () => {
   it('should handle different auth types correctly', () => {
     // Test with Qwen OAuth - should set up event listeners when authenticating
     const { result: qwenResult } = renderHook(() =>
-      useQwenAuth(AuthType.QWEN_OAUTH, true),
+      useQwenAuth(AuthType.MOLI_OAUTH, true),
     );
     expect(qwenResult.current.qwenAuthState.authStatus).toBe('idle');
     expect(mockQwenOAuth2Events.on).toHaveBeenCalled();
@@ -417,7 +417,7 @@ describe('useQwenAuth', () => {
   });
 
   it('should initialize with idle status when starting authentication with Qwen auth', () => {
-    const { result } = renderHook(() => useQwenAuth(AuthType.QWEN_OAUTH, true));
+    const { result } = renderHook(() => useQwenAuth(AuthType.MOLI_OAUTH, true));
 
     expect(result.current.qwenAuthState.authStatus).toBe('idle');
     expect(mockQwenOAuth2Events.on).toHaveBeenCalled();

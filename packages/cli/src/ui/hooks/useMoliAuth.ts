@@ -10,7 +10,7 @@ import {
   moliOAuth2Events,
   MoliOAuth2Event,
   type DeviceAuthorizationData,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 export interface MoliAuthState {
   deviceAuth: DeviceAuthorizationData | null;

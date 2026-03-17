@@ -6,8 +6,8 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
-import { AuthType, OutputFormat } from '@qwen-code/qwen-code-core';
-import type { Config } from '@qwen-code/qwen-code-core';
+import { AuthType, OutputFormat } from '@dobby/moli-code-core';
+import type { Config } from '@dobby/moli-code-core';
 import * as auth from './config/auth.js';
 import { type LoadedSettings } from './config/settings.js';
 import * as JsonOutputAdapterModule from './nonInteractive/io/JsonOutputAdapter.js';
@@ -28,7 +28,7 @@ type ModelsConfig = ReturnType<Config['getModelsConfig']>;
 function createMockConfig(overrides?: Partial<Config>): Config {
   const baseModelsConfig = {
     getModel: vi.fn().mockReturnValue('default-model'),
-    getCurrentAuthType: vi.fn().mockReturnValue(AuthType.QWEN_OAUTH),
+    getCurrentAuthType: vi.fn().mockReturnValue(AuthType.MOLI_OAUTH),
   } as unknown as ModelsConfig;
   const baseConfig: Partial<Config> = {
     refreshAuth: vi.fn().mockResolvedValue('refreshed'),
@@ -59,14 +59,14 @@ describe('validateNonInterActiveAuth', () => {
     originalEnvVertexAi = process.env['GOOGLE_GENAI_USE_VERTEXAI'];
     originalEnvGcp = process.env['GOOGLE_GENAI_USE_GCA'];
     originalEnvOpenAiApiKey = process.env['OPENAI_API_KEY'];
-    originalEnvQwenOauth = process.env['QWEN_OAUTH'];
+    originalEnvQwenOauth = process.env['MOLI_OAUTH'];
     originalEnvGoogleApiKey = process.env['GOOGLE_API_KEY'];
     originalEnvAnthropicApiKey = process.env['ANTHROPIC_API_KEY'];
     delete process.env['GEMINI_API_KEY'];
     delete process.env['GOOGLE_GENAI_USE_VERTEXAI'];
     delete process.env['GOOGLE_GENAI_USE_GCA'];
     delete process.env['OPENAI_API_KEY'];
-    delete process.env['QWEN_OAUTH'];
+    delete process.env['MOLI_OAUTH'];
     delete process.env['GOOGLE_API_KEY'];
     delete process.env['ANTHROPIC_API_KEY'];
     mockWriteStderrLine.mockClear();
@@ -117,9 +117,9 @@ describe('validateNonInterActiveAuth', () => {
       delete process.env['OPENAI_API_KEY'];
     }
     if (originalEnvQwenOauth !== undefined) {
-      process.env['QWEN_OAUTH'] = originalEnvQwenOauth;
+      process.env['MOLI_OAUTH'] = originalEnvQwenOauth;
     } else {
-      delete process.env['QWEN_OAUTH'];
+      delete process.env['MOLI_OAUTH'];
     }
     if (originalEnvGoogleApiKey !== undefined) {
       process.env['GOOGLE_API_KEY'] = originalEnvGoogleApiKey;
@@ -143,7 +143,7 @@ describe('validateNonInterActiveAuth', () => {
       refreshAuth: refreshAuthMock,
       getModelsConfig: vi.fn().mockReturnValue({
         getModel: vi.fn().mockReturnValue('default-model'),
-        getCurrentAuthType: vi.fn().mockReturnValue(AuthType.QWEN_OAUTH),
+        getCurrentAuthType: vi.fn().mockReturnValue(AuthType.MOLI_OAUTH),
       }),
     });
     try {
@@ -179,12 +179,12 @@ describe('validateNonInterActiveAuth', () => {
     expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.USE_OPENAI);
   });
 
-  it('uses configured QWEN_OAUTH if provided', async () => {
+  it('uses configured MOLI_OAUTH if provided', async () => {
     const nonInteractiveConfig = createMockConfig({
       refreshAuth: refreshAuthMock,
       getModelsConfig: vi.fn().mockReturnValue({
         getModel: vi.fn().mockReturnValue('default-model'),
-        getCurrentAuthType: vi.fn().mockReturnValue(AuthType.QWEN_OAUTH),
+        getCurrentAuthType: vi.fn().mockReturnValue(AuthType.MOLI_OAUTH),
       }),
     });
     await validateNonInteractiveAuth(
@@ -192,7 +192,7 @@ describe('validateNonInterActiveAuth', () => {
       nonInteractiveConfig,
       mockSettings,
     );
-    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.QWEN_OAUTH);
+    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.MOLI_OAUTH);
   });
 
   it('exits if validateAuthMethod returns error', async () => {
@@ -236,7 +236,7 @@ describe('validateNonInterActiveAuth', () => {
     expect(mockWriteStderrLine).not.toHaveBeenCalled();
     expect(processExitSpy).not.toHaveBeenCalled();
     // refreshAuth is called with the authType from config.getModelsConfig().getCurrentAuthType()
-    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.QWEN_OAUTH);
+    expect(refreshAuthMock).toHaveBeenCalledWith(AuthType.MOLI_OAUTH);
   });
 
   it('uses enforcedAuthType if provided', async () => {
@@ -260,7 +260,7 @@ describe('validateNonInterActiveAuth', () => {
   });
 
   it('exits if currentAuthType does not match enforcedAuthType', async () => {
-    mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+    mockSettings.merged.security!.auth!.enforcedType = AuthType.MOLI_OAUTH;
     process.env['OPENAI_API_KEY'] = 'fake-key';
     const nonInteractiveConfig = createMockConfig({
       refreshAuth: refreshAuthMock,
@@ -312,7 +312,7 @@ describe('validateNonInterActiveAuth', () => {
         getOutputFormat: vi.fn().mockReturnValue(OutputFormat.JSON),
         getModelsConfig: vi.fn().mockReturnValue({
           getModel: vi.fn().mockReturnValue('default-model'),
-          getCurrentAuthType: vi.fn().mockReturnValue(AuthType.QWEN_OAUTH),
+          getCurrentAuthType: vi.fn().mockReturnValue(AuthType.MOLI_OAUTH),
         }),
       });
 
@@ -341,7 +341,7 @@ describe('validateNonInterActiveAuth', () => {
     });
 
     it('emits error result and exits when enforced auth mismatches current auth', async () => {
-      mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+      mockSettings.merged.security!.auth!.enforcedType = AuthType.MOLI_OAUTH;
       process.env['OPENAI_API_KEY'] = 'fake-key';
 
       const nonInteractiveConfig = createMockConfig({
@@ -448,7 +448,7 @@ describe('validateNonInterActiveAuth', () => {
         getIncludePartialMessages: vi.fn().mockReturnValue(false),
         getModelsConfig: vi.fn().mockReturnValue({
           getModel: vi.fn().mockReturnValue('default-model'),
-          getCurrentAuthType: vi.fn().mockReturnValue(AuthType.QWEN_OAUTH),
+          getCurrentAuthType: vi.fn().mockReturnValue(AuthType.MOLI_OAUTH),
         }),
       });
 
@@ -477,7 +477,7 @@ describe('validateNonInterActiveAuth', () => {
     });
 
     it('emits error result and exits when enforced auth mismatches current auth', async () => {
-      mockSettings.merged.security!.auth!.enforcedType = AuthType.QWEN_OAUTH;
+      mockSettings.merged.security!.auth!.enforcedType = AuthType.MOLI_OAUTH;
       process.env['OPENAI_API_KEY'] = 'fake-key';
 
       const nonInteractiveConfig = createMockConfig({

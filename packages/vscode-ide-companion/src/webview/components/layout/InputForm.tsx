@@ -8,11 +8,14 @@
  */
 
 import type { FC } from 'react';
-import { InputForm as BaseInputForm, getEditModeIcon } from '@qwen-code/webui';
+import {
+  InputForm as BaseInputForm,
+  getEditModeIcon,
+} from '@dobby/moli-code-webui';
 import type {
   InputFormProps as BaseInputFormProps,
   EditModeInfo,
-} from '@qwen-code/webui';
+} from '@dobby/moli-code-webui';
 import { getApprovalModeInfoFromString } from '../../../types/acpTypes.js';
 import type { ApprovalModeValue } from '../../../types/approvalModeValueTypes.js';
 import type { ModelInfo } from '@agentclientprotocol/sdk';

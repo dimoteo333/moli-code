@@ -10,7 +10,7 @@ import {
   qwenOAuth2Events,
   QwenOAuth2Event,
   type DeviceAuthorizationData,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 export interface QwenAuthState {
   deviceAuth: DeviceAuthorizationData | null;
@@ -34,7 +34,7 @@ export const useQwenAuth = (
     authMessage: null,
   });
 
-  const isQwenAuth = pendingAuthType === AuthType.QWEN_OAUTH;
+  const isQwenAuth = pendingAuthType === AuthType.MOLI_OAUTH;
 
   // Set up event listeners when authentication starts
   useEffect(() => {

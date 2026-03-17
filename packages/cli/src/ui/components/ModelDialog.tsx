@@ -15,7 +15,7 @@ import {
   type AvailableModel as CoreAvailableModel,
   type ContentGeneratorConfig,
   type InputModalities,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { theme } from '../semantic-colors.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
@@ -160,7 +160,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
 
     // Fixed order: qwen-oauth first, then others in a stable order
     const authTypeOrder: AuthType[] = [
-      AuthType.QWEN_OAUTH,
+      AuthType.MOLI_OAUTH,
       AuthType.USE_OPENAI,
       AuthType.USE_ANTHROPIC,
       AuthType.USE_GEMINI,
@@ -328,7 +328,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
           selectedAuthType,
           modelId,
           selectedAuthType !== authType &&
-            selectedAuthType === AuthType.QWEN_OAUTH
+            selectedAuthType === AuthType.MOLI_OAUTH
             ? { requireCachedCredentials: true }
             : undefined,
         );
@@ -427,7 +427,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
               highlightedEntry.model.contextWindowSize,
             )}
           />
-          {highlightedEntry.authType !== AuthType.QWEN_OAUTH && (
+          {highlightedEntry.authType !== AuthType.MOLI_OAUTH && (
             <>
               <DetailRow
                 label="Base URL"

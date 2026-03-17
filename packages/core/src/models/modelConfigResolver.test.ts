@@ -10,7 +10,7 @@ import {
   validateModelConfig,
 } from './modelConfigResolver.js';
 import { AuthType } from '../core/contentGenerator.js';
-import { DEFAULT_QWEN_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
+import { DEFAULT_MOLI_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
 
 describe('modelConfigResolver', () => {
   describe('resolveModelConfig', () => {
@@ -146,20 +146,20 @@ describe('modelConfigResolver', () => {
     describe('Qwen OAuth auth type', () => {
       it('uses default model for Qwen OAuth', () => {
         const result = resolveModelConfig({
-          authType: AuthType.QWEN_OAUTH,
+          authType: AuthType.MOLI_OAUTH,
           cli: {},
           settings: {},
           env: {},
         });
 
-        expect(result.config.model).toBe(DEFAULT_QWEN_MODEL);
-        expect(result.config.apiKey).toBe('QWEN_OAUTH_DYNAMIC_TOKEN');
+        expect(result.config.model).toBe(DEFAULT_MOLI_MODEL);
+        expect(result.config.apiKey).toBe('MOLI_OAUTH_DYNAMIC_TOKEN');
         expect(result.sources['apiKey'].kind).toBe('computed');
       });
 
       it('allows coder-model for Qwen OAuth', () => {
         const result = resolveModelConfig({
-          authType: AuthType.QWEN_OAUTH,
+          authType: AuthType.MOLI_OAUTH,
           cli: {
             model: 'coder-model',
           },
@@ -173,7 +173,7 @@ describe('modelConfigResolver', () => {
 
       it('warns and falls back for unsupported Qwen OAuth models', () => {
         const result = resolveModelConfig({
-          authType: AuthType.QWEN_OAUTH,
+          authType: AuthType.MOLI_OAUTH,
           cli: {
             model: 'unsupported-model',
           },
@@ -181,7 +181,7 @@ describe('modelConfigResolver', () => {
           env: {},
         });
 
-        expect(result.config.model).toBe(DEFAULT_QWEN_MODEL);
+        expect(result.config.model).toBe(DEFAULT_MOLI_MODEL);
         expect(result.warnings).toHaveLength(1);
         expect(result.warnings[0]).toContain('unsupported-model');
       });
@@ -313,9 +313,9 @@ describe('modelConfigResolver', () => {
 
     it('always passes for Qwen OAuth', () => {
       const result = validateModelConfig({
-        authType: AuthType.QWEN_OAUTH,
-        model: DEFAULT_QWEN_MODEL,
-        apiKey: 'QWEN_OAUTH_DYNAMIC_TOKEN',
+        authType: AuthType.MOLI_OAUTH,
+        model: DEFAULT_MOLI_MODEL,
+        apiKey: 'MOLI_OAUTH_DYNAMIC_TOKEN',
       });
 
       expect(result.valid).toBe(true);

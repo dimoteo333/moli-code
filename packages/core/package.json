@@ -1,7 +1,7 @@
 {
-  "name": "@qwen-code/qwen-code-core",
-  "version": "0.12.5",
-  "description": "Qwen Code Core",
+  "name": "@dobby/moli-code-core",
+  "version": "0.1.0",
+  "description": "Moli Code Core - Core library for AI-powered code generation",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QwenLM/qwen-code.git"
@@ -81,7 +81,7 @@
     "@lydell/node-pty-win32-x64": "1.1.0"
   },
   "devDependencies": {
-    "@qwen-code/qwen-code-test-utils": "file:../test-utils",
+    "@dobby/moli-code-test-utils": "file:../test-utils",
     "@types/diff": "^7.0.2",
     "@types/dotenv": "^6.1.1",
     "@types/fast-levenshtein": "^0.0.4",

@@ -108,7 +108,7 @@ export async function retryWithBackoff<T>(
       const errorStatus = getErrorStatus(error);
 
       // Check for Qwen OAuth quota exceeded error - throw immediately without retry
-      if (authType === AuthType.QWEN_OAUTH && isQwenQuotaExceededError(error)) {
+      if (authType === AuthType.MOLI_OAUTH && isQwenQuotaExceededError(error)) {
         throw new Error(
           `Qwen OAuth quota exceeded: Your free daily quota has been reached.\n\n` +
             `To continue using Qwen Code without waiting, upgrade to the Alibaba Cloud Coding Plan:\n` +

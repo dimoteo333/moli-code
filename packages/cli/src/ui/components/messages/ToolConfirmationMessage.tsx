@@ -16,8 +16,8 @@ import type {
   ToolMcpConfirmationDetails,
   Config,
   EditorType,
-} from '@qwen-code/qwen-code-core';
-import { IdeClient, ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
+import { IdeClient, ToolConfirmationOutcome } from '@dobby/moli-code-core';
 import type { RadioSelectItem } from '../shared/RadioButtonSelect.js';
 import { RadioButtonSelect } from '../shared/RadioButtonSelect.js';
 import { MaxSizedBox } from '../shared/MaxSizedBox.js';

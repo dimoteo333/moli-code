@@ -5,8 +5,8 @@
  */
 
 import { useState, useEffect } from 'react';
-import type { Storage } from '@qwen-code/qwen-code-core';
-import { Logger } from '@qwen-code/qwen-code-core';
+import type { Storage } from '@dobby/moli-code-core';
+import { Logger } from '@dobby/moli-code-core';
 
 /**
  * Hook to manage the logger instance.

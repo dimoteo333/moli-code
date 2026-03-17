@@ -10,7 +10,7 @@ import {
   getFilteredQwenModels,
   getOpenAIAvailableModelFromEnv,
 } from './availableModels.js';
-import { AuthType, type Config } from '@qwen-code/qwen-code-core';
+import { AuthType, type Config } from '@dobby/moli-code-core';
 
 describe('availableModels', () => {
   describe('Qwen models', () => {
@@ -78,7 +78,7 @@ describe('availableModels', () => {
     });
 
     it('should return hard-coded qwen models for qwen-oauth', () => {
-      const models = getAvailableModelsForAuthType(AuthType.QWEN_OAUTH);
+      const models = getAvailableModelsForAuthType(AuthType.MOLI_OAUTH);
       expect(models.length).toBe(1);
       expect(models[0].id).toBe('coder-model');
       expect(models[0].isVision).toBe(true);
@@ -91,14 +91,14 @@ describe('availableModels', () => {
             id: 'custom',
             label: 'Custom',
             description: 'Custom model',
-            authType: AuthType.QWEN_OAUTH,
+            authType: AuthType.MOLI_OAUTH,
             isVision: false,
           },
         ]),
       } as unknown as Config;
 
       const models = getAvailableModelsForAuthType(
-        AuthType.QWEN_OAUTH,
+        AuthType.MOLI_OAUTH,
         mockConfig,
       );
       expect(models).toEqual([

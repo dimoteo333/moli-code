@@ -237,7 +237,7 @@ describe('JSON output', () => {
     process.env['OPENAI_API_KEY'] = 'test-key';
     await rig.setup('json-output-auth-mismatch', {
       settings: {
-        security: { auth: { enforcedType: 'qwen-oauth' } },
+        security: { auth: { enforcedType: 'moli-oauth' } },
       },
     });
 

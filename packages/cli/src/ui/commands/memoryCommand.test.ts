@@ -17,15 +17,15 @@ import path from 'node:path';
 import {
   getErrorMessage,
   loadServerHierarchicalMemory,
-  QWEN_DIR,
+  MOLI_DIR,
   setGeminiMdFilename,
   type FileDiscoveryService,
   type LoadServerHierarchicalMemoryResponse,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
+vi.mock('@dobby/moli-code-core', async (importOriginal) => {
   const original =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+    await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...original,
     getErrorMessage: vi.fn((error: unknown) => {
@@ -158,7 +158,7 @@ describe('memoryCommand', () => {
 
       await globalCommand.action(mockContext, '');
 
-      const expectedGlobalPath = path.join('/home/user', QWEN_DIR, 'AGENTS.md');
+      const expectedGlobalPath = path.join('/home/user', MOLI_DIR, 'AGENTS.md');
       expect(mockReadFile).toHaveBeenCalledWith(expectedGlobalPath, 'utf-8');
       expect(mockContext.ui.addItem).toHaveBeenCalledWith(
         {

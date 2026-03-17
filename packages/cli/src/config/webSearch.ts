@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from '@qwen-code/qwen-code-core';
-import type { WebSearchProviderConfig } from '@qwen-code/qwen-code-core';
+import { AuthType } from '@dobby/moli-code-core';
+import type { WebSearchProviderConfig } from '@dobby/moli-code-core';
 import type { Settings } from './settings.js';
 
 /**
@@ -34,7 +34,7 @@ export interface WebSearchConfig {
  *
  * @param argv - Command line arguments
  * @param settings - User settings from settings.json
- * @param authType - Authentication type (e.g., 'qwen-oauth')
+ * @param authType - Authentication type (e.g., 'moli-oauth')
  * @returns WebSearch configuration or undefined if no providers available
  */
 export function buildWebSearchConfig(
@@ -42,7 +42,7 @@ export function buildWebSearchConfig(
   settings: Settings,
   authType?: string,
 ): WebSearchConfig | undefined {
-  const isQwenOAuth = authType === AuthType.QWEN_OAUTH;
+  const isQwenOAuth = authType === AuthType.MOLI_OAUTH;
 
   // Step 1: Collect providers from settings or command line/env
   let providers: WebSearchProviderConfig[] = [];

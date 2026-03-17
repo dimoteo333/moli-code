@@ -405,7 +405,7 @@ function setupAcpTest(
 
       // Choose a qwen-oauth model to trigger auth-required path deterministically.
       const qwenOauthModel = newSession.models.availableModels.find((model) =>
-        model.modelId.includes('qwen-oauth'),
+        model.modelId.includes('moli-oauth'),
       );
       expect(qwenOauthModel).toBeDefined();
       await expect(

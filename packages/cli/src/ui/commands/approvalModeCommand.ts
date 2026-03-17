@@ -12,8 +12,8 @@ import type {
 } from './types.js';
 import { CommandKind } from './types.js';
 import { t } from '../../i18n/index.js';
-import type { ApprovalMode } from '@qwen-code/qwen-code-core';
-import { APPROVAL_MODES } from '@qwen-code/qwen-code-core';
+import type { ApprovalMode } from '@dobby/moli-code-core';
+import { APPROVAL_MODES } from '@dobby/moli-code-core';
 
 /**
  * Parses the argument string and returns the corresponding ApprovalMode if valid.

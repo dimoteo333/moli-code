@@ -7,10 +7,7 @@
 import type React from 'react';
 import { Box, Text } from 'ink';
 import { theme } from '../semantic-colors.js';
-import {
-  type IdeContext,
-  type MCPServerConfig,
-} from '@qwen-code/qwen-code-core';
+import { type IdeContext, type MCPServerConfig } from '@dobby/moli-code-core';
 import { useTerminalSize } from '../hooks/useTerminalSize.js';
 import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 import { t } from '../../i18n/index.js';

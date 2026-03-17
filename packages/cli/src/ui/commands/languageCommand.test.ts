@@ -58,13 +58,12 @@ vi.mock('node:fs', async (importOriginal) => {
 });
 
 // Mock Storage from core
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+vi.mock('@dobby/moli-code-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     Storage: {
-      getGlobalQwenDir: vi.fn().mockReturnValue('/mock/.qwen'),
+      getGlobalMoliDir: vi.fn().mockReturnValue('/mock/.qwen'),
       getGlobalSettingsPath: vi
         .fn()
         .mockReturnValue('/mock/.qwen/settings.json'),

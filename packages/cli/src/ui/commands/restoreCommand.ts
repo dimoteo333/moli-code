@@ -12,7 +12,7 @@ import {
   type SlashCommandActionReturn,
   CommandKind,
 } from './types.js';
-import type { Config } from '@qwen-code/qwen-code-core';
+import type { Config } from '@dobby/moli-code-core';
 import { t } from '../../i18n/index.js';
 
 async function restoreAction(

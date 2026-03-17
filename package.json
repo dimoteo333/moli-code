@@ -1,6 +1,7 @@
 {
-  "name": "@qwen-code/qwen-code",
-  "version": "0.12.5",
+  "name": "@dobby/moli-code",
+  "version": "0.1.0",
+  "description": "Moli Code - AI-powered code generation assistant",
   "engines": {
     "node": ">=20.0.0"
   },
@@ -10,10 +11,10 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/QwenLM/qwen-code.git"
+    "url": "git+https://github.com/dimoteo333/moli-code.git"
   },
   "config": {
-    "sandboxImageUri": "ghcr.io/qwenlm/qwen-code:0.12.5"
+    "sandboxImageUri": "ghcr.io/dimoteo333/moli-code:0.1.0"
   },
   "scripts": {
     "start": "cross-env node scripts/start.js",
@@ -42,7 +43,7 @@
     "test:integration:cli:sandbox:docker": "cross-env QWEN_SANDBOX=docker npm run build:sandbox && QWEN_SANDBOX=docker vitest run --root ./integration-tests --exclude '**/sdk-typescript/**'",
     "test:terminal-bench": "cross-env VERBOSE=true KEEP_OUTPUT=true vitest run --config ./vitest.terminal-bench.config.ts --root ./integration-tests",
     "test:terminal-bench:oracle": "cross-env VERBOSE=true KEEP_OUTPUT=true vitest run --config ./vitest.terminal-bench.config.ts --root ./integration-tests -t 'oracle'",
-    "test:terminal-bench:qwen": "cross-env VERBOSE=true KEEP_OUTPUT=true vitest run --config ./vitest.terminal-bench.config.ts --root ./integration-tests -t 'qwen'",
+    "test:terminal-bench:moli": "cross-env VERBOSE=true KEEP_OUTPUT=true vitest run --config ./vitest.terminal-bench.config.ts --root ./integration-tests -t 'qwen'",
     "lint": "eslint . --ext .ts,.tsx && eslint integration-tests",
     "lint:fix": "eslint . --fix && eslint integration-tests --fix",
     "lint:ci": "eslint . --ext .ts,.tsx --max-warnings 0 && eslint integration-tests --max-warnings 0",
@@ -68,7 +69,8 @@
     "baseline-browser-mapping": "^2.9.19"
   },
   "bin": {
-    "qwen": "dist/cli.js"
+    "moli": "dist/cli.js",
+    "moli-code": "dist/cli.js"
   },
   "files": [
     "dist/",
@@ -110,7 +112,9 @@
     "tsx": "^4.20.3",
     "typescript-eslint": "^8.30.1",
     "vitest": "^3.2.4",
-    "yargs": "^17.7.2"
+    "yargs": "^17.7.2",
+    "@types/qrcode-terminal": "^0.12.0",
+    "qrcode-terminal": "^0.12.0"
   },
   "dependencies": {
     "@testing-library/dom": "^10.4.1",

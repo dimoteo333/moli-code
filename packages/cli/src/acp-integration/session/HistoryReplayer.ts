@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ChatRecord, TaskResultDisplay } from '@qwen-code/qwen-code-core';
+import type { ChatRecord, TaskResultDisplay } from '@dobby/moli-code-core';
 import type {
   Content,
   GenerateContentResponseUsageMetadata,

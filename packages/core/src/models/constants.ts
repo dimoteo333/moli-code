@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { DEFAULT_QWEN_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
+import { DEFAULT_MOLI_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
 
 import type { ModelConfig } from './types.js';
 
@@ -82,7 +82,7 @@ export const AUTH_ENV_MAPPINGS = {
     baseUrl: [],
     model: ['GOOGLE_MODEL'],
   },
-  'qwen-oauth': {
+  'moli-oauth': {
     apiKey: [],
     baseUrl: [],
     model: [],
@@ -91,14 +91,14 @@ export const AUTH_ENV_MAPPINGS = {
 
 export const DEFAULT_MODELS = {
   openai: MAINLINE_CODER_MODEL,
-  'qwen-oauth': DEFAULT_QWEN_MODEL,
+  'moli-oauth': DEFAULT_MOLI_MODEL,
 } as Partial<Record<AuthType, string>>;
 
 /**
  * Hard-coded Qwen OAuth models that are always available.
  * These cannot be overridden by user configuration.
  */
-export const QWEN_OAUTH_MODELS: ModelConfig[] = [
+export const MOLI_OAUTH_MODELS: ModelConfig[] = [
   {
     id: 'coder-model',
     name: 'coder-model',
@@ -109,9 +109,9 @@ export const QWEN_OAUTH_MODELS: ModelConfig[] = [
 ];
 
 /**
- * Derive allowed models from QWEN_OAUTH_MODELS for authorization.
+ * Derive allowed models from MOLI_OAUTH_MODELS for authorization.
  * This ensures single source of truth (SSOT).
  */
-export const QWEN_OAUTH_ALLOWED_MODELS = QWEN_OAUTH_MODELS.map(
+export const MOLI_OAUTH_ALLOWED_MODELS = MOLI_OAUTH_MODELS.map(
   (model) => model.id,
 ) as readonly string[];

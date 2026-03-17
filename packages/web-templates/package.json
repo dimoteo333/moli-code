@@ -1,5 +1,5 @@
 {
-  "name": "@qwen-code/web-templates",
+  "name": "@dobby/web-templates",
   "version": "0.12.5",
   "description": "Web templates bundled as embeddable JS/CSS strings",
   "repository": {

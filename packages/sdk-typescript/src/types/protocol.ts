@@ -239,7 +239,7 @@ export type PermissionMode = 'default' | 'plan' | 'auto-edit' | 'yolo';
 export type AuthType =
   | 'openai'
   | 'anthropic'
-  | 'qwen-oauth'
+  | 'moli-oauth'
   | 'gemini'
   | 'vertex-ai';
 

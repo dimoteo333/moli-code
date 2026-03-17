@@ -19,11 +19,7 @@ import type {
   ToolKind,
 } from '@agentclientprotocol/sdk';
 import type { Part } from '@google/genai';
-import {
-  TodoWriteTool,
-  Kind,
-  ExitPlanModeTool,
-} from '@qwen-code/qwen-code-core';
+import { TodoWriteTool, Kind, ExitPlanModeTool } from '@dobby/moli-code-core';
 
 /**
  * Unified tool call event emitter.

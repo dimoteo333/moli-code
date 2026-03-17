@@ -8,8 +8,8 @@ import {
   getErrorMessage,
   getCurrentGeminiMdFilename,
   loadServerHierarchicalMemory,
-  QWEN_DIR,
-} from '@qwen-code/qwen-code-core';
+  MOLI_DIR,
+} from '@dobby/moli-code-core';
 import path from 'node:path';
 import os from 'node:os';
 import fs from 'node:fs/promises';
@@ -109,7 +109,7 @@ export const memoryCommand: SlashCommand = {
             try {
               const globalMemoryPath = path.join(
                 os.homedir(),
-                QWEN_DIR,
+                MOLI_DIR,
                 getCurrentGeminiMdFilename(),
               );
               const globalMemoryContent = await fs.readFile(

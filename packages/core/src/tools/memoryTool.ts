@@ -119,7 +119,7 @@ interface SaveMemoryParams {
 }
 
 function getGlobalMemoryFilePath(): string {
-  return path.join(Storage.getGlobalQwenDir(), getCurrentGeminiMdFilename());
+  return path.join(Storage.getGlobalMoliDir(), getCurrentGeminiMdFilename());
 }
 
 function getProjectMemoryFilePath(): string {

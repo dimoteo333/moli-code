@@ -12,7 +12,7 @@ import {
   INSTALL_METADATA_FILENAME,
   EXTENSIONS_CONFIG_FILENAME,
 } from './variables.js';
-import { QWEN_DIR } from '../config/storage.js';
+import { MOLI_DIR } from '../config/storage.js';
 import {
   ExtensionManager,
   SettingScope,
@@ -81,7 +81,7 @@ vi.mock('../index.js', async (importOriginal) => {
   };
 });
 
-const EXTENSIONS_DIRECTORY_NAME = path.join(QWEN_DIR, 'extensions');
+const EXTENSIONS_DIRECTORY_NAME = path.join(MOLI_DIR, 'extensions');
 
 function createExtension({
   extensionsDir = 'extensions-dir',

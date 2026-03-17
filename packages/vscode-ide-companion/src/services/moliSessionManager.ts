@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import * as crypto from 'crypto';
-import { getProjectHash } from '@qwen-code/qwen-code-core/src/utils/paths.js';
+import { getProjectHash } from '@dobby/moli-code-core/src/utils/paths.js';
 import type { MoliSession, MoliMessage } from './moliSessionReader.js';
 
 /**

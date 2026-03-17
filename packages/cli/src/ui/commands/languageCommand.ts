@@ -28,7 +28,7 @@ import {
   resolveOutputLanguage,
   updateOutputLanguageFile,
 } from '../../utils/languageUtils.js';
-import { createDebugLogger } from '@qwen-code/qwen-code-core';
+import { createDebugLogger } from '@dobby/moli-code-core';
 
 const debugLogger = createDebugLogger('LANGUAGE_COMMAND');
 

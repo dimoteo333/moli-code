@@ -44,10 +44,10 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
   </script>
 
   <!-- Load the webui library from CDN -->
-  <script src="https://unpkg.com/@qwen-code/webui@0.1.0-beta.4/dist/index.umd.js"></script>
+  <script src="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.4/dist/index.umd.js"></script>
 
   <!-- Load the CSS -->
-  <link rel="stylesheet" href="https://unpkg.com/@qwen-code/webui@0.1.0-beta.4/dist/styles.css">
+  <link rel="stylesheet" href="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.4/dist/styles.css">
   
   <!-- Load Google Font for Logo -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

@@ -16,12 +16,12 @@ import {
   usePluginChoiceRequests,
 } from './useExtensionUpdates.js';
 import {
-  QWEN_DIR,
+  MOLI_DIR,
   type ExtensionManager,
   type Extension,
   type ExtensionUpdateInfo,
   ExtensionUpdateState,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import { renderHook, waitFor, act } from '@testing-library/react';
 import { MessageType } from '../types.js';
 
@@ -279,7 +279,7 @@ describe('useExtensionUpdates', () => {
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qwen-cli-test-home-'));
     vi.mocked(os.homedir).mockReturnValue(tempHomeDir);
-    userExtensionsDir = path.join(tempHomeDir, QWEN_DIR, 'extensions');
+    userExtensionsDir = path.join(tempHomeDir, MOLI_DIR, 'extensions');
     fs.mkdirSync(userExtensionsDir, { recursive: true });
   });
 

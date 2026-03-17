@@ -21,19 +21,19 @@ import {
   TokenError,
 } from './sharedTokenManager.js';
 
-const debugLogger = createDebugLogger('QWEN_OAUTH');
+const debugLogger = createDebugLogger('MOLI_OAUTH');
 
 // OAuth Endpoints
-const QWEN_OAUTH_BASE_URL = 'https://chat.qwen.ai';
+const MOLI_OAUTH_BASE_URL = 'https://chat.qwen.ai';
 
-const QWEN_OAUTH_DEVICE_CODE_ENDPOINT = `${QWEN_OAUTH_BASE_URL}/api/v1/oauth2/device/code`;
-const QWEN_OAUTH_TOKEN_ENDPOINT = `${QWEN_OAUTH_BASE_URL}/api/v1/oauth2/token`;
+const MOLI_OAUTH_DEVICE_CODE_ENDPOINT = `${MOLI_OAUTH_BASE_URL}/api/v1/oauth2/device/code`;
+const MOLI_OAUTH_TOKEN_ENDPOINT = `${MOLI_OAUTH_BASE_URL}/api/v1/oauth2/token`;
 
 // OAuth Client Configuration
-const QWEN_OAUTH_CLIENT_ID = 'f0304373b74a44d2b584a3fb70ca9e56';
+const MOLI_OAUTH_CLIENT_ID = 'f0304373b74a44d2b584a3fb70ca9e56';
 
-const QWEN_OAUTH_SCOPE = 'openid profile email model.completion';
-const QWEN_OAUTH_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code';
+const MOLI_OAUTH_SCOPE = 'openid profile email model.completion';
+const MOLI_OAUTH_GRANT_TYPE = 'urn:ietf:params:oauth:grant-type:device_code';
 
 // File System Configuration
 const QWEN_DIR = '.qwen';
@@ -294,13 +294,13 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     code_challenge_method: string;
   }): Promise<DeviceAuthorizationResponse> {
     const bodyData = {
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      client_id: MOLI_OAUTH_CLIENT_ID,
       scope: options.scope,
       code_challenge: options.code_challenge,
       code_challenge_method: options.code_challenge_method,
     };
 
-    const response = await fetch(QWEN_OAUTH_DEVICE_CODE_ENDPOINT, {
+    const response = await fetch(MOLI_OAUTH_DEVICE_CODE_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -336,13 +336,13 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     code_verifier: string;
   }): Promise<DeviceTokenResponse> {
     const bodyData = {
-      grant_type: QWEN_OAUTH_GRANT_TYPE,
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      grant_type: MOLI_OAUTH_GRANT_TYPE,
+      client_id: MOLI_OAUTH_CLIENT_ID,
       device_code: options.device_code,
       code_verifier: options.code_verifier,
     };
 
-    const response = await fetch(QWEN_OAUTH_TOKEN_ENDPOINT, {
+    const response = await fetch(MOLI_OAUTH_TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -406,10 +406,10 @@ export class QwenOAuth2Client implements IQwenOAuth2Client {
     const bodyData = {
       grant_type: 'refresh_token',
       refresh_token: this.credentials.refresh_token,
-      client_id: QWEN_OAUTH_CLIENT_ID,
+      client_id: MOLI_OAUTH_CLIENT_ID,
     };
 
-    const response = await fetch(QWEN_OAUTH_TOKEN_ENDPOINT, {
+    const response = await fetch(MOLI_OAUTH_TOKEN_ENDPOINT, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
@@ -729,7 +729,7 @@ async function authWithQwenDeviceFlow(
 
     // Request device authorization
     const deviceAuth = await client.requestDeviceAuthorization({
-      scope: QWEN_OAUTH_SCOPE,
+      scope: MOLI_OAUTH_SCOPE,
       code_challenge,
       code_challenge_method: 'S256',
     });
@@ -939,7 +939,7 @@ async function authWithQwenDeviceFlow(
     return { success: false, reason: 'timeout', message: timeoutMessage };
   } catch (error: unknown) {
     const fullErrorMessage = formatFetchErrorForUser(error, {
-      url: QWEN_OAUTH_BASE_URL,
+      url: MOLI_OAUTH_BASE_URL,
     });
     const message = `Device authorization flow failed: ${fullErrorMessage}`;
 

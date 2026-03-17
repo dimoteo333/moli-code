@@ -17,7 +17,7 @@ import type {
   ToolResult,
   ChatRecord,
   SubAgentEventEmitter,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import {
   AuthType,
   ApprovalMode,
@@ -34,7 +34,7 @@ import {
   TodoWriteTool,
   ExitPlanModeTool,
   readManyFiles,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 import { RequestError } from '@agentclientprotocol/sdk';
 import type {
@@ -429,7 +429,7 @@ export class Session implements SessionContext {
       selectedAuthType,
       parsed.modelId,
       selectedAuthType !== previousAuthType &&
-        selectedAuthType === AuthType.QWEN_OAUTH
+        selectedAuthType === AuthType.MOLI_OAUTH
         ? { requireCachedCredentials: true }
         : undefined,
     );

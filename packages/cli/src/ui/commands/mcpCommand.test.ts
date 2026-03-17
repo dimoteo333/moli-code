@@ -12,11 +12,10 @@ import {
   MCPDiscoveryState,
   getMCPServerStatus,
   getMCPDiscoveryState,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+vi.mock('@dobby/moli-code-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
   const mockAuthenticate = vi.fn();
   return {
     ...actual,

@@ -1,5 +1,5 @@
 {
-  "name": "@qwen-code/webui",
+  "name": "@dobby/moli-code-webui",
   "version": "0.12.5",
   "description": "Shared UI components for Qwen Code packages",
   "type": "module",

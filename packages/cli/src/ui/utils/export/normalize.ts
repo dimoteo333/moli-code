@@ -5,8 +5,8 @@
  */
 
 import type { Part } from '@google/genai';
-import { ExitPlanModeTool, ToolNames } from '@qwen-code/qwen-code-core';
-import type { ChatRecord, Config, Kind } from '@qwen-code/qwen-code-core';
+import { ExitPlanModeTool, ToolNames } from '@dobby/moli-code-core';
+import type { ChatRecord, Config, Kind } from '@dobby/moli-code-core';
 import type { ExportMessage, ExportSessionData } from './types.js';
 
 /**

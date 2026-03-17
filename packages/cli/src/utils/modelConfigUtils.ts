@@ -11,7 +11,7 @@ import {
   resolveModelConfig,
   type ModelConfigSourcesInput,
   type ProviderModelConfig,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import type { Settings } from '../config/settings.js';
 
 export interface CliGenerationConfigInputs {
@@ -46,8 +46,8 @@ export interface ResolvedCliGenerationConfig {
 }
 
 export function getAuthTypeFromEnv(): AuthType | undefined {
-  if (process.env['QWEN_OAUTH']) {
-    return AuthType.QWEN_OAUTH;
+  if (process.env['MOLI_OAUTH']) {
+    return AuthType.MOLI_OAUTH;
   }
 
   if (

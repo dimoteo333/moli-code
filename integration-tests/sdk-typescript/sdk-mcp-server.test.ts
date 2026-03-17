@@ -22,7 +22,7 @@ import {
   isSDKSystemMessage,
   type SDKMessage,
   type SDKSystemMessage,
-} from '@qwen-code/sdk';
+} from '@dobby/moli-code-sdk';
 import {
   SDKTestHelper,
   extractText,

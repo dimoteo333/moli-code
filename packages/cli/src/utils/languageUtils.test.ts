@@ -34,10 +34,10 @@ vi.mock('../i18n/index.js', () => ({
   }),
 }));
 
-// Mock @qwen-code/qwen-code-core
-vi.mock('@qwen-code/qwen-code-core', () => ({
+// Mock @dobby/moli-code-core
+vi.mock('@dobby/moli-code-core', () => ({
   Storage: {
-    getGlobalQwenDir: vi.fn(() => '/mock/home/.qwen'),
+    getGlobalMoliDir: vi.fn(() => '/mock/home/.qwen'),
   },
 }));
 

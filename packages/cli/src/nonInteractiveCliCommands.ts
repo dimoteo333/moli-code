@@ -11,7 +11,7 @@ import {
   uiTelemetryService,
   type Config,
   createDebugLogger,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import { CommandService } from './services/CommandService.js';
 import { BuiltinCommandLoader } from './services/BuiltinCommandLoader.js';
 import { BundledSkillLoader } from './services/BundledSkillLoader.js';

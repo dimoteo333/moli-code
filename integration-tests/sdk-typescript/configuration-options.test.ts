@@ -17,7 +17,7 @@ import {
   isSDKAssistantMessage,
   isSDKSystemMessage,
   type SDKMessage,
-} from '@qwen-code/sdk';
+} from '@dobby/moli-code-sdk';
 import {
   SDKTestHelper,
   extractText,
@@ -451,7 +451,7 @@ describe('Configuration Options (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          authType: 'qwen-oauth',
+          authType: 'moli-oauth',
           debug: true,
           logLevel: 'debug',
           stderr: (msg: string) => {

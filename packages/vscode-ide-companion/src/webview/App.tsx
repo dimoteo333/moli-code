@@ -19,7 +19,10 @@ import { useMessageHandling } from './hooks/message/useMessageHandling.js';
 import { useToolCalls } from './hooks/useToolCalls.js';
 import { useWebViewMessages } from './hooks/useWebViewMessages.js';
 import { useMessageSubmit } from './hooks/useMessageSubmit.js';
-import type { PermissionOption, PermissionToolCall } from '@qwen-code/webui';
+import type {
+  PermissionOption,
+  PermissionToolCall,
+} from '@dobby/moli-code-webui';
 import type { TextMessage } from './hooks/message/useMessageHandling.js';
 import type { ToolCallData } from './components/messages/toolcalls/ToolCall.js';
 import { ToolCall } from './components/messages/toolcalls/ToolCall.js';
@@ -39,7 +42,7 @@ import {
   EmptyState,
   ChatHeader,
   SessionSelector,
-} from '@qwen-code/webui';
+} from '@dobby/moli-code-webui';
 import { InputForm } from './components/layout/InputForm.js';
 import { ApprovalMode, NEXT_APPROVAL_MODE } from '../types/acpTypes.js';
 import type { ApprovalModeValue } from '../types/approvalModeValueTypes.js';
@@ -49,8 +52,8 @@ import type { Question } from '../types/acpTypes.js';
 import {
   DEFAULT_TOKEN_LIMIT,
   tokenLimit,
-} from '@qwen-code/qwen-code-core/src/core/tokenLimits.js';
-import { AskUserQuestionDialog } from '@qwen-code/webui';
+} from '@dobby/moli-code-core/src/core/tokenLimits.js';
+import { AskUserQuestionDialog } from '@dobby/moli-code-webui';
 
 export const App: React.FC = () => {
   const vscode = useVSCode();

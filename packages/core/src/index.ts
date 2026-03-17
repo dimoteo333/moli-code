@@ -14,9 +14,9 @@ export { Storage } from './config/storage.js';
 
 // Model configuration
 export {
-  DEFAULT_QWEN_MODEL,
-  DEFAULT_QWEN_FLASH_MODEL,
-  DEFAULT_QWEN_EMBEDDING_MODEL,
+  DEFAULT_MOLI_MODEL,
+  DEFAULT_MOLI_FLASH_MODEL,
+  DEFAULT_MOLI_EMBEDDING_MODEL,
   MAINLINE_CODER_MODEL,
 } from './config/models.js';
 export {
@@ -35,7 +35,7 @@ export {
   type ModelProvidersConfig,
   type ModelSwitchMetadata,
   type OnModelChangeCallback,
-  QWEN_OAUTH_MODELS,
+  MOLI_OAUTH_MODELS, // MOLI: renamed from MOLI_OAUTH_MODELS
   resolveModelConfig,
   type ResolvedModelConfig,
   validateModelConfig,
@@ -232,6 +232,17 @@ export * from './utils/yaml-parser.js';
 // ============================================================================
 
 export * from './qwen/qwenOAuth2.js';
+
+// MOLI: Enterprise OAuth2 & token management
+export {
+  MoliOAuth2Client,
+  MoliOAuth2Event,
+  moliOAuth2Events,
+  type MoliCredentials,
+  type IMoliOAuth2Client,
+} from './moli/moliOAuth2.js';
+export { MoliContentGenerator } from './moli/moliContentGenerator.js';
+export { SharedTokenManager } from './moli/sharedTokenManager.js';
 
 // ============================================================================
 // Testing Utilities

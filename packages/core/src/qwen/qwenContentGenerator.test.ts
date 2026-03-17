@@ -339,7 +339,7 @@ describe('QwenContentGenerator', () => {
     const contentGeneratorConfig = {
       model: 'qwen-turbo',
       apiKey: 'test-api-key',
-      authType: AuthType.QWEN_OAUTH,
+      authType: AuthType.MOLI_OAUTH,
       baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       timeout: 120000,
       maxRetries: 3,
@@ -1128,7 +1128,7 @@ describe('QwenContentGenerator', () => {
       // Create new instance to pick up the mock
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1163,7 +1163,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1196,7 +1196,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1500,7 +1500,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1521,7 +1521,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1544,7 +1544,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1565,7 +1565,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1583,7 +1583,7 @@ describe('QwenContentGenerator', () => {
         mockQwenClient,
         {
           model: 'qwen-turbo',
-          authType: AuthType.QWEN_OAUTH,
+          authType: AuthType.MOLI_OAUTH,
           baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
           apiKey: 'test-key',
         },
@@ -1601,7 +1601,7 @@ describe('QwenContentGenerator', () => {
     it('should get SharedTokenManager instance', () => {
       const generator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1627,7 +1627,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 
@@ -1656,7 +1656,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: 'qwen-turbo', authType: AuthType.MOLI_OAUTH },
         mockConfig,
       );
 

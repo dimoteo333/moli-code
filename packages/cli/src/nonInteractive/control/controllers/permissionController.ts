@@ -19,11 +19,8 @@ import type {
   ToolExecuteConfirmationDetails,
   ToolMcpConfirmationDetails,
   ApprovalMode,
-} from '@qwen-code/qwen-code-core';
-import {
-  InputFormat,
-  ToolConfirmationOutcome,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
+import { InputFormat, ToolConfirmationOutcome } from '@dobby/moli-code-core';
 import type {
   CLIControlPermissionRequest,
   CLIControlSetPermissionModeRequest,

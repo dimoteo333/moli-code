@@ -6,17 +6,17 @@
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import type { DeviceAuthorizationData } from '@qwen-code/qwen-code-core';
+import type { DeviceAuthorizationData } from '@dobby/moli-code-core';
 import { useMoliAuth } from './useMoliAuth.js';
 import {
   AuthType,
   moliOAuth2Events,
   MoliOAuth2Event,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 // Mock the moliOAuth2Events
-vi.mock('@qwen-code/qwen-code-core', async () => {
-  const actual = await vi.importActual('@qwen-code/qwen-code-core');
+vi.mock('@dobby/moli-code-core', async () => {
+  const actual = await vi.importActual('@dobby/moli-code-core');
   const mockEmitter = {
     on: vi.fn().mockReturnThis(),
     off: vi.fn().mockReturnThis(),

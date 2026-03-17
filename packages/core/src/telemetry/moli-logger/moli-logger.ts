@@ -417,16 +417,12 @@ export class MoliLogger {
       properties: {
         model: event.model,
         approval_mode: event.approval_mode,
-        embedding_model: event.embedding_model,
         sandbox_enabled: event.sandbox_enabled,
         core_tools_enabled: event.core_tools_enabled,
-        api_key_enabled: event.api_key_enabled,
-        vertex_ai_enabled: event.vertex_ai_enabled,
         debug_enabled: event.debug_enabled,
         mcp_servers: event.mcp_servers,
         telemetry_enabled: event.telemetry_enabled,
-        telemetry_log_user_prompts_enabled:
-          event.telemetry_log_user_prompts_enabled,
+        ide_enabled: event.ide_enabled,
         skills: event.skills,
         subagents: event.subagents,
       },

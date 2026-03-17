@@ -18,7 +18,7 @@ import {
   type Config,
   type ConversationRecord,
   type DeviceAuthorizationData,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import {
   AgentSideConnection,
   RequestError,
@@ -147,7 +147,7 @@ class QwenAgent implements Agent {
       });
     };
 
-    if (method === AuthType.QWEN_OAUTH) {
+    if (method === AuthType.MOLI_OAUTH) {
       qwenOAuth2Events.once(QwenOAuth2Event.AuthUri, authUriHandler);
     }
 
@@ -160,7 +160,7 @@ class QwenAgent implements Agent {
         method,
       );
     } finally {
-      if (method === AuthType.QWEN_OAUTH) {
+      if (method === AuthType.MOLI_OAUTH) {
         qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, authUriHandler);
       }
     }
@@ -405,11 +405,11 @@ class QwenAgent implements Agent {
     const authMethods = buildAuthMethods();
     const errorMessage = this.extractErrorMessage(error);
     if (
-      errorMessage?.includes('qwen-oauth') ||
+      errorMessage?.includes('moli-oauth') ||
       errorMessage?.includes('Qwen OAuth')
     ) {
       const qwenOAuthMethods = authMethods.filter(
-        (m) => m.id === AuthType.QWEN_OAUTH,
+        (m) => m.id === AuthType.MOLI_OAUTH,
       );
       return qwenOAuthMethods.length ? qwenOAuthMethods : authMethods;
     }

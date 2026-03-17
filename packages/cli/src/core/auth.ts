@@ -10,7 +10,7 @@ import {
   getErrorMessage,
   logAuth,
   AuthEvent,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 
 /**
  * Handles the initial authentication flow.

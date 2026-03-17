@@ -17,14 +17,10 @@ import {
   type MockedFunction,
 } from 'vitest';
 
-import {
-  ExtensionManager,
-  parseInstallSource,
-} from '@qwen-code/qwen-code-core';
+import { ExtensionManager, parseInstallSource } from '@dobby/moli-code-core';
 
-vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
+vi.mock('@dobby/moli-code-core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     parseInstallSource: vi.fn(),

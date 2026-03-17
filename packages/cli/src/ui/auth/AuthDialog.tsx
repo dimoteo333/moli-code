@@ -6,7 +6,7 @@
 
 import type React from 'react';
 import { useState } from 'react';
-import { AuthType } from '@qwen-code/qwen-code-core';
+import { AuthType } from '@dobby/moli-code-core';
 import { Box, Text } from 'ink';
 import Link from 'ink-link';
 import { theme } from '../semantic-colors.js';
@@ -38,7 +38,7 @@ function parseDefaultAuthType(
 }
 
 // Main menu option type
-type MainOption = typeof AuthType.QWEN_OAUTH | 'CODING_PLAN' | 'API_KEY';
+type MainOption = typeof AuthType.MOLI_OAUTH | 'CODING_PLAN' | 'API_KEY';
 
 // View level for navigation
 type ViewLevel = 'main' | 'region-select' | 'api-key-input' | 'custom-info';
@@ -62,13 +62,13 @@ export function AuthDialog(): React.JSX.Element {
   // Main authentication entries (flat three-option layout)
   const mainItems = [
     {
-      key: AuthType.QWEN_OAUTH,
+      key: AuthType.MOLI_OAUTH,
       title: t('Qwen OAuth'),
       label: t('Qwen OAuth'),
       description: t(
         'Free \u00B7 Up to 1,000 requests/day \u00B7 Qwen latest models',
       ),
-      value: AuthType.QWEN_OAUTH as MainOption,
+      value: AuthType.MOLI_OAUTH as MainOption,
     },
     {
       key: 'CODING_PLAN',
@@ -125,7 +125,7 @@ export function AuthDialog(): React.JSX.Element {
   ];
 
   // Map an AuthType to the corresponding main menu option.
-  // QWEN_OAUTH maps directly; any other auth type maps to CODING_PLAN only
+  // MOLI_OAUTH maps directly; any other auth type maps to CODING_PLAN only
   // if the current config actually uses a Coding Plan baseUrl+envKey,
   // otherwise it maps to API_KEY.
   const contentGenConfig = config.getContentGeneratorConfig();
@@ -136,7 +136,7 @@ export function AuthDialog(): React.JSX.Element {
     ) !== false;
 
   const authTypeToMainOption = (authType: AuthType): MainOption => {
-    if (authType === AuthType.QWEN_OAUTH) return AuthType.QWEN_OAUTH;
+    if (authType === AuthType.MOLI_OAUTH) return AuthType.MOLI_OAUTH;
     if (authType === AuthType.USE_OPENAI && isCurrentlyCodingPlan)
       return 'CODING_PLAN';
     return 'API_KEY';
@@ -164,8 +164,8 @@ export function AuthDialog(): React.JSX.Element {
         return item.value === authTypeToMainOption(defaultAuthType);
       }
 
-      // Priority 4: default to QWEN_OAUTH
-      return item.value === AuthType.QWEN_OAUTH;
+      // Priority 4: default to MOLI_OAUTH
+      return item.value === AuthType.MOLI_OAUTH;
     }),
   );
 

@@ -9,7 +9,7 @@ import type {
   Config,
   ToolCallRequestInfo,
   McpToolProgressData,
-} from '@qwen-code/qwen-code-core';
+} from '@dobby/moli-code-core';
 import type {
   CLIAssistantMessage,
   CLIMessage,

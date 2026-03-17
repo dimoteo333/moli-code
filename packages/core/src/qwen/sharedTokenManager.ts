@@ -19,7 +19,7 @@ import {
 } from './qwenOAuth2.js';
 import { createDebugLogger } from '../utils/debugLogger.js';
 
-const debugLogger = createDebugLogger('QWEN_OAUTH');
+const debugLogger = createDebugLogger('MOLI_OAUTH');
 
 // File System Configuration
 const QWEN_DIR = '.qwen';

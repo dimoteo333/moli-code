@@ -1,7 +1,7 @@
 {
-  "name": "@qwen-code/qwen-code",
-  "version": "0.12.5",
-  "description": "Qwen Code",
+  "name": "@dobby/moli-code",
+  "version": "0.1.0",
+  "description": "Moli Code - AI-powered code generation assistant",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/QwenLM/qwen-code.git"
@@ -10,7 +10,8 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "qwen": "dist/index.js"
+    "moli": "./dist/cli.js",
+    "moli-code": "./dist/cli.js"
   },
   "exports": {
     ".": {
@@ -33,15 +34,15 @@
     "dist"
   ],
   "config": {
-    "sandboxImageUri": "ghcr.io/qwenlm/qwen-code:0.12.5"
+    "sandboxImageUri": "ghcr.io/dimoteo333/moli-code:0.1.0"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.14.1",
     "@google/genai": "1.30.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.25.1",
-    "@qwen-code/qwen-code-core": "file:../core",
-    "@qwen-code/web-templates": "file:../web-templates",
+    "@dobby/moli-code-core": "file:../core",
+    "@dobby/web-templates": "file:../web-templates",
     "@types/update-notifier": "^6.0.8",
     "ansi-regex": "^6.2.2",
     "command-exists": "^1.2.9",
@@ -70,12 +71,13 @@
     "update-notifier": "^7.3.1",
     "wrap-ansi": "9.0.2",
     "yargs": "^17.7.2",
+    "qrcode-terminal": "^0.12.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
     "@babel/runtime": "^7.27.6",
     "@google/gemini-cli-test-utils": "file:../test-utils",
-    "@qwen-code/qwen-code-test-utils": "file:../test-utils",
+    "@dobby/moli-code-test-utils": "file:../test-utils",
     "@testing-library/react": "^16.3.0",
     "@types/archiver": "^6.0.3",
     "@types/command-exists": "^1.2.3",

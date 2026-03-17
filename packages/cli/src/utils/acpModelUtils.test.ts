@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { AuthType } from '@qwen-code/qwen-code-core';
+import { AuthType } from '@dobby/moli-code-core';
 import {
   formatAcpModelId,
   parseAcpBaseModelId,
@@ -14,8 +14,8 @@ import {
 
 describe('acpModelUtils', () => {
   it('formats modelId(authType)', () => {
-    expect(formatAcpModelId('qwen3', AuthType.QWEN_OAUTH)).toBe(
-      `qwen3(${AuthType.QWEN_OAUTH})`,
+    expect(formatAcpModelId('qwen3', AuthType.MOLI_OAUTH)).toBe(
+      `qwen3(${AuthType.MOLI_OAUTH})`,
     );
   });
 
