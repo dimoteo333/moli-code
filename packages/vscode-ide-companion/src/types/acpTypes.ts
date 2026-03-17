@@ -12,7 +12,7 @@ import type { ApprovalModeValue } from './approvalModeValueTypes.js';
 // Private / Qwen-specific types (not part of ACP spec)
 // ---------------------------------------------------------------------------
 
-export const authMethod = 'moli-oauth';
+export const authMethod = 'qwen-oauth';
 
 /**
  * Authenticate update notification (Qwen extension, not ACP spec).

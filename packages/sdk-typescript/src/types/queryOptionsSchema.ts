@@ -127,7 +127,7 @@ export const QueryOptionsSchema = z
   .object({
     cwd: z.string().optional(),
     model: z.string().optional(),
-    pathToQwenExecutable: z.string().optional(),
+    pathToMoliExecutable: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
     permissionMode: z.enum(['default', 'plan', 'auto-edit', 'yolo']).optional(),
     canUseTool: z

@@ -80,6 +80,9 @@ export interface QwenAgentCallbacks {
   onAvailableModels?: (models: ModelInfo[]) => void;
 }
 
+// MOLI: Alias for moli services that reference MoliAgentCallbacks
+export type MoliAgentCallbacks = QwenAgentCallbacks;
+
 export interface ToolCallUpdate {
   type: 'tool_call' | 'tool_call_update';
   toolCallId: string;

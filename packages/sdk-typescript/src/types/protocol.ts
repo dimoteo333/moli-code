@@ -122,7 +122,7 @@ export interface SDKSystemMessage {
   model?: string;
   permission_mode?: string;
   slash_commands?: string[];
-  qwen_code_version?: string;
+  moli_code_version?: string;
   output_style?: string;
   agents?: string[];
   skills?: string[];

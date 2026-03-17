@@ -130,7 +130,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -161,7 +161,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         model: 'qwen-max',
         permissionMode: 'auto-edit',
         maxSessionTurns: 10,
@@ -206,7 +206,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         resume: '123e4567-e89b-12d3-a456-426614174000',
       };
 
@@ -232,7 +232,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         sessionId: '123e4567-e89b-12d3-a456-426614174000',
       };
 
@@ -260,7 +260,7 @@ describe('ProcessTransport', () => {
       abortController.abort();
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -281,7 +281,7 @@ describe('ProcessTransport', () => {
 
       const abortController = new AbortController();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -306,7 +306,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -332,7 +332,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -350,7 +350,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -368,7 +368,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -389,7 +389,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -411,7 +411,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -435,7 +435,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -457,7 +457,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -479,7 +479,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -503,7 +503,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -528,7 +528,7 @@ describe('ProcessTransport', () => {
 
       const abortController = new AbortController();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -565,7 +565,7 @@ describe('ProcessTransport', () => {
       });
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -599,7 +599,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(processWithoutStdout);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -623,7 +623,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -644,7 +644,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -666,7 +666,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -690,7 +690,7 @@ describe('ProcessTransport', () => {
 
       const abortController = new AbortController();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -714,7 +714,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -736,7 +736,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(terminatedProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -756,7 +756,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -781,7 +781,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -803,7 +803,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -826,7 +826,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -850,7 +850,7 @@ describe('ProcessTransport', () => {
 
       const abortController = new AbortController();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -873,7 +873,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -897,7 +897,7 @@ describe('ProcessTransport', () => {
       const processOnSpy = vi.spyOn(process, 'on');
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -919,7 +919,7 @@ describe('ProcessTransport', () => {
       const processOffSpy = vi.spyOn(process, 'off');
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -947,7 +947,7 @@ describe('ProcessTransport', () => {
       );
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -977,7 +977,7 @@ describe('ProcessTransport', () => {
       );
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -1003,7 +1003,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1027,7 +1027,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         cwd: '/custom/path',
       };
 
@@ -1052,7 +1052,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1078,7 +1078,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         env: {
           CUSTOM_VAR: 'custom_value',
         },
@@ -1107,7 +1107,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1131,7 +1131,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         env: {
           CUSTOM_VAR: 'custom_value',
         },
@@ -1163,7 +1163,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         debug: true,
       };
 
@@ -1189,7 +1189,7 @@ describe('ProcessTransport', () => {
 
       const stderrCallback = vi.fn();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         stderr: stderrCallback,
       };
 
@@ -1214,7 +1214,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         debug: false,
       };
 
@@ -1240,7 +1240,7 @@ describe('ProcessTransport', () => {
 
       const stderrCallback = vi.fn();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         stderr: stderrCallback,
         debug: true, // Enable debug to ensure stderr data is logged
       };
@@ -1270,7 +1270,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1288,7 +1288,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1306,7 +1306,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1332,7 +1332,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(immediateExitProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1352,7 +1352,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(exitedProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1372,7 +1372,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(killedProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1392,7 +1392,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(processWithoutStdin);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1412,7 +1412,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(processWithoutStdin);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1432,7 +1432,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(processWithoutStdout);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       const transport = new ProcessTransport(options);
@@ -1453,7 +1453,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1473,7 +1473,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1493,7 +1493,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1520,7 +1520,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1545,7 +1545,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         debug: true,
       };
 
@@ -1573,7 +1573,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1599,7 +1599,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1626,7 +1626,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         env: { CUSTOM_VAR: 'value' },
       };
 
@@ -1655,7 +1655,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         cwd: '/custom/workdir',
       };
 
@@ -1682,7 +1682,7 @@ describe('ProcessTransport', () => {
 
       const abortController = new AbortController();
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
         abortController,
       };
 
@@ -1708,7 +1708,7 @@ describe('ProcessTransport', () => {
       mockSpawn.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);
@@ -1735,7 +1735,7 @@ describe('ProcessTransport', () => {
       mockFork.mockReturnValue(mockChildProcess);
 
       const options: TransportOptions = {
-        pathToQwenExecutable: 'qwen',
+        pathToMoliExecutable: 'qwen',
       };
 
       new ProcessTransport(options);

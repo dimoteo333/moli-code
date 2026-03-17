@@ -5,12 +5,12 @@
  */
 import { AcpConnection } from './acpConnection.js';
 import type {
-  AcpSessionUpdate,
-  AcpPermissionRequest,
-  AuthenticateUpdateNotification,
+  SessionNotification,
+  RequestPermissionRequest,
   ModelInfo,
   AvailableCommand,
-} from '../types/acpTypes.js';
+} from '@agentclientprotocol/sdk';
+import type { AuthenticateUpdateNotification } from '../types/acpTypes.js';
 import type { ApprovalModeValue } from '../types/approvalModeValueTypes.js';
 import { MoliSessionReader, type MoliSession } from './moliSessionReader.js';
 import { MoliSessionManager } from './moliSessionManager.js';
@@ -74,7 +74,7 @@ export class MoliAgentManager {
     this.sessionUpdateHandler = new MoliSessionUpdateHandler({});
 
     // Set ACP connection callbacks
-    this.connection.onSessionUpdate = (data: AcpSessionUpdate) => {
+    this.connection.onSessionUpdate = (data: SessionNotification) => {
       // If we are rehydrating a loaded session, map message chunks into
       // full messages for the UI, instead of streaming behavior.
       try {
@@ -136,7 +136,7 @@ export class MoliAgentManager {
     };
 
     this.connection.onPermissionRequest = async (
-      data: AcpPermissionRequest,
+      data: RequestPermissionRequest,
     ) => {
       if (this.callbacks.onPermissionRequest) {
         const optionId = await this.callbacks.onPermissionRequest(data);
@@ -249,16 +249,10 @@ export class MoliAgentManager {
   ): Promise<ApprovalModeValue> {
     const modeId = mode;
     try {
-      const res = await this.connection.setMode(modeId);
+      await this.connection.setMode(modeId);
       // Optimistically notify UI using response
-      const result = (res?.result || {}) as { modeId?: string };
-      const confirmed =
-        (result.modeId as
-          | 'plan'
-          | 'default'
-          | 'auto-edit'
-          | 'yolo'
-          | undefined) || modeId;
+      // SetSessionModeResponse only has _meta; use the requested modeId
+      const confirmed = modeId;
       this.callbacks.onModeChanged?.(confirmed);
       return confirmed;
     } catch (err) {
@@ -272,13 +266,11 @@ export class MoliAgentManager {
    */
   async setModelFromUi(modelId: string): Promise<ModelInfo | null> {
     try {
-      const res = await this.connection.setModel(modelId);
-      // Parse response and notify UI
-      const result = (res?.result || {}) as { modelId?: string };
-      const confirmedModelId = result.modelId || modelId;
+      await this.connection.setModel(modelId);
+      // SetSessionModelResponse only has _meta; use the requested modelId
       const modelInfo: ModelInfo = {
-        modelId: confirmedModelId,
-        name: confirmedModelId,
+        modelId,
+        name: modelId,
       };
       this.callbacks.onModelChanged?.(modelInfo);
       return modelInfo;
@@ -1307,7 +1299,7 @@ export class MoliAgentManager {
    * @param callback - Permission request callback function
    */
   onPermissionRequest(
-    callback: (request: AcpPermissionRequest) => Promise<string>,
+    callback: (request: RequestPermissionRequest) => Promise<string>,
   ): void {
     this.callbacks.onPermissionRequest = callback;
     this.sessionUpdateHandler.updateCallbacks(this.callbacks);

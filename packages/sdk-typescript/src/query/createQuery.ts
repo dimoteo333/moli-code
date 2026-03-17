@@ -38,7 +38,7 @@ export function query({
 
   const isSingleTurn = typeof prompt === 'string';
 
-  const pathToQwenExecutable = options.pathToQwenExecutable;
+  const pathToMoliExecutable = options.pathToMoliExecutable;
 
   const abortController = options.abortController ?? new AbortController();
 
@@ -46,7 +46,7 @@ export function query({
   const sessionId = options.resume ?? options.sessionId ?? randomUUID();
 
   const transport = new ProcessTransport({
-    pathToQwenExecutable,
+    pathToMoliExecutable,
     spawnInfo,
     cwd: options.cwd,
     model: options.model,
@@ -132,9 +132,9 @@ function validateOptions(options: QueryOptions): SpawnInfo | undefined {
   }
 
   try {
-    return prepareSpawnInfo(options.pathToQwenExecutable);
+    return prepareSpawnInfo(options.pathToMoliExecutable);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid pathToQwenExecutable: ${errorMessage}`);
+    throw new Error(`Invalid pathToMoliExecutable: ${errorMessage}`);
   }
 }

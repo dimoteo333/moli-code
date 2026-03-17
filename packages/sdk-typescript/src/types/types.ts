@@ -10,7 +10,7 @@ import type { SpawnInfo } from '../utils/cliPath.js';
 export type { PermissionMode, AuthType };
 
 export type TransportOptions = {
-  pathToQwenExecutable?: string;
+  pathToMoliExecutable?: string;
   spawnInfo?: SpawnInfo;
   cwd?: string;
   model?: string;
@@ -180,7 +180,7 @@ export function isSdkMcpServerConfig(
 }
 
 /**
- * Configuration options for creating a query session with the Qwen CLI.
+ * Configuration options for creating a query session with the Moli CLI.
  */
 export interface QueryOptions {
   /**
@@ -192,21 +192,21 @@ export interface QueryOptions {
 
   /**
    * The AI model to use for the query session.
-   * This takes precedence over the environment variables `OPENAI_MODEL` and `QWEN_MODEL`
-   * @example 'qwen-max', 'qwen-plus', 'qwen-turbo'
+   * This takes precedence over the environment variables `OPENAI_MODEL` and `MOLI_MODEL`
+   * @example 'moli-max', 'qwen-plus', 'moli-turbo'
    */
   model?: string;
 
   /**
-   * Path to the Qwen CLI executable.
+   * Path to the Moli CLI executable.
    *
    * If not provided, the SDK automatically uses the bundled CLI included in the package.
    *
    * Supports multiple formats:
-   * - Command name (no path separators): `'qwen'` -> executes from PATH
+   * - Command name (no path separators): `'moli'` -> executes from PATH
    * - JavaScript file: `'/path/to/cli.js'` -> uses Node.js (or Bun if running under Bun)
    * - TypeScript file: `'/path/to/index.ts'` -> uses tsx if available (silent support for dev/debug)
-   * - Native binary: `'/path/to/qwen'` -> executes directly
+   * - Native binary: `'/path/to/moli'` -> executes directly
    *
    * Runtime detection:
    * - `.js/.mjs/.cjs` files: Node.js (or Bun if running under Bun)
@@ -215,13 +215,13 @@ export interface QueryOptions {
    * - Other files: executed as native binaries
    *
    * @example '/path/to/cli.js'
-   * @example 'qwen'
+   * @example 'moli'
    * @example './packages/cli/index.ts'
    */
-  pathToQwenExecutable?: string;
+  pathToMoliExecutable?: string;
 
   /**
-   * Environment variables to pass to the Qwen CLI process.
+   * Environment variables to pass to the Moli CLI process.
    * These variables will be merged with the current process environment.
    */
   env?: Record<string, string>;
@@ -322,7 +322,7 @@ export interface QueryOptions {
   debug?: boolean;
 
   /**
-   * Custom handler for stderr output from the Qwen CLI process.
+   * Custom handler for stderr output from the Moli CLI process.
    * Use this to capture and process error messages or diagnostic output.
    */
   stderr?: (message: string) => void;
@@ -398,10 +398,10 @@ export interface QueryOptions {
   /**
    * Authentication type for the AI service.
    * - 'openai': Use OpenAI-compatible authentication
-   * - 'moli-oauth': Use Qwen OAuth authentication
+   * - 'moli-oauth': Use Moli OAuth authentication
    *
    * Though we support 'moli-oauth', it's not recommended to use it in the SDK.
-   * Because the credentials are stored in `~/.qwen` and may need to refresh periodically.
+   * Because the credentials are stored in `~/.moli` and may need to refresh periodically.
    */
   authType?: AuthType;
 
@@ -423,7 +423,7 @@ export interface QueryOptions {
 
   /**
    * Resume a previous session by providing its session ID.
-   * This is equivalent to using the `--resume` flag in the Qwen CLI.
+   * This is equivalent to using the `--resume` flag in the Moli CLI.
    * @example '123e4567-e89b-12d3-a456-426614174000'
    */
   resume?: string;

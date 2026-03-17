@@ -217,7 +217,7 @@ export function findBundledCliPath(): string {
       'Searched locations:\n' +
       candidates.map((c) => `  - ${c}`).join('\n') +
       '\n\nIf you need to use a custom CLI, provide explicit path:\n' +
-      '  • query({ pathToQwenExecutable: "/path/to/cli.js" })',
+      '  • query({ pathToMoliExecutable: "/path/to/cli.js" })',
   );
 }
 
