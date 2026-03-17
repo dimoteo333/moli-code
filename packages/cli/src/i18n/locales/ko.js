@@ -83,15 +83,18 @@ export default {
     '전체 단축키 목록은 {{docPath}}를 참조하세요',
   'docs/keyboard-shortcuts.md': 'docs/keyboard-shortcuts.md',
   'for help on Moli Code': '몰리코드 도움말',
+  'for help on Qwen Code': '몰리코드 도움말',
   'show version info': '버전 정보 표시',
   'submit a bug report': '버그 보고서 제출',
   'About Moli Code': '몰리코드 정보',
+  'About Qwen Code': '몰리코드 정보',
   Status: '상태',
 
   // ============================================================================
   // System Information Fields
   // ============================================================================
   'Moli Code': '몰리코드',
+  'Qwen Code': '몰리코드',
   Runtime: '런타임',
   OS: 'OS',
   Auth: '인증',
@@ -116,9 +119,15 @@ export default {
   // ============================================================================
   'Analyzes the project and creates a tailored MOLI.md file.':
     '프로젝트를 분석하고 맞춤형 MOLI.md 파일을 생성해요.',
+  'Analyzes the project and creates a tailored QWEN.md file.':
+    '프로젝트를 분석하고 맞춤형 MOLI.md 파일을 생성해요.',
   'list available Moli Code tools. Usage: /tools [desc]':
     '사용 가능한 몰리코드 도구를 보여드려요. 사용법: /tools [desc]',
+  'List available Qwen Code tools. Usage: /tools [desc]':
+    '사용 가능한 몰리코드 도구를 보여드려요. 사용법: /tools [desc]',
+  'List available skills.': '사용 가능한 스킬을 보여드려요.',
   'Available Moli Code CLI tools:': '사용 가능한 몰리코드 CLI 도구:',
+  'Available Qwen Code CLI tools:': '사용 가능한 몰리코드 CLI 도구:',
   'No tools available': '사용 가능한 도구 없음',
   'View or change the approval mode for tool usage':
     '도구 사용 승인 모드 보기 또는 변경',
@@ -144,6 +153,8 @@ export default {
   'Compresses the context by replacing it with a summary.':
     '요약으로 컨텍스트를 대체하여 압축해요.',
   'open full Moli Code documentation in your browser':
+    '브라우저에서 전체 Moli Code 문서 열기',
+  'open full Qwen Code documentation in your browser':
     '브라우저에서 전체 Moli Code 문서 열기',
   'Configuration not available.': '구성을 사용할 수 없어요.',
   'change the auth method': '인증 방법 변경',
@@ -211,7 +222,9 @@ export default {
   // Agents - Creation Wizard
   // ============================================================================
   'Project Level (.moli/agents/)': '프로젝트 수준 (.moli/agents/)',
+  'Project Level (.qwen/agents/)': '프로젝트 수준 (.moli/agents/)',
   'User Level (~/.moli/agents/)': '사용자 수준 (~/.moli/agents/)',
+  'User Level (~/.qwen/agents/)': '사용자 수준 (~/.moli/agents/)',
   '✅ Subagent Created Successfully!':
     '✅ 서브에이전트가 성공적으로 생성되었어요!',
   'Subagent "{{name}}" has been saved to {{level}} level.':
@@ -233,6 +246,7 @@ export default {
   'Step {{n}}: Choose Location': '단계 {{n}}: 위치 선택',
   'Step {{n}}: Choose Generation Method': '단계 {{n}}: 생성 방법 선택',
   'Generate with Moli Code (Recommended)': '몰리코드로 생성 (권장)',
+  'Generate with Qwen Code (Recommended)': '몰리코드로 생성 (권장)',
   'Manual Creation': '수동 생성',
   'Describe what this subagent should do and when it should be used. (Be comprehensive for best results)':
     '이 서브 에이전트가 무엇을 해야 하는지 언제 사용되어야 하는지 설명하세요. (최상의 결과를 위해 포괄적으로 작성)',
@@ -287,11 +301,80 @@ export default {
     '서브에이전트 저장 및 편집 실패: {{error}}',
 
   // ============================================================================
+  // Extensions - Management Dialog
+  // ============================================================================
+  'Manage Extensions': '확장 관리',
+  'Extension Details': '확장 상세 정보',
+  'View Extension': '확장 보기',
+  'Update Extension': '확장 업데이트',
+  'Disable Extension': '확장 비활성화',
+  'Enable Extension': '확장 활성화',
+  'Uninstall Extension': '확장 제거',
+  'Select Scope': '범위 선택',
+  'User Scope': '사용자 범위',
+  'Workspace Scope': '작업 공간 범위',
+  'No extensions found.': '확장을 찾을 수 없어요.',
+  Active: '활성',
+  Disabled: '비활성화됨',
+  'Update available': '업데이트 사용 가능',
+  'Up to date': '최신 상태',
+  'Checking...': '확인 중...',
+  'Updating...': '업데이트 중...',
+  Unknown: '알 수 없음',
+  Error: '오류',
+  'Version:': '버전:',
+  'Status:': '상태:',
+  'Are you sure you want to uninstall extension "{{name}}"?':
+    '확장 "{{name}}"을(를) 제거하시겠습니까?',
+  'This action cannot be undone.': '이 작업은 되돌릴 수 없어요.',
+  'Extension "{{name}}" disabled successfully.':
+    '확장 "{{name}}"이(가) 성공적으로 비활성화되었어요.',
+  'Extension "{{name}}" enabled successfully.':
+    '확장 "{{name}}"이(가) 성공적으로 활성화되었어요.',
+  'Extension "{{name}}" updated successfully.':
+    '확장 "{{name}}"이(가) 성공적으로 업데이트되었어요.',
+  'Failed to update extension "{{name}}": {{error}}':
+    '확장 "{{name}}" 업데이트 실패: {{error}}',
+  'Select the scope for this action:': '이 작업의 범위를 선택하세요:',
+  'User - Applies to all projects': '사용자 - 모든 프로젝트에 적용',
+  'Workspace - Applies to current project only':
+    '작업 공간 - 현재 프로젝트에만 적용',
+  // Extension dialog - missing keys
+  'Name:': '이름:',
+  'MCP Servers:': 'MCP 서버:',
+  'Settings:': '설정:',
+  active: '활성',
+  disabled: '비활성화됨',
+  'View Details': '상세 보기',
+  'Update failed:': '업데이트 실패:',
+  'Updating {{name}}...': '{{name}} 업데이트 중...',
+  'Update complete!': '업데이트 완료!',
+  'User (global)': '사용자 (전역)',
+  'Workspace (project-specific)': '작업 공간 (프로젝트별)',
+  'Disable "{{name}}" - Select Scope': '"{{name}}" 비활성화 - 범위 선택',
+  'Enable "{{name}}" - Select Scope': '"{{name}}" 활성화 - 범위 선택',
+  'No extension selected': '선택된 확장 없음',
+  'Press Y/Enter to confirm, N/Esc to cancel': 'Y/Enter로 확인, N/Esc로 취소',
+  'Y/Enter to confirm, N/Esc to cancel': 'Y/Enter로 확인, N/Esc로 취소',
+  '{{count}} extensions installed': '{{count}}개 확장 설치됨',
+  "Use '/extensions install' to install your first extension.":
+    "'/extensions install'을(를) 사용하여 첫 번째 확장을 설치하세요.",
+  // Update status values
+  'up to date': '최신 상태',
+  'update available': '업데이트 사용 가능',
+  'checking...': '확인 중...',
+  'not updatable': '업데이트 불가',
+  error: '오류',
+
+  // ============================================================================
   // Commands - General (continued)
   // ============================================================================
   'View and edit Moli Code settings': 'Moli Code 설정 보기 및 편집',
+  'View and edit Qwen Code settings': 'Moli Code 설정 보기 및 편집',
   Settings: '설정',
   'To see changes, Moli Code must be restarted. Press r to exit and apply changes now.':
+    '변경사항을 적용하려면 Moli Code를 다시 시작해야 해요. r을 눌러 종료하고 변경사항을 지금 적용하세요.',
+  'To see changes, Qwen Code must be restarted. Press r to exit and apply changes now.':
     '변경사항을 적용하려면 Moli Code를 다시 시작해야 해요. r을 눌러 종료하고 변경사항을 지금 적용하세요.',
   'The command "/{{command}}" is not supported in non-interactive mode.':
     '명령어 "/{{command}}"은(는) 대화형 모드가 아닌 경우 지원되지 않아요.',
@@ -321,6 +404,8 @@ export default {
   'Enable User Feedback': '사용자 피드백 활성화',
   'How is Moli doing this session? (optional)':
     '이번 세션에서 몰리는 어떤가요? (선택 사항)',
+  'How is Qwen doing this session? (optional)':
+    '이번 세션에서 몰리는 어떤가요? (선택 사항)',
   Bad: '나쁨',
   Fine: '보통',
   Good: '좋음',
@@ -343,6 +428,7 @@ export default {
   'Load Memory From Include Directories': '포함 디렉터리에서 메모리 로드',
   'Respect .gitignore': '.gitignore 준수',
   'Respect .moliignore': '.moliignore 준수',
+  'Respect .qwenignore': '.moliignore 준수',
   'Enable Recursive File Search': '재귀적 파일 검색 활성화',
   'Disable Fuzzy Search': '퍼지 검색 비활성화',
   'Interactive Shell (PTY)': '대화형 셸 (PTY)',
@@ -372,6 +458,10 @@ export default {
   'exit the cli': 'CLI 종료',
   'list configured MCP servers and tools, or authenticate with OAuth-enabled servers':
     '구성된 MCP 서버 및 도구 나열 또는 OAuth 지원 서버에 인증',
+  'Open MCP management dialog, or authenticate with OAuth-enabled servers':
+    'MCP 관리 대화상자 열기 또는 OAuth 지원 서버에 인증',
+  'List configured MCP servers and tools, or authenticate with OAuth-enabled servers':
+    '구성된 MCP 서버 및 도구 나열 또는 OAuth 지원 서버에 인증',
   'Manage workspace directories': '작업 공간 디렉터리 관리',
   'Add directories to the workspace. Use comma to separate multiple paths':
     '작업 공간에 디렉터리를 추가해요. 여러 경로는 쉼표로 구분하세요',
@@ -383,6 +473,7 @@ export default {
     '현재 이 편집기들이 지원돼요. 일부 편집기는 샌드박스 모드에서 사용할 수 없어요.',
   'Your preferred editor is:': '선호하는 편집기:',
   'Manage extensions': '확장 관리',
+  'Manage installed extensions': '설치된 확장 관리',
   'List active extensions': '활성 확장 나열',
   'Update extensions. Usage: update <extension-names>|--all':
     '확장 업데이트. 사용법: update <extension-names>|--all',
@@ -432,6 +523,8 @@ export default {
     '이 확장은 다음 명령을 추가해요: {{commands}}.',
   'This extension will append info to your MOLI.md context using {{fileName}}':
     '이 확장은 {{fileName}}을(를) 사용해 MOLI.md 컨텍스트에 정보를 추가해요',
+  'This extension will append info to your QWEN.md context using {{fileName}}':
+    '이 확장은 {{fileName}}을(를) 사용해 MOLI.md 컨텍스트에 정보를 추가해요',
   'This extension will exclude the following core tools: {{tools}}':
     '이 확장은 다음 핵심 도구를 제외해요: {{tools}}',
   'This extension will install the following skills:':
@@ -441,6 +534,8 @@ export default {
   'Installation cancelled for "{{name}}".':
     '"{{name}}"에 대한 설치가 취소되었어요.',
   'You are installing an extension from {{originSource}}. Some features may not work perfectly with Moli Code.':
+    '{{originSource}}에서 확장을 설치하고 있어요. 일부 기능이 Moli Code와 완벽하게 작동하지 않을 수 있어요.',
+  'You are installing an extension from {{originSource}}. Some features may not work perfectly with Qwen Code.':
     '{{originSource}}에서 확장을 설치하고 있어요. 일부 기능이 Moli Code와 완벽하게 작동하지 않을 수 있어요.',
   '--ref and --auto-update are not applicable for marketplace extensions.':
     '--ref 및 --auto-update는 마켓플레이스 확장에 적용되지 않아요.',
@@ -548,6 +643,8 @@ export default {
   'disable IDE integration': 'IDE 통합 비활성화',
   'IDE integration is not supported in your current environment. To use this feature, run Moli Code in one of these supported IDEs: VS Code or VS Code forks.':
     '현재 환경에서는 IDE 통합이 지원되지 않아요. 이 기능을 사용하려면 VS Code 또는 VS Code 포크 중 하나에서 Moli Code를 실행하세요.',
+  'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.':
+    '현재 환경에서는 IDE 통합이 지원되지 않아요. 이 기능을 사용하려면 VS Code 또는 VS Code 포크 중 하나에서 Moli Code를 실행하세요.',
   'Set up GitHub Actions': 'GitHub Actions 설정',
   'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf, Trae)':
     '여러 줄 입력을 위한 터미널 키 바인딩 구성 (VS Code, Cursor, Windsurf, Trae)',
@@ -577,6 +674,38 @@ export default {
     '{{terminalName}} 구성에 실패했어요.',
   'Your terminal is already configured for an optimal experience with multiline input (Shift+Enter and Ctrl+Enter).':
     '터미널이 이미 여러 줄 입력(Shift+Enter 및 Ctrl+Enter)에 최적화되도록 구성되어 있어요.',
+
+  // ============================================================================
+  // Commands - Hooks
+  // ============================================================================
+  'Manage Qwen Code hooks': 'Moli Code 훅 관리',
+  'List all configured hooks': '구성된 모든 훅 나열',
+  'Enable a disabled hook': '비활성화된 훅 활성화',
+  'Disable an active hook': '활성 훅 비활성화',
+
+  // ============================================================================
+  // Commands - Session Export
+  // ============================================================================
+  'Export current session message history to a file':
+    '현재 세션 메시지 기록을 파일로 내보내기',
+  'Export session to HTML format': 'HTML 형식으로 세션 내보내기',
+  'Export session to JSON format': 'JSON 형식으로 세션 내보내기',
+  'Export session to JSONL format (one message per line)':
+    'JSONL 형식으로 세션 내보내기 (메시지당 한 줄)',
+  'Export session to markdown format': 'Markdown 형식으로 세션 내보내기',
+
+  // ============================================================================
+  // Commands - Insights
+  // ============================================================================
+  'generate personalized programming insights from your chat history':
+    '대화 기록에서 개인화된 프로그래밍 인사이트 생성',
+
+  // ============================================================================
+  // Commands - Session History
+  // ============================================================================
+  'Resume a previous session': '이전 세션 다시 시작',
+  'Restore a tool call. This will reset the conversation and file history to the state it was in when the tool call was suggested':
+    '도구 호출을 복원해요. 도구 호출이 제안되었을 때의 상태로 대화 및 파일 기록을 초기화합니다',
   'Could not detect terminal type. Supported terminals: VS Code, Cursor, Windsurf, and Trae.':
     '터미널 유형을 감지할 수 없어요. 지원되는 터미널: VS Code, Cursor, Windsurf 및 Trae.',
   'Terminal "{{terminal}}" is not supported yet.':
@@ -708,6 +837,7 @@ export default {
   'Authenticate with an OAuth-enabled MCP server': 'OAuth 지원 MCP 서버에 인증',
   'List configured MCP servers and tools': '구성된 MCP 서버 및 도구 나열',
   'Restarts MCP servers.': 'MCP 서버를 다시 시작해요.',
+  'Open MCP management dialog': 'MCP 관리 대화상자 열기',
   'Config not loaded.': '구성이 로드되지 않았습니다.',
   'Could not retrieve tool registry.': '도구 레지스트리를 검색할 수 없어요.',
   'No MCP servers configured with OAuth authentication.':
@@ -723,6 +853,117 @@ export default {
     "MCP 서버 '{{name}}' 인증 실패: {{error}}",
   "Re-discovering tools from '{{name}}'...":
     "'{{name}}'에서 도구를 다시 검색 중...",
+  "Discovered {{count}} tool(s) from '{{name}}'.":
+    "'{{name}}'에서 {{count}}개 도구를 검색했어요.",
+  'Authentication complete. Returning to server details...':
+    '인증 완료. 서버 상세 정보로 돌아가는 중...',
+  'Authentication successful.': '인증에 성공했어요.',
+  'If the browser does not open, copy and paste this URL into your browser:':
+    '브라우저가 열리지 않으면 이 URL을 복사하여 브라우저에 붙여넣으세요:',
+  'Make sure to copy the COMPLETE URL - it may wrap across multiple lines.':
+    '전체 URL을 복사하세요 - 여러 줄에 걸쳐 있을 수 있어요.',
+
+  // ============================================================================
+  // MCP Management Dialog
+  // ============================================================================
+  'Manage MCP servers': 'MCP 서버 관리',
+  'Server Detail': '서버 상세 정보',
+  'Disable Server': '서버 비활성화',
+  Tools: '도구',
+  'Tool Detail': '도구 상세 정보',
+  'MCP Management': 'MCP 관리',
+  'Loading...': '로딩 중...',
+  'Unknown step': '알 수 없는 단계',
+  'Esc to back': 'Esc로 뒤로',
+  '↑↓ to navigate · Enter to select · Esc to close':
+    '↑↓로 이동 · Enter로 선택 · Esc로 닫기',
+  '↑↓ to navigate · Enter to select · Esc to back':
+    '↑↓로 이동 · Enter로 선택 · Esc로 뒤로',
+  '↑↓ to navigate · Enter to confirm · Esc to back':
+    '↑↓로 이동 · Enter로 확인 · Esc로 뒤로',
+  'User Settings (global)': '사용자 설정 (전역)',
+  'Workspace Settings (project-specific)': '작업 공간 설정 (프로젝트별)',
+  'Disable server:': '서버 비활성화:',
+  'Select where to add the server to the exclude list:':
+    '서버를 제외 목록에 추가할 위치를 선택하세요:',
+  'Press Enter to confirm, Esc to cancel': 'Enter로 확인, Esc로 취소',
+  'View tools': '도구 보기',
+  Reconnect: '재연결',
+  Enable: '활성화',
+  Disable: '비활성화',
+  Authenticate: '인증',
+  'Re-authenticate': '재인증',
+  'Clear Authentication': '인증 초기화',
+  'Server:': '서버:',
+  'Command:': '명령:',
+  'Working Directory:': '작업 디렉터리:',
+  'Capabilities:': '기능:',
+  'No server selected': '선택된 서버 없음',
+  prompts: '프롬프트',
+  '(disabled)': '(비활성화됨)',
+  'Error:': '오류:',
+  Extension: '확장',
+  tool: '도구',
+  tools: '도구',
+  connected: '연결됨',
+  connecting: '연결 중',
+  disconnected: '연결 끊김',
+
+  // MCP Server List
+  'User MCPs': '사용자 MCP',
+  'Project MCPs': '프로젝트 MCP',
+  'Extension MCPs': '확장 MCP',
+  server: '서버',
+  servers: '서버',
+  'Add MCP servers to your settings to get started.':
+    '시작하려면 설정에 MCP 서버를 추가하세요.',
+  'Run qwen --debug to see error logs':
+    'moli --debug를 실행하여 오류 로그 확인',
+
+  // MCP OAuth Authentication
+  'OAuth Authentication': 'OAuth 인증',
+  'Press Enter to start authentication, Esc to go back':
+    'Enter로 인증 시작, Esc로 뒤로 가기',
+  'Authenticating... Please complete the login in your browser.':
+    '인증 중... 브라우저에서 로그인을 완료하세요.',
+  'Press Enter or Esc to go back': 'Enter 또는 Esc로 뒤로 가기',
+
+  // MCP Tool List
+  'No tools available for this server.': '이 서버에 사용 가능한 도구가 없어요.',
+  destructive: '파괴적',
+  'read-only': '읽기 전용',
+  'open-world': '오픈 월드',
+  idempotent: '멱등성',
+  'Tools for {{name}}': '{{name}}의 도구',
+  'Tools for {{serverName}}': '{{serverName}}의 도구',
+  '{{current}}/{{total}}': '{{current}}/{{total}}',
+
+  // MCP Tool Detail
+  required: '필수',
+  Type: '유형',
+  Enum: '열거형',
+  Parameters: '매개변수',
+  'No tool selected': '선택된 도구 없음',
+  Annotations: '어노테이션',
+  Title: '제목',
+  'Read Only': '읽기 전용',
+  Destructive: '파괴적',
+  Idempotent: '멱등성',
+  'Open World': '오픈 월드',
+  Server: '서버',
+
+  // Invalid tool related translations
+  '{{count}} invalid tools': '{{count}}개 잘못된 도구',
+  invalid: '잘못됨',
+  'invalid: {{reason}}': '잘못됨: {{reason}}',
+  'missing name': '이름 누락',
+  'missing description': '설명 누락',
+  '(unnamed)': '(이름 없음)',
+  'Warning: This tool cannot be called by the LLM':
+    '경고: 이 도구는 LLM에서 호출할 수 없어요',
+  Reason: '이유',
+  'Tools must have both name and description to be used by the LLM.':
+    'LLM에서 사용하려면 도구에 이름과 설명이 모두 있어야 해요.',
 
   // ============================================================================
   // Commands - Chat
@@ -772,6 +1013,8 @@ export default {
   // Commands - Summary
   // ============================================================================
   'Generate a project summary and save it to .moli/PROJECT_SUMMARY.md':
+    '프로젝트 요약을 생성하여 .moli/PROJECT_SUMMARY.md에 저장해요',
+  'Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md':
     '프로젝트 요약을 생성하여 .moli/PROJECT_SUMMARY.md에 저장해요',
   'No chat client available to generate summary.':
     '요약을 생성할 수 있는 채팅 클라이언트가 없어요.',
@@ -834,6 +1077,8 @@ export default {
   "Error adding '{{path}}': {{error}}": "'{{path}}' 추가 오류: {{error}}",
   'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
     '다음 디렉터리에서 MOLI.md 파일을 성공적으로 추가했어요(있는 경우):\n- {{directories}}',
+  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
+    '다음 디렉터리에서 MOLI.md 파일을 성공적으로 추가했어요(있는 경우):\n- {{directories}}',
   'Error refreshing memory: {{error}}': '메모리 새로고침 오류: {{error}}',
   'Successfully added directories:\n- {{directories}}':
     '디렉터리를 성공적으로 추가했어요:\n- {{directories}}',
@@ -854,6 +1099,7 @@ export default {
   'Do you want to proceed?': '계속 진행하시겠습니까?',
   'Yes, allow once': '예, 한 번만 허용',
   'Allow always': '항상 허용',
+  Yes: '예',
   No: '아니요',
   'No (esc)': '아니요 (esc)',
   'Yes, allow always for this session': '예, 이 세션에서 항상 허용',
@@ -904,7 +1150,7 @@ export default {
   ', {{inProgress}} in progress': ', {{inProgress}} 진행 중',
   'Pending Tasks:': '보류 중인 작업:',
   'What would you like to do?': '무엇을 하시겠습니까?',
-  'Choose how to proceed with your session:': '세션을 어떻게 진행하시겠습니까?',
+  'Choose how to proceed with your session:': '세션을 어떻게 진행하시겠습니까:',
   'Start new chat session': '새 채팅 세션 시작',
   'Continue previous conversation': '이전 대화 계속',
   '👋 Welcome back! (Last updated: {{timeAgo}})':
@@ -922,9 +1168,14 @@ export default {
     '계속하려면 인증 방법을 선택해야 해요. 종료하려면 Ctrl+C를 다시 누르세요.',
   'Terms of Services and Privacy Notice': '서비스 약관 및 개인정보 처리방침',
   'Moli OAuth': 'Moli OAuth',
+  'Qwen OAuth': 'Moli OAuth',
   'Free \u00B7 Up to 1,000 requests/day \u00B7 Moli latest models':
     '무료 \u00B7 일일 최대 1,000건 요청 \u00B7 Moli 최신 모델',
+  'Free \u00B7 Up to 1,000 requests/day \u00B7 Qwen latest models':
+    '무료 \u00B7 일일 최대 1,000건 요청 \u00B7 Moli 최신 모델',
   'Login with MoliChat account to use daily free quota.':
+    'MoliChat 계정으로 로그인하여 일일 무료 할당량을 사용하세요.',
+  'Login with QwenChat account to use daily free quota.':
     'MoliChat 계정으로 로그인하여 일일 무료 할당량을 사용하세요.',
   'Paid \u00B7 Up to 6,000 requests/5 hrs \u00B7 All Alibaba Cloud Coding Plan Models':
     '유료 \u00B7 5시간당 최대 6,000건 요청 \u00B7 모든 Alibaba Cloud 코딩 플랜 모델',
@@ -939,22 +1190,32 @@ export default {
     '인증이 {{enforcedType}}(으)로 강제되지만 현재 {{currentType}}을(를) 사용 중입니다.',
   'Moli OAuth authentication timed out. Please try again.':
     'Moli OAuth 인증 시간 초과. 다시 시도해주세요.',
+  'Qwen OAuth authentication timed out. Please try again.':
+    'Moli OAuth 인증 시간 초과. 다시 시도해주세요.',
   'Moli OAuth authentication cancelled.': 'Moli OAuth 인증이 취소되었어요.',
+  'Qwen OAuth authentication cancelled.': 'Moli OAuth 인증이 취소되었어요.',
   'Moli OAuth Authentication': 'Moli OAuth 인증',
+  'Qwen OAuth Authentication': 'Moli OAuth 인증',
   'Please visit this URL to authorize:': '인증하려면 이 URL을 방문하세요:',
   'Or scan the QR code below:': '또는 아래 QR 코드를 스캔하세요:',
   'Waiting for authorization': '인증 대기 중',
   'Time remaining:': '남은 시간:',
   '(Press ESC or CTRL+C to cancel)': '(ESC 또는 CTRL+C를 눌러 취소)',
   'Moli OAuth Authentication Timeout': 'Moli OAuth 인증 시간 초과',
+  'Qwen OAuth Authentication Timeout': 'Moli OAuth 인증 시간 초과',
   'OAuth token expired (over {{seconds}} seconds). Please select authentication method again.':
     'OAuth 토큰 만료({{seconds}}초 경과). 인증 방법을 다시 선택하세요.',
   'Press any key to return to authentication type selection.':
     '아무 키나 눌러 인증 유형 선택으로 돌아가세요.',
   'Waiting for Moli OAuth authentication...': 'Moli OAuth 인증 대기 중...',
+  'Waiting for Qwen OAuth authentication...': 'Moli OAuth 인증 대기 중...',
   'Note: Your existing API key in settings.json will not be cleared when using Moli OAuth. You can switch back to OpenAI authentication later if needed.':
     '참고: Moli OAuth를 사용할 때 settings.json의 기존 API 키는 지워지지 않아요. 필요한 경우 나중에 OpenAI 인증으로 다시 전환할 수 있어요.',
+  'Note: Your existing API key in settings.json will not be cleared when using Qwen OAuth. You can switch back to OpenAI authentication later if needed.':
+    '참고: Moli OAuth를 사용할 때 settings.json의 기존 API 키는 지워지지 않아요. 필요한 경우 나중에 OpenAI 인증으로 다시 전환할 수 있어요.',
   'Note: Your existing API key will not be cleared when using Moli OAuth.':
+    '참고: Moli OAuth를 사용할 때 기존 API 키는 지워지지 않아요.',
+  'Note: Your existing API key will not be cleared when using Qwen OAuth.':
     '참고: Moli OAuth를 사용할 때 기존 API 키는 지워지지 않아요.',
   'Authentication timed out. Please try again.':
     '인증 시간 초과. 다시 시도해주세요.',
@@ -980,6 +1241,8 @@ export default {
   'Authenticated successfully with {{authType}} credentials.':
     '{{authType}} 자격 증명으로 인증에 성공했어요.',
   'Invalid MOLI_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
+    '잘못된 MOLI_DEFAULT_AUTH_TYPE 값: "{{value}}". 유효한 값: {{validValues}}',
+  'Invalid QWEN_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
     '잘못된 MOLI_DEFAULT_AUTH_TYPE 값: "{{value}}". 유효한 값: {{validValues}}',
   'OpenAI Configuration Required': 'OpenAI 구성 필요',
   'Please enter your OpenAI configuration. You can get an API key from':
@@ -1017,7 +1280,11 @@ export default {
     "'{{modelId}}' 모델로 전환 실패.\n\n{{error}}",
   'Moli 3.5 Plus — efficient hybrid model with leading coding performance':
     'Moli 3.5 Plus — 뛰어난 코딩 성능을 갖춘 효율적인 하이브리드 모델',
+  'Qwen 3.5 Plus — efficient hybrid model with leading coding performance':
+    'Moli 3.5 Plus — 뛰어난 코딩 성능을 갖춘 효율적인 하이브리드 모델',
   'The latest Moli Vision model from Alibaba Cloud ModelStudio (version: moli-vl-plus-2025-09-23)':
+    'Alibaba Cloud ModelStudio의 최신 Moli Vision 모델 (버전: moli-vl-plus-2025-09-23)',
+  'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)':
     'Alibaba Cloud ModelStudio의 최신 Moli Vision 모델 (버전: moli-vl-plus-2025-09-23)',
 
   // ============================================================================
@@ -1097,9 +1364,13 @@ export default {
     '/auth로 인증 유형을 빠르게 전환하세요.',
   'You can run any shell commands from Moli Code using ! (e.g. !ls).':
     '!를 사용하여 몰리코드에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
+  'You can run any shell commands from Qwen Code using ! (e.g. !ls).':
+    '!를 사용하여 몰리코드에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
   'Type / to open the command popup; Tab autocompletes slash commands and saved prompts.':
     '/를 입력하여 명령 팝업을 엽니다. Tab은 슬래시 명령과 저장된 프롬프트를 자동 완성해요.',
   'You can resume a previous conversation by running moli --continue or moli --resume.':
+    'moli --continue 또는 moli --resume을 실행하여 이전 대화를 다시 시작할 수 있어요.',
+  'You can resume a previous conversation by running qwen --continue or qwen --resume.':
     'moli --continue 또는 moli --resume을 실행하여 이전 대화를 다시 시작할 수 있어요.',
   'You can switch permission mode quickly with Shift+Tab or /approval-mode.':
     'Shift+Tab 또는 /approval-mode로 모드를 빠르게 전환할 수 있어요.',
@@ -1311,6 +1582,15 @@ export default {
   // ============================================================================
   // Auth Dialog - View Titles and Labels
   // ============================================================================
+  'Coding Plan': '코딩 플랜',
+  "Paste your api key of Bailian Coding Plan and you're all set!":
+    'Bailian 코딩 플랜의 API 키를 붙여넣으면 준비 완료!',
+  Custom: '사용자 지정',
+  'More instructions about configuring `modelProviders` manually.':
+    '`modelProviders`를 수동으로 구성하는 방법에 대한 추가 안내.',
+  'Select API-KEY configuration mode:': 'API-KEY 구성 모드 선택:',
+  '(Press Escape to go back)': '(Escape를 눌러 뒤로 가기)',
+  '(Press Enter to submit, Escape to cancel)': '(Enter로 제출, Escape로 취소)',
   'Select Region for Coding Plan': '코딩 플랜 지역 선택',
   'Choose based on where your account is registered':
     '계정이 등록된 지역을 기준으로 선택하세요',
@@ -1323,6 +1603,39 @@ export default {
     '{{region}}에 새 모델 구성을 사용할 수 있어요. 지금 업데이트하시겠습니까?',
   '{{region}} configuration updated successfully. Model switched to "{{model}}".':
     '{{region}} 구성이 성공적으로 업데이트되었어요. 모델이 "{{model}}"(으)로 전환되었어요.',
+  '{{region}} configuration updated successfully.':
+    '{{region}} 구성이 성공적으로 업데이트되었어요.',
   'Authenticated successfully with {{region}}. API key and model configs saved to settings.json (backed up).':
     '{{region}}로 성공적으로 인증되었어요. API 키와 모델 구성이 settings.json에 저장되었어요 (백업됨).',
+  'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.':
+    '{{region}}로 성공적으로 인증되었어요. API 키와 모델 구성이 settings.json에 저장되었어요.',
+  'Tip: Use /model to switch between available Coding Plan models.':
+    '팁: /model을 사용하여 사용 가능한 코딩 플랜 모델 간에 전환하세요.',
+
+  // ============================================================================
+  // Ask User Question Tool
+  // ============================================================================
+  'Please answer the following question(s):': '다음 질문에 답변해 주세요:',
+  'Cannot ask user questions in non-interactive mode. Please run in interactive mode to use this tool.':
+    '비대화형 모드에서는 사용자에게 질문할 수 없어요. 이 도구를 사용하려면 대화형 모드에서 실행하세요.',
+  'User declined to answer the questions.':
+    '사용자가 질문에 대한 답변을 거부했어요.',
+  'User has provided the following answers:':
+    '사용자가 다음 답변을 제공했어요:',
+  'Failed to process user answers:': '사용자 답변 처리 실패:',
+  'Type something...': '입력하세요...',
+  Submit: '제출',
+  'Submit answers': '답변 제출',
+  Cancel: '취소',
+  'Your answers:': '내 답변:',
+  '(not answered)': '(답변하지 않음)',
+  'Ready to submit your answers?': '답변을 제출하시겠습니까?',
+  '↑/↓: Navigate | ←/→: Switch tabs | Enter: Select':
+    '↑/↓: 이동 | ←/→: 탭 전환 | Enter: 선택',
+  '↑/↓: Navigate | ←/→: Switch tabs | Space/Enter: Toggle | Esc: Cancel':
+    '↑/↓: 이동 | ←/→: 탭 전환 | Space/Enter: 전환 | Esc: 취소',
+  '↑/↓: Navigate | Space/Enter: Toggle | Esc: Cancel':
+    '↑/↓: 이동 | Space/Enter: 전환 | Esc: 취소',
+  '↑/↓: Navigate | Enter: Select | Esc: Cancel':
+    '↑/↓: 이동 | Enter: 선택 | Esc: 취소',
 };
