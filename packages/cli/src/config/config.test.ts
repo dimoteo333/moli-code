@@ -147,11 +147,11 @@ vi.mock('@dobby/moli-code-core', async (importOriginal) => {
     ),
     DEFAULT_MEMORY_FILE_FILTERING_OPTIONS: {
       respectGitIgnore: false,
-      respectQwenIgnore: true,
+      respectMoliIgnore: true,
     },
     DEFAULT_FILE_FILTERING_OPTIONS: {
       respectGitIgnore: true,
-      respectQwenIgnore: true,
+      respectMoliIgnore: true,
     },
   };
 });
@@ -2123,13 +2123,13 @@ describe('loadCliConfig fileFiltering', () => {
       value: false,
     },
     {
-      property: 'respectQwenIgnore',
-      getter: (c) => c.getFileFilteringRespectQwenIgnore(),
+      property: 'respectMoliIgnore',
+      getter: (c) => c.getFileFilteringRespectMoliIgnore(),
       value: true,
     },
     {
-      property: 'respectQwenIgnore',
-      getter: (c) => c.getFileFilteringRespectQwenIgnore(),
+      property: 'respectMoliIgnore',
+      getter: (c) => c.getFileFilteringRespectMoliIgnore(),
       value: false,
     },
     {

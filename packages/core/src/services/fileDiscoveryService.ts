@@ -13,7 +13,7 @@ import * as path from 'node:path';
 
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;
-  respectQwenIgnore?: boolean;
+  respectMoliIgnore?: boolean;
 }
 
 export interface FilterReport {
@@ -42,14 +42,14 @@ export class FileDiscoveryService {
     filePaths: string[],
     options: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectQwenIgnore: true,
+      respectMoliIgnore: true,
     },
   ): string[] {
     return filePaths.filter((filePath) => {
       if (options.respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
         return false;
       }
-      if (options.respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
+      if (options.respectMoliIgnore && this.shouldQwenIgnoreFile(filePath)) {
         return false;
       }
       return true;
@@ -64,7 +64,7 @@ export class FileDiscoveryService {
     filePaths: string[],
     opts: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectQwenIgnore: true,
+      respectMoliIgnore: true,
     },
   ): FilterReport {
     const filteredPaths: string[] = [];
@@ -77,7 +77,7 @@ export class FileDiscoveryService {
         continue;
       }
 
-      if (opts.respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
+      if (opts.respectMoliIgnore && this.shouldQwenIgnoreFile(filePath)) {
         qwenIgnoredCount++;
         continue;
       }
@@ -121,13 +121,13 @@ export class FileDiscoveryService {
   ): boolean {
     const {
       respectGitIgnore = true,
-      respectQwenIgnore: respectQwenIgnore = true,
+      respectMoliIgnore: respectMoliIgnore = true,
     } = options;
 
     if (respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
       return true;
     }
-    if (respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
+    if (respectMoliIgnore && this.shouldQwenIgnoreFile(filePath)) {
       return true;
     }
     return false;

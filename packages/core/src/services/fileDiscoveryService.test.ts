@@ -98,7 +98,7 @@ describe('FileDiscoveryService', () => {
 
       const filtered = service.filterFiles(files, {
         respectGitIgnore: false,
-        respectQwenIgnore: true, // still respect this one
+        respectMoliIgnore: true, // still respect this one
       });
 
       expect(filtered).toEqual(
@@ -108,7 +108,7 @@ describe('FileDiscoveryService', () => {
       );
     });
 
-    it('should not filter files when respectQwenIgnore is false', () => {
+    it('should not filter files when respectMoliIgnore is false', () => {
       const files = [
         'src/index.ts',
         'node_modules/package/index.js',
@@ -119,7 +119,7 @@ describe('FileDiscoveryService', () => {
 
       const filtered = service.filterFiles(files, {
         respectGitIgnore: true,
-        respectQwenIgnore: false,
+        respectMoliIgnore: false,
       });
 
       expect(filtered).toEqual(

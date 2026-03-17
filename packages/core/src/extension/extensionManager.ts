@@ -252,7 +252,7 @@ async function convertGeminiOrClaudeExtension(
   pluginName?: string,
 ): Promise<{ extensionDir: string; originSource: ExtensionOriginSource }> {
   let newExtensionDir = extensionDir;
-  let originSource: ExtensionOriginSource = 'QwenCode';
+  let originSource: ExtensionOriginSource = 'MoliCode';
   const configFilePath = path.join(extensionDir, EXTENSIONS_CONFIG_FILENAME);
   if (fs.existsSync(configFilePath)) {
     newExtensionDir = extensionDir;
@@ -1090,7 +1090,7 @@ export class ExtensionManager {
         const installMetadata: ExtensionInstallMetadata = {
           source: extension.path,
           type: 'local',
-          originSource: extension.installMetadata?.originSource || 'QwenCode',
+          originSource: extension.installMetadata?.originSource || 'MoliCode',
         };
         await this.installExtension(
           installMetadata,

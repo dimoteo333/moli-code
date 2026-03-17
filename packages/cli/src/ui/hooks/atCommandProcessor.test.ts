@@ -50,10 +50,10 @@ describe('handleAtCommand', () => {
       isSandboxed: () => false,
       getFileService: () => new FileDiscoveryService(testRootDir),
       getFileFilteringRespectGitIgnore: () => true,
-      getFileFilteringRespectQwenIgnore: () => true,
+      getFileFilteringRespectMoliIgnore: () => true,
       getFileFilteringOptions: () => ({
         respectGitIgnore: true,
-        respectQwenIgnore: true,
+        respectMoliIgnore: true,
       }),
       getFileSystemService: () => new StandardFileSystemService(),
       getEnableRecursiveFileSearch: vi.fn(() => true),

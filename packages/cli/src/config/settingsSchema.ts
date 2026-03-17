@@ -832,7 +832,7 @@ const SETTINGS_SCHEMA = {
             description: 'Respect .gitignore files when searching',
             showInDialog: true,
           },
-          respectQwenIgnore: {
+          respectMoliIgnore: {
             type: 'boolean',
             label: 'Respect .qwenignore',
             category: 'Context',

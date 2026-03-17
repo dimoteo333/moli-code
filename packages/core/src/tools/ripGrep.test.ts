@@ -274,7 +274,7 @@ describe('RipGrepTool', () => {
       Object.assign(mockConfig, {
         getFileFilteringOptions: () => ({
           respectGitIgnore: true,
-          respectQwenIgnore: false,
+          respectMoliIgnore: false,
         }),
       });
 
@@ -298,7 +298,7 @@ describe('RipGrepTool', () => {
       Object.assign(mockConfig, {
         getFileFilteringOptions: () => ({
           respectGitIgnore: false,
-          respectQwenIgnore: true,
+          respectMoliIgnore: true,
         }),
       });
 

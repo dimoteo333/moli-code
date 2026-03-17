@@ -203,13 +203,13 @@ export async function handleAtCommand({
       respectFileIgnore.respectGitIgnore &&
       fileDiscovery.shouldIgnoreFile(pathName, {
         respectGitIgnore: true,
-        respectQwenIgnore: false,
+        respectMoliIgnore: false,
       });
     const qwenIgnored =
-      respectFileIgnore.respectQwenIgnore &&
+      respectFileIgnore.respectMoliIgnore &&
       fileDiscovery.shouldIgnoreFile(pathName, {
         respectGitIgnore: false,
-        respectQwenIgnore: true,
+        respectMoliIgnore: true,
       });
 
     if (gitIgnored || qwenIgnored) {

@@ -192,7 +192,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       rgArgs.push('--no-ignore-vcs');
     }
 
-    if (filteringOptions.respectQwenIgnore) {
+    if (filteringOptions.respectMoliIgnore) {
       const qwenIgnorePath = path.join(
         this.config.getTargetDir(),
         '.qwenignore',
@@ -224,9 +224,9 @@ class GrepToolInvocation extends BaseToolInvocation<
       respectGitIgnore:
         options?.respectGitIgnore ??
         DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-      respectQwenIgnore:
-        options?.respectQwenIgnore ??
-        DEFAULT_FILE_FILTERING_OPTIONS.respectQwenIgnore,
+      respectMoliIgnore:
+        options?.respectMoliIgnore ??
+        DEFAULT_FILE_FILTERING_OPTIONS.respectMoliIgnore,
     };
   }
 

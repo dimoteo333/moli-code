@@ -181,10 +181,10 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
             this.params.file_filtering_options?.respect_git_ignore ??
             this.config.getFileFilteringOptions().respectGitIgnore ??
             DEFAULT_FILE_FILTERING_OPTIONS.respectGitIgnore,
-          respectQwenIgnore:
+          respectMoliIgnore:
             this.params.file_filtering_options?.respect_qwen_ignore ??
-            this.config.getFileFilteringOptions().respectQwenIgnore ??
-            DEFAULT_FILE_FILTERING_OPTIONS.respectQwenIgnore,
+            this.config.getFileFilteringOptions().respectMoliIgnore ??
+            DEFAULT_FILE_FILTERING_OPTIONS.respectMoliIgnore,
         });
 
       const entries = [];

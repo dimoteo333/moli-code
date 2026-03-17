@@ -6,7 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  isQwenQuotaExceededError,
+  isMoliQuotaExceededError,
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   isApiError,
@@ -15,30 +15,30 @@ import {
 } from './quotaErrorDetection.js';
 
 describe('quotaErrorDetection', () => {
-  describe('isQwenQuotaExceededError', () => {
+  describe('isMoliQuotaExceededError', () => {
     it('should detect insufficient_quota error message', () => {
       const error = new Error('insufficient_quota');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect free allocated quota exceeded error message', () => {
       const error = new Error('Free allocated quota exceeded.');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded error message', () => {
       const error = new Error('quota exceeded');
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in string error', () => {
       const error = 'insufficient_quota';
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in structured error', () => {
       const error = { message: 'Free allocated quota exceeded.', status: 429 };
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should detect quota exceeded in API error', () => {
@@ -50,17 +50,17 @@ describe('quotaErrorDetection', () => {
           details: [],
         },
       };
-      expect(isQwenQuotaExceededError(error)).toBe(true);
+      expect(isMoliQuotaExceededError(error)).toBe(true);
     });
 
     it('should not detect throttling errors as quota exceeded', () => {
       const error = new Error('requests throttling triggered');
-      expect(isQwenQuotaExceededError(error)).toBe(false);
+      expect(isMoliQuotaExceededError(error)).toBe(false);
     });
 
     it('should not detect unrelated errors', () => {
       const error = new Error('Network error');
-      expect(isQwenQuotaExceededError(error)).toBe(false);
+      expect(isMoliQuotaExceededError(error)).toBe(false);
     });
   });
 

@@ -250,7 +250,7 @@ export class FileMessageHandler extends BaseMessageHandler {
           if (
             discovery.shouldIgnoreFile(uri.fsPath, {
               respectGitIgnore: true,
-              respectQwenIgnore: false,
+              respectMoliIgnore: false,
             })
           ) {
             return;

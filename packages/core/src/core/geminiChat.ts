@@ -35,7 +35,7 @@ import {
 } from '../telemetry/types.js';
 import { uiTelemetryService } from '../telemetry/uiTelemetry.js';
 
-const debugLogger = createDebugLogger('QWEN_CODE_CHAT');
+const debugLogger = createDebugLogger('MOLI_CODE_CHAT'); // MOLI: branded debug logger
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
