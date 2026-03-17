@@ -1,8 +1,8 @@
 /**
  * Terminal-Bench Integration Tests
  *
- * Tests qwen-code integration with terminal-bench tasks
- * using both oracle (for debugging) and qwen-code agents
+ * Tests moli-code integration with terminal-bench tasks
+ * using both oracle (for debugging) and moli-code agents
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
@@ -211,7 +211,7 @@ describe('terminal-bench integration', () => {
     );
 
     it(
-      `should complete ${taskId} task with qwen-code agent`,
+      `should complete ${taskId} task with moli-code agent`,
       async () => {
         rig.setup(`terminal-bench-qwen-${taskId}`);
 
@@ -221,11 +221,11 @@ describe('terminal-bench integration', () => {
         const apiKey = process.env['OPENAI_API_KEY'];
         if (!apiKey) {
           throw new Error(
-            'OPENAI_API_KEY environment variable is not set. This test requires an API key to run the qwen-code agent.',
+            'OPENAI_API_KEY environment variable is not set. This test requires an API key to run the moli-code agent.',
           );
         }
 
-        // Run qwen-code agent using spawn to avoid blocking event loop
+        // Run moli-code agent using spawn to avoid blocking event loop
         const args = [
           'run',
           '--agent-import-path',
@@ -233,7 +233,7 @@ describe('terminal-bench integration', () => {
           '--agent-kwarg',
           `api_key=${apiKey}`,
           '--agent-kwarg',
-          `version=${process.env['QWEN_CODE_VERSION'] || 'latest'}`,
+          `version=${process.env['MOLI_CODE_VERSION'] || 'latest'}`,
           '--dataset-path',
           ciTasksPath,
           '--task-id',
@@ -247,7 +247,7 @@ describe('terminal-bench integration', () => {
         const env = {
           ...process.env,
           OPENAI_API_KEY: apiKey,
-          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'qwen3-coder-plus',
+          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'moli-coder-plus',
           OPENAI_BASE_URL:
             process.env['OPENAI_BASE_URL'] ||
             'https://dashscope.aliyuncs.com/compatible-mode/v1',
@@ -271,7 +271,7 @@ describe('terminal-bench integration', () => {
           child.on('close', (code) => {
             if (code !== 0) {
               console.error(
-                `qwen-code agent failed for ${taskId} with stderr:`,
+                `moli-code agent failed for ${taskId} with stderr:`,
                 stderr,
               );
               reject(new Error(`Process exited with code ${code}: ${stderr}`));

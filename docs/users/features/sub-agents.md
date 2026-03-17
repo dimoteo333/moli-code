@@ -1,6 +1,6 @@
 # Subagents
 
-Subagents are specialized AI assistants that handle specific types of tasks within Qwen Code. They allow you to delegate focused work to AI agents that are configured with task-specific prompts, tools, and behaviors.
+Subagents are specialized AI assistants that handle specific types of tasks within Moli Code. They allow you to delegate focused work to AI agents that are configured with task-specific prompts, tools, and behaviors.
 
 ## What are Subagents?
 
@@ -69,8 +69,8 @@ Subagents are managed through the `/agents` slash command and its subcommands:
 
 Subagents are stored as Markdown files in multiple locations:
 
-- **Project-level**: `.qwen/agents/` (highest precedence)
-- **User-level**: `~/.qwen/agents/` (fallback)
+- **Project-level**: `.moli/agents/` (highest precedence)
+- **User-level**: `~/.moli/agents/` (fallback)
 - **Extension-level**: Provided by installed extensions
 
 This allows you to have project-specific agents, personal agents that work across all projects, and extension-provided agents that add specialized capabilities.
@@ -132,7 +132,7 @@ new contributors and end users understand the project.
 
 ### Automatic Delegation
 
-Qwen Code proactively delegates tasks based on:
+Moli Code proactively delegates tasks based on:
 
 - The task description in your request
 - The description field in Subagents configurations

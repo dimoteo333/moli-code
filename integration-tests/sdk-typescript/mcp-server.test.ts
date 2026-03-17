@@ -6,7 +6,7 @@
 
 /**
  * E2E tests for MCP (Model Context Protocol) server integration via SDK
- * Tests that the SDK can properly interact with MCP servers configured in qwen-code
+ * Tests that the SDK can properly interact with MCP servers configured in moli-code
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';

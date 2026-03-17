@@ -1,18 +1,18 @@
 # Commands
 
-This document details all commands supported by Qwen Code, helping you efficiently manage sessions, customize the interface, and control its behavior.
+This document details all commands supported by Moli Code, helping you efficiently manage sessions, customize the interface, and control its behavior.
 
-Qwen Code commands are triggered through specific prefixes and fall into three categories:
+Moli Code commands are triggered through specific prefixes and fall into three categories:
 
 | Prefix Type                | Function Description                                | Typical Use Case                                                 |
 | -------------------------- | --------------------------------------------------- | ---------------------------------------------------------------- |
-| Slash Commands (`/`)       | Meta-level control of Qwen Code itself              | Managing sessions, modifying settings, getting help              |
+| Slash Commands (`/`)       | Meta-level control of Moli Code itself              | Managing sessions, modifying settings, getting help              |
 | At Commands (`@`)          | Quickly inject local file content into conversation | Allowing AI to analyze specified files or code under directories |
 | Exclamation Commands (`!`) | Direct interaction with system Shell                | Executing system commands like `git status`, `ls`, etc.          |
 
 ## 1. Slash Commands (`/`)
 
-Slash commands are used to manage Qwen Code sessions, interface, and basic behavior.
+Slash commands are used to manage Moli Code sessions, interface, and basic behavior.
 
 ### 1.1 Session and Project Management
 
@@ -33,7 +33,7 @@ Commands for adjusting interface appearance and work environment.
 | Command      | Description                              | Usage Examples                |
 | ------------ | ---------------------------------------- | ----------------------------- |
 | `/clear`     | Clear terminal screen content            | `/clear` (shortcut: `Ctrl+L`) |
-| `/theme`     | Change Qwen Code visual theme            | `/theme`                      |
+| `/theme`     | Change Moli Code visual theme            | `/theme`                      |
 | `/vim`       | Turn input area Vim editing mode on/off  | `/vim`                        |
 | `/directory` | Manage multi-directory support workspace | `/dir add ./src,./tests`      |
 | `/editor`    | Open dialog to select supported editor   | `/editor`                     |
@@ -80,9 +80,9 @@ Commands for obtaining information and performing system settings.
 | `/stats`    | Display detailed statistics for current session | `/stats`                         |
 | `/settings` | Open settings editor                            | `/settings`                      |
 | `/auth`     | Change authentication method                    | `/auth`                          |
-| `/bug`      | Submit issue about Qwen Code                    | `/bug Button click unresponsive` |
+| `/bug`      | Submit issue about Moli Code                    | `/bug Button click unresponsive` |
 | `/copy`     | Copy last output content to clipboard           | `/copy`                          |
-| `/quit`     | Exit Qwen Code immediately                      | `/quit` or `/exit`               |
+| `/quit`     | Exit Moli Code immediately                      | `/quit` or `/exit`               |
 
 ### 1.6 Common Shortcuts
 
@@ -108,7 +108,7 @@ Note: Spaces in paths need to be escaped with backslash (e.g., `@My\ Documents/f
 
 ## 3. Exclamation Commands (`!`) - Shell Command Execution
 
-Exclamation commands allow you to execute system commands directly within Qwen Code.
+Exclamation commands allow you to execute system commands directly within Moli Code.
 
 | Command Format     | Description                                                        | Examples                               |
 | ------------------ | ------------------------------------------------------------------ | -------------------------------------- |
@@ -130,8 +130,8 @@ Save frequently used prompts as shortcut commands to improve work efficiency and
 | Function         | Description                                | Advantages                             | Priority | Applicable Scenarios                                 |
 | ---------------- | ------------------------------------------ | -------------------------------------- | -------- | ---------------------------------------------------- |
 | Namespace        | Subdirectory creates colon-named commands  | Better command organization            |          |                                                      |
-| Global Commands  | `~/.qwen/commands/`                        | Available in all projects              | Low      | Personal frequently used commands, cross-project use |
-| Project Commands | `<project root directory>/.qwen/commands/` | Project-specific, version-controllable | High     | Team sharing, project-specific commands              |
+| Global Commands  | `~/.moli/commands/`                        | Available in all projects              | Low      | Personal frequently used commands, cross-project use |
+| Project Commands | `<project root directory>/.moli/commands/` | Project-specific, version-controllable | High     | Team sharing, project-specific commands              |
 
 Priority Rules: Project commands > User commands (project command used when names are same)
 
@@ -141,8 +141,8 @@ Priority Rules: Project commands > User commands (project command used when name
 
 | File Location                            | Generated Command | Example Call          |
 | ---------------------------------------- | ----------------- | --------------------- |
-| `~/.qwen/commands/test.md`               | `/test`           | `/test Parameter`     |
-| `<project>/.qwen/commands/git/commit.md` | `/git:commit`     | `/git:commit Message` |
+| `~/.moli/commands/test.md`               | `/test`           | `/test Parameter`     |
+| `<project>/.moli/commands/git/commit.md` | `/git:commit`     | `/git:commit Message` |
 
 Naming Rules: Path separator (`/` or `\`) converted to colon (`:`)
 
@@ -256,8 +256,8 @@ Review {{args}}, reference standards:
 
 | Operation                     | Command/Code                              |
 | ----------------------------- | ----------------------------------------- |
-| 1. Create directory structure | `mkdir -p ~/.qwen/commands/refactor`      |
-| 2. Create command file        | `touch ~/.qwen/commands/refactor/pure.md` |
+| 1. Create directory structure | `mkdir -p ~/.moli/commands/refactor`      |
+| 2. Create command file        | `touch ~/.moli/commands/refactor/pure.md` |
 | 3. Edit command content       | Refer to the complete code below.         |
 | 4. Test command               | `@file.js` → `/refactor:pure`             |
 

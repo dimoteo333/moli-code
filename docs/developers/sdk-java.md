@@ -1,12 +1,12 @@
-# Qwen Code Java SDK
+# Moli Code Java SDK
 
-The Qwen Code Java SDK is a minimum experimental SDK for programmatic access to Qwen Code functionality. It provides a Java interface to interact with the Qwen Code CLI, allowing developers to integrate Qwen Code capabilities into their Java applications.
+The Moli Code Java SDK is a minimum experimental SDK for programmatic access to Moli Code functionality. It provides a Java interface to interact with the Moli Code CLI, allowing developers to integrate Moli Code capabilities into their Java applications.
 
 ## Requirements
 
 - Java >= 1.8
 - Maven >= 3.6.0 (for building from source)
-- qwen-code >= 0.5.0
+- moli-code >= 0.5.0
 
 ### Dependencies
 
@@ -131,7 +131,7 @@ other examples see src/test/java/com/alibaba/qwen/code/cli/example
 The SDK follows a layered architecture:
 
 - **API Layer**: Provides the main entry points through `QwenCodeCli` class with simple static methods for basic usage
-- **Session Layer**: Manages communication sessions with the Qwen Code CLI through the `Session` class
+- **Session Layer**: Manages communication sessions with the Moli Code CLI through the `Session` class
 - **Transport Layer**: Handles the communication mechanism between the SDK and CLI process (currently using process transport via `ProcessTransport`)
 - **Protocol Layer**: Defines data structures for communication based on the CLI protocol
 - **Utils**: Common utilities for concurrent execution, timeout handling, and error management
@@ -232,9 +232,9 @@ For proper operation, the following timeout relationships should be maintained:
 
 ### Transport Options
 
-The `TransportOptions` class allows configuration of how the SDK communicates with the Qwen Code CLI:
+The `TransportOptions` class allows configuration of how the SDK communicates with the Moli Code CLI:
 
-- `pathToQwenExecutable`: Path to the Qwen Code CLI executable
+- `pathToQwenExecutable`: Path to the Moli Code CLI executable
 - `cwd`: Working directory for the CLI process
 - `model`: AI model to use for the session
 - `permissionMode`: Permission mode that controls tool execution
@@ -268,7 +268,7 @@ The SDK uses a thread pool for managing concurrent operations with the following
 - **Maximum Pool Size**: 100 threads
 - **Keep-Alive Time**: 60 seconds
 - **Queue Capacity**: 300 tasks (using LinkedBlockingQueue)
-- **Thread Naming**: "qwen_code_cli-pool-{number}"
+- **Thread Naming**: "moli_code_cli-pool-{number}"
 - **Daemon Threads**: false
 - **Rejected Execution Handler**: CallerRunsPolicy
 

@@ -1,14 +1,14 @@
-# Qwen Code Architecture Overview
+# Moli Code Architecture Overview
 
-This document provides a high-level overview of Qwen Code's architecture.
+This document provides a high-level overview of Moli Code's architecture.
 
 ## Core Components
 
-Qwen Code is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input:
+Moli Code is primarily composed of two main packages, along with a suite of tools that can be used by the system in the course of handling command-line input:
 
 ### 1. CLI Package (`packages/cli`)
 
-**Purpose:** This contains the user-facing portion of Qwen Code, such as handling the initial user input, presenting the final output, and managing the overall user experience.
+**Purpose:** This contains the user-facing portion of Moli Code, such as handling the initial user input, presenting the final output, and managing the overall user experience.
 
 **Key Functions:**
 
@@ -20,7 +20,7 @@ Qwen Code is primarily composed of two main packages, along with a suite of tool
 
 ### 2. Core Package (`packages/core`)
 
-**Purpose:** This acts as the backend for Qwen Code. It receives requests sent from `packages/cli`, orchestrates interactions with the configured model API, and manages the execution of available tools.
+**Purpose:** This acts as the backend for Moli Code. It receives requests sent from `packages/cli`, orchestrates interactions with the configured model API, and manages the execution of available tools.
 
 **Key Functions:**
 
@@ -46,7 +46,7 @@ Qwen Code is primarily composed of two main packages, along with a suite of tool
 
 ## Interaction Flow
 
-A typical interaction with Qwen Code follows this flow:
+A typical interaction with Moli Code follows this flow:
 
 1.  **User Input:** The user types a prompt or command into the terminal, which is managed by `packages/cli`.
 2.  **Request to Core:** `packages/cli` sends the user's input to `packages/core`.
@@ -65,14 +65,14 @@ A typical interaction with Qwen Code follows this flow:
 
 ## Configuration Options
 
-Qwen Code offers multiple ways to configure its behavior:
+Moli Code offers multiple ways to configure its behavior:
 
 ### Configuration Layers (in order of precedence)
 
 1. Command-line arguments
 2. Environment variables
-3. Project settings file (`.qwen/settings.json`)
-4. User settings file (`~/.qwen/settings.json`)
+3. Project settings file (`.moli/settings.json`)
+4. User settings file (`~/.moli/settings.json`)
 5. System settings files
 6. Default values
 

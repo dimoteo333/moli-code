@@ -1,6 +1,6 @@
 # Ignoring Files
 
-This document provides an overview of the Moli Ignore (`.moliignore`) feature of Moli Code.
+This document provides an overview of the Qwen Ignore (`.moliignore`) feature of Moli Code.
 
 Moli Code includes the ability to automatically ignore files, similar to `.gitignore` (used by Git). Adding paths to your `.moliignore` file will exclude them from tools that support this feature, although they will still be visible to other services (such as Git).
 

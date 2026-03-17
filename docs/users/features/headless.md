@@ -1,12 +1,12 @@
 # Headless Mode
 
-Headless mode allows you to run Qwen Code programmatically from command line
+Headless mode allows you to run Moli Code programmatically from command line
 scripts and automation tools without any interactive UI. This is ideal for
 scripting, automation, CI/CD pipelines, and building AI-powered tools.
 
 ## Overview
 
-The headless mode provides a headless interface to Qwen Code that:
+The headless mode provides a headless interface to Moli Code that:
 
 - Accepts prompts via command line arguments or stdin
 - Returns structured output (text or JSON)
@@ -27,7 +27,7 @@ qwen --prompt "What is machine learning?"
 
 ### Stdin Input
 
-Pipe input to Qwen Code from your terminal:
+Pipe input to Moli Code from your terminal:
 
 ```bash
 echo "Explain this code" | qwen
@@ -35,7 +35,7 @@ echo "Explain this code" | qwen
 
 ### Combining with File Input
 
-Read from files and process with Qwen Code:
+Read from files and process with Moli Code:
 
 ```bash
 cat README.md | qwen --prompt "Summarize this documentation"
@@ -55,12 +55,12 @@ qwen --resume 123e4567-e89b-12d3-a456-426614174000 -p "Apply the follow-up refac
 
 > [!note]
 >
-> - Session data is project-scoped JSONL under `~/.qwen/projects/<sanitized-cwd>/chats`.
+> - Session data is project-scoped JSONL under `~/.moli/projects/<sanitized-cwd>/chats`.
 > - Restores conversation history, tool outputs, and chat-compression checkpoints before sending the new prompt.
 
 ## Output Formats
 
-Qwen Code supports multiple output formats for different use cases:
+Moli Code supports multiple output formats for different use cases:
 
 ### Text Output (Default)
 
@@ -156,7 +156,7 @@ qwen -p "Write a Python script" --output-format stream-json --include-partial-me
 
 ### Input Format
 
-The `--input-format` parameter controls how Qwen Code consumes input from standard input:
+The `--input-format` parameter controls how Moli Code consumes input from standard input:
 
 - **`text`** (default): Standard text input from stdin or command-line arguments
 - **`stream-json`**: JSON message protocol via stdin for bidirectional communication

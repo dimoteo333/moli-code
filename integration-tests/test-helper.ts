@@ -487,7 +487,7 @@ export class TestRig {
         return logs.some(
           (logData) =>
             logData.attributes &&
-            logData.attributes['event.name'] === `qwen-code.${eventName}`,
+            logData.attributes['event.name'] === `moli-code.${eventName}`,
         );
       },
       timeout,
@@ -661,7 +661,7 @@ export class TestRig {
                 }
               } else if (
                 obj.attributes &&
-                obj.attributes['event.name'] === 'qwen-code.tool_call'
+                obj.attributes['event.name'] === 'moli-code.tool_call'
               ) {
                 logs.push({
                   timestamp: obj.attributes['event.timestamp'],
@@ -767,7 +767,7 @@ export class TestRig {
       // Look for tool call logs
       if (
         logData.attributes &&
-        logData.attributes['event.name'] === 'qwen-code.tool_call'
+        logData.attributes['event.name'] === 'moli-code.tool_call'
       ) {
         const toolName = logData.attributes.function_name;
         logs.push({
@@ -789,7 +789,7 @@ export class TestRig {
     const apiRequests = logs.filter(
       (logData) =>
         logData.attributes &&
-        logData.attributes['event.name'] === 'qwen-code.api_request',
+        logData.attributes['event.name'] === 'moli-code.api_request',
     );
     return apiRequests.pop() || null;
   }
@@ -800,7 +800,7 @@ export class TestRig {
       if (logData.scopeMetrics) {
         for (const scopeMetric of logData.scopeMetrics) {
           for (const metric of scopeMetric.metrics) {
-            if (metric.descriptor.name === `qwen-code.${metricName}`) {
+            if (metric.descriptor.name === `moli-code.${metricName}`) {
               return metric;
             }
           }
