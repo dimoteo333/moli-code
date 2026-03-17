@@ -45,7 +45,7 @@ import { insightCommand } from '../ui/commands/insightCommand.js';
 
 /**
  * Loads the core, hard-coded slash commands that are an integral part
- * of the Qwen Code application.
+ * of the Moli Code application.
  */
 export class BuiltinCommandLoader implements ICommandLoader {
   constructor(private config: Config | null) {}

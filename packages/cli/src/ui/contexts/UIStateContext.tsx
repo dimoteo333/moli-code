@@ -17,6 +17,7 @@ import type {
   PluginChoiceRequest,
 } from '../types.js';
 import type { QwenAuthState } from '../hooks/useQwenAuth.js';
+import type { MoliAuthState } from '../hooks/useMoliAuth.js';
 import type { CommandContext, SlashCommand } from '../commands/types.js';
 import type { TextBuffer } from '../components/shared/text-buffer.js';
 import type {
@@ -46,6 +47,8 @@ export interface UIState {
   pendingAuthType: AuthType | undefined;
   // Qwen OAuth state
   qwenAuthState: QwenAuthState;
+  // Moli OAuth state
+  moliAuthState: MoliAuthState;
   editorError: string | null;
   isEditorDialogOpen: boolean;
   debugMessage: string;

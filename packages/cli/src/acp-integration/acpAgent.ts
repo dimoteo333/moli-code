@@ -10,8 +10,8 @@ import {
   AuthType,
   clearCachedCredentialFile,
   createDebugLogger,
-  QwenOAuth2Event,
-  qwenOAuth2Events,
+  MoliOAuth2Event,
+  moliOAuth2Events,
   MCPServerConfig,
   SessionService,
   tokenLimit,
@@ -83,7 +83,7 @@ export async function runAcpAgent(
 
   const stream = ndJsonStream(stdout, stdin);
   const connection = new AgentSideConnection(
-    (conn) => new QwenAgent(config, settings, argv, conn),
+    (conn) => new MoliAgent(config, settings, argv, conn),
     stream,
   );
 
@@ -97,7 +97,7 @@ function toStdioServer(server: McpServer): McpServerStdio | undefined {
   return undefined;
 }
 
-class QwenAgent implements Agent {
+class MoliAgent implements Agent {
   private sessions: Map<string, Session> = new Map();
   private clientCapabilities: ClientCapabilities | undefined;
 
@@ -116,8 +116,8 @@ class QwenAgent implements Agent {
     return {
       protocolVersion: PROTOCOL_VERSION,
       agentInfo: {
-        name: 'qwen-code',
-        title: 'Qwen Code',
+        name: 'moli-code',
+        title: 'Moli Code',
         version,
       },
       authMethods,
@@ -148,7 +148,7 @@ class QwenAgent implements Agent {
     };
 
     if (method === AuthType.MOLI_OAUTH) {
-      qwenOAuth2Events.once(QwenOAuth2Event.AuthUri, authUriHandler);
+      moliOAuth2Events.once(MoliOAuth2Event.AuthUri, authUriHandler);
     }
 
     await clearCachedCredentialFile();
@@ -161,7 +161,7 @@ class QwenAgent implements Agent {
       );
     } finally {
       if (method === AuthType.MOLI_OAUTH) {
-        qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, authUriHandler);
+        moliOAuth2Events.off(MoliOAuth2Event.AuthUri, authUriHandler);
       }
     }
   }
@@ -381,7 +381,7 @@ class QwenAgent implements Agent {
     if (!selectedType) {
       throw RequestError.authRequired(
         { authMethods: this.pickAuthMethodsForAuthRequired() },
-        'Use Qwen Code CLI to authenticate first.',
+        'Use Moli Code CLI to authenticate first.',
       );
     }
 
@@ -406,12 +406,12 @@ class QwenAgent implements Agent {
     const errorMessage = this.extractErrorMessage(error);
     if (
       errorMessage?.includes('moli-oauth') ||
-      errorMessage?.includes('Qwen OAuth')
+      errorMessage?.includes('Moli OAuth')
     ) {
-      const qwenOAuthMethods = authMethods.filter(
+      const moliOAuthMethods = authMethods.filter(
         (m) => m.id === AuthType.MOLI_OAUTH,
       );
-      return qwenOAuthMethods.length ? qwenOAuthMethods : authMethods;
+      return moliOAuthMethods.length ? moliOAuthMethods : authMethods;
     }
 
     if (selectedType) {

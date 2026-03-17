@@ -42,7 +42,7 @@ export function buildWebSearchConfig(
   settings: Settings,
   authType?: string,
 ): WebSearchConfig | undefined {
-  const isQwenOAuth = authType === AuthType.MOLI_OAUTH;
+  const isMoliOAuth = authType === AuthType.MOLI_OAUTH;
 
   // Step 1: Collect providers from settings or command line/env
   let providers: WebSearchProviderConfig[] = [];
@@ -77,8 +77,8 @@ export function buildWebSearchConfig(
     }
   }
 
-  // Step 2: Ensure dashscope is available for qwen-oauth users
-  if (isQwenOAuth) {
+  // Step 2: Ensure dashscope is available for moli-oauth users
+  if (isMoliOAuth) {
     const hasDashscope = providers.some((p) => p.type === 'dashscope');
     if (!hasDashscope) {
       providers.push({ type: 'dashscope' } as WebSearchProviderConfig);

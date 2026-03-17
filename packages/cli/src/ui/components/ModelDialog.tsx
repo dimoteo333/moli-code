@@ -158,7 +158,7 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       modelsByAuthTypeMap.get(authType)!.push(model);
     }
 
-    // Fixed order: qwen-oauth first, then others in a stable order
+    // Fixed order: moli-oauth first, then others in a stable order
     const authTypeOrder: AuthType[] = [
       AuthType.MOLI_OAUTH,
       AuthType.USE_OPENAI,

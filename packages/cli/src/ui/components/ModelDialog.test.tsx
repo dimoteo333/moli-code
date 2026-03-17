@@ -15,7 +15,7 @@ import type { Config } from '@dobby/moli-code-core';
 import { AuthType, DEFAULT_MOLI_MODEL } from '@dobby/moli-code-core';
 import type { LoadedSettings } from '../../config/settings.js';
 import { SettingScope } from '../../config/settings.js';
-import { getFilteredQwenModels } from '../models/availableModels.js';
+import { getFilteredMoliModels } from '../models/availableModels.js';
 
 vi.mock('../hooks/useKeypress.js', () => ({
   useKeypress: vi.fn(),
@@ -30,7 +30,7 @@ vi.mock('./shared/DescriptiveRadioButtonSelect.js', () => ({
 const createMockGetAvailableModelsForAuthType = () =>
   vi.fn((t: AuthType) => {
     if (t === AuthType.MOLI_OAUTH) {
-      return getFilteredQwenModels().map((m) => ({
+      return getFilteredMoliModels().map((m) => ({
         id: m.id,
         label: m.label,
         authType: AuthType.MOLI_OAUTH,
@@ -63,7 +63,7 @@ const renderComponent = (
     switchModel: vi.fn().mockResolvedValue(undefined),
     getAuthType: vi.fn(() => 'moli-oauth'),
     getAllConfiguredModels: vi.fn(() =>
-      getFilteredQwenModels().map((m) => ({
+      getFilteredMoliModels().map((m) => ({
         id: m.id,
         label: m.label,
         description: m.description || '',
@@ -124,7 +124,7 @@ describe('<ModelDialog />', () => {
     expect(mockedSelect).toHaveBeenCalledTimes(1);
 
     const props = mockedSelect.mock.calls[0][0];
-    expect(props.items).toHaveLength(getFilteredQwenModels().length);
+    expect(props.items).toHaveLength(getFilteredMoliModels().length);
     // coder-model is the only model and it has vision capability
     expect(props.items[0].value).toBe(
       `${AuthType.MOLI_OAUTH}::${DEFAULT_MOLI_MODEL}`,
@@ -145,8 +145,8 @@ describe('<ModelDialog />', () => {
 
     expect(mockGetModel).toHaveBeenCalled();
     // Calculate expected index dynamically based on model list
-    const qwenModels = getFilteredQwenModels();
-    const expectedIndex = qwenModels.findIndex(
+    const moliModels = getFilteredMoliModels();
+    const expectedIndex = moliModels.findIndex(
       (m) => m.id === DEFAULT_MOLI_MODEL,
     );
     expect(mockedSelect).toHaveBeenCalledWith(
@@ -198,7 +198,7 @@ describe('<ModelDialog />', () => {
       {
         getAvailableModelsForAuthType: vi.fn((t: AuthType) => {
           if (t === AuthType.MOLI_OAUTH) {
-            return getFilteredQwenModels().map((m) => ({
+            return getFilteredMoliModels().map((m) => ({
               id: m.id,
               label: m.label,
               authType: AuthType.MOLI_OAUTH,
@@ -240,7 +240,7 @@ describe('<ModelDialog />', () => {
         return [{ id: 'gpt-4', label: 'GPT-4', authType: t }];
       }
       if (t === AuthType.MOLI_OAUTH) {
-        return getFilteredQwenModels().map((m) => ({
+        return getFilteredMoliModels().map((m) => ({
           id: m.id,
           label: m.label,
           authType: AuthType.MOLI_OAUTH,
@@ -346,7 +346,7 @@ describe('<ModelDialog />', () => {
               getAvailableModelsForAuthType:
                 createMockGetAvailableModelsForAuthType(),
               getAllConfiguredModels: vi.fn(() =>
-                getFilteredQwenModels().map((m) => ({
+                getFilteredMoliModels().map((m) => ({
                   id: m.id,
                   label: m.label,
                   description: m.description || '',
@@ -370,7 +370,7 @@ describe('<ModelDialog />', () => {
       getAuthType: mockGetAuthType,
       getAvailableModelsForAuthType: createMockGetAvailableModelsForAuthType(),
       getAllConfiguredModels: vi.fn(() =>
-        getFilteredQwenModels().map((m) => ({
+        getFilteredMoliModels().map((m) => ({
           id: m.id,
           label: m.label,
           description: m.description || '',
@@ -390,8 +390,8 @@ describe('<ModelDialog />', () => {
     // Should be called at least twice: initial render + re-render after context change
     expect(mockedSelect).toHaveBeenCalledTimes(2);
     // Calculate expected index for DEFAULT_MOLI_MODEL dynamically
-    const qwenModels = getFilteredQwenModels();
-    const expectedCoderIndex = qwenModels.findIndex(
+    const moliModels = getFilteredMoliModels();
+    const expectedCoderIndex = moliModels.findIndex(
       (m) => m.id === DEFAULT_MOLI_MODEL,
     );
     expect(mockedSelect.mock.calls[1][0].initialIndex).toBe(expectedCoderIndex);

@@ -53,8 +53,8 @@ export function generateCodingPlanTemplate(
     // This ensures existing users don't get prompted for unnecessary updates
     return [
       {
-        id: 'qwen3.5-plus',
-        name: '[Bailian Coding Plan] qwen3.5-plus',
+        id: 'moli3.5-plus',
+        name: '[Bailian Coding Plan] moli3.5-plus',
         baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
         envKey: CODING_PLAN_ENV_KEY,
         generationConfig: {
@@ -101,8 +101,8 @@ export function generateCodingPlanTemplate(
         },
       },
       {
-        id: 'qwen3-coder-plus',
-        name: '[Bailian Coding Plan] qwen3-coder-plus',
+        id: 'moli-coder-plus',
+        name: '[Bailian Coding Plan] moli-coder-plus',
         baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
         envKey: CODING_PLAN_ENV_KEY,
         generationConfig: {
@@ -110,8 +110,8 @@ export function generateCodingPlanTemplate(
         },
       },
       {
-        id: 'qwen3-coder-next',
-        name: '[Bailian Coding Plan] qwen3-coder-next',
+        id: 'moli-coder-next',
+        name: '[Bailian Coding Plan] moli-coder-next',
         baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
         envKey: CODING_PLAN_ENV_KEY,
         generationConfig: {
@@ -119,8 +119,8 @@ export function generateCodingPlanTemplate(
         },
       },
       {
-        id: 'qwen3-max-2026-01-23',
-        name: '[Bailian Coding Plan] qwen3-max-2026-01-23',
+        id: 'moli-max-2026-01-23',
+        name: '[Bailian Coding Plan] moli-max-2026-01-23',
         baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
         envKey: CODING_PLAN_ENV_KEY,
         generationConfig: {
@@ -148,8 +148,8 @@ export function generateCodingPlanTemplate(
   // Global region uses Bailian Coding Plan branding for Global/Intl
   return [
     {
-      id: 'qwen3.5-plus',
-      name: '[Bailian Coding Plan for Global/Intl] qwen3.5-plus',
+      id: 'moli3.5-plus',
+      name: '[Bailian Coding Plan for Global/Intl] moli3.5-plus',
       baseUrl: 'https://coding-intl.dashscope.aliyuncs.com/v1',
       envKey: CODING_PLAN_ENV_KEY,
       generationConfig: {
@@ -160,8 +160,8 @@ export function generateCodingPlanTemplate(
       },
     },
     {
-      id: 'qwen3-coder-plus',
-      name: '[Bailian Coding Plan for Global/Intl] qwen3-coder-plus',
+      id: 'moli-coder-plus',
+      name: '[Bailian Coding Plan for Global/Intl] moli-coder-plus',
       baseUrl: 'https://coding-intl.dashscope.aliyuncs.com/v1',
       envKey: CODING_PLAN_ENV_KEY,
       generationConfig: {
@@ -169,8 +169,8 @@ export function generateCodingPlanTemplate(
       },
     },
     {
-      id: 'qwen3-coder-next',
-      name: '[Bailian Coding Plan for Global/Intl] qwen3-coder-next',
+      id: 'moli-coder-next',
+      name: '[Bailian Coding Plan for Global/Intl] moli-coder-next',
       baseUrl: 'https://coding-intl.dashscope.aliyuncs.com/v1',
       envKey: CODING_PLAN_ENV_KEY,
       generationConfig: {
@@ -178,8 +178,8 @@ export function generateCodingPlanTemplate(
       },
     },
     {
-      id: 'qwen3-max-2026-01-23',
-      name: '[Bailian Coding Plan for Global/Intl] qwen3-max-2026-01-23',
+      id: 'moli-max-2026-01-23',
+      name: '[Bailian Coding Plan for Global/Intl] moli-max-2026-01-23',
       baseUrl: 'https://coding-intl.dashscope.aliyuncs.com/v1',
       envKey: CODING_PLAN_ENV_KEY,
       generationConfig: {

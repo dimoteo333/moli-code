@@ -26,6 +26,7 @@ export interface OpenAICredentials {
   model?: string;
 }
 import { useQwenAuth } from '../hooks/useQwenAuth.js';
+import { useMoliAuth } from '../hooks/useMoliAuth.js';
 import { AuthState, MessageType } from '../types.js';
 import type { HistoryItem } from '../types.js';
 import { t } from '../../i18n/index.js';
@@ -60,6 +61,11 @@ export const useAuthCommand = (
   );
 
   const { qwenAuthState, cancelQwenAuth } = useQwenAuth(
+    pendingAuthType,
+    isAuthenticating,
+  );
+
+  const { moliAuthState, cancelMoliAuth: _cancelMoliAuth } = useMoliAuth(
     pendingAuthType,
     isAuthenticating,
   );
@@ -470,6 +476,7 @@ export const useAuthCommand = (
     isAuthenticating,
     pendingAuthType,
     qwenAuthState,
+    moliAuthState,
     handleAuthSelect,
     handleCodingPlanSubmit,
     openAuthDialog,

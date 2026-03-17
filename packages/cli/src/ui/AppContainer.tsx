@@ -405,6 +405,7 @@ export const AppContainer = (props: AppContainerProps) => {
     isAuthenticating,
     pendingAuthType,
     qwenAuthState,
+    moliAuthState,
     handleAuthSelect,
     handleCodingPlanSubmit,
     openAuthDialog,
@@ -1348,6 +1349,8 @@ export const AppContainer = (props: AppContainerProps) => {
       pendingAuthType,
       // Qwen OAuth state
       qwenAuthState,
+      // Moli OAuth state
+      moliAuthState,
       editorError,
       isEditorDialogOpen,
       debugMessage,
@@ -1441,6 +1444,8 @@ export const AppContainer = (props: AppContainerProps) => {
       pendingAuthType,
       // Qwen OAuth state
       qwenAuthState,
+      // Moli OAuth state
+      moliAuthState,
       editorError,
       isEditorDialogOpen,
       debugMessage,

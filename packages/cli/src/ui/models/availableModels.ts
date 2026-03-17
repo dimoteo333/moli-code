@@ -28,16 +28,16 @@ const CACHED_MOLI_OAUTH_MODELS: AvailableModel[] = MOLI_OAUTH_MODELS.map(
   }),
 );
 
-function getQwenOAuthModels(): readonly AvailableModel[] {
+function getMoliOAuthModels(): readonly AvailableModel[] {
   return CACHED_MOLI_OAUTH_MODELS;
 }
 
 /**
- * Get available Qwen models
+ * Get available Moli models
  * coder-model now has vision capabilities by default.
  */
-export function getFilteredQwenModels(): AvailableModel[] {
-  return [...getQwenOAuthModels()];
+export function getFilteredMoliModels(): AvailableModel[] {
+  return [...getMoliOAuthModels()];
 }
 
 /**
@@ -113,7 +113,7 @@ export function getAvailableModelsForAuthType(
   // Fall back to environment variables for specific auth types (no config provided)
   switch (authType) {
     case AuthType.MOLI_OAUTH: {
-      return [...getQwenOAuthModels()];
+      return [...getMoliOAuthModels()];
     }
     case AuthType.USE_OPENAI: {
       const openAIModel = getOpenAIAvailableModelFromEnv();
