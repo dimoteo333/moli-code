@@ -142,7 +142,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedLockFile = path.join(
       '/home/test',
-      '.qwen',
+      '.moli',
       'ide',
       `${port}.lock`,
     );
@@ -174,7 +174,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedLockFile = path.join(
       '/home/test',
-      '.qwen',
+      '.moli',
       'ide',
       `${port}.lock`,
     );
@@ -206,7 +206,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedLockFile = path.join(
       '/home/test',
-      '.qwen',
+      '.moli',
       'ide',
       `${port}.lock`,
     );
@@ -252,7 +252,7 @@ describe('IDEServer', () => {
     const port = getPortFromMock(replaceMock);
     const expectedLockFile = path.join(
       '/home/test',
-      '.qwen',
+      '.moli',
       'ide',
       `${port}.lock`,
     );
@@ -295,7 +295,7 @@ describe('IDEServer', () => {
     await ideServer.start(mockContext);
     const replaceMock = mockContext.environmentVariableCollection.replace;
     const port = getPortFromMock(replaceMock);
-    const lockFile = path.join('/home/test', '.qwen', 'ide', `${port}.lock`);
+    const lockFile = path.join('/home/test', '.moli', 'ide', `${port}.lock`);
     expect(fs.writeFile).toHaveBeenCalledWith(lockFile, expect.any(String));
 
     await ideServer.stop();
@@ -324,7 +324,7 @@ describe('IDEServer', () => {
       const port = getPortFromMock(replaceMock);
       const expectedLockFile = path.join(
         '/home/test',
-        '.qwen',
+        '.moli',
         'ide',
         `${port}.lock`,
       );
