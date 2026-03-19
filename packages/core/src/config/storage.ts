@@ -7,9 +7,9 @@
 import * as path from 'node:path';
 import * as os from 'node:os';
 import * as fs from 'node:fs';
-import { getProjectHash } from '../utils/paths.js';
+import { getProjectHash } from '../utils/paths.js'; // MOLI: removed sanitizeCwd import
 
-export const MOLI_DIR = '.moli';
+export const MOLI_DIR = '.moli'; // MOLI: renamed from MOLI_DIR
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 export const OAUTH_FILE = 'oauth_creds.json';
 const TMP_DIR_NAME = 'tmp';
@@ -78,11 +78,12 @@ export class Storage {
   }
 
   getMoliDir(): string {
+    // MOLI: renamed from getMoliDir
     return path.join(this.targetDir, MOLI_DIR);
   }
 
   getProjectDir(): string {
-    const projectId = this.sanitizeCwd(this.getProjectRoot());
+    const projectId = this.sanitizeCwd(this.getProjectRoot()); // MOLI: use instance method
     const projectsDir = path.join(Storage.getGlobalMoliDir(), PROJECT_DIR_NAME);
     return path.join(projectsDir, projectId);
   }
@@ -130,7 +131,7 @@ export class Storage {
   }
 
   getExtensionsConfigPath(): string {
-    return path.join(this.getExtensionsDir(), 'moli-extension.json');
+    return path.join(this.getExtensionsDir(), 'moli-extension.json'); // MOLI: renamed
   }
 
   getUserSkillsDir(): string {
@@ -141,8 +142,8 @@ export class Storage {
     return path.join(this.getProjectTempDir(), 'shell_history');
   }
 
+  // MOLI: private sanitizeCwd moved from utils/paths.js
   private sanitizeCwd(cwd: string): string {
-    // On Windows, normalize to lowercase for case-insensitive matching
     const normalizedCwd = os.platform() === 'win32' ? cwd.toLowerCase() : cwd;
     return normalizedCwd.replace(/[^a-zA-Z0-9]/g, '-');
   }

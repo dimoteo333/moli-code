@@ -4,28 +4,29 @@ version = "0.1.0"
 schema_version = 1
 authors = ["Moli Team"]
 description = "Moli Code Agent Server Extension for Zed"
-repository = "https://github.com/dimoteo333/moli-code"
+repository = "https://github.com/MoliLM/moli-code"
 
 [agent_servers.moli-code]
 name = "Moli Code"
 icon = "moli-code.svg"
 
 [agent_servers.moli-code.targets.darwin-aarch64]
-archive = "https://registry.npmjs.org/@dobby/moli-code/-/moli-code-0.10.0.tgz"
+archive = "https://registry.npmjs.org/@moli-code/moli-code/-/moli-code-0.10.0.tgz"
 cmd = "node"
 args = ["./package/cli.js", "--acp"]
 
 [agent_servers.moli-code.targets.darwin-x86_64]
-archive = "https://registry.npmjs.org/@dobby/moli-code/-/moli-code-0.10.0.tgz"
+archive = "https://registry.npmjs.org/@moli-code/moli-code/-/moli-code-0.10.0.tgz"
 cmd = "node"
 args = ["./package/cli.js", "--acp"]
 
 [agent_servers.moli-code.targets.linux-x86_64]
-archive = "https://registry.npmjs.org/@dobby/moli-code/-/moli-code-0.10.0.tgz"
+archive = "https://registry.npmjs.org/@moli-code/moli-code/-/moli-code-0.10.0.tgz"
 cmd = "node"
 args = ["./package/cli.js", "--acp"]
 
 [agent_servers.moli-code.targets.windows-x86_64]
-archive = "https://registry.npmjs.org/@dobby/moli-code/-/moli-code-0.10.0.tgz"
+archive = "https://registry.npmjs.org/@moli-code/moli-code/-/moli-code-0.10.0.tgz"
 cmd = "node"
 args = ["./package/cli.js", "--acp"]
+

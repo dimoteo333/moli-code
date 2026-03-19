@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -229,9 +229,8 @@ export class LspServerManager {
           commandCwd,
         ))
       ) {
-        const hint = this.getInstallHint(handle.config.command);
         debugLogger.warn(
-          `LSP server ${name} command not found: ${handle.config.command}${hint ? `. ${hint}` : ''}`,
+          `LSP server ${name} command not found: ${handle.config.command}`,
         );
         handle.status = 'FAILED';
         return;
@@ -593,59 +592,42 @@ export class LspServerManager {
   }
 
   /**
-   * Check if command exists using `which` (or `where` on Windows).
-   * This avoids running the command with `--version` which may not be
-   * supported by all LSP servers (e.g., jdtls).
+   * Check if command exists
    */
   private async commandExists(
     command: string,
     env?: Record<string, string>,
     cwd?: string,
   ): Promise<boolean> {
-    const whichCmd = process.platform === 'win32' ? 'where' : 'which';
     return new Promise((resolve) => {
       let settled = false;
-      const child = spawn(whichCmd, [command], {
+      const child = spawn(command, ['--version'], {
         stdio: ['ignore', 'ignore', 'ignore'],
         cwd: cwd ?? this.workspaceRoot,
         env: this.buildProcessEnv(env),
       });
 
       child.on('error', () => {
-        if (!settled) {
-          settled = true;
-          resolve(false);
-        }
+        settled = true;
+        resolve(false);
       });
 
       child.on('exit', (code) => {
-        if (!settled) {
-          settled = true;
-          resolve(code === 0);
+        if (settled) {
+          return;
         }
+        // If command exists, it typically returns 0 or other non-error codes
+        // Some commands with --version may return non-0, but won't throw error
+        resolve(code !== 127); // 127 typically indicates command not found
       });
 
+      // Set timeout to avoid long waits
       setTimeout(() => {
-        if (!settled) {
-          settled = true;
-          child.kill();
-          resolve(false);
-        }
+        settled = true;
+        child.kill();
+        resolve(false);
       }, DEFAULT_LSP_COMMAND_CHECK_TIMEOUT_MS);
     });
-  }
-
-  private getInstallHint(command: string): string | undefined {
-    const hints: Record<string, string> = {
-      clangd: 'Install via: apt install clangd / brew install llvm',
-      jdtls:
-        'Install via: brew install jdtls / https://github.com/eclipse-jdtls/eclipse.jdt.ls',
-      pylsp: 'Install via: pip install python-lsp-server',
-      gopls: 'Install via: go install golang.org/x/tools/gopls@latest',
-      'typescript-language-server':
-        'Install via: npm install -g typescript-language-server typescript',
-    };
-    return hints[command];
   }
 
   /**

@@ -1,19 +1,25 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { Config } from '@dobby/moli-code-core';
 import type { Part } from '@google/genai';
-import type * as acp from '../acp.js';
+import type {
+  SessionUpdate,
+  ToolCallLocation,
+  ToolKind,
+} from '@agentclientprotocol/sdk';
+
+export type ApprovalModeValue = 'plan' | 'default' | 'auto-edit' | 'yolo';
 
 /**
  * Interface for sending session updates to the ACP client.
  * Implemented by Session class and used by all emitters.
  */
 export interface SessionUpdateSender {
-  sendUpdate(update: acp.SessionUpdate): Promise<void>;
+  sendUpdate(update: SessionUpdate): Promise<void>;
 }
 
 /**
@@ -91,6 +97,6 @@ export interface TodoItem {
  */
 export interface ResolvedToolMetadata {
   title: string;
-  locations: acp.ToolCallLocation[];
-  kind: acp.ToolKind;
+  locations: ToolCallLocation[];
+  kind: ToolKind;
 }

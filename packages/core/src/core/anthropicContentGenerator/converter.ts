@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -91,7 +91,8 @@ export class AnthropicContentConverter {
       }
 
       for (const func of actualTool.functionDeclarations) {
-        if (!func.name) continue;
+        // Skip functions without name or description (required by Anthropic API)
+        if (!func.name || !func.description) continue;
 
         let inputSchema: Record<string, unknown> | undefined;
         if (func.parametersJsonSchema) {

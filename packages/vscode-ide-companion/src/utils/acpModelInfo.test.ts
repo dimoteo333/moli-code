@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,17 +15,17 @@ describe('extractSessionModelState', () => {
     const result = extractSessionModelState({
       sessionId: 's',
       models: {
-        currentModelId: 'moli-coder-plus',
+        currentModelId: 'moli3-coder-plus',
         availableModels: [
           {
-            modelId: 'moli-coder-plus',
-            name: 'Moli Coder Plus',
+            modelId: 'moli3-coder-plus',
+            name: 'Moli3 Coder Plus',
             description: null,
             _meta: { contextLimit: 123 },
           },
           {
-            modelId: 'moli-coder',
-            name: 'Moli Coder',
+            modelId: 'moli3-coder',
+            name: 'Moli3 Coder',
             description: 'Standard model',
             _meta: { contextLimit: 64 },
           },
@@ -34,17 +34,17 @@ describe('extractSessionModelState', () => {
     });
 
     expect(result).toEqual({
-      currentModelId: 'moli-coder-plus',
+      currentModelId: 'moli3-coder-plus',
       availableModels: [
         {
-          modelId: 'moli-coder-plus',
-          name: 'Moli Coder Plus',
+          modelId: 'moli3-coder-plus',
+          name: 'Moli3 Coder Plus',
           description: null,
           _meta: { contextLimit: 123 },
         },
         {
-          modelId: 'moli-coder',
-          name: 'Moli Coder',
+          modelId: 'moli3-coder',
+          name: 'Moli3 Coder',
           description: 'Standard model',
           _meta: { contextLimit: 64 },
         },
@@ -144,11 +144,11 @@ describe('extractModelInfoFromNewSessionResult', () => {
       extractModelInfoFromNewSessionResult({
         sessionId: 's',
         models: {
-          currentModelId: 'moli-coder-plus',
+          currentModelId: 'moli3-coder-plus',
           availableModels: [
             {
-              modelId: 'moli-coder-plus',
-              name: 'Moli Coder Plus',
+              modelId: 'moli3-coder-plus',
+              name: 'Moli3 Coder Plus',
               description: null,
               _meta: { contextLimit: 123 },
             },
@@ -156,8 +156,8 @@ describe('extractModelInfoFromNewSessionResult', () => {
         },
       }),
     ).toEqual({
-      modelId: 'moli-coder-plus',
-      name: 'Moli Coder Plus',
+      modelId: 'moli3-coder-plus',
+      name: 'Moli3 Coder Plus',
       description: null,
       _meta: { contextLimit: 123 },
     });

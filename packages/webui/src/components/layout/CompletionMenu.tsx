@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * CompletionMenu component - Autocomplete dropdown menu
@@ -123,6 +123,7 @@ export const CompletionMenu: FC<CompletionMenuProps> = ({
           setSelected((prev) => Math.max(prev - 1, 0));
           break;
         case 'Enter':
+        case 'Tab':
           event.preventDefault();
           if (items[selected]) {
             onSelect(items[selected]);

@@ -54,7 +54,7 @@ export interface ContentGenerator {
 
 export enum AuthType {
   USE_OPENAI = 'openai',
-  MOLI_OAUTH = 'moli-oauth',
+  MOLI_OAUTH = 'moli-oauth', // MOLI: Enterprise OAuth2 (renamed from MOLI_OAUTH)
   USE_GEMINI = 'gemini',
   USE_VERTEX_AI = 'vertex-ai',
   USE_ANTHROPIC = 'anthropic',
@@ -312,6 +312,7 @@ export async function createContentGenerator(
     );
     baseGenerator = createOpenAIContentGenerator(generatorConfig, config);
   } else if (authType === AuthType.MOLI_OAUTH) {
+    // MOLI: Use MoliContentGenerator for enterprise OAuth2
     const { getMoliOAuthClient: getMoliOauthClient } = await import(
       '../moli/moliOAuth2.js'
     );

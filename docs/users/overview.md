@@ -48,7 +48,7 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 
 > [!note]
 >
-> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=dimoteo333.moli-code-vscode-ide-companion) now.
+> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=molilm.moli-code-vscode-ide-companion) now.
 
 ## What Moli Code does for you
 
@@ -61,4 +61,4 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 
 - **Works in your terminal**: Not another chat window. Not another IDE. Moli Code meets you where you already work, with the tools you already love.
 - **Takes action**: Moli Code can directly edit files, run commands, and create commits. Need more? [MCP](./features/mcp) lets Moli Code read your design docs in Google Drive, update your tickets in Jira, or use _your_ custom developer tooling.
-- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | qwen -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `qwen -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.
+- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | moli -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `moli -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.

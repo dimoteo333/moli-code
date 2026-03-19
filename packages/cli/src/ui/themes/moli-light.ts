@@ -24,7 +24,7 @@ const moliLightColors: ColorsTheme = {
   DiffRemoved: '#f07171',
   Comment: '#ABADB1',
   Gray: '#CCCFD3',
-  GradientColors: ['#9B72CF', '#6C63FF'],
+  GradientColors: ['#399ee6', '#86b300'],
 };
 
 export const MoliLight: Theme = new Theme(

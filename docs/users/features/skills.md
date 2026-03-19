@@ -221,7 +221,7 @@ Ensure:
 Run Moli Code with debug mode to see Skill loading errors:
 
 ```bash
-qwen --debug
+moli --debug
 ```
 
 ## Share Skills with your team

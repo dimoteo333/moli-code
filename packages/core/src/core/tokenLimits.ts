@@ -9,7 +9,7 @@ type TokenCount = number;
 export type TokenLimitType = 'input' | 'output';
 
 export const DEFAULT_TOKEN_LIMIT: TokenCount = 131_072; // 128K (power-of-two)
-export const DEFAULT_OUTPUT_TOKEN_LIMIT: TokenCount = 8_192; // 8K tokens
+export const DEFAULT_OUTPUT_TOKEN_LIMIT: TokenCount = 16_384; // 16K tokens
 
 /**
  * Accurate numeric limits:
@@ -23,6 +23,7 @@ const LIMITS = {
   '128k': 131_072,
   '200k': 200_000, // vendor-declared decimal, used by OpenAI, Anthropic, etc.
   '256k': 262_144,
+  '272k': 272_000, // vendor-declared decimal, GPT-5.x input (400K total - 128K output)
   '400k': 400_000, // vendor-declared decimal, used by OpenAI GPT-5.x
   '512k': 524_288,
   '1m': 1_000_000,
@@ -48,10 +49,10 @@ export function normalize(model: string): string {
   // - dates (e.g., -20250219), -v1, version numbers, 'latest', 'preview' etc.
   s = s.replace(/-preview/g, '');
   // Special handling for model names that include date/version as part of the model identifier
-  // - Qwen models: qwen-plus-latest, qwen-flash-latest, moli-vl-max-latest
+  // - Moli models: moli-plus-latest, moli-flash-latest, moli-vl-max-latest
   // - Kimi models: kimi-k2-0905, kimi-k2-0711, etc. (keep date for version distinction)
   if (
-    !s.match(/^qwen-(?:plus|flash|vl-max)-latest$/) &&
+    !s.match(/^moli-(?:plus|flash|vl-max)-latest$/) &&
     !s.match(/^kimi-k2-\d{4}$/)
   ) {
     // Regex breakdown:
@@ -87,7 +88,7 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   // -------------------
   // OpenAI
   // -------------------
-  [/^gpt-5/, LIMITS['400k']], // GPT-5.x: 400K
+  [/^gpt-5/, LIMITS['272k']], // GPT-5.x: 272K input (400K total - 128K output)
   [/^gpt-/, LIMITS['128k']], // GPT fallback (4o, 4.1, etc.): 128K
   [/^o\d/, LIMITS['200k']], // o-series (o3, o4-mini, etc.): 200K
 
@@ -97,21 +98,22 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-/, LIMITS['200k']], // All Claude models: 200K
 
   // -------------------
-  // Moli
+  // Alibaba / Moli
   // -------------------
   // Commercial API models (1,000,000 context)
-  [/^moli-coder-plus/, LIMITS['1m']],
-  [/^moli-coder-flash/, LIMITS['1m']],
-  [/^qwen3\.5-plus/, LIMITS['1m']],
-  [/^qwen-plus-latest$/, LIMITS['1m']],
-  [/^qwen-flash-latest$/, LIMITS['1m']],
+  [/^moli3-coder-plus/, LIMITS['1m']],
+  [/^moli3-coder-flash/, LIMITS['1m']],
+  [/^moli3\.5-plus/, LIMITS['1m']],
+  [/^moli-plus-latest$/, LIMITS['1m']],
+  [/^moli-flash-latest$/, LIMITS['1m']],
   [/^coder-model$/, LIMITS['1m']],
   // Commercial API models (256K context)
+  [/^moli3-max/, LIMITS['256k']],
   [/^moli-max/, LIMITS['256k']],
-  // Open-source Qwen3 variants: 256K native
-  [/^moli-coder-/, LIMITS['256k']],
-  // Qwen fallback (VL, turbo, plus, 2.5, etc.): 128K
-  [/^qwen/, LIMITS['256k']],
+  // Open-source Moli3 variants: 256K native
+  [/^moli3-coder-/, LIMITS['256k']],
+  // Moli fallback (VL, turbo, plus, 2.5, etc.): 128K
+  [/^moli/, LIMITS['256k']],
 
   // -------------------
   // DeepSeek
@@ -161,18 +163,21 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-sonnet-4-6/, LIMITS['64k']], // Sonnet 4.6: 64K
   [/^claude-/, LIMITS['64k']], // Claude fallback: 64K
 
-  // Moli
-  [/^qwen3\.5/, LIMITS['64k']],
+  // Alibaba / Moli
+  [/^moli3\.5/, LIMITS['64k']],
   [/^coder-model$/, LIMITS['64k']],
+  [/^moli3-max/, LIMITS['64k']],
   [/^moli-max/, LIMITS['64k']],
+  [/^moli/, LIMITS['8k']], // Moli fallback (VL, turbo, plus, etc.): 8K
 
   // DeepSeek
   [/^deepseek-reasoner/, LIMITS['64k']],
+  [/^deepseek-r1/, LIMITS['64k']],
   [/^deepseek-chat/, LIMITS['8k']],
 
   // Zhipu GLM
-  [/^glm-5/, LIMITS['16k']],
-  [/^glm-4\.7/, LIMITS['16k']],
+  [/^glm-5/, LIMITS['128k']],
+  [/^glm-4\.7/, LIMITS['128k']],
 
   // MiniMax
   [/^minimax-m2\.5/i, LIMITS['64k']],

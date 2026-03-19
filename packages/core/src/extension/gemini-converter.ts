@@ -30,7 +30,7 @@ export interface GeminiExtensionConfig {
 /**
  * Converts a Gemini extension config to Moli Code format.
  * @param extensionDir Path to the Gemini extension directory
- * @returns Qwen ExtensionConfig
+ * @returns Moli ExtensionConfig
  */
 export function convertGeminiToMoliConfig(
   extensionDir: string,
@@ -130,9 +130,24 @@ export async function copyDirectory(
 
     if (entry.isDirectory()) {
       await copyDirectory(sourcePath, destPath);
-    } else {
+    } else if (entry.isSymbolicLink()) {
+      // Resolve symlink and copy the target content
+      try {
+        const realPath = fs.realpathSync(sourcePath);
+        const targetStat = fs.statSync(realPath);
+        if (targetStat.isDirectory()) {
+          await copyDirectory(realPath, destPath);
+        } else if (targetStat.isFile()) {
+          fs.copyFileSync(realPath, destPath);
+        }
+        // Skip sockets, FIFOs, etc.
+      } catch {
+        // Skip broken symlinks
+      }
+    } else if (entry.isFile()) {
       fs.copyFileSync(sourcePath, destPath);
     }
+    // Skip sockets, FIFOs, block devices, and character devices
   }
 }
 
@@ -214,6 +229,6 @@ export function isGeminiExtensionConfig(extensionDir: string) {
     }
   }
 
-  // If it has Gemini-specific fields but not Qwen-specific fields, likely Gemini
+  // If it has Gemini-specific fields but not Moli-specific fields, likely Gemini
   return true;
 }

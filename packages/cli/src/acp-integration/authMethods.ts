@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { AuthType } from '@dobby/moli-code-core';
-import type { AuthMethod } from './schema.js';
+import type { AuthMethod } from '@agentclientprotocol/sdk';
 
 export function buildAuthMethods(): AuthMethod[] {
   return [
@@ -13,16 +13,20 @@ export function buildAuthMethods(): AuthMethod[] {
       id: AuthType.USE_OPENAI,
       name: 'Use OpenAI API key',
       description: 'Requires setting the `OPENAI_API_KEY` environment variable',
-      type: 'terminal',
-      args: ['--auth-type=openai'],
+      _meta: {
+        type: 'terminal',
+        args: ['--auth-type=openai'],
+      },
     },
     {
       id: AuthType.MOLI_OAUTH,
       name: 'Moli OAuth',
       description:
-        'OAuth authentication for Qwen models with free daily requests',
-      type: 'terminal',
-      args: ['--auth-type=moli-oauth'],
+        'OAuth authentication for Moli models with free daily requests',
+      _meta: {
+        type: 'terminal',
+        args: ['--auth-type=moli-oauth'],
+      },
     },
   ];
 }

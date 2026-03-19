@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen team
+ * Copyright 2025 Moli team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,7 +11,6 @@ export type SupportedLanguage =
   | 'de'
   | 'ja'
   | 'pt'
-  | 'ko'
   | string;
 
 export interface LanguageDefinition {
@@ -61,12 +60,6 @@ export const SUPPORTED_LANGUAGES: readonly LanguageDefinition[] = [
     id: 'pt-BR',
     fullName: 'Portuguese',
     nativeName: 'Português',
-  },
-  {
-    code: 'ko',
-    id: 'ko-KR',
-    fullName: 'Korean',
-    nativeName: '한국어',
   },
 ];
 

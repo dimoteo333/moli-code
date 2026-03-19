@@ -1,16 +1,13 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useCallback, useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import type { WizardStepProps } from '../types.js';
-import type {
-  SubagentManager,
-  SubagentConfig,
-} from '@dobby/moli-code-core';
+import type { SubagentManager, SubagentConfig } from '@dobby/moli-code-core';
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { theme } from '../../../semantic-colors.js';
 import { shouldShowColor, getColorForDisplay } from '../utils.js';
@@ -94,7 +91,7 @@ export function CreationSummary({
       }
 
       // Check length warnings
-      if (state.generatedDescription.length > 300) {
+      if (state.generatedDescription.length > 1000) {
         allWarnings.push(
           t('Description is over {{length}} characters', {
             length: state.generatedDescription.length.toString(),

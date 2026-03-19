@@ -2,8 +2,8 @@
 REM Script to install Node.js and Moli Code with source information
 REM This script handles the installation process and sets the installation source
 REM
-REM Usage: install-moli-with-source.bat --source [github|npm|internal|local-build]
-REM        install-moli-with-source.bat -s [github|npm|internal|local-build]
+REM Usage: install-moli-with-source.bat --source <source>
+REM        install-moli-with-source.bat -s <source>
 REM
 
 setlocal enabledelayedexpansion
@@ -14,21 +14,21 @@ REM Parse command line arguments
 :parse_args
 if "%~1"=="" goto end_parse
 if /i "%~1"=="--source" (
-    set "SOURCE=%~2"
-    shift
-    shift
-    goto parse_args
+    if not "%~2"=="" (
+        set "SOURCE=%~2"
+        shift
+        shift
+        goto parse_args
+    )
 )
 if /i "%~1"=="-s" (
-    set "SOURCE=%~2"
-    shift
-    shift
-    goto parse_args
+    if not "%~2"=="" (
+        set "SOURCE=%~2"
+        shift
+        shift
+        goto parse_args
+    )
 )
-if /i "%~1"=="github" set "SOURCE=github"
-if /i "%~1"=="npm" set "SOURCE=npm"
-if /i "%~1"=="internal" set "SOURCE=internal"
-if /i "%~1"=="local-build" set "SOURCE=local-build"
 shift
 goto parse_args
 
@@ -100,8 +100,8 @@ if exist "!NODEJS_PATH!\npm.cmd" (
 
 REM Install Moli Code with source information
 echo INFO: Installing Moli Code with source: %SOURCE%
-echo INFO: Running: %NPM_CMD% install -g @moli-code/moli-code
-call "%NPM_CMD%" install -g @moli-code/moli-code
+echo INFO: Running: %NPM_CMD% install -g @dobby/moli-code@latest --registry https://registry.npmmirror.com
+call "%NPM_CMD%" install -g @dobby/moli-code@latest --registry https://registry.npmmirror.com
 
 if %ERRORLEVEL% EQU 0 (
     echo SUCCESS: Moli Code installed successfully!
@@ -110,36 +110,43 @@ if %ERRORLEVEL% EQU 0 (
     exit /b 1
 )
 
-REM After installation, create source.json in the .moli directory
-echo INFO: Creating source.json in %USERPROFILE%\.moli...
+REM Create source.json only if --source or -s was explicitly provided
+if not "!SOURCE!"=="unknown" (
+    echo INFO: Creating source.json in %USERPROFILE%\.moli...
 
-set "MOLI_DIR=%USERPROFILE%\.moli"
-if not exist "%MOLI_DIR%" (
-    mkdir "%MOLI_DIR%"
+    set "MOLI_DIR=%USERPROFILE%\.moli"
+    if not exist "!MOLI_DIR!" (
+        mkdir "!MOLI_DIR!"
+    )
+
+    REM Create the source.json file with the installation source
+    (
+    echo {
+    echo   "source": "!SOURCE!"
+    echo }
+    ) > "!MOLI_DIR!\source.json"
+
+    echo SUCCESS: Installation source saved to %USERPROFILE%\.moli\source.json
 )
-
-REM Create the source.json file with the installation source
-echo { > "%MOLI_DIR%\source.json"
-echo   "source": "%SOURCE%" >> "%MOLI_DIR%\source.json"
-echo } >> "%MOLI_DIR%\source.json"
-
-echo SUCCESS: Installation source saved to %USERPROFILE%\.moli\source.json
 
 REM Verify installation
-call :CheckCommandExists moli
+call :CheckCommandExists moli-code
 if %ERRORLEVEL% EQU 0 (
-    echo SUCCESS: Moli Code is available as 'moli' command.
-    call moli --version
+    echo SUCCESS: Moli Code is available as 'moli-code' command.
+    call moli-code --version
+    echo.
+    echo INFO: Starting Moli Code...
+    echo.
+    call moli-code
 ) else (
     echo WARNING: Moli Code may not be in PATH. Please check your npm global bin directory.
+    echo.
+    echo ===========================================
+    echo SUCCESS: Installation completed!
+    echo The source information is stored in %USERPROFILE%\.moli\source.json
+    echo.
+    echo ===========================================
 )
-
-echo.
-echo ===========================================
-echo SUCCESS: Installation completed!
-echo The source information is stored in %USERPROFILE%\.moli\source.json
-echo.
-echo ===========================================
 
 endlocal
 exit /b 0

@@ -100,7 +100,8 @@ export function isGenericQuotaExceededError(error: unknown): boolean {
 }
 
 export function isMoliQuotaExceededError(error: unknown): boolean {
-  // Check for Qwen insufficient quota errors (should not retry)
+  // MOLI: renamed from isMoliQuotaExceededError
+  // Check for Moli insufficient quota errors (should not retry)
   const checkMessage = (message: string): boolean => {
     const lowerMessage = message.toLowerCase();
     return (

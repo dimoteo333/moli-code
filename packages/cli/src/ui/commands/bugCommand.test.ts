@@ -26,7 +26,7 @@ describe('bugCommand', () => {
       nodeVersion: 'v20.0.0',
       npmVersion: '10.0.0',
       sandboxEnv: 'test',
-      modelVersion: 'moli-coder-plus',
+      modelVersion: 'moli3-coder-plus',
       selectedAuthType: '',
       ideClient: 'VSCode',
       sessionId: 'test-session-id',
@@ -64,13 +64,13 @@ describe('bugCommand', () => {
 Runtime: Node.js v20.0.0 / npm 10.0.0
 IDE Client: VSCode
 OS: test-platform x64 (22.0.0)
-Model: moli-coder-plus
+Model: moli3-coder-plus
 Session ID: test-session-id
 Sandbox: test
 Proxy: no proxy
 Memory Usage: 100 MB`;
     const expectedUrl =
-      'https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=' +
+      'https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=' +
       encodeURIComponent(`\n${expectedInfo}\n`);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);
@@ -98,7 +98,7 @@ Memory Usage: 100 MB`;
 Runtime: Node.js v20.0.0 / npm 10.0.0
 IDE Client: VSCode
 OS: test-platform x64 (22.0.0)
-Model: moli-coder-plus
+Model: moli3-coder-plus
 Session ID: test-session-id
 Sandbox: test
 Proxy: no proxy
@@ -119,7 +119,7 @@ Memory Usage: 100 MB`;
       nodeVersion: 'v20.0.0',
       npmVersion: '10.0.0',
       sandboxEnv: 'test',
-      modelVersion: 'moli-coder-plus',
+      modelVersion: 'moli3-coder-plus',
       selectedAuthType: AuthType.USE_OPENAI,
       ideClient: 'VSCode',
       sessionId: 'test-session-id',
@@ -150,14 +150,15 @@ Memory Usage: 100 MB`;
 Runtime: Node.js v20.0.0 / npm 10.0.0
 IDE Client: VSCode
 OS: test-platform x64 (22.0.0)
-Auth: ${AuthType.USE_OPENAI} (https://api.openai.com/v1)
-Model: moli-coder-plus
+Auth: API Key - ${AuthType.USE_OPENAI}
+Base URL: https://api.openai.com/v1
+Model: moli3-coder-plus
 Session ID: test-session-id
 Sandbox: test
 Proxy: no proxy
 Memory Usage: 100 MB`;
     const expectedUrl =
-      'https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&title=OpenAI%20bug&info=' +
+      'https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&title=OpenAI%20bug&info=' +
       encodeURIComponent(`\n${expectedInfo}\n`);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);

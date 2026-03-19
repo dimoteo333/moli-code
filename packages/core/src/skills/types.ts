@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,8 +9,9 @@
  * - 'project': Stored in `.moli/skills/` within the project directory
  * - 'user': Stored in `~/.moli/skills/` in the user's home directory
  * - 'extension': Provided by an installed extension
+ * - 'bundled': Built-in skills shipped with moli-code
  */
-export type SkillLevel = 'project' | 'user' | 'extension';
+export type SkillLevel = 'project' | 'user' | 'extension' | 'bundled';
 
 /**
  * Core configuration for a skill as stored in SKILL.md files.

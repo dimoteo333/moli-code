@@ -25,7 +25,7 @@ The discovery process is orchestrated by `discoverMcpTools()`, which:
 1. **Iterates through configured servers** from your `settings.json` `mcpServers` configuration
 2. **Establishes connections** using appropriate transport mechanisms (Stdio, SSE, or Streamable HTTP)
 3. **Fetches tool definitions** from each server using the MCP protocol
-4. **Sanitizes and validates** tool schemas for compatibility with the Qwen API
+4. **Sanitizes and validates** tool schemas for compatibility with the Moli API
 5. **Registers tools** in the global tool registry with conflict resolution
 
 ### Execution Layer (`mcp-tool.ts`)
@@ -394,7 +394,7 @@ Upon successful connection:
 1. **Tool listing:** The client calls the MCP server's tool listing endpoint
 2. **Schema validation:** Each tool's function declaration is validated
 3. **Tool filtering:** Tools are filtered based on `includeTools` and `excludeTools` configuration
-4. **Name sanitization:** Tool names are cleaned to meet Qwen API requirements:
+4. **Name sanitization:** Tool names are cleaned to meet Moli API requirements:
    - Invalid characters (non-alphanumeric, underscore, dot, hyphen) are replaced with underscores
    - Names longer than 63 characters are truncated with middle replacement (`___`)
 
@@ -529,7 +529,7 @@ Discovery State: COMPLETED
 
 ### Tool Usage
 
-Once discovered, MCP tools are available to the Qwen model like built-in tools. The model will automatically:
+Once discovered, MCP tools are available to the Moli model like built-in tools. The model will automatically:
 
 1. **Select appropriate tools** based on your requests
 2. **Present confirmation dialogs** (unless the server is trusted)
@@ -686,7 +686,7 @@ When Moli Code receives this response, it will:
 2.  Present the image data as a separate `inlineData` part.
 3.  Provide a clean, user-friendly summary in the CLI, indicating that both text and an image were received.
 
-This enables you to build sophisticated tools that can provide rich, multi-modal context to the Qwen model.
+This enables you to build sophisticated tools that can provide rich, multi-modal context to the Moli model.
 
 ## MCP Prompts as Slash Commands
 
@@ -759,18 +759,18 @@ or, using positional arguments:
 
 When you run this command, the CLI executes the `prompts/get` method on the MCP server with the provided arguments. The server is responsible for substituting the arguments into the prompt template and returning the final prompt text. The CLI then sends this prompt to the model for execution. This provides a convenient way to automate and share common workflows.
 
-## Managing MCP Servers with `qwen mcp`
+## Managing MCP Servers with `moli mcp`
 
 While you can always configure MCP servers by manually editing your `settings.json` file, the CLI provides a convenient set of commands to manage your server configurations programmatically. These commands streamline the process of adding, listing, and removing MCP servers without needing to directly edit JSON files.
 
-### Adding a Server (`qwen mcp add`)
+### Adding a Server (`moli mcp add`)
 
 The `add` command configures a new MCP server in your `settings.json`. Based on the scope (`-s, --scope`), it will be added to either the user config `~/.moli/settings.json` or the project config `.moli/settings.json` file.
 
 **Command:**
 
 ```bash
-qwen mcp add [options] <name> <commandOrUrl> [args...]
+moli mcp add [options] <name> <commandOrUrl> [args...]
 ```
 
 - `<name>`: A unique name for the server.
@@ -795,13 +795,13 @@ This is the default transport for running local servers.
 
 ```bash
 # Basic syntax
-qwen mcp add <name> <command> [args...]
+moli mcp add <name> <command> [args...]
 
 # Example: Adding a local server
-qwen mcp add my-stdio-server -e API_KEY=123 /path/to/server arg1 arg2 arg3
+moli mcp add my-stdio-server -e API_KEY=123 /path/to/server arg1 arg2 arg3
 
 # Example: Adding a local python server
-qwen mcp add python-server python server.py --port 8080
+moli mcp add python-server python server.py --port 8080
 ```
 
 #### Adding an HTTP server
@@ -810,13 +810,13 @@ This transport is for servers that use the streamable HTTP transport.
 
 ```bash
 # Basic syntax
-qwen mcp add --transport http <name> <url>
+moli mcp add --transport http <name> <url>
 
 # Example: Adding an HTTP server
-qwen mcp add --transport http http-server https://api.example.com/mcp/
+moli mcp add --transport http http-server https://api.example.com/mcp/
 
 # Example: Adding an HTTP server with an authentication header
-qwen mcp add --transport http secure-http https://api.example.com/mcp/ --header "Authorization: Bearer abc123"
+moli mcp add --transport http secure-http https://api.example.com/mcp/ --header "Authorization: Bearer abc123"
 ```
 
 #### Adding an SSE server
@@ -825,47 +825,49 @@ This transport is for servers that use Server-Sent Events (SSE).
 
 ```bash
 # Basic syntax
-qwen mcp add --transport sse <name> <url>
+moli mcp add --transport sse <name> <url>
 
 # Example: Adding an SSE server
-qwen mcp add --transport sse sse-server https://api.example.com/sse/
+moli mcp add --transport sse sse-server https://api.example.com/sse/
 
 # Example: Adding an SSE server with an authentication header
-qwen mcp add --transport sse secure-sse https://api.example.com/sse/ --header "Authorization: Bearer abc123"
+moli mcp add --transport sse secure-sse https://api.example.com/sse/ --header "Authorization: Bearer abc123"
 ```
 
-### Listing Servers (`qwen mcp list`)
+### Managing Servers (`moli mcp`)
 
-To view all MCP servers currently configured, use the `list` command. It displays each server's name, configuration details, and connection status.
+To view and manage all MCP servers currently configured, use the `manage` command or simply `moli mcp`. This opens an interactive TUI dialog where you can:
+
+- View all MCP servers with their connection status
+- Enable/disable servers
+- Reconnect to disconnected servers
+- View tools and prompts provided by each server
+- View server logs
 
 **Command:**
 
 ```bash
-qwen mcp list
+moli mcp
+# or
+moli mcp manage
 ```
 
-**Example Output:**
+The management dialog provides a visual interface showing each server's name, configuration details, connection status, and available tools/prompts.
 
-```sh
-✓ stdio-server: command: python3 server.py (stdio) - Connected
-✓ http-server: https://api.example.com/mcp (http) - Connected
-✗ sse-server: https://api.example.com/sse (sse) - Disconnected
-```
-
-### Removing a Server (`qwen mcp remove`)
+### Removing a Server (`moli mcp remove`)
 
 To delete a server from your configuration, use the `remove` command with the server's name.
 
 **Command:**
 
 ```bash
-qwen mcp remove <name>
+moli mcp remove <name>
 ```
 
 **Example:**
 
 ```bash
-qwen mcp remove my-server
+moli mcp remove my-server
 ```
 
 This will find and delete the "my-server" entry from the `mcpServers` object in the appropriate `settings.json` file based on the scope (`-s, --scope`).

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -481,7 +481,7 @@ export type AuthResult =
     };
 
 /**
- * Global event emitter instance for QwenOAuth2 authentication events
+ * Global event emitter instance for MoliOAuth2 authentication events
  */
 export const moliOAuth2Events = new EventEmitter();
 
@@ -980,14 +980,14 @@ async function cacheMoliCredentials(credentials: MoliCredentials) {
 }
 
 /**
- * Clear cached Qwen credentials from disk
+ * Clear cached Moli credentials from disk
  * This is useful when credentials have expired or need to be reset
  */
 export async function clearMoliCredentials(): Promise<void> {
   try {
     const filePath = getMoliCachedCredentialPath();
     await fs.unlink(filePath);
-    debugLogger.debug('Cached Qwen credentials cleared successfully.');
+    debugLogger.debug('Cached Moli credentials cleared successfully.');
   } catch (error: unknown) {
     // If file doesn't exist or can't be deleted, we consider it cleared
     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
@@ -996,7 +996,7 @@ export async function clearMoliCredentials(): Promise<void> {
     }
     // Log other errors but don't throw - clearing credentials should be non-critical
     debugLogger.warn(
-      'Warning: Failed to clear cached Qwen credentials:',
+      'Warning: Failed to clear cached Moli credentials:',
       error,
     );
   } finally {

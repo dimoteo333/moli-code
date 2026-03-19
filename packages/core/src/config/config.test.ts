@@ -118,6 +118,7 @@ vi.mock('../tools/memoryTool', () => ({
   MemoryTool: createToolMock('save_memory'),
   setGeminiMdFilename: vi.fn(),
   getCurrentGeminiMdFilename: vi.fn(() => 'MOLI.md'), // Mock the original filename
+  getAllGeminiMdFilenames: vi.fn(() => ['MOLI.md', 'AGENTS.md']),
   DEFAULT_CONTEXT_FILENAME: 'MOLI.md',
   MOLI_CONFIG_DIR: '.moli',
 }));
@@ -196,7 +197,7 @@ import { BaseLlmClient } from '../core/baseLlmClient.js';
 vi.mock('../core/baseLlmClient.js');
 
 describe('Server Config (config.ts)', () => {
-  const MODEL = 'moli-coder-plus';
+  const MODEL = 'moli3-coder-plus';
 
   // Default mock for canUseRipgrep to return true (tests that care about ripgrep will override this)
   beforeEach(() => {
@@ -291,7 +292,7 @@ describe('Server Config (config.ts)', () => {
       const authType = AuthType.USE_GEMINI;
       const mockContentConfig = {
         apiKey: 'test-key',
-        model: 'moli-coder-plus',
+        model: 'moli3-coder-plus',
         authType,
       };
 
@@ -1046,10 +1047,10 @@ describe('Server Config (config.ts)', () => {
       expect(config.getTruncateToolOutputThreshold()).toBe(50000);
     });
 
-    it('should return infinity when truncation is disabled', () => {
+    it('should return infinity when threshold is zero or negative', () => {
       const customParams = {
         ...baseParams,
-        enableToolOutputTruncation: false,
+        truncateToolOutputThreshold: 0,
       };
       const config = new Config(customParams);
       expect(config.getTruncateToolOutputThreshold()).toBe(
@@ -1317,7 +1318,7 @@ describe('Model Switching and Config Updates', () => {
     cwd: '/tmp',
     targetDir: '/path/to/target',
     debugMode: false,
-    model: 'moli-coder-plus',
+    model: 'moli3-coder-plus',
     usageStatisticsEnabled: false,
     telemetry: { enabled: false },
   };
@@ -1331,7 +1332,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Initialize with first model
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'moli-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 1_000_000,
@@ -1351,7 +1352,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Verify initial config
     const contentGenConfig = config.getContentGeneratorConfig();
-    expect(contentGenConfig['model']).toBe('moli-coder-plus');
+    expect(contentGenConfig['model']).toBe('moli3-coder-plus');
     expect(contentGenConfig['contextWindowSize']).toBe(1_000_000);
 
     // Switch to a different model with different token limits
@@ -1406,7 +1407,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Initialize with moli-oauth
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'moli-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 1_000_000,
@@ -1458,7 +1459,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Initialize with config that has undefined token limits
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'moli-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: undefined,

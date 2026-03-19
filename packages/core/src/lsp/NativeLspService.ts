@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -38,7 +38,7 @@ import type {
   NativeLspServiceOptions,
 } from './types.js';
 import * as path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { fileURLToPath } from 'url';
 import * as fs from 'node:fs';
 import { createDebugLogger } from '../utils/debugLogger.js';
 
@@ -54,8 +54,6 @@ export class NativeLspService {
   private serverManager: LspServerManager;
   private languageDetector: LspLanguageDetector;
   private normalizer: LspResponseNormalizer;
-  private openDocuments: Map<string, number> = new Map();
-  private cleanupRegistered = false;
 
   constructor(
     config: CoreConfig,
@@ -139,7 +137,6 @@ export class NativeLspService {
    * Start all LSP servers
    */
   async start(): Promise<void> {
-    this.registerCleanupHandlers();
     await this.serverManager.startAll();
   }
 
@@ -148,105 +145,6 @@ export class NativeLspService {
    */
   async stop(): Promise<void> {
     await this.serverManager.stopAll();
-  }
-
-  /**
-   * Notify LSP servers that a file has changed on disk.
-   *
-   * Sends `textDocument/didOpen` for files not yet tracked, or
-   * `textDocument/didChange` (full-document sync) for already-open files.
-   * This ensures LSP servers have current file content for diagnostics.
-   */
-  async notifyFileChanged(filePath: string): Promise<void> {
-    const absolutePath = path.isAbsolute(filePath)
-      ? filePath
-      : path.resolve(this.workspaceRoot, filePath);
-
-    let text: string;
-    try {
-      text = fs.readFileSync(absolutePath, 'utf-8');
-    } catch {
-      return;
-    }
-
-    const uri = pathToFileURL(absolutePath).toString();
-    const languageId = this.detectLanguageId(absolutePath);
-    const handles = this.getReadyHandles();
-
-    const currentVersion = this.openDocuments.get(uri);
-
-    if (currentVersion === undefined) {
-      // First time — send didOpen
-      this.openDocuments.set(uri, 1);
-      for (const [, handle] of handles) {
-        handle.connection.send({
-          jsonrpc: '2.0',
-          method: 'textDocument/didOpen',
-          params: {
-            textDocument: {
-              uri,
-              languageId,
-              version: 1,
-              text,
-            },
-          },
-        });
-      }
-    } else {
-      // Already open — send didChange with incremented version
-      const newVersion = currentVersion + 1;
-      this.openDocuments.set(uri, newVersion);
-      for (const [, handle] of handles) {
-        handle.connection.send({
-          jsonrpc: '2.0',
-          method: 'textDocument/didChange',
-          params: {
-            textDocument: { uri, version: newVersion },
-            contentChanges: [{ text }],
-          },
-        });
-      }
-    }
-  }
-
-  private detectLanguageId(filePath: string): string {
-    const ext = path.extname(filePath).slice(1).toLowerCase();
-    const map: Record<string, string> = {
-      js: 'javascript',
-      ts: 'typescript',
-      jsx: 'javascriptreact',
-      tsx: 'typescriptreact',
-      py: 'python',
-      go: 'go',
-      rs: 'rust',
-      java: 'java',
-      cpp: 'cpp',
-      c: 'c',
-      h: 'c',
-      hpp: 'cpp',
-      hxx: 'cpp',
-      cc: 'cpp',
-      cxx: 'cpp',
-      php: 'php',
-      rb: 'ruby',
-      cs: 'csharp',
-      vue: 'vue',
-      svelte: 'svelte',
-      html: 'html',
-      css: 'css',
-    };
-    return map[ext] || ext || 'plaintext';
-  }
-
-  private registerCleanupHandlers(): void {
-    if (this.cleanupRegistered) {
-      return;
-    }
-    this.cleanupRegistered = true;
-    const cleanup = () => void this.stop();
-    process.once('exit', cleanup);
-    process.once('SIGTERM', cleanup);
-    process.once('SIGINT', cleanup);
   }
 
   /**

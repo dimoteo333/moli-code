@@ -11,13 +11,11 @@ import {
   Storage,
   type Config,
   createDebugLogger,
-  uiTelemetryService,
 } from '@dobby/moli-code-core';
-import { spawn } from 'node:child_process';
+import { render } from 'ink';
 import dns from 'node:dns';
 import os from 'node:os';
-import { basename, dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { basename } from 'node:path';
 import v8 from 'node:v8';
 import React from 'react';
 import { validateAuthMethod } from './config/auth.js';
@@ -62,8 +60,6 @@ import { computeWindowTitle } from './utils/windowTitle.js';
 import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
 import { showResumeSessionPicker } from './ui/components/StandaloneSessionPicker.js';
 import { initializeLlmOutputLanguage } from './utils/languageUtils.js';
-import { computeSessionStats } from './ui/utils/computeStats.js';
-import { render } from 'ink';
 
 const debugLogger = createDebugLogger('STARTUP');
 
@@ -125,12 +121,13 @@ export function setupUnhandledRejectionHandler() {
 This is an unexpected error. Please file a bug report using the /bug tool.
 CRITICAL: Unhandled Promise Rejection!
 =========================================
-Reason: ${reason}${reason instanceof Error && reason.stack
+Reason: ${reason}${
+      reason instanceof Error && reason.stack
         ? `
 Stack trace:
 ${reason.stack}`
         : ''
-      }`;
+    }`;
     appEvents.emit(AppEvent.LogError, errorMessage);
     if (!unhandledRejectionOccurred) {
       unhandledRejectionOccurred = true;
@@ -357,29 +354,6 @@ export async function main() {
     // This ensures MCP server subprocesses are properly terminated on exit
     registerCleanup(() => config.shutdown());
 
-    registerCleanup(() => {
-      try {
-        const metrics = uiTelemetryService.getMetrics();
-        const computedStats = computeSessionStats(metrics);
-
-        const __filename = fileURLToPath(import.meta.url);
-        const __dir_name = dirname(__filename);
-        const workerPath = join(__dir_name, 'utils', 'telemetryWorker.js');
-
-        const child = spawn(process.execPath, [workerPath], {
-          detached: true,
-          stdio: 'ignore',
-          env: {
-            ...process.env,
-            TELEMETRY_PAYLOAD: JSON.stringify(computedStats),
-          },
-        });
-        child.unref();
-      } catch (e) {
-        // Silently fail if telemetry spawning fails
-      }
-    });
-
     // FIXME: list extensions after the config initialize
     // if (config.getListExtensions()) {
     //   console.log('Installed extensions:');
@@ -411,17 +385,16 @@ export async function main() {
     setMaxSizedBoxDebugging(isDebugMode);
 
     // Check input format early to determine initialization flow
-    const inputFormat =
-      typeof config.getInputFormat === 'function'
+    // In TTY mode, ignore stream-json input format to prevent process from hanging
+    const inputFormat = process.stdin.isTTY
+      ? InputFormat.TEXT
+      : typeof config.getInputFormat === 'function'
         ? config.getInputFormat()
         : InputFormat.TEXT;
 
     // For stream-json mode, defer config.initialize() until after the initialize control request
     // For other modes, initialize normally
-    let initializationResult: InitializationResult | undefined;
-    if (inputFormat !== InputFormat.STREAM_JSON) {
-      initializationResult = await initializeApp(config, settings);
-    }
+    const initializationResult = await initializeApp(config, settings);
 
     if (config.getExperimentalZedIntegration()) {
       return runAcpAgent(config, settings, argv);

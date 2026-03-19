@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -31,11 +31,6 @@ const DEFAULT_EXTENSION_TO_LANGUAGE: Record<string, string> = {
   java: 'java',
   cpp: 'cpp',
   c: 'c',
-  h: 'c',
-  hpp: 'cpp',
-  hxx: 'cpp',
-  cc: 'cpp',
-  cxx: 'cpp',
   php: 'php',
   rb: 'ruby',
   cs: 'csharp',
@@ -59,13 +54,6 @@ const MARKER_TO_LANGUAGE: Record<string, string> = {
   'Cargo.toml': 'rust',
   'pom.xml': 'java',
   'build.gradle': 'java',
-  'build.gradle.kts': 'java',
-  'settings.gradle': 'java',
-  'settings.gradle.kts': 'java',
-  '.classpath': 'java',
-  'CMakeLists.txt': 'cpp',
-  'compile_commands.json': 'cpp',
-  '.clangd': 'cpp',
   'composer.json': 'php',
   Gemfile: 'ruby',
   '*.sln': 'csharp',
@@ -84,13 +72,6 @@ const COMMON_MARKERS = [
   'Cargo.toml',
   'pom.xml',
   'build.gradle',
-  'build.gradle.kts',
-  'settings.gradle',
-  'settings.gradle.kts',
-  '.classpath',
-  'CMakeLists.txt',
-  'compile_commands.json',
-  '.clangd',
   'composer.json',
   'Gemfile',
   'mix.exs',

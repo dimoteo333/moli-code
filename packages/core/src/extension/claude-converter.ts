@@ -24,6 +24,7 @@ import {
   stringify as stringifyYaml,
 } from '../utils/yaml-parser.js';
 import { createDebugLogger } from '../utils/debugLogger.js';
+import { normalizeContent } from '../utils/textUtils.js';
 
 const debugLogger = createDebugLogger('CLAUDE_CONVERTER');
 
@@ -91,7 +92,7 @@ export interface ClaudeMarketplaceConfig {
 }
 
 const CLAUDE_TOOLS_MAPPING: Record<string, string | string[]> = {
-  AskUserQuestion: 'None',
+  AskUserQuestion: 'AskUserQuestion',
   Bash: 'Shell',
   BashOutput: 'None',
   Edit: 'Edit',
@@ -181,7 +182,7 @@ export function convertClaudeAgentConfig(
 
   // Convert model to modelConfig
   if (claudeAgent.model) {
-    // Map Claude model names to Qwen model config
+    // Map Claude model names to Moli model config
     // Claude uses: sonnet, opus, haiku, inherit
     // We preserve the model name for now, the actual mapping will be handled at runtime
     moliAgent['modelConfig'] = {
@@ -208,7 +209,7 @@ export function convertClaudeAgentConfig(
 }
 
 /**
- * Converts all agent files in a directory from Claude format to Qwen format.
+ * Converts all agent files in a directory from Claude format to Moli format.
  * Parses the YAML frontmatter, converts the configuration, and writes back.
  * @param agentsDir Directory containing agent markdown files
  */
@@ -226,10 +227,11 @@ async function convertAgentFiles(agentsDir: string): Promise<void> {
 
     try {
       const content = await fs.promises.readFile(filePath, 'utf-8');
+      const normalizedContent = normalizeContent(content);
 
       // Parse frontmatter
       const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
-      const match = content.match(frontmatterRegex);
+      const match = normalizedContent.match(frontmatterRegex);
 
       if (!match) {
         // No frontmatter, skip this file
@@ -254,7 +256,7 @@ async function convertAgentFiles(agentsDir: string): Promise<void> {
         systemPrompt: body.trim(),
       };
 
-      // Convert to Qwen format
+      // Convert to Moli format
       const moliAgent = convertClaudeAgentConfig(claudeAgent);
 
       // Build new frontmatter (excluding systemPrompt as it goes in body)
@@ -287,7 +289,7 @@ ${systemPrompt}
 /**
  * Converts a Claude plugin config to Moli Code format.
  * @param claudeConfig Claude plugin configuration
- * @returns Qwen ExtensionConfig
+ * @returns Moli ExtensionConfig
  */
 export function convertClaudeToMoliConfig(
   claudeConfig: ClaudePluginConfig,
@@ -387,15 +389,15 @@ export async function convertClaudePluginPackage(
   const strict = marketplacePlugin.strict ?? false;
   let mergedConfig: ClaudePluginConfig;
 
-  if (strict) {
-    const pluginJsonPath = path.join(
-      pluginSource,
-      '.claude-plugin',
-      'plugin.json',
-    );
-    if (!fs.existsSync(pluginJsonPath)) {
-      throw new Error(`Strict mode requires plugin.json at ${pluginJsonPath}`);
-    }
+  const pluginJsonPath = path.join(
+    pluginSource,
+    '.claude-plugin',
+    'plugin.json',
+  );
+  if (strict && !fs.existsSync(pluginJsonPath)) {
+    throw new Error(`Strict mode requires plugin.json at ${pluginJsonPath}`);
+  }
+  if (fs.existsSync(pluginJsonPath)) {
     const pluginContent = fs.readFileSync(pluginJsonPath, 'utf-8');
     const pluginConfig: ClaudePluginConfig = JSON.parse(pluginContent);
     mergedConfig = mergeClaudeConfigs(marketplacePlugin, pluginConfig);
@@ -459,11 +461,11 @@ export async function convertClaudePluginPackage(
       // Otherwise, keep the existing folder from pluginSource (default behavior)
     }
 
-    // Step 9.1: Convert collected agent files from Claude format to Qwen format
+    // Step 9.1: Convert collected agent files from Claude format to Moli format
     const agentsDestDir = path.join(tmpDir, 'agents');
     await convertAgentFiles(agentsDestDir);
 
-    // Step 10: Convert to Qwen format config
+    // Step 10: Convert to Moli format config
     const moliConfig = convertClaudeToMoliConfig(mergedConfig);
 
     // Step 11: Write moli-extension.json
@@ -551,6 +553,18 @@ async function collectResources(
       for (const file of files) {
         const srcFile = path.join(resolvedPath, file);
         const destFile = path.join(finalDestDir, file);
+
+        // Check if the source is a regular file (skip sockets, FIFOs, directories behind symlinks, etc.)
+        try {
+          const fileStat = fs.statSync(srcFile);
+          if (!fileStat.isFile()) {
+            debugLogger.debug(`Skipping non-regular file: ${srcFile}`);
+            continue;
+          }
+        } catch {
+          debugLogger.debug(`Failed to stat file, skipping: ${srcFile}`);
+          continue;
+        }
 
         // Ensure parent directory exists
         const destFileDir = path.dirname(destFile);

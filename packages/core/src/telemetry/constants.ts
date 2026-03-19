@@ -7,6 +7,7 @@
 export const SERVICE_NAME = 'moli-code';
 
 export const EVENT_USER_PROMPT = 'moli-code.user_prompt';
+export const EVENT_USER_RETRY = 'moli-code.user_retry';
 export const EVENT_TOOL_CALL = 'moli-code.tool_call';
 export const EVENT_API_REQUEST = 'moli-code.api_request';
 export const EVENT_API_ERROR = 'moli-code.api_error';

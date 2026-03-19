@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -127,19 +127,19 @@ describe('modelConfigResolver', () => {
         expect(result.sources['apiKey'].via?.kind).toBe('modelProviders');
       });
 
-      it('reads QWEN_MODEL as fallback for OPENAI_MODEL', () => {
+      it('reads MOLI_MODEL as fallback for OPENAI_MODEL', () => {
         const result = resolveModelConfig({
           authType: AuthType.USE_OPENAI,
           cli: {},
           settings: {},
           env: {
-            QWEN_MODEL: 'moli-model',
+            MOLI_MODEL: 'moli-model',
             OPENAI_API_KEY: 'key',
           },
         });
 
         expect(result.config.model).toBe('moli-model');
-        expect(result.sources['model'].envKey).toBe('QWEN_MODEL');
+        expect(result.sources['model'].envKey).toBe('MOLI_MODEL');
       });
     });
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -26,6 +26,7 @@ export interface TextInputProps {
   isActive?: boolean; // when false, ignore keypresses
   validationErrors?: string[];
   inputWidth?: number;
+  initialCursorOffset?: number;
 }
 
 export function TextInput({
@@ -37,6 +38,7 @@ export function TextInput({
   isActive = true,
   validationErrors = [],
   inputWidth = 80,
+  initialCursorOffset,
 }: TextInputProps) {
   const allowMultiline = height > 1;
 
@@ -51,6 +53,7 @@ export function TextInput({
 
   const buffer = useTextBuffer({
     initialText: value || '',
+    initialCursorOffset,
     viewport: { height, width: inputWidth },
     isValidPath: () => false,
     onChange: stableOnChange,

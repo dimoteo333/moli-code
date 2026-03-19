@@ -36,6 +36,12 @@ import {
   CODING_PLAN_ENV_KEY,
 } from '../../constants/codingPlan.js';
 import { backupSettingsFile } from '../../utils/settingsUtils.js';
+import {
+  authenticateWithMolimate,
+  validateEmployeeId,
+} from '../../services/molimateAuthService.js';
+import type { MolimateModel } from '../components/MolimateModelSelector.js';
+import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
 
 export type { MoliAuthState } from '../hooks/useMoliAuth.js';
 
@@ -389,8 +395,19 @@ export const useAuthCommand = (
           {
             type: MessageType.INFO,
             text: t(
-              'Authenticated successfully with {{region}}. API key and model configs saved to settings.json (backed up).',
+              'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.',
               { region: t('Alibaba Cloud Coding Plan') },
+            ),
+          },
+          Date.now(),
+        );
+
+        // Hint about /model command
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: t(
+              'Tip: Use /model to switch between available Coding Plan models.',
             ),
           },
           Date.now(),
@@ -402,71 +419,6 @@ export const useAuthCommand = (
           'coding-plan',
           'success',
         );
-        logAuth(config, authEvent);
-      } catch (error) {
-        handleAuthFailure(error);
-      }
-    },
-    [settings, config, handleAuthFailure, addItem, onAuthChange],
-  );
-
-  /**
-   * Handle local environment setup - writes modelProviders config, sets env var,
-   * hot-reloads providers, and triggers auth without needing manual credentials.
-   */
-  const handleLocalEnvSetup = useCallback(
-    async (params: { apiKey: string; baseUrl: string; modelName: string }) => {
-      try {
-        setIsAuthenticating(true);
-        setAuthError(null);
-
-        const { apiKey, baseUrl, modelName } = params;
-        const authType = AuthType.USE_OPENAI;
-
-        // Set env var so applyResolvedModelDefaults can read it from process.env
-        process.env['MODEL_API_KEY'] = apiKey;
-
-        // Hot-reload model providers so the model appears in the registry
-        const updatedModelProviders: ModelProvidersConfig = {
-          [authType]: [
-            {
-              id: modelName,
-              name: modelName,
-              baseUrl,
-              description: `${modelName} via Custom Endpoint`,
-              envKey: 'MODEL_API_KEY',
-            } as ProviderModelConfig,
-          ],
-        };
-        config.reloadModelProvidersConfig(updatedModelProviders);
-
-        // Refresh auth - syncAfterAuthRefresh will find the model in registry
-        // and applyResolvedModelDefaults will read apiKey from process.env
-        await config.refreshAuth(authType);
-
-        // Persist auth type and model to in-memory settings
-        const persistScope = getPersistScopeForModelSelection(settings);
-        settings.setValue(persistScope, 'security.auth.selectedType', authType);
-        settings.setValue(persistScope, 'model.name', modelName);
-
-        setAuthError(null);
-        setAuthState(AuthState.Authenticated);
-        setPendingAuthType(undefined);
-        setIsAuthDialogOpen(false);
-        setIsAuthenticating(false);
-        onAuthChange?.();
-
-        addItem(
-          {
-            type: MessageType.INFO,
-            text: t('Authenticated successfully with {{authType}} credentials.', {
-              authType,
-            }),
-          },
-          Date.now(),
-        );
-
-        const authEvent = new AuthEvent(authType, 'manual', 'success');
         logAuth(config, authEvent);
       } catch (error) {
         handleAuthFailure(error);
@@ -515,6 +467,345 @@ export const useAuthCommand = (
     }
   }, [onAuthError]);
 
+  /**
+   * Validate employee ID with Molimate HTTP request (POST to molimateUrl).
+   * Called before model selection to verify the employee ID is valid.
+   */
+  const validateMolimateEmployee = useCallback(
+    async (
+      employeeId: string,
+    ): Promise<{ success: boolean; message?: string }> => {
+      // Validate employee ID format
+      if (!validateEmployeeId(employeeId)) {
+        return {
+          success: false,
+          message: t(
+            'Invalid employee ID. Only alphanumeric characters are allowed.',
+          ),
+        };
+      }
+
+      // Call the Molimate auth service
+      const authResponse = await authenticateWithMolimate(employeeId);
+      if (!authResponse.success) {
+        return {
+          success: false,
+          message:
+            authResponse.message ||
+            t('Authentication failed. Please check your employee ID.'),
+        };
+      }
+
+      return { success: true };
+    },
+    [],
+  );
+
+  /**
+   * Handle Molimate authentication submit - saves hardcoded API keys to settings.
+   * Called after employee ID validation and model selection.
+   */
+  const handleMolimateAuthSubmit = useCallback(
+    async (employeeId: string, model: MolimateModel) => {
+      setIsAuthenticating(true);
+      setAuthError(null);
+
+      try {
+        // Get persist scope
+        const persistScope = getPersistScopeForModelSelection(settings);
+
+        // Backup settings file before modification
+        const settingsFile = settings.forScope(persistScope);
+        backupSettingsFile(settingsFile.path);
+
+        // Build provider model configs with hardcoded API keys
+        const providerModels: ProviderModelConfig[] = [
+          {
+            id: 'qwen3-coder',
+            name: 'qwen3-coder',
+            baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
+            description: 'Qwen3-Coder via moli',
+            envKey: 'MODEL_API_KEY_qwen3-coder',
+          },
+          {
+            id: 'gpt-oss-120b',
+            name: 'gpt-oss-120b',
+            baseUrl: 'https://testai.apitest.com/oss-mode/v1',
+            description: 'gpt-oss-120b via moli',
+            envKey: 'MODEL_API_KEY_gpt-oss-120b',
+          },
+        ];
+
+        // Get existing configs and filter out coding plan configs
+        const existingConfigs =
+          (
+            settings.merged.modelProviders as ModelProvidersConfig | undefined
+          )?.[AuthType.USE_OPENAI] || [];
+        const nonCodingPlanConfigs = existingConfigs.filter(
+          (config) => !isCodingPlanConfig(config.baseUrl, config.envKey),
+        );
+
+        // Merge with new configs
+        const updatedConfigs = [...providerModels, ...nonCodingPlanConfigs];
+
+        // Persist to settings
+        settings.setValue(
+          persistScope,
+          `modelProviders.${AuthType.USE_OPENAI}`,
+          updatedConfigs,
+        );
+
+        // Persist hardcoded API keys
+        settings.setValue(
+          persistScope,
+          'env.MODEL_API_KEY_qwen3-coder',
+          'sk-cj-12axvbiej12',
+        );
+        settings.setValue(
+          persistScope,
+          'env.MODEL_API_KEY_gpt-oss-120b',
+          'sk-ei-bkoiwormc42',
+        );
+
+        // Persist auth type and selected model
+        settings.setValue(
+          persistScope,
+          'security.auth.selectedType',
+          AuthType.USE_OPENAI,
+        );
+        settings.setValue(persistScope, 'model.name', model);
+
+        // Hot-reload model providers configuration before refreshAuth
+        const updatedModelProviders: ModelProvidersConfig = {
+          ...(settings.merged.modelProviders as
+            | ModelProvidersConfig
+            | undefined),
+          [AuthType.USE_OPENAI]: updatedConfigs,
+        };
+        config.reloadModelProvidersConfig(updatedModelProviders);
+
+        // Refresh auth with the new configuration
+        await config.refreshAuth(AuthType.USE_OPENAI);
+
+        // Success handling
+        setAuthError(null);
+        setAuthState(AuthState.Authenticated);
+        setIsAuthDialogOpen(false);
+        setIsAuthenticating(false);
+
+        // Trigger UI refresh
+        onAuthChange?.();
+
+        // Add success message
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: t(
+              'Authenticated successfully with Molimate. Default model: {{modelName}}',
+              { modelName: model },
+            ),
+          },
+          Date.now(),
+        );
+
+        // Log success
+        const authEvent = new AuthEvent(
+          AuthType.USE_OPENAI,
+          'manual',
+          'success',
+        );
+        logAuth(config, authEvent);
+      } catch (error) {
+        handleAuthFailure(error);
+      }
+    },
+    [settings, config, handleAuthFailure, addItem, onAuthChange],
+  );
+
+  /**
+   * Handle Molimate model selection - updates the selected model
+   */
+  const handleMolimateModelSelect = useCallback(
+    async (model: MolimateModel) => {
+      try {
+        const persistScope = getPersistScopeForModelSelection(settings);
+
+        // Update the selected model
+        settings.setValue(persistScope, 'model.name', model);
+
+        // Sync to process.env for immediate use
+        const envKey = `MODEL_API_KEY_${model}`;
+        const apiKey =
+          model === 'qwen3-coder' ? 'sk-cj-12axvbiej12' : 'sk-ei-bkoiwormc42';
+        process.env[envKey] = apiKey;
+
+        // Refresh auth to apply changes
+        await config.refreshAuth(AuthType.USE_OPENAI);
+
+        // Success handling
+        setAuthError(null);
+        setAuthState(AuthState.Authenticated);
+        setIsAuthDialogOpen(false);
+        setIsAuthenticating(false);
+
+        // Trigger UI refresh
+        onAuthChange?.();
+
+        // Add success message
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: t('Model switched to {{modelName}}', { modelName: model }),
+          },
+          Date.now(),
+        );
+      } catch (error) {
+        handleAuthFailure(error);
+      }
+    },
+    [settings, config, handleAuthFailure, addItem, onAuthChange],
+  );
+
+  /**
+   * Handle local config submit - step-by-step configuration wizard
+   */
+  const handleLocalConfigSubmit = useCallback(
+    async (values: LocalConfigValues) => {
+      setIsAuthenticating(true);
+      setAuthError(null);
+
+      try {
+        const persistScope = getPersistScopeForModelSelection(settings);
+
+        // Backup settings file before modification
+        const settingsFile = settings.forScope(persistScope);
+        backupSettingsFile(settingsFile.path);
+
+        // Build provider model configs
+        const providerModels: ProviderModelConfig[] = [];
+
+        if (values.moli3CoderApiKey) {
+          providerModels.push({
+            id: 'qwen3-coder',
+            name: 'qwen3-coder',
+            baseUrl:
+              values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
+            description: 'Moli3-Coder via local config',
+            envKey: 'MODEL_API_KEY_qwen3-coder',
+          });
+        }
+
+        if (values.gptOss120bApiKey) {
+          providerModels.push({
+            id: 'gpt-oss-120b',
+            name: 'gpt-oss-120b',
+            baseUrl: values.baseUrl || 'https://testai.apitest.com/oss-mode/v1',
+            description: 'gpt-oss-120b via local config',
+            envKey: 'MODEL_API_KEY_gpt-oss-120b',
+          });
+        }
+
+        // Get existing configs and filter out conflicting ones
+        const existingConfigs =
+          (
+            settings.merged.modelProviders as ModelProvidersConfig | undefined
+          )?.[AuthType.USE_OPENAI] || [];
+        const nonLocalConfigs = existingConfigs.filter(
+          (config) =>
+            config.id !== 'qwen3-coder' && config.id !== 'gpt-oss-120b',
+        );
+
+        // Merge with new configs
+        const updatedConfigs = [...providerModels, ...nonLocalConfigs];
+
+        // Persist to settings
+        settings.setValue(
+          persistScope,
+          `modelProviders.${AuthType.USE_OPENAI}`,
+          updatedConfigs,
+        );
+
+        // Save API keys
+        if (values.moli3CoderApiKey) {
+          settings.setValue(
+            persistScope,
+            'env.MODEL_API_KEY_qwen3-coder',
+            values.moli3CoderApiKey,
+          );
+          // Sync to process.env immediately
+          process.env['MODEL_API_KEY_qwen3-coder'] = values.moli3CoderApiKey;
+        }
+
+        if (values.gptOss120bApiKey) {
+          settings.setValue(
+            persistScope,
+            'env.MODEL_API_KEY_gpt-oss-120b',
+            values.gptOss120bApiKey,
+          );
+          // Sync to process.env immediately
+          process.env['MODEL_API_KEY_gpt-oss-120b'] = values.gptOss120bApiKey;
+        }
+
+        // Set auth type
+        settings.setValue(
+          persistScope,
+          'security.auth.selectedType',
+          AuthType.USE_OPENAI,
+        );
+
+        // Set default model
+        const defaultModel = values.moli3CoderApiKey
+          ? 'qwen3-coder'
+          : 'gpt-oss-120b';
+        settings.setValue(persistScope, 'model.name', defaultModel);
+
+        // Hot-reload model providers configuration before refreshAuth
+        const updatedModelProviders: ModelProvidersConfig = {
+          ...(settings.merged.modelProviders as
+            | ModelProvidersConfig
+            | undefined),
+          [AuthType.USE_OPENAI]: updatedConfigs,
+        };
+        config.reloadModelProvidersConfig(updatedModelProviders);
+
+        // Refresh auth with the new configuration
+        await config.refreshAuth(AuthType.USE_OPENAI);
+
+        // Success handling
+        setAuthError(null);
+        setAuthState(AuthState.Authenticated);
+        setIsAuthDialogOpen(false);
+        setIsAuthenticating(false);
+
+        // Trigger UI refresh
+        onAuthChange?.();
+
+        // Add success message
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: t(
+              'Local configuration saved successfully. Default model: {{modelName}}',
+              { modelName: defaultModel },
+            ),
+          },
+          Date.now(),
+        );
+
+        // Log success
+        const authEvent = new AuthEvent(
+          AuthType.USE_OPENAI,
+          'manual',
+          'success',
+        );
+        logAuth(config, authEvent);
+      } catch (error) {
+        handleAuthFailure(error);
+      }
+    },
+    [settings, config, handleAuthFailure, addItem, onAuthChange],
+  );
+
   return {
     authState,
     setAuthState,
@@ -525,9 +816,12 @@ export const useAuthCommand = (
     pendingAuthType,
     moliAuthState,
     handleAuthSelect,
-    handleLocalEnvSetup,
     handleCodingPlanSubmit,
     openAuthDialog,
     cancelAuthentication,
+    validateMolimateEmployee,
+    handleMolimateAuthSubmit,
+    handleMolimateModelSelect,
+    handleLocalConfigSubmit,
   };
 };

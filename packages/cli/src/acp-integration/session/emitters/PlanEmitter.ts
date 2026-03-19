@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { BaseEmitter } from './BaseEmitter.js';
 import type { TodoItem } from '../types.js';
-import type * as acp from '../../acp.js';
+import type { PlanEntry } from '@agentclientprotocol/sdk';
 
 /**
  * Handles emission of plan/todo updates.
@@ -22,7 +22,7 @@ export class PlanEmitter extends BaseEmitter {
    * @param todos - Array of todo items to send as plan entries
    */
   async emitPlan(todos: TodoItem[]): Promise<void> {
-    const entries: acp.PlanEntry[] = todos.map((todo) => ({
+    const entries: PlanEntry[] = todos.map((todo) => ({
       content: todo.content,
       priority: 'medium' as const, // Default priority since todos don't have priority
       status: todo.status,

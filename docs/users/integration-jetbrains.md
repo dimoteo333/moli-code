@@ -16,6 +16,30 @@
 
 ### Installation
 
+#### Install from ACP Registry (Recommend)
+
+1. Install Moli Code CLI:
+
+   ```bash
+   npm install -g @moli-code/moli-code
+   ```
+
+2. Open your JetBrains IDE and navigate to AI Chat tool window.
+
+3. Click **Add ACP Agent**, then click **Install**.
+
+   ![Install](https://img.alicdn.com/imgextra/i4/O1CN01qNdPCW1y8AcqxRgCy_!!6000000006533-2-tps-2490-1788.png)
+
+   For users using JetBrains AI Assistant and/or other ACP agents, click **Install From ACP Registry** in Agents List, then install Moli Code ACP.
+
+   ![Add from Agents List](https://img.alicdn.com/imgextra/i2/O1CN01ZyOugP26BOKzNgZXx_!!6000000007623-2-tps-479-523.png)
+
+4. The Moli Code agent should now be available in the AI Assistant panel.
+
+   ![Moli Code in JetBrains AI Chat](https://img.alicdn.com/imgextra/i4/O1CN013kAVE41XVzbIZOxyv_!!6000000002930-2-tps-3188-2170.png)
+
+#### Manual Install (for older version of JetBrains IDEs)
+
 1. Install Moli Code CLI:
 
    ```bash
@@ -29,8 +53,8 @@
 ```json
 {
   "agent_servers": {
-    "qwen": {
-      "command": "/path/to/qwen",
+    "moli": {
+      "command": "/path/to/moli",
       "args": ["--acp"],
       "env": {}
     }
@@ -46,7 +70,7 @@
 
 ### Agent not appearing
 
-- Run `qwen --version` in terminal to verify installation
+- Run `moli --version` in terminal to verify installation
 - Ensure your JetBrains IDE version supports ACP
 - Restart your JetBrains IDE
 
@@ -54,4 +78,4 @@
 
 - Check your internet connection
 - Verify CLI works by running `moli` in terminal
-- [File an issue on GitHub](https://github.com/dimoteo333/moli-code/issues) if the problem persists
+- [File an issue on GitHub](https://github.com/molilm/moli-code/issues) if the problem persists

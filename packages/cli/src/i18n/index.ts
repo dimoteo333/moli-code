@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen team
+ * Copyright 2025 Moli team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -88,13 +88,27 @@ async function loadTranslationsAsync(
   }
 
   const loadPromise = (async () => {
-    // 1. Try user directory first (for custom language packs)
-    const userDir = getUserLocalesDir();
-    if (fs.existsSync(userDir)) {
-      const userJsPath = getLocalePath(lang, true);
-      if (fs.existsSync(userJsPath)) {
+    // Try user directory first (for custom language packs), then builtin directory
+    const searchDirs = [
+      { dir: getUserLocalesDir(), isUser: true },
+      { dir: getBuiltinLocalesDir(), isUser: false },
+    ];
+
+    for (const { dir, isUser } of searchDirs) {
+      // Ensure directory exists
+      if (!fs.existsSync(dir)) {
+        continue;
+      }
+
+      const jsPath = getLocalePath(lang, isUser);
+      if (!fs.existsSync(jsPath)) {
+        continue;
+      }
+
+      try {
+        // Convert file path to file:// URL for cross-platform compatibility
+        const fileUrl = pathToFileURL(jsPath).href;
         try {
-          const fileUrl = pathToFileURL(userJsPath).href;
           const module = await import(fileUrl);
           const result = module.default || module;
           if (
@@ -104,57 +118,48 @@ async function loadTranslationsAsync(
           ) {
             translationCache[lang] = result;
             return result;
+          } else {
+            throw new Error('Module loaded but result is empty or invalid');
           }
-        } catch (error) {
+        } catch {
+          // For builtin locales, try alternative import method (relative path)
+          if (!isUser) {
+            try {
+              const module = await import(`./locales/${lang}.js`);
+              const result = module.default || module;
+              if (
+                result &&
+                typeof result === 'object' &&
+                Object.keys(result).length > 0
+              ) {
+                translationCache[lang] = result;
+                return result;
+              }
+            } catch {
+              // Continue to next directory
+            }
+          }
+          // If import failed, continue to next directory
+          continue;
+        }
+      } catch (error) {
+        // Log warning but continue to next directory
+        if (isUser) {
           writeStderrLine(
             `Failed to load translations from user directory for ${lang}: ${error instanceof Error ? error.message : String(error)}`,
           );
-        }
-      }
-    }
-
-    // 2. Try bundled locale import (works in esbuild bundle where locales are inlined)
-    try {
-      const module = await import(`./locales/${lang}.js`);
-      const result = module.default || module;
-      if (
-        result &&
-        typeof result === 'object' &&
-        Object.keys(result).length > 0
-      ) {
-        translationCache[lang] = result;
-        return result;
-      }
-    } catch {
-      // Bundled import not available, try filesystem
-    }
-
-    // 3. Try builtin locales directory on filesystem
-    const builtinDir = getBuiltinLocalesDir();
-    if (fs.existsSync(builtinDir)) {
-      const builtinJsPath = getLocalePath(lang, false);
-      if (fs.existsSync(builtinJsPath)) {
-        try {
-          const fileUrl = pathToFileURL(builtinJsPath).href;
-          const module = await import(fileUrl);
-          const result = module.default || module;
-          if (
-            result &&
-            typeof result === 'object' &&
-            Object.keys(result).length > 0
-          ) {
-            translationCache[lang] = result;
-            return result;
-          }
-        } catch (error) {
+        } else {
           writeStderrLine(
             `Failed to load JS translations for ${lang}: ${error instanceof Error ? error.message : String(error)}`,
           );
         }
+        // Continue to next directory
+        continue;
       }
     }
 
-    // Return empty object if all methods fail
+    // Return empty object if both directories fail
+    // Cache it to avoid repeated failed attempts
     translationCache[lang] = {};
     return {};
   })();

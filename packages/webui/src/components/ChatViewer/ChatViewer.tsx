@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -31,7 +31,7 @@ import type { ToolCallData as BaseToolCallData } from '../toolcalls/index.js';
 import './ChatViewer.css';
 
 /**
- * Message part containing text content (Qwen format)
+ * Message part containing text content (Moli format)
  */
 export interface MessagePart {
   text: string;
@@ -54,7 +54,7 @@ export type ToolCallData = BaseToolCallData;
 
 /**
  * Single chat message from JSONL format
- * Supports both Qwen format and Claude format
+ * Supports both Moli format and Claude format
  */
 export interface ChatMessageData {
   uuid: string;
@@ -62,7 +62,7 @@ export interface ChatMessageData {
   sessionId?: string;
   timestamp: string; // ISO timestamp string
   type: 'user' | 'assistant' | 'system' | 'tool_call';
-  // Qwen format
+  // Moli format
   message?: {
     role?: string;
     parts?: MessagePart[];
@@ -109,12 +109,12 @@ export interface ChatViewerProps {
 }
 
 /**
- * Extract text content from message (supports both Qwen and Claude formats)
+ * Extract text content from message (supports both Moli and Claude formats)
  */
 function extractContent(message: ChatMessageData['message']): string {
   if (!message) return '';
 
-  // Qwen format: message.parts[].text
+  // Moli format: message.parts[].text
   if (message.parts && Array.isArray(message.parts)) {
     return message.parts.map((part) => part.text || '').join('');
   }

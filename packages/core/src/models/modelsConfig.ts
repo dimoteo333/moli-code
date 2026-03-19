@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -769,6 +769,25 @@ export class ModelsConfig {
       this.generationConfigSources['contextWindowSize'] = {
         kind: 'computed',
         detail: 'auto-detected from model',
+      };
+    }
+
+    // max_tokens fallback: auto-detect from model when not set by provider.
+    // Without this, requests to non-Moli models (Claude, GPT, etc.) may omit
+    // max_tokens entirely, causing the API to use a small default (e.g. 4096)
+    // and truncating long responses mid-tool-call.
+    if (!this._generationConfig.samplingParams?.max_tokens) {
+      const outputLimit = tokenLimit(model.id, 'output');
+      if (!this._generationConfig.samplingParams) {
+        this._generationConfig.samplingParams = {};
+      }
+      this._generationConfig.samplingParams.max_tokens = outputLimit;
+      const existingSource = this.generationConfigSources['samplingParams'];
+      this.generationConfigSources['samplingParams'] = {
+        kind: 'computed',
+        detail: existingSource
+          ? `max_tokens auto-detected from model (other params from ${existingSource.kind})`
+          : 'max_tokens auto-detected from model',
       };
     }
 

@@ -2,12 +2,12 @@
   "name": "moli-code-vscode-ide-companion",
   "displayName": "Moli Code Companion",
   "description": "Enable Moli Code with direct access to your VS Code workspace.",
-  "version": "0.1.0",
-  "publisher": "dimoteo333",
+  "version": "0.12.5",
+  "publisher": "dobby",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dimoteo333/moli-code.git",
+    "url": "https://github.com/MoliLM/moli-code.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -20,15 +20,67 @@
   ],
   "keywords": [
     "moli-code",
+    "moli code",
     "moli",
+    "moli code",
     "cli",
     "ide integration",
     "ide companion"
   ],
   "activationEvents": [
-    "onStartupFinished"
+    "onStartupFinished",
+    "onView:moli-code.chatView.sidebar",
+    "onView:moli-code.chatView.secondary",
+    "onCommand:moli-code.openChat",
+    "onCommand:moli-code.focusChat",
+    "onCommand:moli-code.newConversation",
+    "onCommand:moli-code.showLogs"
   ],
   "contributes": {
+    "jsonValidation": [
+      {
+        "fileMatch": "**/.moli/settings.json",
+        "url": "./schemas/settings.schema.json"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "moli-code-sidebar",
+          "title": "Moli Code",
+          "icon": "assets/sidebar-icon.svg",
+          "when": "moli-code:doesNotSupportSecondarySidebar"
+        }
+      ],
+      "secondarySidebar": [
+        {
+          "id": "moli-code-secondary",
+          "title": "Moli Code",
+          "icon": "assets/sidebar-icon.svg",
+          "when": "!moli-code:doesNotSupportSecondarySidebar"
+        }
+      ]
+    },
+    "views": {
+      "moli-code-sidebar": [
+        {
+          "type": "webview",
+          "id": "moli-code.chatView.sidebar",
+          "name": "Moli Code",
+          "icon": "assets/sidebar-icon.svg",
+          "when": "moli-code:doesNotSupportSecondarySidebar"
+        }
+      ],
+      "moli-code-secondary": [
+        {
+          "type": "webview",
+          "id": "moli-code.chatView.secondary",
+          "name": "Moli Code",
+          "icon": "assets/sidebar-icon.svg",
+          "when": "!moli-code:doesNotSupportSecondarySidebar"
+        }
+      ]
+    },
     "languages": [
       {
         "id": "moli-diff-editable"
@@ -46,7 +98,7 @@
         "icon": "$(close)"
       },
       {
-        "command": "moli-code.run",
+        "command": "moli-code.runMoliCode",
         "title": "Moli Code: Run"
       },
       {
@@ -61,6 +113,18 @@
       {
         "command": "moli-code.login",
         "title": "Moli Code: Login"
+      },
+      {
+        "command": "moli-code.focusChat",
+        "title": "Moli Code: Focus Chat View"
+      },
+      {
+        "command": "moli-code.newConversation",
+        "title": "Moli Code: New Conversation"
+      },
+      {
+        "command": "moli-code.showLogs",
+        "title": "Moli Code: Show Logs"
       }
     ],
     "menus": {
@@ -105,6 +169,11 @@
         "command": "moli.diff.accept",
         "key": "cmd+s",
         "when": "moli.diff.isVisible"
+      },
+      {
+        "command": "moli-code.focusChat",
+        "key": "ctrl+shift+l",
+        "mac": "cmd+shift+l"
       }
     ]
   },
@@ -150,6 +219,7 @@
     "vitest": "^3.2.4"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^0.14.1",
     "@dobby/moli-code-webui": "*",
     "@modelcontextprotocol/sdk": "^1.25.1",
     "cors": "^2.8.5",

@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { MoliSessionUpdateHandler } from './moliSessionUpdateHandler.js';
-import type { AcpSessionUpdate } from '../types/acpTypes.js';
+import type { SessionNotification } from '@agentclientprotocol/sdk';
 import type { ApprovalModeValue } from '../types/approvalModeValueTypes.js';
 import type { MoliAgentCallbacks } from '../types/chatTypes.js';
 
@@ -28,81 +28,15 @@ describe('MoliSessionUpdateHandler', () => {
     handler = new MoliSessionUpdateHandler(mockCallbacks);
   });
 
-  describe('current_model_update handling', () => {
-    it('calls onModelChanged callback with model info', () => {
-      const modelUpdate: AcpSessionUpdate = {
-        sessionId: 'test-session',
-        update: {
-          sessionUpdate: 'current_model_update',
-          model: {
-            modelId: 'moli-coder-plus',
-            name: 'Moli Coder Plus',
-            description: 'A powerful coding model',
-          },
-        },
-      } as AcpSessionUpdate;
-
-      handler.handleSessionUpdate(modelUpdate);
-
-      expect(mockCallbacks.onModelChanged).toHaveBeenCalledWith({
-        modelId: 'moli-coder-plus',
-        name: 'Moli Coder Plus',
-        description: 'A powerful coding model',
-      });
-    });
-
-    it('handles model update with _meta field', () => {
-      const modelUpdate: AcpSessionUpdate = {
-        sessionId: 'test-session',
-        update: {
-          sessionUpdate: 'current_model_update',
-          model: {
-            modelId: 'test-model',
-            name: 'Test Model',
-            _meta: { contextLimit: 128000 },
-          },
-        },
-      } as AcpSessionUpdate;
-
-      handler.handleSessionUpdate(modelUpdate);
-
-      expect(mockCallbacks.onModelChanged).toHaveBeenCalledWith({
-        modelId: 'test-model',
-        name: 'Test Model',
-        _meta: { contextLimit: 128000 },
-      });
-    });
-
-    it('does not call callback when onModelChanged is not set', () => {
-      const handlerWithoutCallback = new MoliSessionUpdateHandler({});
-
-      const modelUpdate: AcpSessionUpdate = {
-        sessionId: 'test-session',
-        update: {
-          sessionUpdate: 'current_model_update',
-          model: {
-            modelId: 'moli-coder',
-            name: 'Moli Coder',
-          },
-        },
-      } as AcpSessionUpdate;
-
-      // Should not throw
-      expect(() =>
-        handlerWithoutCallback.handleSessionUpdate(modelUpdate),
-      ).not.toThrow();
-    });
-  });
-
   describe('current_mode_update handling', () => {
     it('calls onModeChanged callback with mode id', () => {
-      const modeUpdate: AcpSessionUpdate = {
+      const modeUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'current_mode_update',
-          modeId: 'auto-edit' as ApprovalModeValue,
+          currentModeId: 'auto-edit' as ApprovalModeValue,
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       handler.handleSessionUpdate(modeUpdate);
 
@@ -112,7 +46,7 @@ describe('MoliSessionUpdateHandler', () => {
 
   describe('agent_message_chunk handling', () => {
     it('calls onStreamChunk callback with text content', () => {
-      const messageUpdate: AcpSessionUpdate = {
+      const messageUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'agent_message_chunk',
@@ -129,7 +63,7 @@ describe('MoliSessionUpdateHandler', () => {
     });
 
     it('emits usage metadata when present', () => {
-      const messageUpdate: AcpSessionUpdate = {
+      const messageUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'agent_message_chunk',
@@ -152,18 +86,66 @@ describe('MoliSessionUpdateHandler', () => {
 
       expect(mockCallbacks.onUsageUpdate).toHaveBeenCalledWith({
         usage: {
+          inputTokens: 100,
+          outputTokens: 50,
+          thoughtTokens: undefined,
+          totalTokens: 150,
+          cachedReadTokens: undefined,
+          cachedWriteTokens: undefined,
           promptTokens: 100,
           completionTokens: 50,
-          totalTokens: 150,
+          thoughtsTokens: undefined,
+          cachedTokens: undefined,
         },
         durationMs: 1234,
+      });
+    });
+
+    it('maps SDK usage field names to both SDK and legacy fields', () => {
+      const messageUpdate: SessionNotification = {
+        sessionId: 'test-session',
+        update: {
+          sessionUpdate: 'agent_message_chunk',
+          content: {
+            type: 'text',
+            text: 'Response',
+          },
+          _meta: {
+            usage: {
+              inputTokens: 200,
+              outputTokens: 80,
+              thoughtTokens: 30,
+              totalTokens: 310,
+              cachedReadTokens: 10,
+            } as never,
+            durationMs: 500,
+          },
+        },
+      };
+
+      handler.handleSessionUpdate(messageUpdate);
+
+      expect(mockCallbacks.onUsageUpdate).toHaveBeenCalledWith({
+        usage: {
+          inputTokens: 200,
+          outputTokens: 80,
+          thoughtTokens: 30,
+          totalTokens: 310,
+          cachedReadTokens: 10,
+          cachedWriteTokens: undefined,
+          promptTokens: 200,
+          completionTokens: 80,
+          thoughtsTokens: 30,
+          cachedTokens: 10,
+        },
+        durationMs: 500,
       });
     });
   });
 
   describe('tool_call handling', () => {
     it('calls onToolCall callback with tool call data', () => {
-      const toolCallUpdate: AcpSessionUpdate = {
+      const toolCallUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'tool_call',
@@ -191,7 +173,7 @@ describe('MoliSessionUpdateHandler', () => {
 
   describe('plan handling', () => {
     it('calls onPlan callback with plan entries', () => {
-      const planUpdate: AcpSessionUpdate = {
+      const planUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'plan',
@@ -215,7 +197,7 @@ describe('MoliSessionUpdateHandler', () => {
         onStreamChunk: vi.fn(),
       });
 
-      const planUpdate: AcpSessionUpdate = {
+      const planUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'plan',
@@ -231,7 +213,7 @@ describe('MoliSessionUpdateHandler', () => {
 
   describe('available_commands_update handling', () => {
     it('calls onAvailableCommands callback with commands', () => {
-      const commandsUpdate: AcpSessionUpdate = {
+      const commandsUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'available_commands_update',
@@ -253,7 +235,7 @@ describe('MoliSessionUpdateHandler', () => {
             },
           ],
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       handler.handleSessionUpdate(commandsUpdate);
 
@@ -269,7 +251,7 @@ describe('MoliSessionUpdateHandler', () => {
     });
 
     it('handles commands with input hint', () => {
-      const commandsUpdate: AcpSessionUpdate = {
+      const commandsUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'available_commands_update',
@@ -281,7 +263,7 @@ describe('MoliSessionUpdateHandler', () => {
             },
           ],
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       handler.handleSessionUpdate(commandsUpdate);
 
@@ -297,7 +279,7 @@ describe('MoliSessionUpdateHandler', () => {
     it('does not call callback when onAvailableCommands is not set', () => {
       const handlerWithoutCallback = new MoliSessionUpdateHandler({});
 
-      const commandsUpdate: AcpSessionUpdate = {
+      const commandsUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'available_commands_update',
@@ -305,7 +287,7 @@ describe('MoliSessionUpdateHandler', () => {
             { name: 'compress', description: 'Compress', input: null },
           ],
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       // Should not throw
       expect(() =>
@@ -314,13 +296,13 @@ describe('MoliSessionUpdateHandler', () => {
     });
 
     it('handles empty commands list', () => {
-      const commandsUpdate: AcpSessionUpdate = {
+      const commandsUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'available_commands_update',
           availableCommands: [],
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       handler.handleSessionUpdate(commandsUpdate);
 
@@ -329,28 +311,25 @@ describe('MoliSessionUpdateHandler', () => {
   });
 
   describe('updateCallbacks', () => {
-    it('updates callbacks and uses new ones', () => {
-      const newOnModelChanged = vi.fn();
+    it('updates mode callback and uses new one', () => {
+      const newOnModeChanged = vi.fn();
       handler.updateCallbacks({
         ...mockCallbacks,
-        onModelChanged: newOnModelChanged,
+        onModeChanged: newOnModeChanged,
       });
 
-      const modelUpdate: AcpSessionUpdate = {
+      const modeUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
-          sessionUpdate: 'current_model_update',
-          model: {
-            modelId: 'new-model',
-            name: 'New Model',
-          },
+          sessionUpdate: 'current_mode_update',
+          currentModeId: 'yolo' as ApprovalModeValue,
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
-      handler.handleSessionUpdate(modelUpdate);
+      handler.handleSessionUpdate(modeUpdate);
 
-      expect(newOnModelChanged).toHaveBeenCalled();
-      expect(mockCallbacks.onModelChanged).not.toHaveBeenCalled();
+      expect(newOnModeChanged).toHaveBeenCalled();
+      expect(mockCallbacks.onModeChanged).not.toHaveBeenCalled();
     });
 
     it('updates onAvailableCommands callback', () => {
@@ -360,7 +339,7 @@ describe('MoliSessionUpdateHandler', () => {
         onAvailableCommands: newOnAvailableCommands,
       });
 
-      const commandsUpdate: AcpSessionUpdate = {
+      const commandsUpdate: SessionNotification = {
         sessionId: 'test-session',
         update: {
           sessionUpdate: 'available_commands_update',
@@ -368,7 +347,7 @@ describe('MoliSessionUpdateHandler', () => {
             { name: 'test', description: 'Test command', input: null },
           ],
         },
-      } as AcpSessionUpdate;
+      } as SessionNotification;
 
       handler.handleSessionUpdate(commandsUpdate);
 

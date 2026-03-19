@@ -18,7 +18,7 @@ LSP support in Moli Code works by connecting to language servers that understand
 LSP is an experimental feature in Moli Code. To enable it, use the `--experimental-lsp` command line flag:
 
 ```bash
-qwen --experimental-lsp
+moli --experimental-lsp
 ```
 
 For most common languages, Moli Code will automatically detect and start the appropriate language server if it's installed on your system.
@@ -317,7 +317,7 @@ You can override trust requirements for specific servers in their configuration:
 Enable debug logging to see LSP communication:
 
 ```bash
-DEBUG=lsp* qwen --experimental-lsp
+DEBUG=lsp* moli --experimental-lsp
 ```
 
 Or check the LSP debugging guide at `packages/cli/LSP_DEBUGGING_GUIDE.md`.
@@ -358,7 +358,7 @@ Claude Code LSP plugins can also supply `lspServers` in `plugin.json` (or a refe
 Use the `--experimental-lsp` flag when starting Moli Code:
 
 ```bash
-qwen --experimental-lsp
+moli --experimental-lsp
 ```
 
 ### Q: How do I know which language servers are running?

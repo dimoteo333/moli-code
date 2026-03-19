@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -50,7 +50,7 @@ describe('ModelRegistry', () => {
         'moli-oauth': [
           {
             id: 'custom-moli',
-            name: 'Custom Qwen',
+            name: 'Custom Moli',
           },
         ],
       };
@@ -451,7 +451,7 @@ describe('ModelRegistry', () => {
       const registry = new ModelRegistry();
 
       registry.reloadModels({
-        'moli-oauth': [{ id: 'custom-moli', name: 'Custom Qwen' }],
+        'moli-oauth': [{ id: 'custom-moli', name: 'Custom Moli' }],
       });
 
       // moli-oauth should still use hard-coded models

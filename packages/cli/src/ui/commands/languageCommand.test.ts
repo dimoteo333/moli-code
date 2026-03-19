@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -59,8 +59,7 @@ vi.mock('node:fs', async (importOriginal) => {
 
 // Mock Storage from core
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     Storage: {

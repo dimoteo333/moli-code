@@ -2,12 +2,16 @@
   "name": "@dobby/moli-code",
   "version": "0.1.0",
   "description": "Moli Code - AI-powered code generation assistant",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MoliLM/moli-code.git"
+  },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "moli": "dist/index.js",
-    "moli-code": "dist/index.js"
+    "moli": "./dist/index.js",
+    "moli-code": "./dist/index.js"
   },
   "exports": {
     ".": {
@@ -33,6 +37,7 @@
     "sandboxImageUri": "ghcr.io/dimoteo333/moli-code:0.1.0"
   },
   "dependencies": {
+    "@agentclientprotocol/sdk": "^0.14.1",
     "@google/genai": "1.30.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.25.1",
@@ -55,10 +60,10 @@
     "open": "^10.1.2",
     "p-limit": "^7.3.0",
     "prompts": "^2.4.2",
-    "qrcode-terminal": "^0.12.0",
     "react": "^19.1.0",
     "read-package-up": "^11.0.0",
     "shell-quote": "^1.8.3",
+    "simple-git": "^3.28.0",
     "string-width": "^7.1.0",
     "strip-ansi": "^7.1.0",
     "strip-json-comments": "^3.1.1",
@@ -66,6 +71,7 @@
     "update-notifier": "^7.3.1",
     "wrap-ansi": "9.0.2",
     "yargs": "^17.7.2",
+    "qrcode-terminal": "^0.12.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -96,10 +102,10 @@
     "@teddyzhu/clipboard": "^0.0.5",
     "@teddyzhu/clipboard-darwin-arm64": "0.0.5",
     "@teddyzhu/clipboard-darwin-x64": "0.0.5",
-    "@teddyzhu/clipboard-linux-x64-gnu": "0.0.5",
     "@teddyzhu/clipboard-linux-arm64-gnu": "0.0.5",
-    "@teddyzhu/clipboard-win32-x64-msvc": "0.0.5",
-    "@teddyzhu/clipboard-win32-arm64-msvc": "0.0.5"
+    "@teddyzhu/clipboard-linux-x64-gnu": "0.0.5",
+    "@teddyzhu/clipboard-win32-arm64-msvc": "0.0.5",
+    "@teddyzhu/clipboard-win32-x64-msvc": "0.0.5"
   },
   "engines": {
     "node": ">=20"

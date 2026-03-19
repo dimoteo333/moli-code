@@ -9,7 +9,7 @@ Git repository releases tend to be the simplest and most flexible approach, whil
 
 ## Releasing through a git repository
 
-This is the most flexible and simple option. All you need to do us create a publicly accessible git repo (such as a public github repository) and then users can install your extension using `qwen extensions install <your-repo-uri>`, or for a GitHub repository they can use the simplified `qwen extensions install <org>/<repo>` format. They can optionally depend on a specific ref (branch/tag/commit) using the `--ref=<some-ref>` argument, this defaults to the default branch.
+This is the most flexible and simple option. All you need to do us create a publicly accessible git repo (such as a public github repository) and then users can install your extension using `moli extensions install <your-repo-uri>`, or for a GitHub repository they can use the simplified `moli extensions install <org>/<repo>` format. They can optionally depend on a specific ref (branch/tag/commit) using the `--ref=<some-ref>` argument, this defaults to the default branch.
 
 Whenever commits are pushed to the ref that a user depends on, they will be prompted to update the extension. Note that this also allows for easy rollbacks, the HEAD commit is always treated as the latest version regardless of the actual version in the `moli-extension.json` file.
 
@@ -17,13 +17,13 @@ Whenever commits are pushed to the ref that a user depends on, they will be prom
 
 Users can depend on any ref from your git repo, such as a branch or tag, which allows you to manage multiple release channels.
 
-For instance, you can maintain a `stable` branch, which users can install this way `qwen extensions install <your-repo-uri> --ref=stable`. Or, you could make this the default by treating your default branch as your stable release branch, and doing development in a different branch (for instance called `dev`). You can maintain as many branches or tags as you like, providing maximum flexibility for you and your users.
+For instance, you can maintain a `stable` branch, which users can install this way `moli extensions install <your-repo-uri> --ref=stable`. Or, you could make this the default by treating your default branch as your stable release branch, and doing development in a different branch (for instance called `dev`). You can maintain as many branches or tags as you like, providing maximum flexibility for you and your users.
 
 Note that these `ref` arguments can be tags, branches, or even specific commits, which allows users to depend on a specific version of your extension. It is up to you how you want to manage your tags and branches.
 
 ### Example releasing flow using a git repo
 
-While there are many options for how you want to manage releases using a git flow, we recommend treating your default branch as your "stable" release branch. This means that the default behavior for `qwen extensions install <your-repo-uri>` is to be on the stable release branch.
+While there are many options for how you want to manage releases using a git flow, we recommend treating your default branch as your "stable" release branch. This means that the default behavior for `moli extensions install <your-repo-uri>` is to be on the stable release branch.
 
 Lets say you want to maintain three standard release channels, `stable`, `preview`, and `dev`. You would do all your standard development in the `dev` branch. When you are ready to do a preview release, you merge that branch into your `preview` branch. When you are ready to promote your preview branch to stable, you merge `preview` into your stable branch (which might be your default branch or a different branch).
 
@@ -35,7 +35,7 @@ Moli Code extensions can be distributed through [GitHub Releases](https://docs.g
 
 Each release includes at least one archive file, which contains the full contents of the repo at the tag that it was linked to. Releases may also include [pre-built archives](#custom-pre-built-archives) if your extension requires some build step or has platform specific binaries attached to it.
 
-When checking for updates, qwen code will just look for the latest release on github (you must mark it as such when creating the release), unless the user installed a specific release by passing `--ref=<some-release-tag>`. We do not at this time support opting in to pre-release releases or semver.
+When checking for updates, moli code will just look for the latest release on github (you must mark it as such when creating the release), unless the user installed a specific release by passing `--ref=<some-release-tag>`. We do not at this time support opting in to pre-release releases or semver.
 
 ### Custom pre-built archives
 

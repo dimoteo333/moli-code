@@ -263,8 +263,8 @@ export async function start_sandbox(
         ...finalArgv.map((arg) => quote([arg])),
       ].join(' '),
     );
-    // start and set up proxy if GEMINI_SANDBOX_PROXY_COMMAND is set
-    const proxyCommand = process.env['GEMINI_SANDBOX_PROXY_COMMAND'];
+    // start and set up proxy if MOLI_SANDBOX_PROXY_COMMAND is set
+    const proxyCommand = process.env['MOLI_SANDBOX_PROXY_COMMAND'];
     let proxyProcess: ChildProcess | undefined = undefined;
     let sandboxProcess: ChildProcess | undefined = undefined;
     const sandboxEnv = { ...process.env };
@@ -378,7 +378,7 @@ export async function start_sandbox(
           stdio: 'inherit',
           env: {
             ...process.env,
-            GEMINI_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
+            MOLI_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
           },
         },
       );
@@ -498,8 +498,8 @@ export async function start_sandbox(
 
   // copy proxy environment variables, replacing localhost with SANDBOX_PROXY_NAME
   // copy as both upper-case and lower-case as is required by some utilities
-  // GEMINI_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
-  const proxyCommand = process.env['GEMINI_SANDBOX_PROXY_COMMAND'];
+  // MOLI_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
+  const proxyCommand = process.env['MOLI_SANDBOX_PROXY_COMMAND'];
 
   if (proxyCommand) {
     let proxy =
@@ -563,11 +563,11 @@ export async function start_sandbox(
   }
   args.push('--name', containerName, '--hostname', containerName);
 
-  // copy GEMINI_CLI_TEST_VAR for integration tests
-  if (process.env['GEMINI_CLI_TEST_VAR']) {
+  // copy MOLI_CODE_TEST_VAR for integration tests
+  if (process.env['MOLI_CODE_TEST_VAR']) {
     args.push(
       '--env',
-      `GEMINI_CLI_TEST_VAR=${process.env['GEMINI_CLI_TEST_VAR']}`,
+      `MOLI_CODE_TEST_VAR=${process.env['MOLI_CODE_TEST_VAR']}`,
     );
   }
 
@@ -579,7 +579,7 @@ export async function start_sandbox(
     args.push('--env', `GOOGLE_API_KEY=${process.env['GOOGLE_API_KEY']}`);
   }
 
-  // copy OPENAI_API_KEY and related env vars for Qwen
+  // copy OPENAI_API_KEY and related env vars for Moli
   if (process.env['OPENAI_API_KEY']) {
     args.push('--env', `OPENAI_API_KEY=${process.env['OPENAI_API_KEY']}`);
   }
@@ -773,7 +773,7 @@ export async function start_sandbox(
   // push container entrypoint (including args)
   args.push(...finalEntrypoint);
 
-  // start and set up proxy if GEMINI_SANDBOX_PROXY_COMMAND is set
+  // start and set up proxy if MOLI_SANDBOX_PROXY_COMMAND is set
   let proxyProcess: ChildProcess | undefined = undefined;
   let sandboxProcess: ChildProcess | undefined = undefined;
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -24,7 +24,7 @@ const debugLogger = createDebugLogger('MOLI_OAUTH');
 // File System Configuration
 const MOLI_DIR = '.moli';
 const MOLI_CREDENTIAL_FILENAME = 'oauth_creds.json';
-const QWEN_LOCK_FILENAME = 'oauth_creds.lock';
+const MOLI_LOCK_FILENAME = 'oauth_creds.lock';
 
 // Token and Cache Configuration
 const TOKEN_REFRESH_BUFFER_MS = 30 * 1000; // 30 seconds
@@ -696,7 +696,7 @@ export class SharedTokenManager {
    * @returns The absolute path to the lock file
    */
   private getLockFilePath(): string {
-    return path.join(os.homedir(), MOLI_DIR, QWEN_LOCK_FILENAME);
+    return path.join(os.homedir(), MOLI_DIR, MOLI_LOCK_FILENAME);
   }
 
   /**

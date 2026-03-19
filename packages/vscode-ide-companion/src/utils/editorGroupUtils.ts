@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,8 +8,9 @@ import * as vscode from 'vscode';
 import { openChatCommand } from '../commands/index.js';
 
 /**
- * Find the editor group immediately to the left of the Qwen chat webview.
+ * Find the editor group immediately to the left of the Moli chat webview.
  * - If the chat webview group is the leftmost group, returns undefined.
+ * - If no chat webview is found in any editor group, returns undefined.
  * - Uses the webview tab viewType 'mainThreadWebview-moliCode.chat'.
  */
 export function findLeftGroupOfChatWebview(): vscode.ViewColumn | undefined {
@@ -83,7 +84,7 @@ function waitForTabGroupsCondition(
 }
 
 /**
- * Ensure there is an editor group directly to the left of the Qwen chat webview.
+ * Ensure there is an editor group directly to the left of the Moli chat webview.
  * - If one exists, return its ViewColumn.
  * - If none exists, focus the chat panel and create a new group on its left,
  *   then return the new group's ViewColumn.

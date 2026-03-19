@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FC } from 'react';
-import type { ModelInfo } from '../../../types/acpTypes.js';
+import type { ModelInfo } from '@agentclientprotocol/sdk';
 import { PlanCompletedIcon } from '@dobby/moli-code-webui';
 
 interface ModelSelectorProps {

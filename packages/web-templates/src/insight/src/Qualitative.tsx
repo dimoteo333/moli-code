@@ -484,8 +484,8 @@ export function FrictionPoints({
   );
 }
 
-// Qwen.md Additions Section Component
-function MoliMdAdditionsSection({
+// MOLI.md Additions Section Component
+function ClaudeMdAdditionsSection({
   additions,
 }: {
   additions: NonNullable<
@@ -578,7 +578,9 @@ export function Improvements({
       {/* MOLI.md Additions */}
       {Array.isArray(improvements.Moli_md_additions) &&
         improvements.Moli_md_additions.length > 0 && (
-          <MoliMdAdditionsSection additions={improvements.Moli_md_additions} />
+          <ClaudeMdAdditionsSection
+            additions={improvements.Moli_md_additions}
+          />
         )}
 
       <p className="text-xs text-slate-500 mb-3">

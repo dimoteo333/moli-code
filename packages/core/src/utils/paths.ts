@@ -11,7 +11,7 @@ import * as crypto from 'node:crypto';
 import type { Config } from '../config/config.js';
 import { isNodeError } from './errors.js';
 
-export const MOLI_DIR = '.moli';
+export const MOLI_DIR = '.moli'; // MOLI: renamed from MOLI_DIR
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 
 /**
@@ -200,6 +200,25 @@ export function getProjectHash(projectRoot: string): string {
   const normalizedPath =
     os.platform() === 'win32' ? projectRoot.toLowerCase() : projectRoot;
   return crypto.createHash('sha256').update(normalizedPath).digest('hex');
+}
+
+/**
+ * Sanitizes a directory path to create a safe project ID.
+ *
+ * - On Windows: normalizes to lowercase for case-insensitive matching
+ * - Replaces all non-alphanumeric characters with hyphens
+ *
+ * This is used for:
+ * - Creating project-specific directories
+ * - Generating session IDs for debug logging during startup
+ *
+ * @param cwd - The directory path to sanitize
+ * @returns A sanitized string safe for use as a project identifier
+ */
+export function sanitizeCwd(cwd: string): string {
+  // On Windows, normalize to lowercase for case-insensitive matching
+  const normalizedCwd = os.platform() === 'win32' ? cwd.toLowerCase() : cwd;
+  return normalizedCwd.replace(/[^a-zA-Z0-9]/g, '-');
 }
 
 /**

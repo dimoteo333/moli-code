@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -221,51 +221,7 @@ export class LspConfigLoader {
       });
     }
 
-    /** clangd preset for C/C++ — uses background indexing and clang-tidy for lint diagnostics */
-    if (detectedLanguages.includes('cpp') || detectedLanguages.includes('c')) {
-      presets.push({
-        name: 'clangd',
-        languages: ['cpp', 'c'],
-        command: 'clangd',
-        args: ['--background-index', '--clang-tidy'],
-        transport: 'stdio',
-        initializationOptions: {},
-        rootUri,
-        workspaceFolder: this.workspaceRoot,
-        trustRequired: true,
-        restartOnCrash: true,
-        maxRestarts: 3,
-      });
-    }
-
-    /**
-     * JDTLS preset for Java — uses the `jdtls` launcher script (available via
-     * brew, sdkman, or AUR). startupTimeout is increased because JDTLS performs
-     * a full workspace build on first launch.
-     */
-    if (detectedLanguages.includes('java')) {
-      presets.push({
-        name: 'jdtls',
-        languages: ['java'],
-        command: 'jdtls',
-        args: [],
-        transport: 'stdio',
-        initializationOptions: {
-          settings: {
-            java: {
-              signatureHelp: { enabled: true },
-              contentProvider: { preferred: 'fernflower' },
-            },
-          },
-        },
-        rootUri,
-        workspaceFolder: this.workspaceRoot,
-        trustRequired: true,
-        startupTimeout: 30000,
-        restartOnCrash: true,
-        maxRestarts: 2,
-      });
-    }
+    // Additional language presets can be added as needed
 
     return presets;
   }

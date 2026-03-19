@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,4 +11,15 @@ export interface PermissionResponsePayload {
 export interface PermissionResponseMessage {
   type: string;
   data: PermissionResponsePayload;
+}
+
+export interface AskUserQuestionResponsePayload {
+  optionId?: string;
+  answers: Record<string, string>;
+  cancelled?: boolean;
+}
+
+export interface AskUserQuestionResponseMessage {
+  type: string;
+  data: AskUserQuestionResponsePayload;
 }

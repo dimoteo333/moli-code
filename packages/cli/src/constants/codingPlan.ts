@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -65,6 +65,42 @@ export function generateCodingPlanTemplate(
         },
       },
       {
+        id: 'glm-5',
+        name: '[Bailian Coding Plan] glm-5',
+        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
+        envKey: CODING_PLAN_ENV_KEY,
+        generationConfig: {
+          extra_body: {
+            enable_thinking: true,
+          },
+          contextWindowSize: 202752,
+        },
+      },
+      {
+        id: 'kimi-k2.5',
+        name: '[Bailian Coding Plan] kimi-k2.5',
+        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
+        envKey: CODING_PLAN_ENV_KEY,
+        generationConfig: {
+          extra_body: {
+            enable_thinking: true,
+          },
+          contextWindowSize: 262144,
+        },
+      },
+      {
+        id: 'MiniMax-M2.5',
+        name: '[Bailian Coding Plan] MiniMax-M2.5',
+        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
+        envKey: CODING_PLAN_ENV_KEY,
+        generationConfig: {
+          extra_body: {
+            enable_thinking: true,
+          },
+          contextWindowSize: 1000000,
+        },
+      },
+      {
         id: 'moli-coder-plus',
         name: '[Bailian Coding Plan] moli-coder-plus',
         baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
@@ -104,42 +140,6 @@ export function generateCodingPlanTemplate(
             enable_thinking: true,
           },
           contextWindowSize: 202752,
-        },
-      },
-      {
-        id: 'glm-5',
-        name: '[Bailian Coding Plan] glm-5',
-        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
-        envKey: CODING_PLAN_ENV_KEY,
-        generationConfig: {
-          extra_body: {
-            enable_thinking: true,
-          },
-          contextWindowSize: 202752,
-        },
-      },
-      {
-        id: 'MiniMax-M2.5',
-        name: '[Bailian Coding Plan] MiniMax-M2.5',
-        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
-        envKey: CODING_PLAN_ENV_KEY,
-        generationConfig: {
-          extra_body: {
-            enable_thinking: true,
-          },
-          contextWindowSize: 1000000,
-        },
-      },
-      {
-        id: 'kimi-k2.5',
-        name: '[Bailian Coding Plan] kimi-k2.5',
-        baseUrl: 'https://coding.dashscope.aliyuncs.com/v1',
-        envKey: CODING_PLAN_ENV_KEY,
-        generationConfig: {
-          extra_body: {
-            enable_thinking: true,
-          },
-          contextWindowSize: 262144,
         },
       },
     ];

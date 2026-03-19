@@ -24,7 +24,7 @@ Moli Code is primarily composed of two main packages, along with a suite of tool
 
 **Key Functions:**
 
-- **API Client:** Communicates with the Qwen model API to send prompts and receive responses.
+- **API Client:** Communicates with the Moli model API to send prompts and receive responses.
 - **Prompt Construction:** Builds appropriate prompts for the model, incorporating conversation history and available tool definitions.
 - **Tool Registration and Execution:** Manages the registration of available tools and executes them based on model requests.
 - **State Management:** Maintains conversation and session state information.
@@ -32,9 +32,9 @@ Moli Code is primarily composed of two main packages, along with a suite of tool
 
 ### 3. Tools (`packages/core/src/tools/`)
 
-**Purpose:** These are individual modules that extend the capabilities of the Qwen model, allowing it to interact with the local environment (e.g., file system, shell commands, web fetching).
+**Purpose:** These are individual modules that extend the capabilities of the Moli model, allowing it to interact with the local environment (e.g., file system, shell commands, web fetching).
 
-**Interaction:** `packages/core` invokes these tools based on requests from the Qwen model.
+**Interaction:** `packages/core` invokes these tools based on requests from the Moli model.
 
 **Common Tools Include:**
 

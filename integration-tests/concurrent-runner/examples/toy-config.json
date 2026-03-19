@@ -2,7 +2,7 @@
   "concurrency": 2,
   "yolo": true,
   "source_repo": "/Users/andy/workspace/projects/moli-code/integration-tests/concurrent-runner/examples/toy-project",
-  "worktree_base": "~/.qwen/worktrees",
+  "worktree_base": "~/.moli/worktrees",
   "outputs_dir": "./examples/test-run",
   "results_file": "./examples/test-run/results.json",
   "keep_worktree": false,
@@ -23,5 +23,5 @@
       ]
     }
   ],
-  "models": ["qwen3-coder-plus", "claude-sonnet-4-20250514"]
+  "models": ["moli3-coder-plus", "claude-sonnet-4-20250514"]
 }

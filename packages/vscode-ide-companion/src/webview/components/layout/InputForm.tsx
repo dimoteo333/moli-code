@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * InputForm adapter for VSCode - wraps webui InputForm with local type handling
@@ -8,14 +8,17 @@
  */
 
 import type { FC } from 'react';
-import { InputForm as BaseInputForm, getEditModeIcon } from '@dobby/moli-code-webui';
+import {
+  InputForm as BaseInputForm,
+  getEditModeIcon,
+} from '@dobby/moli-code-webui';
 import type {
   InputFormProps as BaseInputFormProps,
   EditModeInfo,
 } from '@dobby/moli-code-webui';
 import { getApprovalModeInfoFromString } from '../../../types/acpTypes.js';
 import type { ApprovalModeValue } from '../../../types/approvalModeValueTypes.js';
-import type { ModelInfo } from '../../../types/acpTypes.js';
+import type { ModelInfo } from '@agentclientprotocol/sdk';
 import { ModelSelector } from './ModelSelector.js';
 
 /**

@@ -15,8 +15,9 @@ import {
   type ApprovalMode,
 } from '@dobby/moli-code-core';
 import { type SettingScope } from '../../config/settings.js';
-import { type CodingPlanRegion } from '../../constants/codingPlan.js';
 import type { AuthState } from '../types.js';
+import type { MolimateModel } from '../components/MolimateModelSelector.js';
+import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
 // OpenAICredentials type (previously imported from OpenAIKeyPrompt)
 export interface OpenAICredentials {
   apiKey: string;
@@ -40,15 +41,6 @@ export interface UIActions {
     authType: AuthType | undefined,
     credentials?: OpenAICredentials,
   ) => Promise<void>;
-  handleLocalEnvSetup: (params: {
-    apiKey: string;
-    baseUrl: string;
-    modelName: string;
-  }) => Promise<void>;
-  handleCodingPlanSubmit: (
-    apiKey: string,
-    region?: CodingPlanRegion,
-  ) => Promise<void>;
   setAuthState: (state: AuthState) => void;
   onAuthError: (error: string | null) => void;
   cancelAuthentication: () => void;
@@ -59,7 +51,6 @@ export interface UIActions {
   exitEditorDialog: () => void;
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
-  dismissCodingPlanUpdate: () => void;
   closePermissionsDialog: () => void;
   setShellModeActive: (value: boolean) => void;
   vimHandleInput: (key: Key) => boolean;
@@ -79,6 +70,10 @@ export interface UIActions {
   // Subagent dialogs
   closeSubagentCreateDialog: () => void;
   closeAgentsManagerDialog: () => void;
+  // Extensions manager dialog
+  closeExtensionsManagerDialog: () => void;
+  // MCP dialog
+  closeMcpDialog: () => void;
   // Resume session dialog
   openResumeDialog: () => void;
   closeResumeDialog: () => void;
@@ -88,6 +83,17 @@ export interface UIActions {
   closeFeedbackDialog: () => void;
   temporaryCloseFeedbackDialog: () => void;
   submitFeedback: (rating: number) => void;
+  // Molimate authentication
+  validateMolimateEmployee: (
+    employeeId: string,
+  ) => Promise<{ success: boolean; message?: string }>;
+  handleMolimateAuthSubmit: (
+    employeeId: string,
+    model: MolimateModel,
+  ) => Promise<void>;
+  handleMolimateModelSelect: (model: MolimateModel) => Promise<void>;
+  // Local configuration
+  handleLocalConfigSubmit: (values: LocalConfigValues) => Promise<void>;
 }
 
 export const UIActionsContext = createContext<UIActions | null>(null);

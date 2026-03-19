@@ -85,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
   const showModelHint =
     infoPanelContentWidth > 0 &&
     getCachedStringWidth(authModelText + modelHintText) <=
-    infoPanelContentWidth;
+      infoPanelContentWidth;
 
   // Now shorten the path to fit the available space
   const tildeifiedPath = tildeifyPath(workingDirectory);
@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
       {showLogo && (
         <>
           <Box flexShrink={0}>
-            <Text color="#B48EFF">{displayLogo}</Text>
+            <Text color="#B19CD9">{displayLogo}</Text>
           </Box>
           {/* Fixed gap between logo and info panel */}
           <Box width={logoGap} />
@@ -118,13 +118,13 @@ export const Header: React.FC<HeaderProps> = ({
       {/* Right side: Info panel (flexible width, max 60 in two-column layout) */}
       <Box
         flexDirection="column"
-        borderStyle="round"
+        borderStyle="single"
         borderColor={theme.border.default}
         paddingX={infoPanelPaddingX}
         flexGrow={showLogo ? 0 : 1}
         width={showLogo ? availableInfoPanelWidth : undefined}
       >
-        {/* Title line: >_ Moli Code (v{version}) */}
+        {/* Title line: >_ 몰리코드 (v{version}) */}
         <Text>
           <Text bold color={theme.text.accent}>
             &gt;_ 몰리코드

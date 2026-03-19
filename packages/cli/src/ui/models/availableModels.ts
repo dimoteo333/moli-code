@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -33,7 +33,7 @@ function getMoliOAuthModels(): readonly AvailableModel[] {
 }
 
 /**
- * Get available Qwen models
+ * Get available Moli models
  * coder-model now has vision capabilities by default.
  */
 export function getFilteredMoliModels(): AvailableModel[] {

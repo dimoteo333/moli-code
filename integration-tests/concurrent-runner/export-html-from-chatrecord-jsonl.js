@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -269,7 +269,7 @@ const HTML_TEMPLATE = `<!DOCTYPE html>
       <div class="header-left">
         <div class="logo-icon">${FAVICON_SVG}</div>
         <div class="logo">
-          <div class="logo-text" data-text="QWEN">
+          <div class="logo-text" data-text="MOLI">
             <span class="logo-text-inner">MOLI</span>
           </div>
         </div>

@@ -275,9 +275,9 @@ describe('Model-specific tool call formats', () => {
     vi.stubEnv('SANDBOX', undefined);
   });
 
-  it('should use XML format for moli-coder model', () => {
+  it('should use XML format for moli3-coder model', () => {
     vi.mocked(isGitRepository).mockReturnValue(false);
-    const prompt = getCoreSystemPrompt(undefined, 'moli-coder-7b');
+    const prompt = getCoreSystemPrompt(undefined, 'moli3-coder-7b');
 
     // Should contain XML-style tool calls
     expect(prompt).toContain('<tool_call>');
@@ -295,9 +295,9 @@ describe('Model-specific tool call formats', () => {
     expect(prompt).toMatchSnapshot();
   });
 
-  it('should use JSON format for qwen-vl model', () => {
+  it('should use JSON format for moli-vl model', () => {
     vi.mocked(isGitRepository).mockReturnValue(false);
-    const prompt = getCoreSystemPrompt(undefined, 'qwen-vl-max');
+    const prompt = getCoreSystemPrompt(undefined, 'moli-vl-max');
 
     // Should contain JSON-style tool calls
     expect(prompt).toContain('<tool_call>');
@@ -353,7 +353,7 @@ describe('Model-specific tool call formats', () => {
   it('should preserve model-specific formats with user memory', () => {
     vi.mocked(isGitRepository).mockReturnValue(false);
     const userMemory = 'User prefers concise responses.';
-    const prompt = getCoreSystemPrompt(userMemory, 'moli-coder-14b');
+    const prompt = getCoreSystemPrompt(userMemory, 'moli3-coder-14b');
 
     // Should contain XML-style tool calls
     expect(prompt).toContain('<tool_call>');
@@ -369,7 +369,7 @@ describe('Model-specific tool call formats', () => {
   it('should preserve model-specific formats with sandbox environment', () => {
     vi.stubEnv('SANDBOX', 'true');
     vi.mocked(isGitRepository).mockReturnValue(false);
-    const prompt = getCoreSystemPrompt(undefined, 'qwen-vl-plus');
+    const prompt = getCoreSystemPrompt(undefined, 'moli-vl-plus');
 
     // Should contain JSON-style tool calls
     expect(prompt).toContain('{"name": "run_shell_command"');

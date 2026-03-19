@@ -1,14 +1,17 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { ChildProcess } from 'child_process';
 import type {
-  AcpSessionUpdate,
-  AcpPermissionRequest,
+  RequestPermissionRequest,
+  SessionNotification,
+} from '@agentclientprotocol/sdk';
+import type {
   AuthenticateUpdateNotification,
+  AskUserQuestionRequest,
 } from './acpTypes.js';
 
 export interface PendingRequest<T = unknown> {
@@ -19,12 +22,16 @@ export interface PendingRequest<T = unknown> {
 }
 
 export interface AcpConnectionCallbacks {
-  onSessionUpdate: (data: AcpSessionUpdate) => void;
-  onPermissionRequest: (data: AcpPermissionRequest) => Promise<{
+  onSessionUpdate: (data: SessionNotification) => void;
+  onPermissionRequest: (data: RequestPermissionRequest) => Promise<{
     optionId: string;
   }>;
   onAuthenticateUpdate: (data: AuthenticateUpdateNotification) => void;
   onEndTurn: (reason?: string) => void;
+  onAskUserQuestion: (data: AskUserQuestionRequest) => Promise<{
+    optionId: string;
+    answers?: Record<string, string>;
+  }>;
 }
 
 export interface AcpConnectionState {

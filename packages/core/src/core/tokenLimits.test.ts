@@ -17,7 +17,7 @@ describe('normalize', () => {
   });
 
   it('should handle pipe and colon separators', () => {
-    expect(normalize('qwen|qwen2.5:qwen2.5-1m')).toBe('qwen2.5-1m');
+    expect(normalize('moli|moli2.5:moli2.5-1m')).toBe('moli2.5-1m');
   });
 
   it('should collapse whitespace to a single hyphen', () => {
@@ -35,11 +35,11 @@ describe('normalize', () => {
   });
 
   it('should remove quantization and numeric suffixes', () => {
-    expect(normalize('moli-coder-7b-4bit')).toBe('moli-coder-7b');
+    expect(normalize('moli3-coder-7b-4bit')).toBe('moli3-coder-7b');
     expect(normalize('llama-4-scout-int8')).toBe('llama-4-scout');
     expect(normalize('mistral-large-2-bf16')).toBe('mistral-large-2');
     expect(normalize('deepseek-v3.1-q4')).toBe('deepseek-v3.1');
-    expect(normalize('qwen2.5-quantized')).toBe('qwen2.5');
+    expect(normalize('moli2.5-quantized')).toBe('moli2.5');
   });
 
   it('should handle a combination of normalization rules', () => {
@@ -58,9 +58,9 @@ describe('normalize', () => {
     expect(normalize('gemini-2.0-flash-preview')).toBe('gemini-2.0-flash');
   });
 
-  it('should not remove "-latest" from specific Qwen model names', () => {
-    expect(normalize('qwen-plus-latest')).toBe('qwen-plus-latest');
-    expect(normalize('qwen-flash-latest')).toBe('qwen-flash-latest');
+  it('should not remove "-latest" from specific Moli model names', () => {
+    expect(normalize('moli-plus-latest')).toBe('moli-plus-latest');
+    expect(normalize('moli-flash-latest')).toBe('moli-flash-latest');
     expect(normalize('moli-vl-max-latest')).toBe('moli-vl-max-latest');
   });
 
@@ -108,11 +108,11 @@ describe('tokenLimit', () => {
   });
 
   describe('OpenAI', () => {
-    it('should return 400K for GPT-5.x (latest)', () => {
-      expect(tokenLimit('gpt-5')).toBe(400000);
-      expect(tokenLimit('gpt-5-mini')).toBe(400000);
-      expect(tokenLimit('gpt-5.2')).toBe(400000);
-      expect(tokenLimit('gpt-5.2-pro')).toBe(400000);
+    it('should return 272K for GPT-5.x (latest)', () => {
+      expect(tokenLimit('gpt-5')).toBe(272000);
+      expect(tokenLimit('gpt-5-mini')).toBe(272000);
+      expect(tokenLimit('gpt-5.2')).toBe(272000);
+      expect(tokenLimit('gpt-5.2-pro')).toBe(272000);
     });
 
     it('should return 128K for legacy GPT (fallback)', () => {
@@ -140,32 +140,32 @@ describe('tokenLimit', () => {
     });
   });
 
-  describe('Alibaba Qwen', () => {
-    it('should return 1M for commercial Qwen3 models', () => {
-      expect(tokenLimit('moli-coder-plus')).toBe(1000000);
-      expect(tokenLimit('moli-coder-plus-20250601')).toBe(1000000);
-      expect(tokenLimit('moli-coder-flash')).toBe(1000000);
+  describe('Alibaba Moli', () => {
+    it('should return 1M for commercial Moli3 models', () => {
+      expect(tokenLimit('moli3-coder-plus')).toBe(1000000);
+      expect(tokenLimit('moli3-coder-plus-20250601')).toBe(1000000);
+      expect(tokenLimit('moli3-coder-flash')).toBe(1000000);
       expect(tokenLimit('moli3.5-plus')).toBe(1000000);
       expect(tokenLimit('coder-model')).toBe(1000000);
     });
 
-    it('should return 256K for Qwen3 non-commercial models', () => {
-      expect(tokenLimit('moli-max')).toBe(262144);
-      expect(tokenLimit('moli-max-2026-01-23')).toBe(262144);
-      expect(tokenLimit('moli-vl-plus')).toBe(262144);
-      expect(tokenLimit('moli-coder-7b')).toBe(262144);
-      expect(tokenLimit('moli-coder-next')).toBe(262144);
+    it('should return 256K for Moli3 non-commercial models', () => {
+      expect(tokenLimit('moli3-max')).toBe(262144);
+      expect(tokenLimit('moli3-max-2026-01-23')).toBe(262144);
+      expect(tokenLimit('moli3-vl-plus')).toBe(262144);
+      expect(tokenLimit('moli3-coder-7b')).toBe(262144);
+      expect(tokenLimit('moli3-coder-next')).toBe(262144);
     });
 
     it('should return 1M for studio latest models', () => {
-      expect(tokenLimit('qwen-plus-latest')).toBe(1000000);
-      expect(tokenLimit('qwen-flash-latest')).toBe(1000000);
+      expect(tokenLimit('moli-plus-latest')).toBe(1000000);
+      expect(tokenLimit('moli-flash-latest')).toBe(1000000);
     });
 
-    it('should return 256K for Qwen fallback', () => {
-      expect(tokenLimit('qwen-plus')).toBe(262144);
+    it('should return 256K for Moli fallback', () => {
+      expect(tokenLimit('moli-plus')).toBe(262144);
       expect(tokenLimit('moli-turbo')).toBe(262144);
-      expect(tokenLimit('qwen2.5')).toBe(262144);
+      expect(tokenLimit('moli2.5')).toBe(262144);
       expect(tokenLimit('moli-vl-max-latest')).toBe(262144);
     });
   });
@@ -267,16 +267,16 @@ describe('tokenLimit with output type', () => {
     });
   });
 
-  describe('Qwen output limits', () => {
-    it('should return correct output limits for Qwen models', () => {
+  describe('Moli output limits', () => {
+    it('should return correct output limits for Moli models', () => {
       expect(tokenLimit('moli3.5-plus', 'output')).toBe(65536);
-      expect(tokenLimit('moli-max', 'output')).toBe(65536);
-      expect(tokenLimit('moli-max-2026-01-23', 'output')).toBe(65536);
+      expect(tokenLimit('moli3-max', 'output')).toBe(65536);
+      expect(tokenLimit('moli3-max-2026-01-23', 'output')).toBe(65536);
       expect(tokenLimit('coder-model', 'output')).toBe(65536);
       // Models without specific output limits fall back to default
-      expect(tokenLimit('moli-coder-plus', 'output')).toBe(8192);
-      expect(tokenLimit('moli-coder-next', 'output')).toBe(8192);
-      expect(tokenLimit('moli-vl-plus', 'output')).toBe(8192);
+      expect(tokenLimit('moli3-coder-plus', 'output')).toBe(8192);
+      expect(tokenLimit('moli3-coder-next', 'output')).toBe(8192);
+      expect(tokenLimit('moli3-vl-plus', 'output')).toBe(8192);
       expect(tokenLimit('moli-vl-max-latest', 'output')).toBe(8192);
     });
   });
@@ -284,12 +284,14 @@ describe('tokenLimit with output type', () => {
   describe('other output limits', () => {
     it('should return correct output limits for DeepSeek', () => {
       expect(tokenLimit('deepseek-reasoner', 'output')).toBe(65536);
+      expect(tokenLimit('deepseek-r1', 'output')).toBe(65536);
+      expect(tokenLimit('deepseek-r1-0528', 'output')).toBe(65536);
       expect(tokenLimit('deepseek-chat', 'output')).toBe(8192);
     });
 
     it('should return correct output limits for GLM', () => {
-      expect(tokenLimit('glm-5', 'output')).toBe(16384);
-      expect(tokenLimit('glm-4.7', 'output')).toBe(16384);
+      expect(tokenLimit('glm-5', 'output')).toBe(131072);
+      expect(tokenLimit('glm-4.7', 'output')).toBe(131072);
     });
 
     it('should return correct output limits for MiniMax', () => {
@@ -311,21 +313,21 @@ describe('tokenLimit with output type', () => {
 
   describe('input vs output comparison', () => {
     it('should return different limits for input vs output', () => {
-      expect(tokenLimit('moli-max', 'input')).toBe(262144);
-      expect(tokenLimit('moli-max', 'output')).toBe(65536);
+      expect(tokenLimit('moli3-max', 'input')).toBe(262144);
+      expect(tokenLimit('moli3-max', 'output')).toBe(65536);
     });
 
     it('should default to input type when no type is specified', () => {
-      expect(tokenLimit('moli-coder-plus')).toBe(1000000);
+      expect(tokenLimit('moli3-coder-plus')).toBe(1000000);
       expect(tokenLimit('unknown-model')).toBe(DEFAULT_TOKEN_LIMIT);
     });
   });
 
   describe('normalization with output limits', () => {
     it('should handle normalized model names for output limits', () => {
-      expect(tokenLimit('QWEN3-MAX', 'output')).toBe(65536);
-      expect(tokenLimit('moli-max-20250601', 'output')).toBe(65536);
-      expect(tokenLimit('QWEN-VL-MAX-LATEST', 'output')).toBe(8192);
+      expect(tokenLimit('MOLI3-MAX', 'output')).toBe(65536);
+      expect(tokenLimit('moli3-max-20250601', 'output')).toBe(65536);
+      expect(tokenLimit('MOLI-VL-MAX-LATEST', 'output')).toBe(8192);
     });
   });
 });

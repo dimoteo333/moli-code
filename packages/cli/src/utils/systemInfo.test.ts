@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -33,8 +33,7 @@ vi.mock('./version.js', () => ({
 }));
 
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     IdeClient: {

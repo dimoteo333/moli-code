@@ -20,20 +20,20 @@ With MCP servers connected, you can ask Moli Code to:
 Moli Code loads MCP servers from `mcpServers` in your `settings.json`. You can configure servers either:
 
 - By editing `settings.json` directly
-- By using `qwen mcp` commands (see [CLI reference](#qwen-mcp-cli))
+- By using `moli mcp` commands (see [CLI reference](#moli-mcp-cli))
 
 ### Add your first server
 
 1. Add a server (example: remote HTTP MCP server):
 
 ```bash
-qwen mcp add --transport http my-server http://localhost:3000/mcp
+moli mcp add --transport http my-server http://localhost:3000/mcp
 ```
 
-2. Verify it shows up:
+2. Open MCP management dialog to view and manage servers:
 
 ```bash
-qwen mcp list
+moli mcp
 ```
 
 3. Restart Moli Code in the same project (or start it if it wasn’t running yet), then ask the model to use tools from that server.
@@ -48,7 +48,7 @@ Most users only need these two scopes:
 Write to user scope:
 
 ```bash
-qwen mcp add --scope user --transport http my-server http://localhost:3000/mcp
+moli mcp add --scope user --transport http my-server http://localhost:3000/mcp
 ```
 
 > [!tip]
@@ -69,7 +69,7 @@ qwen mcp add --scope user --transport http my-server http://localhost:3000/mcp
 >
 > If a server supports both, prefer **HTTP** over **SSE**.
 
-### Configure via `settings.json` vs `qwen mcp add`
+### Configure via `settings.json` vs `moli mcp add`
 
 Both approaches produce the same `mcpServers` entries in your `settings.json`—use whichever you prefer.
 
@@ -97,7 +97,7 @@ JSON (`.moli/settings.json`):
 CLI (writes to project scope by default):
 
 ```bash
-qwen mcp add pythonTools -e DATABASE_URL=$DB_CONNECTION_STRING -e API_KEY=$EXTERNAL_API_KEY \
+moli mcp add pythonTools -e DATABASE_URL=$DB_CONNECTION_STRING -e API_KEY=$EXTERNAL_API_KEY \
   --timeout 15000 python -m my_mcp_server --port 8080
 ```
 
@@ -122,7 +122,7 @@ JSON:
 CLI:
 
 ```bash
-qwen mcp add --transport http httpServerWithAuth http://localhost:3000/mcp \
+moli mcp add --transport http httpServerWithAuth http://localhost:3000/mcp \
   --header "Authorization: Bearer your-api-token" --timeout 5000
 ```
 
@@ -144,7 +144,7 @@ JSON:
 CLI:
 
 ```bash
-qwen mcp add --transport sse sseServer http://localhost:8080/sse --timeout 30000
+moli mcp add --transport sse sseServer http://localhost:8080/sse --timeout 30000
 ```
 
 ## Safety and control
@@ -192,7 +192,7 @@ Example:
 
 ## Troubleshooting
 
-- **Server shows “Disconnected” in `qwen mcp list`**: verify the URL/command is correct, then increase `timeout`.
+- **Server shows “Disconnected” in `moli mcp list`**: verify the URL/command is correct, then increase `timeout`.
 - **Stdio server fails to start**: use an absolute `command` path, and double-check `cwd`/`env`.
 - **Environment variables in JSON don’t resolve**: ensure they exist in the environment where Moli Code runs (shell vs GUI app environments can differ).
 
@@ -247,16 +247,16 @@ Optional:
 | `targetAudience`       | string                       | The OAuth Client ID allowlisted on the IAP-protected application you are trying to access. Used with `authProviderType: 'service_account_impersonation'`.                                                                                                         |
 | `targetServiceAccount` | string                       | The email address of the Google Cloud Service Account to impersonate. Used with `authProviderType: 'service_account_impersonation'`.                                                                                                                              |
 
-<a id="qwen-mcp-cli"></a>
+<a id="moli-mcp-cli"></a>
 
-### Manage MCP servers with `qwen mcp`
+### Manage MCP servers with `moli mcp`
 
 You can always configure MCP servers by manually editing `settings.json`, but the CLI is usually faster.
 
-#### Adding a server (`qwen mcp add`)
+#### Adding a server (`moli mcp add`)
 
 ```bash
-qwen mcp add [options] <name> <commandOrUrl> [args...]
+moli mcp add [options] <name> <commandOrUrl> [args...]
 ```
 
 | Argument/Option     | Description                                                         | Default            | Example                                   |
@@ -274,14 +274,8 @@ qwen mcp add [options] <name> <commandOrUrl> [args...]
 | `--include-tools`   | A comma-separated list of tools to include.                         | all tools included | `--include-tools mytool,othertool`        |
 | `--exclude-tools`   | A comma-separated list of tools to exclude.                         | none               | `--exclude-tools mytool`                  |
 
-#### Listing servers (`qwen mcp list`)
+#### Removing a server (`moli mcp remove`)
 
 ```bash
-qwen mcp list
-```
-
-#### Removing a server (`qwen mcp remove`)
-
-```bash
-qwen mcp remove <name>
+moli mcp remove <name>
 ```

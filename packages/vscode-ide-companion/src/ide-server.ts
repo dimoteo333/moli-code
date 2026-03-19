@@ -40,7 +40,7 @@ class CORSError extends Error {
 const MCP_SESSION_ID_HEADER = 'mcp-session-id';
 const IDE_SERVER_PORT_ENV_VAR = 'MOLI_CODE_IDE_SERVER_PORT';
 const IDE_WORKSPACE_PATH_ENV_VAR = 'MOLI_CODE_IDE_WORKSPACE_PATH';
-const MOLI_DIR = '.moli';
+const MOLI_DIR = '.moli'; // MOLI: renamed;
 const IDE_DIR = 'ide';
 
 async function getGlobalIdeDir(): Promise<string> {

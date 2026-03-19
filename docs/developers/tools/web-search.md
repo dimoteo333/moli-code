@@ -183,4 +183,4 @@ web_search(query="best practices for React 19", provider="dashscope")
 **Need help?**
 
 - Check your configuration: Run `moli` and use the settings dialog
-- View your current settings in `~/.moli/settings.json` (macOS/Linux) or `%USERPROFILE%\.moli\settings.json` (Windows)
+- View your current settings in `~/.moli-code/settings.json` (macOS/Linux) or `%USERPROFILE%\.moli-code\settings.json` (Windows)

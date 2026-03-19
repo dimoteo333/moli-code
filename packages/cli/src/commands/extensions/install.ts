@@ -6,10 +6,7 @@
 
 import type { CommandModule } from 'yargs';
 
-import {
-  ExtensionManager,
-  parseInstallSource,
-} from '@dobby/moli-code-core';
+import { ExtensionManager, parseInstallSource } from '@dobby/moli-code-core';
 import { getErrorMessage } from '../../utils/errors.js';
 import { writeStdoutLine, writeStderrLine } from '../../utils/stdioHelpers.js';
 import { isWorkspaceTrusted } from '../../config/trustedFolders.js';

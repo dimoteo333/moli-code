@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,10 +20,7 @@ import type {
   ToolMcpConfirmationDetails,
   ApprovalMode,
 } from '@dobby/moli-code-core';
-import {
-  InputFormat,
-  ToolConfirmationOutcome,
-} from '@dobby/moli-code-core';
+import { InputFormat, ToolConfirmationOutcome } from '@dobby/moli-code-core';
 import type {
   CLIControlPermissionRequest,
   CLIControlSetPermissionModeRequest,

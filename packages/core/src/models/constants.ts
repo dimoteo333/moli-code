@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -65,7 +65,7 @@ export const AUTH_ENV_MAPPINGS = {
   openai: {
     apiKey: ['OPENAI_API_KEY'],
     baseUrl: ['OPENAI_BASE_URL'],
-    model: ['OPENAI_MODEL', 'QWEN_MODEL'],
+    model: ['OPENAI_MODEL', 'MOLI_MODEL'],
   },
   anthropic: {
     apiKey: ['ANTHROPIC_API_KEY'],

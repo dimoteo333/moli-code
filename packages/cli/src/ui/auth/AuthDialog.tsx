@@ -5,286 +5,245 @@
  */
 
 import type React from 'react';
-import { useState, useEffect } from 'react';
-import { AuthType } from '@dobby/moli-code-core';
+import { useState } from 'react';
 import { Box, Text } from 'ink';
-
 import { theme } from '../semantic-colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { DescriptiveRadioButtonSelect } from '../components/shared/DescriptiveRadioButtonSelect.js';
-import { TextInput } from '../components/shared/TextInput.js';
+import { MolimateEmployeeIdInput } from '../components/MolimateEmployeeIdInput.js';
+import { MolimateModelSelector } from '../components/MolimateModelSelector.js';
+import { MolimateTimerDisplay } from '../components/MolimateTimerDisplay.js';
+import { LocalConfigWizard } from '../components/LocalConfigWizard.js';
+import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
-import fs from 'node:fs/promises';
-import path from 'node:path';
-import os from 'node:os';
+import { useConfig } from '../contexts/ConfigContext.js';
+import { t } from '../../i18n/index.js';
 
-type MainOption = 'MOLIMATE' | 'LOCAL_ENV';
-type ViewLevel = 'main' | 'molimate-auth' | 'molimate-timer' | 'local-env';
+// Main menu option type
+type MainOption = 'MOLIMATE' | 'LOCAL';
+
+// View level for navigation
+type ViewLevel =
+  | 'main'
+  | 'molimate-auth'
+  | 'molimate-model-select'
+  | 'molimate-timer'
+  | 'local-config';
 
 export function AuthDialog(): React.JSX.Element {
-  const { handleAuthSelect: onAuthSelect, handleLocalEnvSetup } = useUIActions();
-  // We may not use config directly but keep it to respect signatures if needed
-  // const config = useConfig();
+  const { authError } = useUIState();
+  const {
+    validateMolimateEmployee,
+    handleMolimateAuthSubmit,
+    handleLocalConfigSubmit,
+    onAuthError,
+  } = useUIActions();
+  const config = useConfig();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [viewLevel, setViewLevel] = useState<ViewLevel>('main');
+  const [molimateEmployeeId, setMolimateEmployeeId] = useState<string>('');
+  const [timerExpired, setTimerExpired] = useState(false);
 
-  // Molimate Auth State
-  const [employeeId, setEmployeeId] = useState('');
-  const [timerCountdown, setTimerCountdown] = useState(120);
-
-  // Local Env State
-  const [localEnvStep, setLocalEnvStep] = useState(0); // 0 = baseUrl, 1 = modelName, 2 = apiKey
-  const [baseUrl, setBaseUrl] = useState('');
-  const [modelName, setModelName] = useState('');
-  const [apiKey, setApiKey] = useState('');
-
+  // Main authentication entries (two options)
   const mainItems = [
     {
       key: 'MOLIMATE',
-      title: '몰리메이트 인증',
-      label: '몰리메이트 인증',
-      description: '행번을 입력하여 로그인하세요',
+      title: t('몰리메이트로 인증'),
+      label: t('몰리메이트 인증'),
+      description: t('사번을 입력하여 인증'),
       value: 'MOLIMATE' as MainOption,
     },
     {
-      key: 'LOCAL_ENV',
-      title: '수동으로 모델 설정하기',
-      label: '수동으로 모델 설정하기',
-      description: '로컬 환경에서 모델을 설정하세요',
-      value: 'LOCAL_ENV' as MainOption,
+      key: 'LOCAL',
+      title: t('로컬 환경에서 실행'),
+      label: t('로컬 환경'),
+      description: t('수동 설정'),
+      value: 'LOCAL' as MainOption,
     },
   ];
 
   const handleMainSelect = async (value: MainOption) => {
     setErrorMessage(null);
+    onAuthError(null);
+
     if (value === 'MOLIMATE') {
       setViewLevel('molimate-auth');
-    } else if (value === 'LOCAL_ENV') {
-      setViewLevel('local-env');
+      return;
     }
+
+    if (value === 'LOCAL') {
+      setViewLevel('local-config');
+      return;
+    }
+  };
+
+  const handleMolimateEmployeeIdSubmit = async (employeeId: string) => {
+    setErrorMessage(null);
+    onAuthError(null);
+
+    // Validate employee ID via Molimate HTTP request before showing model selection
+    const result = await validateMolimateEmployee(employeeId);
+    if (!result.success) {
+      setErrorMessage(result.message || t('Molimate Auth failed'));
+      return;
+    }
+
+    setMolimateEmployeeId(employeeId);
+    setViewLevel('molimate-model-select');
+  };
+
+  const handleMolimateModelSelection = async (
+    model: 'qwen3-coder' | 'gpt-oss-120b',
+  ) => {
+    setViewLevel('molimate-timer');
+    setTimerExpired(false);
+
+    await handleMolimateAuthSubmit(molimateEmployeeId, model);
+  };
+
+  const handleTimerTimeout = () => {
+    setTimerExpired(true);
+    setErrorMessage(t('시간이 초과되었습니다.'));
+  };
+
+  const handleTimerCancel = () => {
+    setViewLevel('molimate-model-select');
+    setTimerExpired(false);
+    setErrorMessage(null);
+  };
+
+  const handleLocalConfigWizardSubmit = async (
+    values: import('../components/LocalConfigWizard.js').LocalConfigValues,
+  ) => {
+    await handleLocalConfigSubmit(values);
   };
 
   const handleGoBack = () => {
     setErrorMessage(null);
-    setSuccessMessage(null);
-    setViewLevel('main');
-    setEmployeeId('');
-    setLocalEnvStep(0);
-    setBaseUrl('');
-    setModelName('');
-    setApiKey('');
-    setTimerCountdown(120);
+    onAuthError(null);
+
+    switch (viewLevel) {
+      case 'molimate-auth':
+      case 'local-config':
+        setViewLevel('main');
+        break;
+      case 'molimate-model-select':
+        setViewLevel('molimate-auth');
+        break;
+      case 'molimate-timer':
+        if (!timerExpired) {
+          setViewLevel('molimate-model-select');
+        } else {
+          setViewLevel('main');
+          setTimerExpired(false);
+        }
+        break;
+      default:
+        setViewLevel('main');
+    }
   };
 
-  useKeypress((key) => {
-    if (key.name === 'escape') {
-      if (viewLevel !== 'main') {
-        handleGoBack();
-        return;
-      }
-      if (errorMessage || successMessage) return;
-      // Close dialog
-      onAuthSelect(undefined);
-    } else if (key.name === 'return') {
-      if (viewLevel === 'molimate-auth') {
-        if (!/^[A-Za-z0-9]+$/.test(employeeId)) {
-          setErrorMessage('Employee ID must be alphanumeric.');
+  useKeypress(
+    (key) => {
+      if (key.name === 'escape') {
+        if (viewLevel !== 'main') {
+          handleGoBack();
           return;
         }
-        setErrorMessage(null);
-        setViewLevel('molimate-timer');
-      } else if (viewLevel === 'local-env') {
-        if (localEnvStep === 0) {
-          if (!baseUrl.trim()) {
-            setErrorMessage('Endpoint cannot be empty.');
-            return;
-          }
-          setErrorMessage(null);
-          setLocalEnvStep(1);
-        } else if (localEnvStep === 1) {
-          if (!modelName.trim()) {
-            setErrorMessage('Model name cannot be empty.');
-            return;
-          }
-          setErrorMessage(null);
-          setLocalEnvStep(2);
-        } else if (localEnvStep === 2) {
-          if (!apiKey.trim()) {
-            setErrorMessage('API Key cannot be empty.');
-            return;
-          }
-          setErrorMessage(null);
-          generateLocalSettings();
+
+        if (errorMessage) {
+          return;
+        }
+        if (config.getAuthType() === undefined) {
+          setErrorMessage(
+            t(
+              '인증 방식을 선택해야 합니다. 계속하려면 Ctrl+C를 다시 누르세요.',
+            ),
+          );
+          return;
         }
       }
-    }
-  }, { isActive: true });
+    },
+    { isActive: true },
+  );
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout;
-    let timeout: NodeJS.Timeout;
-    if (viewLevel === 'molimate-timer') {
-      // Countdown
-      interval = setInterval(() => {
-        setTimerCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-
-      // Mock API trigger resolves after 5 seconds to simulate Moli Auth flow
-      timeout = setTimeout(() => {
-        clearInterval(interval);
-        setSuccessMessage('Successful authentication!');
-        setTimeout(() => {
-          onAuthSelect(AuthType.MOLI_OAUTH).catch((err) => {
-            setErrorMessage(err.message);
-          });
-        }, 2000);
-      }, 5000);
-    }
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-    };
-  }, [viewLevel, onAuthSelect]);
-
-  useEffect(() => {
-    if (timerCountdown === 0 && viewLevel === 'molimate-timer' && !successMessage) {
-      setErrorMessage('시간이 초과되었어요!');
-    }
-  }, [timerCountdown, viewLevel, successMessage]);
-
-  const generateLocalSettings = async () => {
-    try {
-      const moliDir = path.join(os.homedir(), '.moli');
-      await fs.mkdir(moliDir, { recursive: true });
-      const settingsPath = path.join(moliDir, 'settings.json');
-
-      const configJson = {
-        modelProviders: {
-          openai: [
-            {
-              id: modelName,
-              name: modelName,
-              baseUrl: baseUrl,
-              description: `${modelName} via Custom Endpoint`,
-              envKey: 'MODEL_API_KEY',
-            },
-          ],
-        },
-        env: {
-          MODEL_API_KEY: apiKey,
-        },
-        security: {
-          auth: {
-            selectedType: 'openai',
-          },
-        },
-        model: {
-          name: modelName,
-        },
-      };
-
-      await fs.writeFile(settingsPath, JSON.stringify(configJson, null, 2), 'utf-8');
-      setSuccessMessage('설정이 완료되었습니다!');
-      setTimeout(() => {
-        handleLocalEnvSetup({ apiKey, baseUrl, modelName }).catch((err: any) => {
-          setErrorMessage(err.message);
-        });
-      }, 2000);
-    } catch (err: any) {
-      setErrorMessage(`Failed to write settings.json: ${err.message}`);
-    }
-  };
-
+  // Render main auth selection
   const renderMainView = () => (
+    <>
+      <Box marginTop={1}>
+        <DescriptiveRadioButtonSelect
+          items={mainItems}
+          initialIndex={0}
+          onSelect={handleMainSelect}
+          itemGap={1}
+        />
+      </Box>
+    </>
+  );
+
+  // Render Molimate employee ID input
+  const renderMolimateAuthView = () => (
     <Box marginTop={1}>
-      <DescriptiveRadioButtonSelect
-        items={mainItems}
-        initialIndex={0}
-        onSelect={handleMainSelect}
-        itemGap={1}
+      <MolimateEmployeeIdInput
+        onSubmit={handleMolimateEmployeeIdSubmit}
+        onCancel={handleGoBack}
       />
     </Box>
   );
 
-  const renderMolimateAuth = () => (
-    <Box flexDirection="column" marginTop={1}>
-      <Text>사용자 행번을 입력해주세요 :</Text>
-      <TextInput value={employeeId} onChange={setEmployeeId} placeholder="예: 23100613" />
-      <Box marginTop={1}>
-        <Text color={theme.text.secondary}>Enter를 누르면 제출, Esc를 누르면 뒤로가기</Text>
-      </Box>
+  // Render Molimate model selector
+  const renderMolimateModelSelectView = () => (
+    <Box marginTop={1}>
+      <MolimateModelSelector
+        onSelect={handleMolimateModelSelection}
+        onCancel={handleGoBack}
+      />
     </Box>
   );
 
-  const renderMolimateTimer = () => (
-    <Box flexDirection="column" marginTop={1}>
-      {successMessage ? (
-        <Text color={theme.status.success}>{successMessage}</Text>
-      ) : timerCountdown === 0 ? (
-        <Text color={theme.status.error}>Time has expired.</Text>
-      ) : (
-        <Text>인증 중... 남은 시간: {timerCountdown}초</Text>
-      )}
-      <Box marginTop={1}>
-        <Text color={theme.text.secondary}>Esc를 누르면 뒤로가기</Text>
-      </Box>
+  // Render Molimate timer display
+  const renderMolimateTimerView = () => (
+    <Box marginTop={1}>
+      <MolimateTimerDisplay
+        onTimeout={handleTimerTimeout}
+        onCancel={handleTimerCancel}
+        initialSeconds={120}
+        message={t('인증 중...')}
+      />
     </Box>
   );
 
-  const renderLocalEnv = () => (
-    <Box flexDirection="column" marginTop={1}>
-      {localEnvStep === 0 && (
-        <>
-          <Text>모델 엔드포인트 (baseUrl)를 입력해주세요:</Text>
-          <TextInput value={baseUrl} onChange={setBaseUrl} placeholder="https://api.example.com" />
-        </>
-      )}
-      {localEnvStep === 1 && (
-        <>
-          <Text>모델명 (name)을 입력해주세요:</Text>
-          <TextInput value={modelName} onChange={setModelName} placeholder="gpt-4o" />
-        </>
-      )}
-      {localEnvStep === 2 && (
-        <>
-          <Text>API 키를 입력해주세요:</Text>
-          <TextInput value={apiKey} onChange={setApiKey} />
-        </>
-      )}
-      {successMessage && (
-        <Box marginTop={1}>
-          <Text color={theme.status.success}>{successMessage}</Text>
-        </Box>
-      )}
-      {!successMessage && (
-        <Box marginTop={1}>
-          <Text color={theme.text.secondary}>Enter를 누르면 다음, Esc를 누르면 뒤로가기</Text>
-        </Box>
-      )}
+  // Render local config wizard
+  const renderLocalConfigView = () => (
+    <Box marginTop={1}>
+      <LocalConfigWizard
+        onSubmit={handleLocalConfigWizardSubmit}
+        onCancel={handleGoBack}
+      />
     </Box>
   );
 
   const getViewTitle = () => {
     switch (viewLevel) {
-      case 'main': return '인증 방법 선택';
-      case 'molimate-auth': return '몰리메이트 인증';
-      case 'molimate-timer': return '인증 진행 중';
-      case 'local-env': return '로컬 환경에서 실행';
-      default: return '인증 방법 선택';
+      case 'main':
+        return t('인증 방식 선택');
+      case 'molimate-auth':
+        return t('몰리메이트 인증');
+      case 'molimate-model-select':
+        return t('모델 선택');
+      case 'molimate-timer':
+        return t('인증 중...');
+      case 'local-config':
+        return t('로컬 환경 설정');
+      default:
+        return t('인증 방식 선택');
     }
   };
 
   return (
     <Box
-      borderStyle="round"
+      borderStyle="single"
       borderColor={theme?.border?.default}
       flexDirection="column"
       padding={1}
@@ -293,13 +252,14 @@ export function AuthDialog(): React.JSX.Element {
       <Text bold>{getViewTitle()}</Text>
 
       {viewLevel === 'main' && renderMainView()}
-      {viewLevel === 'molimate-auth' && renderMolimateAuth()}
-      {viewLevel === 'molimate-timer' && renderMolimateTimer()}
-      {viewLevel === 'local-env' && renderLocalEnv()}
+      {viewLevel === 'molimate-auth' && renderMolimateAuthView()}
+      {viewLevel === 'molimate-model-select' && renderMolimateModelSelectView()}
+      {viewLevel === 'molimate-timer' && renderMolimateTimerView()}
+      {viewLevel === 'local-config' && renderLocalConfigView()}
 
-      {errorMessage && (
+      {(authError || errorMessage) && (
         <Box marginTop={1}>
-          <Text color={theme.status.error}>{errorMessage}</Text>
+          <Text color={theme.status.error}>{authError || errorMessage}</Text>
         </Box>
       )}
 
@@ -309,7 +269,9 @@ export function AuthDialog(): React.JSX.Element {
             <Text color={theme.border.default}>{'\u2500'.repeat(80)}</Text>
           </Box>
           <Box>
-            <Text color={theme.text.primary}>이용약관 및 개인정보처리방침:</Text>
+            <Text color={theme.text.primary}>
+              {t('이용약관 및 개인정보처리방침')}:
+            </Text>
           </Box>
           <Box>
             <Text color={theme.text.secondary} underline>

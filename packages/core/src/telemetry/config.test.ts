@@ -79,13 +79,13 @@ describe('telemetry/config helpers', () => {
         useCollector: false,
       };
       const env = {
-        GEMINI_TELEMETRY_ENABLED: '1',
-        GEMINI_TELEMETRY_TARGET: 'gcp',
-        GEMINI_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
-        GEMINI_TELEMETRY_OTLP_PROTOCOL: 'http',
-        GEMINI_TELEMETRY_LOG_PROMPTS: 'true',
-        GEMINI_TELEMETRY_OUTFILE: 'env.log',
-        GEMINI_TELEMETRY_USE_COLLECTOR: 'true',
+        MOLI_TELEMETRY_ENABLED: '1',
+        MOLI_TELEMETRY_TARGET: 'gcp',
+        MOLI_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
+        MOLI_TELEMETRY_OTLP_PROTOCOL: 'http',
+        MOLI_TELEMETRY_LOG_PROMPTS: 'true',
+        MOLI_TELEMETRY_OUTFILE: 'env.log',
+        MOLI_TELEMETRY_USE_COLLECTOR: 'true',
       } as Record<string, string>;
       const argv = {
         telemetry: false,
@@ -133,7 +133,7 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown protocol values', async () => {
-      const env = { GEMINI_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
+      const env = { MOLI_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
         string,
         string
       >;
@@ -143,7 +143,7 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown target values', async () => {
-      const env = { GEMINI_TELEMETRY_TARGET: 'unknown' } as Record<
+      const env = { MOLI_TELEMETRY_TARGET: 'unknown' } as Record<
         string,
         string
       >;

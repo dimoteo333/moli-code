@@ -52,11 +52,6 @@ esbuild
     target: 'node20',
     external,
     packages: 'bundle',
-    define: {
-      'process.env.CLI_VERSION': JSON.stringify(pkg.version),
-      global: 'globalThis',
-    },
-    loader: { '.node': 'file' },
     inject: [path.resolve(__dirname, 'scripts/esbuild-shims.js')],
     banner: {
       js: `// Force strict mode and setup for ESM
@@ -68,6 +63,12 @@ esbuild
         'packages/cli/src/patches/is-in-ci.ts',
       ),
     },
+    define: {
+      'process.env.CLI_VERSION': JSON.stringify(pkg.version),
+      // Make global available for compatibility
+      global: 'globalThis',
+    },
+    loader: { '.node': 'file' },
     metafile: true,
     write: true,
     keepNames: true,

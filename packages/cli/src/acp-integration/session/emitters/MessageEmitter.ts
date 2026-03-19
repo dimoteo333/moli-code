@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { GenerateContentResponseUsageMetadata } from '@google/genai';
-import type { Usage } from '../../schema.js';
+import type { Usage } from '@agentclientprotocol/sdk';
 import { BaseEmitter } from './BaseEmitter.js';
 
 /**
@@ -80,11 +80,11 @@ export class MessageEmitter extends BaseEmitter {
     subagentMeta?: import('../types.js').SubagentMeta,
   ): Promise<void> {
     const usage: Usage = {
-      promptTokens: usageMetadata.promptTokenCount,
-      completionTokens: usageMetadata.candidatesTokenCount,
-      thoughtsTokens: usageMetadata.thoughtsTokenCount,
-      totalTokens: usageMetadata.totalTokenCount,
-      cachedTokens: usageMetadata.cachedContentTokenCount,
+      inputTokens: usageMetadata.promptTokenCount ?? 0,
+      outputTokens: usageMetadata.candidatesTokenCount ?? 0,
+      totalTokens: usageMetadata.totalTokenCount ?? 0,
+      thoughtTokens: usageMetadata.thoughtsTokenCount,
+      cachedReadTokens: usageMetadata.cachedContentTokenCount,
     };
 
     const meta =

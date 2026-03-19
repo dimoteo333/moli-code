@@ -1,13 +1,13 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * Qwen Connection Handler
+ * Moli Connection Handler
  *
- * Handles Qwen Agent connection establishment, authentication, and session creation
+ * Handles Moli Agent connection establishment, authentication, and session creation
  */
 
 import type { AcpConnection } from './acpConnection.js';
@@ -17,7 +17,7 @@ import {
   extractModelInfoFromNewSessionResult,
   extractSessionModelState,
 } from '../utils/acpModelInfo.js';
-import type { ModelInfo } from '../types/acpTypes.js';
+import type { ModelInfo } from '@agentclientprotocol/sdk';
 
 export interface MoliConnectionResult {
   sessionCreated: boolean;
@@ -27,12 +27,12 @@ export interface MoliConnectionResult {
 }
 
 /**
- * Qwen Connection Handler class
+ * Moli Connection Handler class
  * Handles connection, authentication, and session initialization
  */
 export class MoliConnectionHandler {
   /**
-   * Connect to Qwen service and establish session
+   * Connect to Moli service and establish session
    *
    * @param connection - ACP connection instance
    * @param workingDir - Working directory
@@ -157,7 +157,7 @@ export class MoliConnectionHandler {
           errorMessage,
         );
 
-        // If Qwen reports that authentication is required, try to
+        // If Moli reports that authentication is required, try to
         // authenticate on-the-fly once and retry without waiting.
         const requiresAuth = isAuthenticationRequiredError(error);
         if (requiresAuth) {

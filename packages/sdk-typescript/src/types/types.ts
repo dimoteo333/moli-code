@@ -180,7 +180,7 @@ export function isSdkMcpServerConfig(
 }
 
 /**
- * Configuration options for creating a query session with the Qwen CLI.
+ * Configuration options for creating a query session with the Moli CLI.
  */
 export interface QueryOptions {
   /**
@@ -192,13 +192,13 @@ export interface QueryOptions {
 
   /**
    * The AI model to use for the query session.
-   * This takes precedence over the environment variables `OPENAI_MODEL` and `QWEN_MODEL`
-   * @example 'moli-max', 'qwen-plus', 'moli-turbo'
+   * This takes precedence over the environment variables `OPENAI_MODEL` and `MOLI_MODEL`
+   * @example 'moli-max', 'moli-plus', 'moli-turbo'
    */
   model?: string;
 
   /**
-   * Path to the Qwen CLI executable.
+   * Path to the Moli CLI executable.
    *
    * If not provided, the SDK automatically uses the bundled CLI included in the package.
    *
@@ -221,7 +221,7 @@ export interface QueryOptions {
   pathToMoliExecutable?: string;
 
   /**
-   * Environment variables to pass to the Qwen CLI process.
+   * Environment variables to pass to the Moli CLI process.
    * These variables will be merged with the current process environment.
    */
   env?: Record<string, string>;
@@ -322,7 +322,7 @@ export interface QueryOptions {
   debug?: boolean;
 
   /**
-   * Custom handler for stderr output from the Qwen CLI process.
+   * Custom handler for stderr output from the Moli CLI process.
    * Use this to capture and process error messages or diagnostic output.
    */
   stderr?: (message: string) => void;
@@ -423,7 +423,7 @@ export interface QueryOptions {
 
   /**
    * Resume a previous session by providing its session ID.
-   * This is equivalent to using the `--resume` flag in the Qwen CLI.
+   * This is equivalent to using the `--resume` flag in the Moli CLI.
    * @example '123e4567-e89b-12d3-a456-426614174000'
    */
   resume?: string;

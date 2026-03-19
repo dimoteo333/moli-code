@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -127,8 +127,15 @@ export class ContentGenerationPipeline {
     // Reset streaming tool calls to prevent data pollution from previous streams
     this.converter.resetStreamingToolCalls();
 
-    // State for handling chunk merging
+    // State for handling chunk merging.
+    // pendingFinishResponse holds a finish chunk waiting to be merged with
+    // a subsequent usage-metadata chunk before yielding.
+    // finishYielded is set to true once the merged finish response has been
+    // yielded, so that any further trailing chunks are treated as normal
+    // chunks instead of triggering another merge (which would duplicate the
+    // function-call parts from the finish chunk).
     let pendingFinishResponse: GenerateContentResponse | null = null;
+    let finishYielded = false;
 
     try {
       // Stage 2a: Convert and yield each chunk while preserving original
@@ -155,7 +162,29 @@ export class ContentGenerationPipeline {
           continue;
         }
 
-        // Stage 2c: Handle chunk merging for providers that send finishReason and usageMetadata separately
+        // Stage 2c: Handle chunk merging for providers that send
+        // finishReason and usageMetadata in separate chunks.
+        // Once the merged finish response has been yielded, skip
+        // further merging so trailing chunks don't duplicate the
+        // function-call parts carried by the finish chunk.
+        if (finishYielded) {
+          // Finish already yielded — absorb any remaining usage
+          // metadata but do NOT yield another response.
+          // Note: pendingFinishResponse is guaranteed non-null here because
+          // finishYielded is only set to true inside the `if (pendingFinishResponse)`
+          // block below. TypeScript cannot infer this through the callback
+          // assignment in handleChunkMerging, so an explicit cast is needed.
+          if (response.usageMetadata) {
+            const pending =
+              pendingFinishResponse as GenerateContentResponse | null;
+            if (pending) {
+              pending.usageMetadata = response.usageMetadata;
+            }
+          }
+          collectedGeminiResponses.push(response);
+          continue;
+        }
+
         const shouldYield = this.handleChunkMerging(
           response,
           collectedGeminiResponses,
@@ -168,15 +197,18 @@ export class ContentGenerationPipeline {
           // If we have a pending finish response, yield it instead
           if (pendingFinishResponse) {
             yield pendingFinishResponse;
-            pendingFinishResponse = null;
+            finishYielded = true;
+            // Keep pendingFinishResponse alive so late-arriving usage
+            // metadata can still be merged (see finishYielded block above).
           } else {
             yield response;
           }
         }
       }
 
-      // Stage 2d: If there's still a pending finish response at the end, yield it
-      if (pendingFinishResponse) {
+      // Stage 2d: If there's still a pending finish response at the end
+      // (e.g. no usage chunk arrived after the finish chunk), yield it.
+      if (pendingFinishResponse && !finishYielded) {
         yield pendingFinishResponse;
       }
 
@@ -369,7 +401,7 @@ export class ContentGenerationPipeline {
     //   - glm-4.7             — thinking is enabled by default; can be disabled via `extra_body.thinking.enabled`
     //   - kimi-k2-thinking    — thinking is enabled by default and cannot be disabled
     //   - gpt-5.x series      — thinking is enabled by default; can be disabled via `reasoning.effort`
-    //   - qwen3 series        — model-dependent; can be manually disabled via `extra_body.enable_thinking`
+    //   - moli3 series        — model-dependent; can be manually disabled via `extra_body.enable_thinking`
     //
     // Given this inconsistency, we avoid mapping values and only pass through the
     // configured reasoning object when explicitly enabled. This keeps provider- and

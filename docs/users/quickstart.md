@@ -83,8 +83,8 @@ Open your terminal in any project directory and start Moli Code:
 ```bash
 # optiona
 cd /path/to/your/project
-# start qwen
-qwen
+# start moli
+moli
 ```
 
 You'll see the Moli Code welcome screen with your session information, recent conversations, and latest updates. Type `/help` for available commands.
@@ -268,4 +268,4 @@ build a dashboard showing products that are most frequently returned by our UK c
 
 - **In Moli Code**: Type `/help` or ask "how do I..."
 - **Documentation**: You're here! Browse other guides
-- **Community**: Join our [GitHub Discussion](https://github.com/dimoteo333/moli-code/discussions) for tips and support
+- **Community**: Join our [GitHub Discussion](https://github.com/MoliLM/moli-code/discussions) for tips and support

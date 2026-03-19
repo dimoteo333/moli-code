@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,9 +11,13 @@
  * users to define reusable skill configurations that can be loaded by the
  * model via a dedicated Skills tool.
  *
- * Skills are stored as directories in `.moli/skills/` (project-level) or
- * `~/.moli/skills/` (user-level), with each directory containing a SKILL.md
- * file with YAML frontmatter for metadata.
+ * Skills are stored as directories containing a SKILL.md file with YAML
+ * frontmatter for metadata. They can be loaded from four levels
+ * (precedence: project > user > extension > bundled):
+ * - Project-level: `.moli/skills/`
+ * - User-level: `~/.moli/skills/`
+ * - Extension-level: provided by installed extensions
+ * - Bundled: built-in skills shipped with moli-code
  */
 
 // Core types and interfaces

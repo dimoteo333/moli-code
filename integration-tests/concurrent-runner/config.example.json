@@ -3,7 +3,7 @@
   "yolo": true,
   "source_repo": ".",
   "branch": "main",
-  "worktree_base": "~/.qwen/worktrees",
+  "worktree_base": "~/.moli/worktrees",
   "outputs_dir": "./outputs",
   "results_file": "./results.json",
   "tasks": [
@@ -32,7 +32,7 @@
     }
   ],
   "models": [
-    "qwen3-coder-plus",
+    "moli3-coder-plus",
     { "name": "glm-4.7", "auth_type": "anthropic" },
     { "name": "claude-4-5-sonnet-20260219", "auth_type": "anthropic" }
   ]

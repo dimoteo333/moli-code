@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +13,7 @@ import {
 import { AuthType, type Config } from '@dobby/moli-code-core';
 
 describe('availableModels', () => {
-  describe('Qwen models', () => {
+  describe('Moli models', () => {
     const moliModels = getFilteredMoliModels();
 
     it('should include only coder-model', () => {

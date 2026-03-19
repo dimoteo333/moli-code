@@ -123,7 +123,7 @@ class VsCodeInstaller implements IdeInstaller {
         isWindows ? `"${commandPath}"` : commandPath,
         [
           '--install-extension',
-          'dobby.moli-code-vscode-ide-companion',
+          'molilm.moli-code-vscode-ide-companion',
           '--force',
         ],
         { stdio: 'pipe', shell: isWindows },

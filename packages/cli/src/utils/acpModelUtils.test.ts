@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,13 +14,13 @@ import {
 
 describe('acpModelUtils', () => {
   it('formats modelId(authType)', () => {
-    expect(formatAcpModelId('qwen3', AuthType.MOLI_OAUTH)).toBe(
-      `qwen3(${AuthType.MOLI_OAUTH})`,
+    expect(formatAcpModelId('moli3', AuthType.MOLI_OAUTH)).toBe(
+      `moli3(${AuthType.MOLI_OAUTH})`,
     );
   });
 
   it('extracts base model id when string ends with parentheses', () => {
-    expect(parseAcpBaseModelId(`qwen3(${AuthType.USE_OPENAI})`)).toBe('qwen3');
+    expect(parseAcpBaseModelId(`moli3(${AuthType.USE_OPENAI})`)).toBe('moli3');
   });
 
   it('does not strip when parentheses are not a trailing suffix', () => {
@@ -28,8 +28,8 @@ describe('acpModelUtils', () => {
   });
 
   it('parses modelId and validates authType', () => {
-    expect(parseAcpModelOption(` qwen3(${AuthType.USE_OPENAI}) `)).toEqual({
-      modelId: 'qwen3',
+    expect(parseAcpModelOption(` moli3(${AuthType.USE_OPENAI}) `)).toEqual({
+      modelId: 'moli3',
       authType: AuthType.USE_OPENAI,
     });
   });

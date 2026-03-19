@@ -5,7 +5,7 @@
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
-      "@dobby/moli-code-sdk": ["../packages/sdk-typescript/dist/index.d.ts"]
+      "@moli-code/sdk": ["../packages/sdk-typescript/dist/index.d.ts"]
     }
   },
   "include": ["**/*.ts"],

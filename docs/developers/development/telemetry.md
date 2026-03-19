@@ -56,13 +56,13 @@ These settings can be overridden by environment variables or CLI flags.
 
 | Setting        | Environment Variable           | CLI Flag                                                 | Description                                       | Values             | Default                 |
 | -------------- | ------------------------------ | -------------------------------------------------------- | ------------------------------------------------- | ------------------ | ----------------------- |
-| `enabled`      | `QWEN_TELEMETRY_ENABLED`       | `--telemetry` / `--no-telemetry`                         | Enable or disable telemetry                       | `true`/`false`     | `false`                 |
-| `target`       | `QWEN_TELEMETRY_TARGET`        | `--telemetry-target <local\|qwen>`                       | Where to send telemetry data                      | `"qwen"`/`"local"` | `"local"`               |
-| `otlpEndpoint` | `QWEN_TELEMETRY_OTLP_ENDPOINT` | `--telemetry-otlp-endpoint <URL>`                        | OTLP collector endpoint                           | URL string         | `http://localhost:4317` |
-| `otlpProtocol` | `QWEN_TELEMETRY_OTLP_PROTOCOL` | `--telemetry-otlp-protocol <grpc\|http>`                 | OTLP transport protocol                           | `"grpc"`/`"http"`  | `"grpc"`                |
-| `outfile`      | `QWEN_TELEMETRY_OUTFILE`       | `--telemetry-outfile <path>`                             | Save telemetry to file (overrides `otlpEndpoint`) | file path          | -                       |
-| `logPrompts`   | `QWEN_TELEMETRY_LOG_PROMPTS`   | `--telemetry-log-prompts` / `--no-telemetry-log-prompts` | Include prompts in telemetry logs                 | `true`/`false`     | `true`                  |
-| `useCollector` | `QWEN_TELEMETRY_USE_COLLECTOR` | -                                                        | Use external OTLP collector (advanced)            | `true`/`false`     | `false`                 |
+| `enabled`      | `MOLI_TELEMETRY_ENABLED`       | `--telemetry` / `--no-telemetry`                         | Enable or disable telemetry                       | `true`/`false`     | `false`                 |
+| `target`       | `MOLI_TELEMETRY_TARGET`        | `--telemetry-target <local\|moli>`                       | Where to send telemetry data                      | `"moli"`/`"local"` | `"local"`               |
+| `otlpEndpoint` | `MOLI_TELEMETRY_OTLP_ENDPOINT` | `--telemetry-otlp-endpoint <URL>`                        | OTLP collector endpoint                           | URL string         | `http://localhost:4317` |
+| `otlpProtocol` | `MOLI_TELEMETRY_OTLP_PROTOCOL` | `--telemetry-otlp-protocol <grpc\|http>`                 | OTLP transport protocol                           | `"grpc"`/`"http"`  | `"grpc"`                |
+| `outfile`      | `MOLI_TELEMETRY_OUTFILE`       | `--telemetry-outfile <path>`                             | Save telemetry to file (overrides `otlpEndpoint`) | file path          | -                       |
+| `logPrompts`   | `MOLI_TELEMETRY_LOG_PROMPTS`   | `--telemetry-log-prompts` / `--no-telemetry-log-prompts` | Include prompts in telemetry logs                 | `true`/`false`     | `true`                  |
+| `useCollector` | `MOLI_TELEMETRY_USE_COLLECTOR` | -                                                        | Use external OTLP collector (advanced)            | `true`/`false`     | `false`                 |
 
 **Note on boolean environment variables:** For the boolean settings (`enabled`,
 `logPrompts`, `useCollector`), setting the corresponding environment variable to
@@ -82,7 +82,7 @@ Sends telemetry directly to Aliyun services. No collector needed.
    {
      "telemetry": {
        "enabled": true,
-       "target": "qwen"
+       "target": "moli"
      }
    }
    ```
@@ -139,16 +139,16 @@ Logs are timestamped records of specific events. The following events are logged
 - `moli-code.config`: This event occurs once at startup with the CLI's configuration.
   - **Attributes**:
     - `model` (string)
-    - `embedding_model` (string)
     - `sandbox_enabled` (boolean)
     - `core_tools_enabled` (string)
     - `approval_mode` (string)
-    - `api_key_enabled` (boolean)
-    - `vertex_ai_enabled` (boolean)
-    - `code_assist_enabled` (boolean)
-    - `log_prompts_enabled` (boolean)
     - `file_filtering_respect_git_ignore` (boolean)
     - `debug_mode` (boolean)
+    - `truncate_tool_output_threshold` (number)
+    - `truncate_tool_output_lines` (number)
+    - `hooks` (string, comma-separated hook event types, omitted if hooks disabled)
+    - `ide_enabled` (boolean)
+    - `interactive_shell_enabled` (boolean)
     - `mcp_servers` (string)
     - `output_format` (string: "text" or "json")
 
@@ -187,7 +187,7 @@ Logs are timestamped records of specific events. The following events are logged
       - `user_added_lines` (int)
       - `user_removed_lines` (int)
 
-- `moli-code.api_request`: This event occurs when making a request to Qwen API.
+- `moli-code.api_request`: This event occurs when making a request to Moli API.
   - **Attributes**:
     - `model`
     - `request_text` (if applicable)
@@ -201,7 +201,7 @@ Logs are timestamped records of specific events. The following events are logged
     - `duration_ms`
     - `auth_type`
 
-- `moli-code.api_response`: This event occurs upon receiving a response from Qwen API.
+- `moli-code.api_response`: This event occurs upon receiving a response from Moli API.
   - **Attributes**:
     - `model`
     - `status_code`
@@ -224,7 +224,7 @@ Logs are timestamped records of specific events. The following events are logged
     - `lines` (int)
     - `prompt_id` (string)
 
-- `moli-code.malformed_json_response`: This event occurs when a `generateJson` response from Qwen API cannot be parsed as a json.
+- `moli-code.malformed_json_response`: This event occurs when a `generateJson` response from Moli API cannot be parsed as a json.
   - **Attributes**:
     - `model`
 

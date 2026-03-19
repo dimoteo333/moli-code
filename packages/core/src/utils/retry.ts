@@ -6,7 +6,7 @@
 
 import type { GenerateContentResponse } from '@google/genai';
 import { AuthType } from '../core/contentGenerator.js';
-import { isMoliQuotaExceededError } from './quotaErrorDetection.js';
+import { isMoliQuotaExceededError } from './quotaErrorDetection.js'; // MOLI: renamed from isMoliQuotaExceededError
 import { createDebugLogger } from './debugLogger.js';
 
 const debugLogger = createDebugLogger('RETRY');
@@ -107,7 +107,7 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       const errorStatus = getErrorStatus(error);
 
-      // Check for Moli OAuth quota exceeded error - throw immediately without retry
+      // MOLI: Check for Moli OAuth quota exceeded error - throw immediately without retry
       if (authType === AuthType.MOLI_OAUTH && isMoliQuotaExceededError(error)) {
         throw new Error(
           `Moli OAuth quota exceeded: Your free daily quota has been reached.\n\n` +

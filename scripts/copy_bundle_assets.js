@@ -27,7 +27,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
 const coreVendorDir = join(root, 'packages', 'core', 'vendor');
-const cliLocalesDir = join(root, 'packages', 'cli', 'dist', 'src', 'i18n', 'locales');
+const cliLocalesDir = join(
+  root,
+  'packages',
+  'cli',
+  'dist',
+  'src',
+  'i18n',
+  'locales',
+);
 const distLocalesDir = join(distDir, 'src', 'i18n', 'locales');
 
 // Create the dist directory if it doesn't exist
@@ -60,6 +68,27 @@ if (existsSync(cliLocalesDir)) {
   console.log('Copied locale files to dist/');
 } else {
   console.warn(`Warning: Locale directory not found at ${cliLocalesDir}`);
+}
+
+// Copy bundled skills (e.g. /review) so they are available at runtime.
+// In the esbuild bundle, import.meta.url resolves to dist/cli.js, so
+// SkillManager looks for bundled skills at dist/bundled/.
+const bundledSkillsDir = join(
+  root,
+  'packages',
+  'core',
+  'src',
+  'skills',
+  'bundled',
+);
+if (existsSync(bundledSkillsDir)) {
+  const destBundledDir = join(distDir, 'bundled');
+  copyRecursiveSync(bundledSkillsDir, destBundledDir);
+  console.log('Copied bundled skills to dist/bundled/');
+} else {
+  console.warn(
+    `Warning: Bundled skills directory not found at ${bundledSkillsDir}`,
+  );
 }
 
 console.log('\n✅ All bundle assets copied to dist/');

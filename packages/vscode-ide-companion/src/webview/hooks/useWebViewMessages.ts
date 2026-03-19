@@ -1,20 +1,24 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useVSCode } from './useVSCode.js';
 import type { Conversation } from '../../services/conversationStore.js';
-import type { PermissionOption, PermissionToolCall } from '@dobby/moli-code-webui';
+import type {
+  PermissionOption,
+  PermissionToolCall,
+} from '@dobby/moli-code-webui';
 import type {
   ToolCallUpdate,
   UsageStatsPayload,
 } from '../../types/chatTypes.js';
 import type { ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import type { PlanEntry } from '../../types/chatTypes.js';
-import type { ModelInfo, AvailableCommand } from '../../types/acpTypes.js';
+import type { ModelInfo, AvailableCommand } from '@agentclientprotocol/sdk';
+import type { Question } from '../../types/acpTypes.js';
 
 const FORCE_CLEAR_STREAM_END_REASONS = new Set([
   'user_cancelled',
@@ -41,10 +45,6 @@ interface UseWebViewMessagesProps {
     setNextCursor: (cursor: number | undefined) => void;
     setHasMore: (hasMore: boolean) => void;
     setIsLoading: (loading: boolean) => void;
-    handleSaveSessionResponse: (response: {
-      success: boolean;
-      message?: string;
-    }) => void;
   };
 
   // File context
@@ -91,6 +91,7 @@ interface UseWebViewMessagesProps {
     appendStreamChunk: (chunk: string) => void;
     endStreaming: () => void;
     breakAssistantSegment: () => void;
+    breakThinkingSegment: () => void;
     appendThinkingChunk: (chunk: string) => void;
     clearThinking: () => void;
     setWaitingForResponse: (message: string) => void;
@@ -111,6 +112,17 @@ interface UseWebViewMessagesProps {
     request: {
       options: PermissionOption[];
       toolCall: PermissionToolCall;
+    } | null,
+  ) => void;
+
+  // Ask User Question
+  handleAskUserQuestion: (
+    request: {
+      questions: Question[];
+      sessionId: string;
+      metadata?: {
+        source?: string;
+      };
     } | null,
   ) => void;
 
@@ -143,6 +155,7 @@ export const useWebViewMessages = ({
   clearToolCalls,
   setPlanEntries,
   handlePermissionRequest,
+  handleAskUserQuestion,
   inputFieldRef,
   setInputText,
   setEditMode,
@@ -158,6 +171,9 @@ export const useWebViewMessages = ({
   // keep the bottom "waiting" message visible until all of them complete.
   const activeExecToolCallsRef = useRef<Set<string>>(new Set());
   const modelInfoRef = useRef<ModelInfo | null>(null);
+  // Track the active requestId from the latest streamStart so we can
+  // discard stale streamEnd events from cancelled/previous requests.
+  const activeRequestIdRef = useRef<string | null>(null);
   // Use ref to store callbacks to avoid useEffect dependency issues
   const handlersRef = useRef({
     sessionManagement,
@@ -167,6 +183,7 @@ export const useWebViewMessages = ({
     clearToolCalls,
     setPlanEntries,
     handlePermissionRequest,
+    handleAskUserQuestion,
     setIsAuthenticated,
     setUsageStats,
     setModelInfo,
@@ -216,6 +233,7 @@ export const useWebViewMessages = ({
       clearToolCalls,
       setPlanEntries,
       handlePermissionRequest,
+      handleAskUserQuestion,
       setIsAuthenticated,
       setUsageStats,
       setModelInfo,
@@ -365,11 +383,11 @@ export const useWebViewMessages = ({
           handlers.messageHandling.clearWaitingForResponse();
           const errorMsg =
             (message?.data?.message as string) ||
-            'Failed to connect to Qwen agent.';
+            'Failed to connect to Moli agent.';
 
           handlers.messageHandling.addMessage({
             role: 'assistant',
-            content: `Failed to connect to Qwen agent: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
+            content: `Failed to connect to Moli agent: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
             timestamp: Date.now(),
           });
           // Set authentication state to false
@@ -449,11 +467,15 @@ export const useWebViewMessages = ({
           break;
         }
 
-        case 'streamStart':
-          handlers.messageHandling.startStreaming(
-            (message.data as { timestamp?: number } | undefined)?.timestamp,
-          );
+        case 'streamStart': {
+          const startData = message.data as
+            | { timestamp?: number; requestId?: string }
+            | undefined;
+          // Store the requestId so we can validate streamEnd events
+          activeRequestIdRef.current = startData?.requestId ?? null;
+          handlers.messageHandling.startStreaming(startData?.timestamp);
           break;
+        }
 
         case 'streamChunk': {
           handlers.messageHandling.appendStreamChunk(message.data.chunk);
@@ -467,6 +489,24 @@ export const useWebViewMessages = ({
         }
 
         case 'streamEnd': {
+          const endData = message.data as
+            | { reason?: string; requestId?: string }
+            | undefined;
+          const endRequestId = endData?.requestId ?? null;
+
+          // Drop stale or untagged streamEnd when a tagged stream is active.
+          if (activeRequestIdRef.current) {
+            if (endRequestId !== activeRequestIdRef.current) {
+              console.log(
+                '[useWebViewMessages] Ignoring stale/untagged streamEnd:',
+                endRequestId,
+                'active:',
+                activeRequestIdRef.current,
+              );
+              break;
+            }
+          }
+
           // Always end local streaming state and clear thinking state
           handlers.messageHandling.endStreaming();
           handlers.messageHandling.clearThinking();
@@ -476,9 +516,7 @@ export const useWebViewMessages = ({
           // This avoids UI getting stuck with Stop button visible after
           // rejecting a permission request.
           try {
-            const reason = (
-              (message.data as { reason?: string } | undefined)?.reason || ''
-            ).toLowerCase();
+            const reason = (endData?.reason || '').toLowerCase();
 
             /**
              * Handle different types of stream end reasons that require a full reset:
@@ -612,6 +650,7 @@ export const useWebViewMessages = ({
 
             // Split assistant stream so subsequent chunks start a new assistant message
             handlers.messageHandling.breakAssistantSegment();
+            handlers.messageHandling.breakThinkingSegment();
           }
           break;
         }
@@ -626,6 +665,19 @@ export const useWebViewMessages = ({
               _error,
             );
           }
+          break;
+        }
+
+        case 'askUserQuestion': {
+          // Handle ask user question request from extension
+          const questionsData = message.data as {
+            questions: Question[];
+            sessionId: string;
+            metadata?: {
+              source?: string;
+            };
+          };
+          handlers.handleAskUserQuestion(questionsData);
           break;
         }
 
@@ -686,6 +738,7 @@ export const useWebViewMessages = ({
 
               // Split assistant message segments, keep rendering blocks independent
               handlers.messageHandling.breakAssistantSegment?.();
+              handlers.messageHandling.breakThinkingSegment?.();
             } catch (_error) {
               console.warn(
                 '[useWebViewMessages] failed to push/merge plan snapshot toolcall:',
@@ -711,6 +764,7 @@ export const useWebViewMessages = ({
             (status === 'completed' || status === 'failed');
           if (isStart || isFinalUpdate) {
             handlers.messageHandling.breakAssistantSegment();
+            handlers.messageHandling.breakThinkingSegment();
           }
 
           // While long-running tools (e.g., execute/bash/command) are in progress,
@@ -932,11 +986,6 @@ export const useWebViewMessages = ({
               requestId,
             );
           }
-          break;
-        }
-
-        case 'saveSessionResponse': {
-          handlers.sessionManagement.handleSaveSessionResponse(message.data);
           break;
         }
 

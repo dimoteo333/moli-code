@@ -46,7 +46,7 @@ export function IdeIntegrationNudge({
 
   const OPTIONS: Array<RadioSelectItem<IdeIntegrationNudgeResult>> = [
     {
-      label: '예',
+      label: 'Yes',
       value: {
         userSelection: 'yes',
         isExtensionPreInstalled,
@@ -54,7 +54,7 @@ export function IdeIntegrationNudge({
       key: 'Yes',
     },
     {
-      label: '아니오 (Esc)',
+      label: 'No (esc)',
       value: {
         userSelection: 'no',
         isExtensionPreInstalled,
@@ -62,7 +62,7 @@ export function IdeIntegrationNudge({
       key: 'No (esc)',
     },
     {
-      label: "다음에 다시 묻지 않기",
+      label: "No, don't ask again",
       value: {
         userSelection: 'dismiss',
         isExtensionPreInstalled,
@@ -72,11 +72,14 @@ export function IdeIntegrationNudge({
   ];
 
   const installText = isInSandbox
-    ? `참고: 샌드박스 환경에서는 IDE 통합을 위해 로컬 컴퓨터에 수동 설정이 필요해요. 예를 선택하면 설정 방법을 안내해 드립니다.`
+    ? `Note: In sandbox environments, IDE integration requires manual setup on the host system. If you select Yes, you'll receive instructions on how to set this up.`
     : isExtensionPreInstalled
-      ? `예를 선택하면 ${ideName ?? 'IDE'
-      }에 연결되어 열려있는 파일에 접근하고 차이점을 직접 표시할 수 있어요.`
-      : `${ideName ?? 'IDE'}에 연결되어 열려있는 파일에 접근하고 차이점을 직접 표시할 수 있도록 확장 프로그램을 설치할게요.`;
+      ? `If you select Yes, the CLI will connect to your ${
+          ideName ?? 'editor'
+        } and have access to your open files and display diffs directly.`
+      : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${
+          ideName ?? 'your editor'
+        }.`;
 
   return (
     <Box
@@ -90,7 +93,7 @@ export function IdeIntegrationNudge({
       <Box marginBottom={1} flexDirection="column">
         <Text>
           <Text color={theme.status.warning}>{'> '}</Text>
-          {`몰리코드를 ${ideName ?? 'your editor'}에 연결하시겠어요?`}
+          {`Do you want to connect ${ideName ?? 'your editor'} to Moli Code?`}
         </Text>
         <Text color={theme.text.secondary}>{installText}</Text>
       </Box>

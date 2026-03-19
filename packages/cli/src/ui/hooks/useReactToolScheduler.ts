@@ -20,10 +20,7 @@ import type {
   Status as CoreStatus,
   EditorType,
 } from '@dobby/moli-code-core';
-import {
-  CoreToolScheduler,
-  createDebugLogger,
-} from '@dobby/moli-code-core';
+import { CoreToolScheduler, createDebugLogger } from '@dobby/moli-code-core';
 import { useCallback, useState, useMemo } from 'react';
 import type {
   HistoryItemToolGroup,
@@ -252,7 +249,6 @@ export function mapToDisplay(
             status: mapCoreStatusToDisplayStatus(trackedCall.status),
             resultDisplay: trackedCall.response.resultDisplay,
             confirmationDetails: undefined,
-            outputFile: trackedCall.response.outputFile,
           };
         case 'error':
           return {

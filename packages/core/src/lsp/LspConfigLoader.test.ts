@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +8,6 @@ import { describe, it, expect, afterEach } from 'vitest';
 import mock from 'mock-fs';
 import { LspConfigLoader } from './LspConfigLoader.js';
 import type { Extension } from '../extension/extensionManager.js';
-import { pathToFileURL } from 'url';
 
 describe('LspConfigLoader extension configs', () => {
   const workspaceRoot = '/workspace';
@@ -87,52 +86,5 @@ describe('LspConfigLoader extension configs', () => {
 
     expect(configs).toHaveLength(1);
     expect(configs[0]?.env?.['EXT_ROOT']).toBe(extensionPath);
-  });
-});
-
-describe('LspConfigLoader built-in presets', () => {
-  const workspaceRoot = '/workspace';
-
-  it('returns clangd preset when cpp is detected', () => {
-    const loader = new LspConfigLoader(workspaceRoot);
-    const configs = loader.mergeConfigs(['cpp'], [], []);
-
-    const clangd = configs.find((c) => c.name === 'clangd');
-    expect(clangd).toBeDefined();
-    expect(clangd!.command).toBe('clangd');
-    expect(clangd!.languages).toEqual(['cpp', 'c']);
-    expect(clangd!.args).toEqual(['--background-index', '--clang-tidy']);
-    expect(clangd!.transport).toBe('stdio');
-    expect(clangd!.rootUri).toBe(pathToFileURL(workspaceRoot).toString());
-  });
-
-  it('returns clangd preset when c is detected', () => {
-    const loader = new LspConfigLoader(workspaceRoot);
-    const configs = loader.mergeConfigs(['c'], [], []);
-
-    const clangd = configs.find((c) => c.name === 'clangd');
-    expect(clangd).toBeDefined();
-    expect(clangd!.languages).toEqual(['cpp', 'c']);
-  });
-
-  it('returns jdtls preset when java is detected', () => {
-    const loader = new LspConfigLoader(workspaceRoot);
-    const configs = loader.mergeConfigs(['java'], [], []);
-
-    const jdtls = configs.find((c) => c.name === 'jdtls');
-    expect(jdtls).toBeDefined();
-    expect(jdtls!.command).toBe('jdtls');
-    expect(jdtls!.languages).toEqual(['java']);
-    expect(jdtls!.startupTimeout).toBe(30000);
-    expect(jdtls!.maxRestarts).toBe(2);
-    expect(jdtls!.transport).toBe('stdio');
-  });
-
-  it('does not return clangd/jdtls when those languages are not detected', () => {
-    const loader = new LspConfigLoader(workspaceRoot);
-    const configs = loader.mergeConfigs(['typescript'], [], []);
-
-    expect(configs.find((c) => c.name === 'clangd')).toBeUndefined();
-    expect(configs.find((c) => c.name === 'jdtls')).toBeUndefined();
   });
 });

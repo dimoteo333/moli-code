@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -104,7 +104,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
 
       expect(headers).toEqual({
         'User-Agent': `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
-        'HTTP-Referer': 'https://github.com/dimoteo333/moli-code.git',
+        'HTTP-Referer': 'https://github.com/MoliLM/moli-code.git',
         'X-OpenRouter-Title': 'Moli Code',
       });
     });
@@ -124,7 +124,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
 
       expect(headers).toEqual({
         'User-Agent': 'ParentAgent/1.0.0',
-        'HTTP-Referer': 'https://github.com/dimoteo333/moli-code.git', // OpenRouter-specific value should override
+        'HTTP-Referer': 'https://github.com/MoliLM/moli-code.git', // OpenRouter-specific value should override
         'X-OpenRouter-Title': 'Moli Code',
       });
 
@@ -140,7 +140,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
         `MoliCode/unknown (${process.platform}; ${process.arch})`,
       );
       expect(headers['HTTP-Referer']).toBe(
-        'https://github.com/dimoteo333/moli-code.git',
+        'https://github.com/MoliLM/moli-code.git',
       );
       expect(headers['X-OpenRouter-Title']).toBe('Moli Code');
     });
@@ -213,7 +213,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
       // Should have both parent and OpenRouter-specific headers
       expect(headers['User-Agent']).toBeDefined(); // From parent
       expect(headers['HTTP-Referer']).toBe(
-        'https://github.com/dimoteo333/moli-code.git',
+        'https://github.com/MoliLM/moli-code.git',
       ); // OpenRouter-specific
       expect(headers['X-OpenRouter-Title']).toBe('Moli Code'); // OpenRouter-specific
     });

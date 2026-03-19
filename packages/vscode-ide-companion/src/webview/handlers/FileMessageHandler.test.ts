@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -40,16 +40,13 @@ const vscodeMock = vi.hoisted(() => {
 });
 
 vi.mock('vscode', () => vscodeMock);
-vi.mock(
-  '@dobby/moli-code-core/src/services/fileDiscoveryService.js',
-  () => ({
-    FileDiscoveryService: class {
-      shouldIgnoreFile(filePath: string, options?: unknown) {
-        return shouldIgnoreFileMock(filePath, options);
-      }
-    },
-  }),
-);
+vi.mock('@dobby/moli-code-core/src/services/fileDiscoveryService.js', () => ({
+  FileDiscoveryService: class {
+    shouldIgnoreFile(filePath: string, options?: unknown) {
+      return shouldIgnoreFileMock(filePath, options);
+    }
+  },
+}));
 
 describe('FileMessageHandler', () => {
   beforeEach(() => {

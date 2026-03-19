@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { SessionContext } from '../types.js';
-import type * as acp from '../../acp.js';
+import type { SessionUpdate } from '@agentclientprotocol/sdk';
 
 /**
  * Abstract base class for all session event emitters.
@@ -32,7 +32,7 @@ export abstract class BaseEmitter {
   /**
    * Sends a session update to the ACP client.
    */
-  protected async sendUpdate(update: acp.SessionUpdate): Promise<void> {
+  protected async sendUpdate(update: SessionUpdate): Promise<void> {
     return this.ctx.sendUpdate(update);
   }
 

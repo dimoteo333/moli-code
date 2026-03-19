@@ -1,12 +1,17 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as vscode from 'vscode';
 import type { DiffManager } from '../diff-manager.js';
-import type { WebViewProvider } from '../webview/WebViewProvider.js';
+import type { WebViewProvider } from '../webview/providers/WebViewProvider.js';
+import { getErrorMessage } from '../utils/errorMessage.js';
+import {
+  CHAT_VIEW_ID_SIDEBAR,
+  CHAT_VIEW_ID_SECONDARY,
+} from '../constants/viewIds.js';
 
 type Logger = (message: string) => void;
 
@@ -15,16 +20,36 @@ export const showDiffCommand = 'moliCode.showDiff';
 export const openChatCommand = 'moli-code.openChat';
 export const openNewChatTabCommand = 'moliCode.openNewChatTab';
 export const loginCommand = 'moli-code.login';
+export const focusChatCommand = 'moli-code.focusChat';
+export const newConversationCommand = 'moli-code.newConversation';
+export const showLogsCommand = 'moli-code.showLogs';
 
+/**
+ * Register all Moli Code chat-related commands.
+ *
+ * `openChat` and `newConversation` always open an editor tab, while
+ * `focusChat` focuses the secondary sidebar (preferred) or primary sidebar.
+ *
+ * @param context - VS Code extension context for subscription management
+ * @param log - Logger function for debug output
+ * @param diffManager - Diff manager for showing file diffs
+ * @param getWebViewProviders - Returns all active editor-tab WebView providers
+ * @param createWebViewProvider - Factory to create a new editor-tab WebView provider
+ * @param outputChannel - Optional output channel for the showLogs command
+ * @param supportsSecondarySidebar - Whether the running VS Code supports secondary sidebar
+ */
 export function registerNewCommands(
   context: vscode.ExtensionContext,
   log: Logger,
   diffManager: DiffManager,
   getWebViewProviders: () => WebViewProvider[],
   createWebViewProvider: () => WebViewProvider,
+  outputChannel?: vscode.OutputChannel,
+  supportsSecondarySidebar = true,
 ): void {
   const disposables: vscode.Disposable[] = [];
 
+  // Open Chat: show the most recent editor tab or create a new one
   disposables.push(
     vscode.commands.registerCommand(openChatCommand, async () => {
       const providers = getWebViewProviders();
@@ -55,17 +80,18 @@ export function registerNewCommands(
           log(`[Command] Showing diff for ${absolutePath}`);
           await diffManager.showDiff(absolutePath, args.oldText, args.newText);
         } catch (error) {
-          log(`[Command] Error showing diff: ${error}`);
-          vscode.window.showErrorMessage(`Failed to show diff: ${error}`);
+          const errorMsg = getErrorMessage(error);
+          log(`[Command] Error showing diff: ${errorMsg}`);
+          vscode.window.showErrorMessage(`Failed to show diff: ${errorMsg}`);
         }
       },
     ),
   );
 
+  // Open New Chat Tab: always create a new editor tab
   disposables.push(
     vscode.commands.registerCommand(openNewChatTabCommand, async () => {
       const provider = createWebViewProvider();
-      // Session restoration is now disabled by default, so no need to suppress it
       await provider.show();
     }),
   );
@@ -82,5 +108,39 @@ export function registerNewCommands(
       }
     }),
   );
+
+  // Focus Chat: bring the active chat view to front.
+  // Use secondary sidebar when supported; fall back to primary sidebar.
+  disposables.push(
+    vscode.commands.registerCommand(focusChatCommand, async () => {
+      if (supportsSecondarySidebar) {
+        await vscode.commands.executeCommand(`${CHAT_VIEW_ID_SECONDARY}.focus`);
+      } else {
+        await vscode.commands.executeCommand(`${CHAT_VIEW_ID_SIDEBAR}.focus`);
+      }
+    }),
+  );
+
+  // New Conversation: open a new editor tab for a fresh conversation
+  disposables.push(
+    vscode.commands.registerCommand(newConversationCommand, async () => {
+      const provider = createWebViewProvider();
+      await provider.show();
+    }),
+  );
+
+  // Show Logs: reveal the output channel
+  disposables.push(
+    vscode.commands.registerCommand(showLogsCommand, async () => {
+      if (outputChannel) {
+        outputChannel.show(true);
+      } else {
+        vscode.window.showWarningMessage(
+          'Moli Code Companion log channel is not available.',
+        );
+      }
+    }),
+  );
+
   context.subscriptions.push(...disposables);
 }

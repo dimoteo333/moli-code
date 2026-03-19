@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -119,45 +119,6 @@ export function AgentCreationWizard({
       </Box>
     );
   }, [state.currentStep, state.generationMethod]);
-
-  const renderDebugContent = useCallback(() => {
-    if (process.env['NODE_ENV'] !== 'development') {
-      return null;
-    }
-
-    return (
-      <Box borderStyle="single" borderColor={theme.status.warning} padding={1}>
-        <Box flexDirection="column">
-          <Text color={theme.status.warning} bold>
-            Debug Info:
-          </Text>
-          <Text color={theme.text.secondary}>Step: {state.currentStep}</Text>
-          <Text color={theme.text.secondary}>
-            Can Proceed: {state.canProceed ? 'Yes' : 'No'}
-          </Text>
-          <Text color={theme.text.secondary}>
-            Generating: {state.isGenerating ? 'Yes' : 'No'}
-          </Text>
-          <Text color={theme.text.secondary}>Location: {state.location}</Text>
-          <Text color={theme.text.secondary}>
-            Method: {state.generationMethod}
-          </Text>
-          {state.validationErrors.length > 0 && (
-            <Text color={theme.status.error}>
-              Errors: {state.validationErrors.join(', ')}
-            </Text>
-          )}
-        </Box>
-      </Box>
-    );
-  }, [
-    state.currentStep,
-    state.canProceed,
-    state.isGenerating,
-    state.location,
-    state.generationMethod,
-    state.validationErrors,
-  ]);
 
   const renderStepFooter = useCallback(() => {
     const getNavigationInstructions = () => {
@@ -331,7 +292,6 @@ export function AgentCreationWizard({
       >
         {renderStepHeader()}
         {renderStepContent()}
-        {renderDebugContent()}
         {renderStepFooter()}
       </Box>
     </Box>

@@ -53,7 +53,7 @@ debug:
 
 
 run-npx:
-	npx https://github.com/dimoteo333/moli-code
+	npx https://github.com/MoliLM/moli-code
 
 create-alias:
 	scripts/create_alias.sh
