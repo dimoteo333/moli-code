@@ -83,18 +83,15 @@ export default {
     '전체 단축키 목록은 {{docPath}}를 참조하세요',
   'docs/keyboard-shortcuts.md': 'docs/keyboard-shortcuts.md',
   'for help on Moli Code': '몰리코드 도움말',
-  'for help on Qwen Code': '몰리코드 도움말',
   'show version info': '버전 정보 표시',
   'submit a bug report': '버그 보고서 제출',
   'About Moli Code': '몰리코드 정보',
-  'About Qwen Code': '몰리코드 정보',
   Status: '상태',
 
   // ============================================================================
   // System Information Fields
   // ============================================================================
   'Moli Code': '몰리코드',
-  'Qwen Code': '몰리코드',
   Runtime: '런타임',
   OS: 'OS',
   Auth: '인증',
@@ -123,11 +120,10 @@ export default {
     '프로젝트를 분석하고 맞춤형 MOLI.md 파일을 생성해요.',
   'list available Moli Code tools. Usage: /tools [desc]':
     '사용 가능한 몰리코드 도구를 보여드려요. 사용법: /tools [desc]',
-  'List available Qwen Code tools. Usage: /tools [desc]':
+  'List available Moli Code tools. Usage: /tools [desc]':
     '사용 가능한 몰리코드 도구를 보여드려요. 사용법: /tools [desc]',
   'List available skills.': '사용 가능한 스킬을 보여드려요.',
   'Available Moli Code CLI tools:': '사용 가능한 몰리코드 CLI 도구:',
-  'Available Qwen Code CLI tools:': '사용 가능한 몰리코드 CLI 도구:',
   'No tools available': '사용 가능한 도구 없음',
   'View or change the approval mode for tool usage':
     '도구 사용 승인 모드 보기 또는 변경',
@@ -153,8 +149,6 @@ export default {
   'Compresses the context by replacing it with a summary.':
     '요약으로 컨텍스트를 대체하여 압축해요.',
   'open full Moli Code documentation in your browser':
-    '브라우저에서 전체 Moli Code 문서 열기',
-  'open full Qwen Code documentation in your browser':
     '브라우저에서 전체 Moli Code 문서 열기',
   'Configuration not available.': '구성을 사용할 수 없어요.',
   'change the auth method': '인증 방법 변경',
@@ -246,7 +240,6 @@ export default {
   'Step {{n}}: Choose Location': '단계 {{n}}: 위치 선택',
   'Step {{n}}: Choose Generation Method': '단계 {{n}}: 생성 방법 선택',
   'Generate with Moli Code (Recommended)': '몰리코드로 생성 (권장)',
-  'Generate with Qwen Code (Recommended)': '몰리코드로 생성 (권장)',
   'Manual Creation': '수동 생성',
   'Describe what this subagent should do and when it should be used. (Be comprehensive for best results)':
     '이 서브 에이전트가 무엇을 해야 하는지 언제 사용되어야 하는지 설명하세요. (최상의 결과를 위해 포괄적으로 작성)',
@@ -370,11 +363,8 @@ export default {
   // Commands - General (continued)
   // ============================================================================
   'View and edit Moli Code settings': 'Moli Code 설정 보기 및 편집',
-  'View and edit Qwen Code settings': 'Moli Code 설정 보기 및 편집',
   Settings: '설정',
   'To see changes, Moli Code must be restarted. Press r to exit and apply changes now.':
-    '변경사항을 적용하려면 Moli Code를 다시 시작해야 해요. r을 눌러 종료하고 변경사항을 지금 적용하세요.',
-  'To see changes, Qwen Code must be restarted. Press r to exit and apply changes now.':
     '변경사항을 적용하려면 Moli Code를 다시 시작해야 해요. r을 눌러 종료하고 변경사항을 지금 적용하세요.',
   'The command "/{{command}}" is not supported in non-interactive mode.':
     '명령어 "/{{command}}"은(는) 대화형 모드가 아닌 경우 지원되지 않아요.',
@@ -403,8 +393,6 @@ export default {
   'Show Welcome Back Dialog': '환영 복귀 대화상자 표시',
   'Enable User Feedback': '사용자 피드백 활성화',
   'How is Moli doing this session? (optional)':
-    '이번 세션에서 몰리는 어떤가요? (선택 사항)',
-  'How is Qwen doing this session? (optional)':
     '이번 세션에서 몰리는 어떤가요? (선택 사항)',
   Bad: '나쁨',
   Fine: '보통',
@@ -535,8 +523,6 @@ export default {
     '"{{name}}"에 대한 설치가 취소되었어요.',
   'You are installing an extension from {{originSource}}. Some features may not work perfectly with Moli Code.':
     '{{originSource}}에서 확장을 설치하고 있어요. 일부 기능이 Moli Code와 완벽하게 작동하지 않을 수 있어요.',
-  'You are installing an extension from {{originSource}}. Some features may not work perfectly with Qwen Code.':
-    '{{originSource}}에서 확장을 설치하고 있어요. 일부 기능이 Moli Code와 완벽하게 작동하지 않을 수 있어요.',
   '--ref and --auto-update are not applicable for marketplace extensions.':
     '--ref 및 --auto-update는 마켓플레이스 확장에 적용되지 않아요.',
   'Extension "{{name}}" installed successfully and enabled.':
@@ -643,8 +629,6 @@ export default {
   'disable IDE integration': 'IDE 통합 비활성화',
   'IDE integration is not supported in your current environment. To use this feature, run Moli Code in one of these supported IDEs: VS Code or VS Code forks.':
     '현재 환경에서는 IDE 통합이 지원되지 않아요. 이 기능을 사용하려면 VS Code 또는 VS Code 포크 중 하나에서 Moli Code를 실행하세요.',
-  'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.':
-    '현재 환경에서는 IDE 통합이 지원되지 않아요. 이 기능을 사용하려면 VS Code 또는 VS Code 포크 중 하나에서 Moli Code를 실행하세요.',
   'Set up GitHub Actions': 'GitHub Actions 설정',
   'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf, Trae)':
     '여러 줄 입력을 위한 터미널 키 바인딩 구성 (VS Code, Cursor, Windsurf, Trae)',
@@ -678,7 +662,7 @@ export default {
   // ============================================================================
   // Commands - Hooks
   // ============================================================================
-  'Manage Qwen Code hooks': 'Moli Code 훅 관리',
+  'Manage Moli Code hooks': 'Moli Code 훅 관리',
   'List all configured hooks': '구성된 모든 훅 나열',
   'Enable a disabled hook': '비활성화된 훅 활성화',
   'Disable an active hook': '활성 훅 비활성화',
@@ -1168,14 +1152,9 @@ export default {
     '계속하려면 인증 방법을 선택해야 해요. 종료하려면 Ctrl+C를 다시 누르세요.',
   'Terms of Services and Privacy Notice': '서비스 약관 및 개인정보 처리방침',
   'Moli OAuth': 'Moli OAuth',
-  'Qwen OAuth': 'Moli OAuth',
   'Free \u00B7 Up to 1,000 requests/day \u00B7 Moli latest models':
     '무료 \u00B7 일일 최대 1,000건 요청 \u00B7 Moli 최신 모델',
-  'Free \u00B7 Up to 1,000 requests/day \u00B7 Qwen latest models':
-    '무료 \u00B7 일일 최대 1,000건 요청 \u00B7 Moli 최신 모델',
   'Login with MoliChat account to use daily free quota.':
-    'MoliChat 계정으로 로그인하여 일일 무료 할당량을 사용하세요.',
-  'Login with QwenChat account to use daily free quota.':
     'MoliChat 계정으로 로그인하여 일일 무료 할당량을 사용하세요.',
   'Paid \u00B7 Up to 6,000 requests/5 hrs \u00B7 All Alibaba Cloud Coding Plan Models':
     '유료 \u00B7 5시간당 최대 6,000건 요청 \u00B7 모든 Alibaba Cloud 코딩 플랜 모델',
@@ -1190,32 +1169,22 @@ export default {
     '인증이 {{enforcedType}}(으)로 강제되지만 현재 {{currentType}}을(를) 사용 중입니다.',
   'Moli OAuth authentication timed out. Please try again.':
     'Moli OAuth 인증 시간 초과. 다시 시도해주세요.',
-  'Qwen OAuth authentication timed out. Please try again.':
-    'Moli OAuth 인증 시간 초과. 다시 시도해주세요.',
   'Moli OAuth authentication cancelled.': 'Moli OAuth 인증이 취소되었어요.',
-  'Qwen OAuth authentication cancelled.': 'Moli OAuth 인증이 취소되었어요.',
   'Moli OAuth Authentication': 'Moli OAuth 인증',
-  'Qwen OAuth Authentication': 'Moli OAuth 인증',
   'Please visit this URL to authorize:': '인증하려면 이 URL을 방문하세요:',
   'Or scan the QR code below:': '또는 아래 QR 코드를 스캔하세요:',
   'Waiting for authorization': '인증 대기 중',
   'Time remaining:': '남은 시간:',
   '(Press ESC or CTRL+C to cancel)': '(ESC 또는 CTRL+C를 눌러 취소)',
   'Moli OAuth Authentication Timeout': 'Moli OAuth 인증 시간 초과',
-  'Qwen OAuth Authentication Timeout': 'Moli OAuth 인증 시간 초과',
   'OAuth token expired (over {{seconds}} seconds). Please select authentication method again.':
     'OAuth 토큰 만료({{seconds}}초 경과). 인증 방법을 다시 선택하세요.',
   'Press any key to return to authentication type selection.':
     '아무 키나 눌러 인증 유형 선택으로 돌아가세요.',
   'Waiting for Moli OAuth authentication...': 'Moli OAuth 인증 대기 중...',
-  'Waiting for Qwen OAuth authentication...': 'Moli OAuth 인증 대기 중...',
   'Note: Your existing API key in settings.json will not be cleared when using Moli OAuth. You can switch back to OpenAI authentication later if needed.':
     '참고: Moli OAuth를 사용할 때 settings.json의 기존 API 키는 지워지지 않아요. 필요한 경우 나중에 OpenAI 인증으로 다시 전환할 수 있어요.',
-  'Note: Your existing API key in settings.json will not be cleared when using Qwen OAuth. You can switch back to OpenAI authentication later if needed.':
-    '참고: Moli OAuth를 사용할 때 settings.json의 기존 API 키는 지워지지 않아요. 필요한 경우 나중에 OpenAI 인증으로 다시 전환할 수 있어요.',
   'Note: Your existing API key will not be cleared when using Moli OAuth.':
-    '참고: Moli OAuth를 사용할 때 기존 API 키는 지워지지 않아요.',
-  'Note: Your existing API key will not be cleared when using Qwen OAuth.':
     '참고: Moli OAuth를 사용할 때 기존 API 키는 지워지지 않아요.',
   'Authentication timed out. Please try again.':
     '인증 시간 초과. 다시 시도해주세요.',
@@ -1280,11 +1249,9 @@ export default {
     "'{{modelId}}' 모델로 전환 실패.\n\n{{error}}",
   'Moli 3.5 Plus — efficient hybrid model with leading coding performance':
     'Moli 3.5 Plus — 뛰어난 코딩 성능을 갖춘 효율적인 하이브리드 모델',
-  'Qwen 3.5 Plus — efficient hybrid model with leading coding performance':
-    'Moli 3.5 Plus — 뛰어난 코딩 성능을 갖춘 효율적인 하이브리드 모델',
   'The latest Moli Vision model from Alibaba Cloud ModelStudio (version: moli-vl-plus-2025-09-23)':
     'Alibaba Cloud ModelStudio의 최신 Moli Vision 모델 (버전: moli-vl-plus-2025-09-23)',
-  'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)':
+  'The latest Moli Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)':
     'Alibaba Cloud ModelStudio의 최신 Moli Vision 모델 (버전: moli-vl-plus-2025-09-23)',
 
   // ============================================================================
@@ -1364,13 +1331,9 @@ export default {
     '/auth로 인증 유형을 빠르게 전환하세요.',
   'You can run any shell commands from Moli Code using ! (e.g. !ls).':
     '!를 사용하여 몰리코드에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
-  'You can run any shell commands from Qwen Code using ! (e.g. !ls).':
-    '!를 사용하여 몰리코드에서 모든 셸 명령을 실행할 수 있어요(예: !ls).',
   'Type / to open the command popup; Tab autocompletes slash commands and saved prompts.':
     '/를 입력하여 명령 팝업을 엽니다. Tab은 슬래시 명령과 저장된 프롬프트를 자동 완성해요.',
   'You can resume a previous conversation by running moli --continue or moli --resume.':
-    'moli --continue 또는 moli --resume을 실행하여 이전 대화를 다시 시작할 수 있어요.',
-  'You can resume a previous conversation by running qwen --continue or qwen --resume.':
     'moli --continue 또는 moli --resume을 실행하여 이전 대화를 다시 시작할 수 있어요.',
   'You can switch permission mode quickly with Shift+Tab or /approval-mode.':
     'Shift+Tab 또는 /approval-mode로 모드를 빠르게 전환할 수 있어요.',

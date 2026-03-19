@@ -68,7 +68,7 @@ describe('memoryCommand', () => {
     let mockGetGeminiMdFileCount: Mock;
 
     beforeEach(() => {
-      setGeminiMdFilename('QWEN.md');
+      setGeminiMdFilename('MOLI.md');
       mockReadFile.mockReset();
       vi.restoreAllMocks();
 

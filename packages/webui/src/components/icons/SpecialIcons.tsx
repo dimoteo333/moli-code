@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Special UI icons
@@ -38,10 +38,10 @@ export const ThinkingIcon: FC<ThinkingIconProps> = ({
       strokeWidth="0.27"
       style={{
         stroke: enabled
-          ? 'var(--app-qwen-ivory)'
+          ? 'var(--app-moli-ivory)'
           : 'var(--app-secondary-foreground)',
         fill: enabled
-          ? 'var(--app-qwen-ivory)'
+          ? 'var(--app-moli-ivory)'
           : 'var(--app-secondary-foreground)',
         ...style,
       }}

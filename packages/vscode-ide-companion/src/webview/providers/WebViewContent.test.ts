@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -35,7 +35,7 @@ describe('WebViewContent', () => {
     const html = WebViewContent.generate(webview as never, fakeExtensionUri);
 
     expect(html).toContain('<!DOCTYPE html>');
-    expect(html).toContain('Qwen Code');
+    expect(html).toContain('Moli Code');
     expect(html).toContain(webview.cspSource);
     expect(webview.asWebviewUri).toHaveBeenCalled();
   });

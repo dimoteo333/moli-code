@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -12,7 +12,7 @@ import { getProjectHash } from '@dobby/moli-code-core/src/utils/paths.js';
 import type { MoliSession, MoliMessage } from './moliSessionReader.js';
 
 /**
- * Qwen Session Manager
+ * Moli Session Manager
  *
  * This service provides direct filesystem access to save and load sessions
  * without relying on the CLI's ACP session/save method.

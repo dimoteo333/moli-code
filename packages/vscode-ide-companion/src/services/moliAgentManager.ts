@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 import { AcpConnection } from './acpConnection.js';
@@ -10,7 +10,10 @@ import type {
   ModelInfo,
   AvailableCommand,
 } from '@agentclientprotocol/sdk';
-import type { AuthenticateUpdateNotification } from '../types/acpTypes.js';
+import type {
+  AuthenticateUpdateNotification,
+  AskUserQuestionRequest,
+} from '../types/acpTypes.js';
 import type { ApprovalModeValue } from '../types/approvalModeValueTypes.js';
 import { MoliSessionReader, type MoliSession } from './moliSessionReader.js';
 import { MoliSessionManager } from './moliSessionManager.js';
@@ -37,7 +40,7 @@ import { handleAuthenticateUpdate } from '../utils/authNotificationHandler.js';
 export type { ChatMessage, PlanEntry, ToolCallUpdateData };
 
 /**
- * Qwen Agent Manager
+ * Moli Agent Manager
  *
  * Coordinates various modules and provides unified interface
  */
@@ -199,7 +202,7 @@ export class MoliAgentManager {
   }
 
   /**
-   * Connect to Qwen service
+   * Connect to Moli service
    *
    * @param workingDir - Working directory
    * @param cliEntryPath - Path to bundled CLI entrypoint (cli.js)
@@ -1141,7 +1144,7 @@ export class MoliAgentManager {
     this.sessionCreateInFlight = (async () => {
       try {
         let newSessionResult: unknown;
-        // Try to create a new ACP session. If Qwen asks for auth, let it handle authentication.
+        // Try to create a new ACP session. If Moli asks for auth, let it handle authentication.
         try {
           newSessionResult = await this.connection.newSession(workingDir);
           console.log(
@@ -1306,6 +1309,20 @@ export class MoliAgentManager {
   }
 
   /**
+   * Register ask user question callback
+   *
+   * @param callback - Ask user question callback
+   */
+  onAskUserQuestion(
+    callback: (
+      request: AskUserQuestionRequest,
+    ) => Promise<{ optionId: string; answers?: Record<string, string> }>,
+  ): void {
+    this.callbacks.onAskUserQuestion = callback;
+    this.sessionUpdateHandler.updateCallbacks(this.callbacks);
+  }
+
+  /**
    * Register end-of-turn callback
    *
    * @param callback - Called when ACP stopReason is reported
@@ -1402,4 +1419,24 @@ export class MoliAgentManager {
   get currentSessionId(): string | null {
     return this.connection.currentSessionId;
   }
+}
+
+/**
+ * Helper to extract session array from either modern ACP { sessions: [...] }
+ * or legacy { items: [...] } response formats.
+ */
+export function extractSessionListItems(
+  res: unknown,
+): Array<Record<string, unknown>> {
+  if (!res || typeof res !== 'object') {
+    return [];
+  }
+  const typedRes = res as Record<string, unknown>;
+  if (Array.isArray(typedRes.sessions)) {
+    return typedRes.sessions as Array<Record<string, unknown>>;
+  }
+  if (Array.isArray(typedRes.items)) {
+    return typedRes.items as Array<Record<string, unknown>>;
+  }
+  return [];
 }

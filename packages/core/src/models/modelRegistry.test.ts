@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,12 +11,12 @@ import type { ModelProvidersConfig } from './types.js';
 
 describe('ModelRegistry', () => {
   describe('initialization', () => {
-    it('should always include hard-coded qwen-oauth models', () => {
+    it('should always include hard-coded moli-oauth models', () => {
       const registry = new ModelRegistry();
 
-      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(qwenModels[0].id).toBe('coder-model');
+      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(moliModels[0].id).toBe('coder-model');
     });
 
     it('should initialize with empty config', () => {
@@ -45,22 +45,22 @@ describe('ModelRegistry', () => {
       expect(openaiModels[0].id).toBe('gpt-4-turbo');
     });
 
-    it('should ignore qwen-oauth models in config (hard-coded)', () => {
+    it('should ignore moli-oauth models in config (hard-coded)', () => {
       const modelProvidersConfig: ModelProvidersConfig = {
         'moli-oauth': [
           {
-            id: 'custom-qwen',
-            name: 'Custom Qwen',
+            id: 'custom-moli',
+            name: 'Custom Moli',
           },
         ],
       };
 
       const registry = new ModelRegistry(modelProvidersConfig);
 
-      // Should still use hard-coded qwen-oauth models
-      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(qwenModels.find((m) => m.id === 'custom-qwen')).toBeUndefined();
+      // Should still use hard-coded moli-oauth models
+      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(moliModels.find((m) => m.id === 'custom-moli')).toBeUndefined();
     });
   });
 
@@ -187,7 +187,7 @@ describe('ModelRegistry', () => {
   });
 
   describe('getDefaultModelForAuthType', () => {
-    it('should return coder-model for qwen-oauth', () => {
+    it('should return coder-model for moli-oauth', () => {
       const registry = new ModelRegistry();
       const defaultModel = registry.getDefaultModelForAuthType(
         AuthType.MOLI_OAUTH,
@@ -222,7 +222,7 @@ describe('ModelRegistry', () => {
   });
 
   describe('default base URLs', () => {
-    it('should apply default dashscope URL for qwen-oauth', () => {
+    it('should apply default dashscope URL for moli-oauth', () => {
       const registry = new ModelRegistry();
       const model = registry.getModel(AuthType.MOLI_OAUTH, 'coder-model');
       expect(model?.baseUrl).toBe('DYNAMIC_MOLI_OAUTH_BASE_URL');
@@ -404,7 +404,7 @@ describe('ModelRegistry', () => {
       expect(registry.getModel(AuthType.USE_OPENAI, 'gpt-3.5')).toBeDefined();
     });
 
-    it('should preserve hard-coded qwen-oauth models after reload', () => {
+    it('should preserve hard-coded moli-oauth models after reload', () => {
       const registry = new ModelRegistry({
         openai: [{ id: 'gpt-4', name: 'GPT-4' }],
       });
@@ -417,7 +417,7 @@ describe('ModelRegistry', () => {
         openai: [{ id: 'gpt-3.5', name: 'GPT-3.5' }],
       });
 
-      // qwen-oauth models should still exist
+      // moli-oauth models should still exist
       expect(registry.getModelsForAuthType(AuthType.MOLI_OAUTH).length).toBe(
         MOLI_OAUTH_MODELS.length,
       );
@@ -441,23 +441,23 @@ describe('ModelRegistry', () => {
       expect(registry.getModelsForAuthType(AuthType.USE_OPENAI).length).toBe(0);
       expect(registry.getModelsForAuthType(AuthType.USE_GEMINI).length).toBe(0);
 
-      // qwen-oauth models should still exist
+      // moli-oauth models should still exist
       expect(registry.getModelsForAuthType(AuthType.MOLI_OAUTH).length).toBe(
         MOLI_OAUTH_MODELS.length,
       );
     });
 
-    it('should ignore qwen-oauth models in reload config', () => {
+    it('should ignore moli-oauth models in reload config', () => {
       const registry = new ModelRegistry();
 
       registry.reloadModels({
-        'moli-oauth': [{ id: 'custom-qwen', name: 'Custom Qwen' }],
+        'moli-oauth': [{ id: 'custom-moli', name: 'Custom Moli' }],
       });
 
-      // qwen-oauth should still use hard-coded models
-      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(qwenModels.find((m) => m.id === 'custom-qwen')).toBeUndefined();
+      // moli-oauth should still use hard-coded models
+      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(moliModels.find((m) => m.id === 'custom-moli')).toBeUndefined();
     });
 
     it('should handle reload with multiple authTypes', () => {
@@ -507,7 +507,7 @@ describe('ModelRegistry', () => {
 
       // All user-configured models should be cleared
       expect(registry.getModelsForAuthType(AuthType.USE_OPENAI).length).toBe(0);
-      // qwen-oauth models should still exist
+      // moli-oauth models should still exist
       expect(registry.getModelsForAuthType(AuthType.MOLI_OAUTH).length).toBe(
         MOLI_OAUTH_MODELS.length,
       );

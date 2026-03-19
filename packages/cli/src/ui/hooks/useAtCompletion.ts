@@ -160,7 +160,7 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
           ignoreDirs: [],
           useGitignore:
             config?.getFileFilteringOptions()?.respectGitIgnore ?? true,
-          useQwenignore:
+          useMoliignore:
             config?.getFileFilteringOptions()?.respectMoliIgnore ?? true,
           cache: true,
           cacheTtl: 30, // 30 seconds

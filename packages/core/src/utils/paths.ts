@@ -11,7 +11,7 @@ import * as crypto from 'node:crypto';
 import type { Config } from '../config/config.js';
 import { isNodeError } from './errors.js';
 
-export const MOLI_DIR = '.moli'; // MOLI: renamed from QWEN_DIR
+export const MOLI_DIR = '.moli'; // MOLI: renamed from MOLI_DIR
 export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
 
 /**

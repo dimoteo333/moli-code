@@ -193,7 +193,7 @@ describe('useAtCompletion', () => {
         projectRoot: testRootDir,
         ignoreDirs: [],
         useGitignore: true,
-        useQwenignore: true,
+        useMoliignore: true,
         cache: false,
         cacheTtl: 0,
         enableRecursiveFileSearch: true,

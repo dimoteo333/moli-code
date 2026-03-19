@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -26,7 +26,7 @@ export function getSystemInfoFields(
 ): SystemInfoDisplayField[] {
   const fields: SystemInfoDisplayField[] = [];
 
-  addField(fields, t('Qwen Code'), formatCliVersion(info));
+  addField(fields, t('Moli Code'), formatCliVersion(info));
   addField(fields, t('Runtime'), formatRuntime(info));
   addField(fields, t('IDE Client'), info.ideClient);
   addField(fields, t('OS'), formatOs(info));
@@ -97,7 +97,7 @@ function formatAuth(info: ExtendedSystemInfo): string {
     info.selectedAuthType.startsWith('oauth') ||
     info.selectedAuthType === 'moli-oauth'
   ) {
-    return 'Qwen OAuth';
+    return 'Moli OAuth';
   }
 
   return `API Key - ${info.selectedAuthType}`;

@@ -360,7 +360,7 @@ export class ShellExecutionService {
         windowsHide: isWindows,
         env: {
           ...normalizePathEnvForWindows(process.env),
-          QWEN_CODE: '1',
+          MOLI_CODE: '1',
           TERM: 'xterm-256color',
           PAGER: 'cat',
         },
@@ -566,7 +566,7 @@ export class ShellExecutionService {
         rows,
         env: {
           ...normalizePathEnvForWindows(process.env),
-          QWEN_CODE: '1',
+          MOLI_CODE: '1',
           TERM: 'xterm-256color',
           PAGER: shellExecutionConfig.pager ?? 'cat',
           GIT_PAGER: shellExecutionConfig.pager ?? 'cat',

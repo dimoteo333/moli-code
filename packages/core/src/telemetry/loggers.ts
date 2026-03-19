@@ -55,7 +55,7 @@ import {
   recordTokenUsageMetrics,
   recordToolCallMetrics,
 } from './metrics.js';
-import { QwenLogger } from './qwen-logger/qwen-logger.js';
+import { MoliLogger } from './moli-logger/moli-logger.js';
 import { isTelemetrySdkInitialized } from './sdk.js';
 import type {
   ApiErrorEvent,
@@ -109,7 +109,7 @@ export function logStartSession(
   config: Config,
   event: StartSessionEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logStartSessionEvent(event);
+  MoliLogger.getInstance(config)?.logStartSessionEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -145,7 +145,7 @@ export function logStartSession(
 }
 
 export function logUserPrompt(config: Config, event: UserPromptEvent): void {
-  QwenLogger.getInstance(config)?.logNewPromptEvent(event);
+  MoliLogger.getInstance(config)?.logNewPromptEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -173,7 +173,7 @@ export function logUserPrompt(config: Config, event: UserPromptEvent): void {
 }
 
 export function logUserRetry(config: Config, event: UserRetryEvent): void {
-  QwenLogger.getInstance(config)?.logRetryEvent(event);
+  MoliLogger.getInstance(config)?.logRetryEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -199,7 +199,7 @@ export function logToolCall(config: Config, event: ToolCallEvent): void {
   } as UiEvent;
   uiTelemetryService.addEvent(uiEvent);
   config.getChatRecordingService()?.recordUiTelemetryEvent(uiEvent);
-  QwenLogger.getInstance(config)?.logToolCallEvent(event);
+  MoliLogger.getInstance(config)?.logToolCallEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -234,7 +234,7 @@ export function logToolOutputTruncated(
   config: Config,
   event: ToolOutputTruncatedEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logToolOutputTruncatedEvent(event);
+  MoliLogger.getInstance(config)?.logToolOutputTruncatedEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -256,7 +256,7 @@ export function logFileOperation(
   config: Config,
   event: FileOperationEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logFileOperationEvent(event);
+  MoliLogger.getInstance(config)?.logFileOperationEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -297,7 +297,7 @@ export function logFileOperation(
 }
 
 export function logApiRequest(config: Config, event: ApiRequestEvent): void {
-  // QwenLogger.getInstance(config)?.logApiRequestEvent(event);
+  // MoliLogger.getInstance(config)?.logApiRequestEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -319,7 +319,7 @@ export function logFlashFallback(
   config: Config,
   event: FlashFallbackEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logFlashFallbackEvent(event);
+  MoliLogger.getInstance(config)?.logFlashFallbackEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -341,7 +341,7 @@ export function logRipgrepFallback(
   config: Config,
   event: RipgrepFallbackEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logRipgrepFallbackEvent(event);
+  MoliLogger.getInstance(config)?.logRipgrepFallbackEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -367,7 +367,7 @@ export function logApiError(config: Config, event: ApiErrorEvent): void {
   } as UiEvent;
   uiTelemetryService.addEvent(uiEvent);
   config.getChatRecordingService()?.recordUiTelemetryEvent(uiEvent);
-  QwenLogger.getInstance(config)?.logApiErrorEvent(event);
+  MoliLogger.getInstance(config)?.logApiErrorEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -407,7 +407,7 @@ export function logApiCancel(config: Config, event: ApiCancelEvent): void {
     'event.timestamp': new Date().toISOString(),
   } as UiEvent;
   uiTelemetryService.addEvent(uiEvent);
-  QwenLogger.getInstance(config)?.logApiCancelEvent(event);
+  MoliLogger.getInstance(config)?.logApiCancelEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -434,7 +434,7 @@ export function logApiResponse(config: Config, event: ApiResponseEvent): void {
   } as UiEvent;
   uiTelemetryService.addEvent(uiEvent);
   config.getChatRecordingService()?.recordUiTelemetryEvent(uiEvent);
-  QwenLogger.getInstance(config)?.logApiResponseEvent(event);
+  MoliLogger.getInstance(config)?.logApiResponseEvent(event);
   if (!isTelemetrySdkInitialized()) return;
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
@@ -487,7 +487,7 @@ export function logLoopDetected(
   config: Config,
   event: LoopDetectedEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logLoopDetectedEvent(event);
+  MoliLogger.getInstance(config)?.logLoopDetectedEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -507,14 +507,14 @@ export function logLoopDetectionDisabled(
   config: Config,
   _event: LoopDetectionDisabledEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logLoopDetectionDisabledEvent();
+  MoliLogger.getInstance(config)?.logLoopDetectionDisabledEvent();
 }
 
 export function logNextSpeakerCheck(
   config: Config,
   event: NextSpeakerCheckEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logNextSpeakerCheck(event);
+  MoliLogger.getInstance(config)?.logNextSpeakerCheck(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -535,7 +535,7 @@ export function logSlashCommand(
   config: Config,
   event: SlashCommandEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logSlashCommandEvent(event);
+  MoliLogger.getInstance(config)?.logSlashCommandEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -556,7 +556,7 @@ export function logIdeConnection(
   config: Config,
   event: IdeConnectionEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logIdeConnectionEvent(event);
+  MoliLogger.getInstance(config)?.logIdeConnectionEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -577,7 +577,7 @@ export function logConversationFinishedEvent(
   config: Config,
   event: ConversationFinishedEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logConversationFinishedEvent(event);
+  MoliLogger.getInstance(config)?.logConversationFinishedEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -598,7 +598,7 @@ export function logChatCompression(
   config: Config,
   event: ChatCompressionEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logChatCompressionEvent(event);
+  MoliLogger.getInstance(config)?.logChatCompressionEvent(event);
 
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
@@ -623,7 +623,7 @@ export function logKittySequenceOverflow(
   config: Config,
   event: KittySequenceOverflowEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logKittySequenceOverflowEvent(event);
+  MoliLogger.getInstance(config)?.logKittySequenceOverflowEvent(event);
   if (!isTelemetrySdkInitialized()) return;
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
@@ -641,7 +641,7 @@ export function logMalformedJsonResponse(
   config: Config,
   event: MalformedJsonResponseEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logMalformedJsonResponseEvent(event);
+  MoliLogger.getInstance(config)?.logMalformedJsonResponseEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -662,7 +662,7 @@ export function logInvalidChunk(
   config: Config,
   event: InvalidChunkEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logInvalidChunkEvent(event);
+  MoliLogger.getInstance(config)?.logInvalidChunkEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -688,7 +688,7 @@ export function logContentRetry(
   config: Config,
   event: ContentRetryEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logContentRetryEvent(event);
+  MoliLogger.getInstance(config)?.logContentRetryEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -710,7 +710,7 @@ export function logContentRetryFailure(
   config: Config,
   event: ContentRetryFailureEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logContentRetryFailureEvent(event);
+  MoliLogger.getInstance(config)?.logContentRetryFailureEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -732,7 +732,7 @@ export function logSubagentExecution(
   config: Config,
   event: SubagentExecutionEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logSubagentExecutionEvent(event);
+  MoliLogger.getInstance(config)?.logSubagentExecutionEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -760,7 +760,7 @@ export function logModelSlashCommand(
   config: Config,
   event: ModelSlashCommandEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logModelSlashCommandEvent(event);
+  MoliLogger.getInstance(config)?.logModelSlashCommandEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -782,7 +782,7 @@ export function logExtensionInstallEvent(
   config: Config,
   event: ExtensionInstallEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logExtensionInstallEvent(event);
+  MoliLogger.getInstance(config)?.logExtensionInstallEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -808,7 +808,7 @@ export function logExtensionUninstall(
   config: Config,
   event: ExtensionUninstallEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logExtensionUninstallEvent(event);
+  MoliLogger.getInstance(config)?.logExtensionUninstallEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -830,7 +830,7 @@ export async function logExtensionUpdateEvent(
   config: Config,
   event: ExtensionUpdateEvent,
 ): Promise<void> {
-  QwenLogger.getInstance(config)?.logExtensionUpdateEvent(event);
+  MoliLogger.getInstance(config)?.logExtensionUpdateEvent(event);
 
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
@@ -856,7 +856,7 @@ export function logExtensionEnable(
   config: Config,
   event: ExtensionEnableEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logExtensionEnableEvent(event);
+  MoliLogger.getInstance(config)?.logExtensionEnableEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -878,7 +878,7 @@ export function logExtensionDisable(
   config: Config,
   event: ExtensionDisableEvent,
 ): void {
-  QwenLogger.getInstance(config)?.logExtensionDisableEvent(event);
+  MoliLogger.getInstance(config)?.logExtensionDisableEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -897,7 +897,7 @@ export function logExtensionDisable(
 }
 
 export function logAuth(config: Config, event: AuthEvent): void {
-  QwenLogger.getInstance(config)?.logAuthEvent(event);
+  MoliLogger.getInstance(config)?.logAuthEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {
@@ -951,7 +951,7 @@ export function logUserFeedback(
   } as UiEvent;
   uiTelemetryService.addEvent(uiEvent);
   config.getChatRecordingService()?.recordUiTelemetryEvent(uiEvent);
-  QwenLogger.getInstance(config)?.logUserFeedbackEvent(event);
+  MoliLogger.getInstance(config)?.logUserFeedbackEvent(event);
   if (!isTelemetrySdkInitialized()) return;
 
   const attributes: LogAttributes = {

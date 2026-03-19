@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -104,7 +104,7 @@ describe('AnthropicContentGenerator', () => {
     vi.restoreAllMocks();
   });
 
-  it('passes a QwenCode User-Agent header to the Anthropic SDK', async () => {
+  it('passes a MoliCode User-Agent header to the Anthropic SDK', async () => {
     const { AnthropicContentGenerator } = await importGenerator();
     void new AnthropicContentGenerator(
       {
@@ -121,7 +121,7 @@ describe('AnthropicContentGenerator', () => {
 
     const headers = (anthropicState.constructorOptions?.['defaultHeaders'] ||
       {}) as Record<string, string>;
-    expect(headers['User-Agent']).toContain('QwenCode/1.2.3');
+    expect(headers['User-Agent']).toContain('MoliCode/1.2.3');
     expect(headers['User-Agent']).toContain(
       `(${process.platform}; ${process.arch})`,
     );
@@ -148,7 +148,7 @@ describe('AnthropicContentGenerator', () => {
 
     const headers = (anthropicState.constructorOptions?.['defaultHeaders'] ||
       {}) as Record<string, string>;
-    expect(headers['User-Agent']).toContain('QwenCode/1.2.3');
+    expect(headers['User-Agent']).toContain('MoliCode/1.2.3');
     expect(headers['anthropic-beta']).toContain('effort-2025-11-24');
     expect(headers['X-Custom']).toBe('1');
   });

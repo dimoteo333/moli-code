@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -97,7 +97,7 @@ export class SkillTool extends BaseDeclarativeTool<SkillParams, ToolResult> {
     let skillDescriptions = '';
     if (this.availableSkills.length === 0) {
       skillDescriptions =
-        'No skills are currently configured. Skills can be created by adding directories with SKILL.md files to .qwen/skills/ or ~/.qwen/skills/.';
+        'No skills are currently configured. Skills can be created by adding directories with SKILL.md files to .moli/skills/ or ~/.moli/skills/.';
     } else {
       skillDescriptions = this.availableSkills
         .map(

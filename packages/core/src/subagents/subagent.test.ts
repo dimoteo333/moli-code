@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -230,7 +230,7 @@ describe('subagent.ts', () => {
     let mockSendMessageStream: Mock;
 
     const defaultModelConfig: ModelConfig = {
-      model: 'qwen3-coder-plus',
+      model: 'moli3-coder-plus',
       temp: 0.5, // Specific temp to test override
       top_p: 1,
     };

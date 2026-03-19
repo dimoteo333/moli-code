@@ -13,7 +13,7 @@ import {
   IdeConnectionType,
 } from '@dobby/moli-code-core';
 import {
-  QWEN_CODE_COMPANION_EXTENSION_NAME,
+  MOLI_CODE_COMPANION_EXTENSION_NAME,
   getIdeInstaller,
   IDEConnectionStatus,
   ideContextStore,
@@ -148,7 +148,7 @@ export const ideCommand = async (): Promise<SlashCommand> => {
           type: 'message',
           messageType: 'error',
           content: t(
-            'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.',
+            'IDE integration is not supported in your current environment. To use this feature, run Moli Code in one of these supported IDEs: VS Code or VS Code forks.',
           ),
         }) as const,
     };
@@ -207,7 +207,7 @@ export const ideCommand = async (): Promise<SlashCommand> => {
         context.ui.addItem(
           {
             type: 'error',
-            text: `Automatic installation is not supported for ${ideName}. Please install the '${QWEN_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
+            text: `Automatic installation is not supported for ${ideName}. Please install the '${MOLI_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
           },
           Date.now(),
         );

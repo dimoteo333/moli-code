@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,7 @@ export interface CreationWizardState {
   location: SubagentLevel;
 
   /** Generation method selection */
-  generationMethod: 'qwen' | 'manual';
+  generationMethod: 'moli' | 'manual';
 
   /** User's description input for the subagent */
   userDescription: string;
@@ -71,7 +71,7 @@ export interface ColorOption {
 export type WizardAction =
   | { type: 'SET_STEP'; step: number }
   | { type: 'SET_LOCATION'; location: SubagentLevel }
-  | { type: 'SET_GENERATION_METHOD'; method: 'qwen' | 'manual' }
+  | { type: 'SET_GENERATION_METHOD'; method: 'moli' | 'manual' }
   | { type: 'SET_USER_DESCRIPTION'; description: string }
   | { type: 'SET_GENERATED_NAME'; name: string }
   | { type: 'SET_GENERATED_SYSTEM_PROMPT'; systemPrompt: string }

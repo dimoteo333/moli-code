@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,10 +22,10 @@ import { DEFAULT_DASHSCOPE_BASE_URL } from '../core/openaiContentGenerator/const
 import { createDebugLogger } from '../utils/debugLogger.js';
 
 /**
- * Qwen Content Generator that uses Moli OAuth tokens with automatic refresh
+ * Moli Content Generator that uses Moli OAuth tokens with automatic refresh
  */
 export class MoliContentGenerator extends OpenAIContentGenerator {
-  private readonly debugLogger = createDebugLogger('QWEN');
+  private readonly debugLogger = createDebugLogger('MOLI');
   private moliClient: IMoliOAuth2Client;
   private sharedManager: SharedTokenManager;
   private currentToken?: string;
@@ -35,7 +35,7 @@ export class MoliContentGenerator extends OpenAIContentGenerator {
     contentGeneratorConfig: ContentGeneratorConfig,
     cliConfig: Config,
   ) {
-    // Create DashScope provider for Qwen
+    // Create DashScope provider for Moli
     const dashscopeProvider = new DashScopeOpenAICompatibleProvider(
       contentGeneratorConfig,
       cliConfig,

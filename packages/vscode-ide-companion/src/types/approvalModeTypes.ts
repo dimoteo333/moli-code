@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -39,17 +39,17 @@ export const APPROVAL_MODE_INFO: Record<
 > = {
   [ApprovalMode.PLAN]: {
     label: 'Plan mode',
-    title: 'Qwen will plan before executing. Click to switch modes.',
+    title: 'Moli will plan before executing. Click to switch modes.',
     iconType: 'plan',
   },
   [ApprovalMode.DEFAULT]: {
     label: 'Ask before edits',
-    title: 'Qwen will ask before each edit. Click to switch modes.',
+    title: 'Moli will ask before each edit. Click to switch modes.',
     iconType: 'edit',
   },
   [ApprovalMode.AUTO_EDIT]: {
     label: 'Edit automatically',
-    title: 'Qwen will edit files automatically. Click to switch modes.',
+    title: 'Moli will edit files automatically. Click to switch modes.',
     iconType: 'auto',
   },
   [ApprovalMode.YOLO]: {

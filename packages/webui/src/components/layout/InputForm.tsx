@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * InputForm component - Main chat input with toolbar
@@ -171,7 +171,7 @@ export const InputForm: FC<InputFormProps> = ({
   completionItems,
   onCompletionSelect,
   onCompletionClose,
-  placeholder = 'Ask Qwen Code …',
+  placeholder = 'Ask Moli Code …',
 }) => {
   const composerDisabled = isStreaming || isWaitingForResponse;
   const completionItemsResolved = completionItems ?? [];

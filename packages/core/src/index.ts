@@ -154,7 +154,7 @@ export type {
 // Telemetry
 // ============================================================================
 
-export { QwenLogger } from './telemetry/qwen-logger/qwen-logger.js';
+export { MoliLogger } from './telemetry/moli-logger/moli-logger.js';
 export * from './telemetry/index.js';
 export {
   logAuth,
@@ -231,7 +231,7 @@ export * from './utils/yaml-parser.js';
 // OAuth & Authentication
 // ============================================================================
 
-export * from './qwen/qwenOAuth2.js';
+export * from './moli/moliOAuth2.js';
 
 // MOLI: Enterprise OAuth2 & token management
 export {

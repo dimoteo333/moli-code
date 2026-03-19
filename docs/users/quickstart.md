@@ -10,7 +10,7 @@ Make sure you have:
 
 - A **terminal** or command prompt open
 - A code project to work with
-- A [Moli Code](https://chat.qwen.ai/auth?mode=register) account
+- A [Moli Code](https://chat.moli.ai/auth?mode=register) account
 
 ## Step 1: Install Moli Code
 
@@ -21,13 +21,13 @@ To install Moli Code, use one of the following methods:
 **Linux / macOS**
 
 ```sh
-curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
+curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.sh | bash
 ```
 
 **Windows (Run as Administrator CMD)**
 
 ```sh
-curl -fsSL -o %TEMP%\install-qwen.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
+curl -fsSL -o %TEMP%\install-moli.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.bat && %TEMP%\install-moli.bat
 ```
 
 > [!note]
@@ -54,11 +54,11 @@ brew install moli-code
 
 ## Step 2: Log in to your account
 
-Moli Code requires an account to use. When you start an interactive session with the `qwen` command, you'll need to log in:
+Moli Code requires an account to use. When you start an interactive session with the `moli` command, you'll need to log in:
 
 ```bash
 # You'll be prompted to log in on first use
-qwen
+moli
 ```
 
 ```bash
@@ -70,7 +70,7 @@ Select `Moli OAuth`, log in to your account and follow the prompts to confirm. O
 
 > [!note]
 >
-> When you first authenticate Moli Code with your Qwen account, a workspace called ".qwen" is automatically created for you. This workspace provides centralized cost tracking and management for all Moli Code usage in your organization.
+> When you first authenticate Moli Code with your Moli account, a workspace called ".moli" is automatically created for you. This workspace provides centralized cost tracking and management for all Moli Code usage in your organization.
 
 > [!tip]
 >
@@ -83,8 +83,8 @@ Open your terminal in any project directory and start Moli Code:
 ```bash
 # optiona
 cd /path/to/your/project
-# start qwen
-qwen
+# start moli
+moli
 ```
 
 You'll see the Moli Code welcome screen with your session information, recent conversations, and latest updates. Type `/help` for available commands.
@@ -215,7 +215,7 @@ Here are the most important commands for daily use:
 
 | Command               | What it does                                     | Example                       |
 | --------------------- | ------------------------------------------------ | ----------------------------- |
-| `qwen`                | start Moli Code                                  | `qwen`                        |
+| `moli`                | start Moli Code                                  | `moli`                        |
 | `/auth`               | Change authentication method                     | `/auth`                       |
 | `/help`               | Display help information for available commands  | `/help` or `/?`               |
 | `/compress`           | Replace chat history with summary to save Tokens | `/compress`                   |
@@ -268,4 +268,4 @@ build a dashboard showing products that are most frequently returned by our UK c
 
 - **In Moli Code**: Type `/help` or ask "how do I..."
 - **Documentation**: You're here! Browse other guides
-- **Community**: Join our [GitHub Discussion](https://github.com/QwenLM/moli-code/discussions) for tips and support
+- **Community**: Join our [GitHub Discussion](https://github.com/MoliLM/moli-code/discussions) for tips and support

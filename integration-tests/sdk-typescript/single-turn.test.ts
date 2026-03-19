@@ -180,7 +180,7 @@ describe('Single-Turn Query (E2E)', () => {
         expect(Array.isArray(systemMessage!.mcp_servers)).toBe(true);
         expect(systemMessage!.model).toBeDefined();
         expect(systemMessage!.permission_mode).toBeDefined();
-        expect(systemMessage!.qwen_code_version).toBeDefined();
+        expect(systemMessage!.moli_code_version).toBeDefined();
 
         // Validate system message appears early in sequence
         const systemMessageIndex = messages.findIndex(
@@ -462,7 +462,7 @@ describe('Single-Turn Query (E2E)', () => {
         const q = query({
           prompt: 'Hello',
           options: {
-            pathToQwenExecutable: '/nonexistent/path/to/cli',
+            pathToMoliExecutable: '/nonexistent/path/to/cli',
             debug: false,
           },
         });
@@ -476,7 +476,7 @@ describe('Single-Turn Query (E2E)', () => {
         expect(error).toBeDefined();
         expect(error instanceof Error).toBe(true);
         expect((error as Error).message).toContain(
-          'Invalid pathToQwenExecutable',
+          'Invalid pathToMoliExecutable',
         );
       }
     });

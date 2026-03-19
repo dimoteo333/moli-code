@@ -301,7 +301,7 @@ describe('JSON output', () => {
     expect(resultMessage).toHaveProperty('error');
     expect(resultMessage.error).toBeDefined();
     expect(resultMessage.error?.message).toContain(
-      'configured auth type is qwen-oauth',
+      'configured auth type is moli-oauth',
     );
     expect(resultMessage.error?.message).toContain(
       'current auth type is openai',

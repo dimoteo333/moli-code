@@ -155,7 +155,7 @@ export function extensionConsentString(
   if (originSource !== 'MoliCode') {
     output.push(
       t(
-        'You are installing an extension from {{originSource}}. Some features may not work perfectly with Qwen Code.',
+        'You are installing an extension from {{originSource}}. Some features may not work perfectly with Moli Code.',
         { originSource },
       ),
     );
@@ -195,7 +195,7 @@ export function extensionConsentString(
       : extensionConfig.contextFileName;
     output.push(
       t(
-        'This extension will append info to your QWEN.md context using {{fileName}}',
+        'This extension will append info to your MOLI.md context using {{fileName}}',
         { fileName },
       ),
     );

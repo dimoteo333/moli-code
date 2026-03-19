@@ -15,7 +15,7 @@ const useTerminalSizeMock = vi.mocked(useTerminalSize.useTerminalSize);
 const defaultProps = {
   version: '1.0.0',
   authDisplayType: AuthDisplayType.MOLI_OAUTH,
-  model: 'qwen-coder-plus',
+  model: 'moli-coder-plus',
   workingDirectory: '/home/user/projects/test',
 };
 
@@ -33,7 +33,7 @@ describe('<Header />', () => {
     useTerminalSizeMock.mockReturnValue({ columns: 60, rows: 24 });
     const { lastFrame } = render(<Header {...defaultProps} />);
     expect(lastFrame()).not.toContain('██╔═══██╗');
-    expect(lastFrame()).toContain('>_ Qwen Code');
+    expect(lastFrame()).toContain('>_ Moli Code');
   });
 
   it('displays the version number', () => {
@@ -43,8 +43,8 @@ describe('<Header />', () => {
 
   it('displays auth type and model', () => {
     const { lastFrame } = render(<Header {...defaultProps} />);
-    expect(lastFrame()).toContain('Qwen OAuth');
-    expect(lastFrame()).toContain('qwen-coder-plus');
+    expect(lastFrame()).toContain('Moli OAuth');
+    expect(lastFrame()).toContain('moli-coder-plus');
   });
 
   it('displays Coding Plan auth type', () => {

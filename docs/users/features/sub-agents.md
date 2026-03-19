@@ -86,7 +86,7 @@ Extension subagents:
 - Cannot be edited directly (edit the extension source instead)
 - Follow the same configuration format as user-defined agents
 
-To see which extensions provide subagents, check the extension's `qwen-extension.json` file for an `agents` field.
+To see which extensions provide subagents, check the extension's `moli-extension.json` file for an `agents` field.
 
 ### File Format
 

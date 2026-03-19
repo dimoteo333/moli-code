@@ -5,7 +5,7 @@
  */
 
 /**
- * Converter for Gemini extensions to Qwen Code format.
+ * Converter for Gemini extensions to Moli Code format.
  */
 
 import * as fs from 'node:fs';
@@ -28,11 +28,11 @@ export interface GeminiExtensionConfig {
 }
 
 /**
- * Converts a Gemini extension config to Qwen Code format.
+ * Converts a Gemini extension config to Moli Code format.
  * @param extensionDir Path to the Gemini extension directory
- * @returns Qwen ExtensionConfig
+ * @returns Moli ExtensionConfig
  */
-export function convertGeminiToQwenConfig(
+export function convertGeminiToMoliConfig(
   extensionDir: string,
 ): ExtensionConfig {
   const configFilePath = path.join(extensionDir, 'gemini-extension.json');
@@ -58,9 +58,9 @@ export function convertGeminiToQwenConfig(
 }
 
 /**
- * Converts a complete Gemini extension package to Qwen Code format.
+ * Converts a complete Gemini extension package to Moli Code format.
  * Creates a new temporary directory with:
- * 1. Converted qwen-extension.json
+ * 1. Converted moli-extension.json
  * 2. Commands converted from TOML to MD
  * 3. All other files/folders preserved
  *
@@ -70,7 +70,7 @@ export function convertGeminiToQwenConfig(
 export async function convertGeminiExtensionPackage(
   extensionDir: string,
 ): Promise<{ config: ExtensionConfig; convertedDir: string }> {
-  const geminiConfig = convertGeminiToQwenConfig(extensionDir);
+  const geminiConfig = convertGeminiToMoliConfig(extensionDir);
 
   // Create temporary directory for converted extension
   const tmpDir = await ExtensionStorage.createTmpDir();
@@ -85,10 +85,10 @@ export async function convertGeminiExtensionPackage(
       await convertCommandsDirectory(commandsDir);
     }
 
-    // Step 3: Create qwen-extension.json with converted config
-    const qwenConfigPath = path.join(tmpDir, 'qwen-extension.json');
+    // Step 3: Create moli-extension.json with converted config
+    const moliConfigPath = path.join(tmpDir, 'moli-extension.json');
     fs.writeFileSync(
-      qwenConfigPath,
+      moliConfigPath,
       JSON.stringify(geminiConfig, null, 2),
       'utf-8',
     );
@@ -229,6 +229,6 @@ export function isGeminiExtensionConfig(extensionDir: string) {
     }
   }
 
-  // If it has Gemini-specific fields but not Qwen-specific fields, likely Gemini
+  // If it has Gemini-specific fields but not Moli-specific fields, likely Gemini
   return true;
 }

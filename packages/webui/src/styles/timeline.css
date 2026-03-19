@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Shared timeline styles - base classes only
@@ -34,36 +34,36 @@
  * Timeline fallback for environments without data-first/data-last.
  * Uses sibling selectors and :has() to detect AI sequence boundaries.
  */
-.qwen-message.message-item:not(.user-message-container):first-child::after,
+.moli-message.message-item:not(.user-message-container):first-child::after,
 .user-message-container
-  + .qwen-message.message-item:not(.user-message-container)::after,
+  + .moli-message.message-item:not(.user-message-container)::after,
 .chat-messages
-  > :not(.qwen-message.message-item)
-  + .qwen-message.message-item:not(.user-message-container)::after,
+  > :not(.moli-message.message-item)
+  + .moli-message.message-item:not(.user-message-container)::after,
 .chat-viewer-messages
-  > :not(.qwen-message.message-item)
-  + .qwen-message.message-item:not(.user-message-container)::after {
+  > :not(.moli-message.message-item)
+  + .moli-message.message-item:not(.user-message-container)::after {
   top: var(--timeline-center-offset, 13px);
 }
 
-.qwen-message.message-item:not(.user-message-container):has(
+.moli-message.message-item:not(.user-message-container):has(
     + .user-message-container
   )::after,
-.qwen-message.message-item:not(.user-message-container):has(
-    + :not(.qwen-message.message-item)
+.moli-message.message-item:not(.user-message-container):has(
+    + :not(.moli-message.message-item)
   )::after,
-.qwen-message.message-item:not(.user-message-container):last-child::after {
+.moli-message.message-item:not(.user-message-container):last-child::after {
   bottom: calc(100% - var(--timeline-center-offset, 13px));
 }
 
-.qwen-message.message-item[data-first='true']::after {
+.moli-message.message-item[data-first='true']::after {
   top: var(--timeline-center-offset, 13px);
 }
 
-.qwen-message.message-item[data-last='true']::after {
+.moli-message.message-item[data-last='true']::after {
   bottom: calc(100% - var(--timeline-center-offset, 13px));
 }
 
-.qwen-message.message-item[data-first='true'][data-last='true']::after {
+.moli-message.message-item[data-first='true'][data-last='true']::after {
   display: none;
 }

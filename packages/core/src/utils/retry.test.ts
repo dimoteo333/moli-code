@@ -285,8 +285,8 @@ describe('retryWithBackoff', () => {
     });
   });
 
-  describe('Qwen OAuth 429 error handling', () => {
-    it('should retry for Qwen OAuth 429 errors that are throttling-related', async () => {
+  describe('Moli OAuth 429 error handling', () => {
+    it('should retry for Moli OAuth 429 errors that are throttling-related', async () => {
       const errorWith429: HttpError = new Error('Rate limit exceeded');
       errorWith429.status = 429;
 
@@ -311,7 +311,7 @@ describe('retryWithBackoff', () => {
       expect(fn).toHaveBeenCalledTimes(2);
     });
 
-    it('should throw immediately for Qwen OAuth with insufficient_quota message', async () => {
+    it('should throw immediately for Moli OAuth with insufficient_quota message', async () => {
       const errorWithInsufficientQuota = new Error('insufficient_quota');
 
       const fn = vi.fn().mockRejectedValue(errorWithInsufficientQuota);
@@ -323,13 +323,13 @@ describe('retryWithBackoff', () => {
         authType: AuthType.MOLI_OAUTH,
       });
 
-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
+      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
 
       // Should be called only once (no retries)
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw immediately for Qwen OAuth with free allocated quota exceeded message', async () => {
+    it('should throw immediately for Moli OAuth with free allocated quota exceeded message', async () => {
       const errorWithQuotaExceeded = new Error(
         'Free allocated quota exceeded.',
       );
@@ -343,13 +343,13 @@ describe('retryWithBackoff', () => {
         authType: AuthType.MOLI_OAUTH,
       });
 
-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
+      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
 
       // Should be called only once (no retries)
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it('should retry for Qwen OAuth with throttling message', async () => {
+    it('should retry for Moli OAuth with throttling message', async () => {
       const throttlingError: HttpError = new Error(
         'requests throttling triggered',
       );
@@ -377,7 +377,7 @@ describe('retryWithBackoff', () => {
       expect(fn).toHaveBeenCalledTimes(3);
     });
 
-    it('should retry for Qwen OAuth with throttling error', async () => {
+    it('should retry for Moli OAuth with throttling error', async () => {
       const throttlingError: HttpError = new Error('throttling');
       throttlingError.status = 429;
 
@@ -402,7 +402,7 @@ describe('retryWithBackoff', () => {
       expect(fn).toHaveBeenCalledTimes(2);
     });
 
-    it('should throw immediately for Qwen OAuth with quota message', async () => {
+    it('should throw immediately for Moli OAuth with quota message', async () => {
       const errorWithQuota = new Error('quota exceeded');
 
       const fn = vi.fn().mockRejectedValue(errorWithQuota);
@@ -414,13 +414,13 @@ describe('retryWithBackoff', () => {
         authType: AuthType.MOLI_OAUTH,
       });
 
-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
+      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
 
       // Should be called only once (no retries)
       expect(fn).toHaveBeenCalledTimes(1);
     });
 
-    it('should retry normal errors for Qwen OAuth (not quota-related)', async () => {
+    it('should retry normal errors for Moli OAuth (not quota-related)', async () => {
       const normalError: HttpError = new Error('Network error');
       normalError.status = 500;
 

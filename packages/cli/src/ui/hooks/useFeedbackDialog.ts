@@ -148,7 +148,7 @@ export const useFeedbackDialog = ({
       if (streamingState === StreamingState.Idle && history.length > 0) {
         // Show feedback dialog if:
         // 1. User is authenticated via MOLI_OAUTH
-        // 2. Qwen logger is enabled (required for feedback submission)
+        // 2. Moli logger is enabled (required for feedback submission)
         // 3. User feedback is enabled in settings
         // 4. The last message is an AI response
         // 5. Random chance (25% probability)

@@ -138,7 +138,7 @@ Extensions can provide custom skills that become available when the extension is
 
 Extension skills are automatically discovered and loaded when the extension is installed and enabled.
 
-To see which extensions provide skills, check the extension's `qwen-extension.json` file for a `skills` field.
+To see which extensions provide skills, check the extension's `moli-extension.json` file for a `skills` field.
 
 To view available Skills, ask Moli Code directly:
 
@@ -221,7 +221,7 @@ Ensure:
 Run Moli Code with debug mode to see Skill loading errors:
 
 ```bash
-qwen --debug
+moli --debug
 ```
 
 ## Share Skills with your team

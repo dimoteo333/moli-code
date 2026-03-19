@@ -404,12 +404,14 @@ export const AppContainer = (props: AppContainerProps) => {
     isAuthDialogOpen,
     isAuthenticating,
     pendingAuthType,
-    qwenAuthState,
     moliAuthState,
     handleAuthSelect,
     handleCodingPlanSubmit,
     openAuthDialog,
     cancelAuthentication,
+    handleMolimateAuthSubmit,
+    handleMolimateModelSelect,
+    handleLocalConfigSubmit,
   } = useAuthCommand(settings, config, historyManager.addItem, refreshStatic);
 
   useInitializationAuthError(initializationResult.authError, onAuthError);
@@ -583,7 +585,7 @@ export const AppContainer = (props: AppContainerProps) => {
     historyManager.addItem(
       {
         type: MessageType.INFO,
-        text: 'Refreshing hierarchical memory (QWEN.md or other context files)...',
+        text: 'Refreshing hierarchical memory (MOLI.md or other context files)...',
       },
       Date.now(),
     );
@@ -1252,7 +1254,7 @@ export const AppContainer = (props: AppContainerProps) => {
 
   useKeypress(handleGlobalKeypress, { isActive: true });
 
-  // Update terminal title with Qwen Code status and thoughts
+  // Update terminal title with Moli Code status and thoughts
   useEffect(() => {
     // Respect both showStatusInTitle and hideWindowTitle settings
     if (
@@ -1279,7 +1281,7 @@ export const AppContainer = (props: AppContainerProps) => {
       lastTitleRef.current = paddedTitle;
       stdout.write(`\x1b]2;${paddedTitle}\x07`);
     }
-    // Note: We don't need to reset the window title on exit because Qwen Code is already doing that elsewhere
+    // Note: We don't need to reset the window title on exit because Moli Code is already doing that elsewhere
   }, [
     streamingState,
     thought,
@@ -1347,8 +1349,6 @@ export const AppContainer = (props: AppContainerProps) => {
       authError,
       isAuthDialogOpen,
       pendingAuthType,
-      // Qwen OAuth state
-      qwenAuthState,
       // Moli OAuth state
       moliAuthState,
       editorError,
@@ -1442,8 +1442,6 @@ export const AppContainer = (props: AppContainerProps) => {
       authError,
       isAuthDialogOpen,
       pendingAuthType,
-      // Qwen OAuth state
-      qwenAuthState,
       // Moli OAuth state
       moliAuthState,
       editorError,
@@ -1581,6 +1579,11 @@ export const AppContainer = (props: AppContainerProps) => {
       closeFeedbackDialog,
       temporaryCloseFeedbackDialog,
       submitFeedback,
+      // Molimate authentication
+      handleMolimateAuthSubmit,
+      handleMolimateModelSelect,
+      // Local configuration
+      handleLocalConfigSubmit,
     }),
     [
       openThemeDialog,
@@ -1628,6 +1631,11 @@ export const AppContainer = (props: AppContainerProps) => {
       closeFeedbackDialog,
       temporaryCloseFeedbackDialog,
       submitFeedback,
+      // Molimate authentication
+      handleMolimateAuthSubmit,
+      handleMolimateModelSelect,
+      // Local configuration
+      handleLocalConfigSubmit,
     ],
   );
 

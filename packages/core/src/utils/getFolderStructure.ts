@@ -136,7 +136,7 @@ async function readFullStructure(
             (options.fileFilteringOptions.respectGitIgnore &&
               options.fileService.shouldGitIgnoreFile(filePath)) ||
             (options.fileFilteringOptions.respectMoliIgnore &&
-              options.fileService.shouldQwenIgnoreFile(filePath));
+              options.fileService.shouldMoliIgnoreFile(filePath));
           if (shouldIgnore) {
             continue;
           }
@@ -176,7 +176,7 @@ async function readFullStructure(
             (options.fileFilteringOptions.respectGitIgnore &&
               options.fileService.shouldGitIgnoreFile(subFolderPath)) ||
             (options.fileFilteringOptions.respectMoliIgnore &&
-              options.fileService.shouldQwenIgnoreFile(subFolderPath));
+              options.fileService.shouldMoliIgnoreFile(subFolderPath));
         }
 
         if (options.ignoredFolders.has(subFolderName) || isIgnored) {

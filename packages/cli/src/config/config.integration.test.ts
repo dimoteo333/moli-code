@@ -54,7 +54,7 @@ describe('Configuration Integration Tests', () => {
   let tempDir: string;
 
   beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(tmpdir(), 'qwen-code-test-'));
+    tempDir = fs.mkdtempSync(path.join(tmpdir(), 'moli-code-test-'));
     server.resetHandlers(http.post(CLEARCUT_URL, () => HttpResponse.text()));
 
     vi.stubEnv('GEMINI_API_KEY', 'test-api-key');

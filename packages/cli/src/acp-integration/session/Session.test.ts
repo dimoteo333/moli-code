@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -36,7 +36,7 @@ describe('Session', () => {
   let getAvailableCommandsSpy: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
-    currentModel = 'qwen3-code-plus';
+    currentModel = 'moli3-code-plus';
     currentAuthType = AuthType.USE_OPENAI;
     switchModelSpy = vi
       .fn()
@@ -117,7 +117,7 @@ describe('Session', () => {
 
   describe('setModel', () => {
     it('sets model via config and returns current model', async () => {
-      const requested = `qwen3-coder-plus(${AuthType.USE_OPENAI})`;
+      const requested = `moli3-coder-plus(${AuthType.USE_OPENAI})`;
       await session.setModel({
         sessionId: 'test-session-id',
         modelId: `  ${requested}  `,
@@ -125,7 +125,7 @@ describe('Session', () => {
 
       expect(mockConfig.switchModel).toHaveBeenCalledWith(
         AuthType.USE_OPENAI,
-        'qwen3-coder-plus',
+        'moli3-coder-plus',
         undefined,
       );
     });
@@ -199,7 +199,7 @@ describe('Session', () => {
   describe('prompt', () => {
     it('passes resolved paths to read_many_files tool', async () => {
       const tempDir = await fs.mkdtemp(
-        path.join(os.tmpdir(), 'qwen-acp-session-'),
+        path.join(os.tmpdir(), 'moli-acp-session-'),
       );
       const fileName = 'README.md';
       const filePath = path.join(tempDir, fileName);

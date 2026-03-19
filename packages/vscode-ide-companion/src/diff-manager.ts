@@ -191,7 +191,7 @@ export class DiffManager {
       this.recentlyShown.set(key, now);
       return;
     }
-    // Left side: old content using qwen-diff scheme
+    // Left side: old content using moli-diff scheme
     const leftDocUri = vscode.Uri.from({
       scheme: DIFF_SCHEME,
       path: normalizedPath,
@@ -199,7 +199,7 @@ export class DiffManager {
     });
     this.diffContentProvider.setContent(leftDocUri, oldContent);
 
-    // Right side: new content using qwen-diff scheme
+    // Right side: new content using moli-diff scheme
     const rightDocUri = vscode.Uri.from({
       scheme: DIFF_SCHEME,
       path: normalizedPath,
@@ -218,7 +218,7 @@ export class DiffManager {
     const diffTitle = `${path.basename(normalizedPath)} (Before ↔ After)`;
     await vscode.commands.executeCommand(
       'setContext',
-      'qwen.diff.isVisible',
+      'moli.diff.isVisible',
       true,
     );
 
@@ -358,7 +358,7 @@ export class DiffManager {
     }
     await vscode.commands.executeCommand(
       'setContext',
-      'qwen.diff.isVisible',
+      'moli.diff.isVisible',
       isVisible,
     );
   }
@@ -371,7 +371,7 @@ export class DiffManager {
     const diffInfo = this.diffDocuments.get(rightDocUri.toString());
     await vscode.commands.executeCommand(
       'setContext',
-      'qwen.diff.isVisible',
+      'moli.diff.isVisible',
       false,
     );
 
@@ -395,7 +395,7 @@ export class DiffManager {
     }
   }
 
-  /** Close all open qwen-diff editors */
+  /** Close all open moli-diff editors */
   async closeAll(): Promise<void> {
     // Collect keys first to avoid iterator invalidation while closing
     const uris = Array.from(this.diffDocuments.keys()).map((k) =>

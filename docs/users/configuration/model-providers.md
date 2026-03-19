@@ -194,8 +194,8 @@ Most local inference servers (vLLM, Ollama, LM Studio, etc.) provide an OpenAI-c
   "modelProviders": {
     "openai": [
       {
-        "id": "qwen2.5-7b",
-        "name": "Qwen2.5 7B (Ollama)",
+        "id": "moli2.5-7b",
+        "name": "Moli2.5 7B (Ollama)",
         "envKey": "OLLAMA_API_KEY",
         "baseUrl": "http://localhost:11434/v1",
         "generationConfig": {
@@ -257,7 +257,7 @@ export VLLM_API_KEY="not-needed"
 
 ## Alibaba Cloud Coding Plan
 
-Alibaba Cloud Coding Plan provides a pre-configured set of Qwen models optimized for coding tasks. This feature is available for users with Alibaba Cloud Coding Plan API access and offers a simplified setup experience with automatic model configuration updates.
+Alibaba Cloud Coding Plan provides a pre-configured set of Moli models optimized for coding tasks. This feature is available for users with Alibaba Cloud Coding Plan API access and offers a simplified setup experience with automatic model configuration updates.
 
 ### Overview
 
@@ -265,9 +265,9 @@ When you authenticate with an Alibaba Cloud Coding Plan API key using the `/auth
 
 | Model ID               | Name                 | Description                            |
 | ---------------------- | -------------------- | -------------------------------------- |
-| `qwen3.5-plus`         | qwen3.5-plus         | Advanced model with thinking enabled   |
-| `qwen3-coder-plus`     | qwen3-coder-plus     | Optimized for coding tasks             |
-| `qwen3-max-2026-01-23` | qwen3-max-2026-01-23 | Latest max model with thinking enabled |
+| `moli3.5-plus`         | moli3.5-plus         | Advanced model with thinking enabled   |
+| `moli3-coder-plus`     | moli3-coder-plus     | Optimized for coding tasks             |
+| `moli3-max-2026-01-23` | moli3-max-2026-01-23 | Latest max model with thinking enabled |
 
 ### Setup
 
@@ -326,9 +326,9 @@ If you prefer to manually configure Coding Plan models, you can add them to your
   "modelProviders": {
     "openai": [
       {
-        "id": "qwen3-coder-plus",
-        "name": "qwen3-coder-plus",
-        "description": "Qwen3-Coder via Alibaba Cloud Coding Plan",
+        "id": "moli3-coder-plus",
+        "name": "moli3-coder-plus",
+        "description": "Moli3-Coder via Alibaba Cloud Coding Plan",
         "envKey": "YOUR_CUSTOM_ENV_KEY",
         "baseUrl": "https://coding.dashscope.aliyuncs.com/v1"
       }
@@ -360,7 +360,7 @@ The effective auth/model/credential values are chosen per field using the follow
 | CLI arguments              | `--auth-type`                       | `--model`                                       | `--openaiApiKey` (or provider-specific equivalents) | `--openaiBaseUrl` (or provider-specific equivalents) | —                      | —                                 |
 | Environment variables      | —                                   | Provider-specific mapping (e.g. `OPENAI_MODEL`) | Provider-specific mapping (e.g. `OPENAI_API_KEY`)   | Provider-specific mapping (e.g. `OPENAI_BASE_URL`)   | —                      | —                                 |
 | Settings (`settings.json`) | `security.auth.selectedType`        | `model.name`                                    | `security.auth.apiKey`                              | `security.auth.baseUrl`                              | —                      | —                                 |
-| Default / computed         | Falls back to `AuthType.QWEN_OAUTH` | Built-in default (OpenAI ⇒ `qwen3-coder-plus`)  | —                                                   | —                                                    | —                      | `Config.getProxy()` if configured |
+| Default / computed         | Falls back to `AuthType.MOLI_OAUTH` | Built-in default (OpenAI ⇒ `moli3-coder-plus`)  | —                                                   | —                                                    | —                      | `Config.getProxy()` if configured |
 
 \*When present, CLI auth flags override settings. Otherwise, `security.auth.selectedType` or the implicit default determine the auth type. Moli OAuth and OpenAI are the only auth types surfaced without extra configuration.
 
@@ -471,7 +471,7 @@ When you configure a model without using `modelProviders`, Moli Code automatical
 
 ```bash
 # This creates a RuntimeModelSnapshot with ID: $runtime|openai|my-custom-model
-qwen --auth-type openai --model my-custom-model --openaiApiKey $KEY --openaiBaseUrl https://api.example.com/v1
+moli --auth-type openai --model my-custom-model --openaiApiKey $KEY --openaiBaseUrl https://api.example.com/v1
 ```
 
 The snapshot:

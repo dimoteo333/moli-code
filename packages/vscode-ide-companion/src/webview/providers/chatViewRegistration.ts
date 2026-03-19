@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,7 +15,7 @@ import {
 } from './ChatWebviewViewProvider.js';
 
 const SECONDARY_SIDEBAR_CONTEXT_KEY =
-  'qwen-code:doesNotSupportSecondarySidebar';
+  'moli-code:doesNotSupportSecondarySidebar';
 
 export function detectSecondarySidebarSupport(vscodeVersion: string): boolean {
   const [major, minor] = vscodeVersion.split('.').map(Number);

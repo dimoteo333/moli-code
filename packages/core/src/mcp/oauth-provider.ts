@@ -287,7 +287,7 @@ export class MCPOAuthProvider {
             <html>
               <body>
                 <h1>Authentication Successful!</h1>
-                <p>You can close this window and return to Qwen Code.</p>
+                <p>You can close this window and return to Moli Code.</p>
                 <script>window.close();</script>
               </body>
             </html>

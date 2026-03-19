@@ -38,8 +38,8 @@ class CORSError extends Error {
 }
 
 const MCP_SESSION_ID_HEADER = 'mcp-session-id';
-const IDE_SERVER_PORT_ENV_VAR = 'QWEN_CODE_IDE_SERVER_PORT';
-const IDE_WORKSPACE_PATH_ENV_VAR = 'QWEN_CODE_IDE_WORKSPACE_PATH';
+const IDE_SERVER_PORT_ENV_VAR = 'MOLI_CODE_IDE_SERVER_PORT';
+const IDE_WORKSPACE_PATH_ENV_VAR = 'MOLI_CODE_IDE_WORKSPACE_PATH';
 const MOLI_DIR = '.moli'; // MOLI: renamed;
 const IDE_DIR = 'ide';
 
@@ -430,7 +430,7 @@ export class IDEServer {
 const createMcpServer = (diffManager: DiffManager) => {
   const server = new McpServer(
     {
-      name: 'qwen-code-companion-mcp-server',
+      name: 'moli-code-companion-mcp-server',
       version: '1.0.0',
     },
     { capabilities: { logging: {} } },

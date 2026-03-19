@@ -247,7 +247,7 @@ export const DialogManager = ({
 
   if (uiState.isAuthenticating) {
     // OpenAI authentication now handled through AuthDialog with coding-plan/custom sub-modes
-    // Qwen OAuth remains as a separate flow
+    // Moli OAuth remains as a separate flow
     if (uiState.pendingAuthType === AuthType.MOLI_OAUTH) {
       return (
         <MoliOAuthProgress

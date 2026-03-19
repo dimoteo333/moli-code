@@ -14,7 +14,7 @@ jobs:
   check-issue-info:
     timeout-minutes: 2
     if: |-
-      ${{ github.repository == 'QwenLM/qwen-code' && contains(github.event.issue.labels.*.name, 'type/bug') }}
+      ${{ github.repository == 'MoliLM/moli-code' && contains(github.event.issue.labels.*.name, 'type/bug') }}
     runs-on: 'ubuntu-latest'
     steps:
       - name: 'Check for Client Information'
@@ -54,7 +54,7 @@ jobs:
             fi
 
             # Check for Auth Method information
-            if echo "$ISSUE_BODY_LOWER" | grep -qE '(auth method|authentication|login|qwen-oauth|api.?config|oauth)'; then
+            if echo "$ISSUE_BODY_LOWER" | grep -qE '(auth method|authentication|login|moli-oauth|api.?config|oauth)'; then
               HAS_AUTH_METHOD=true
             fi
           else
@@ -66,7 +66,7 @@ jobs:
           # Determine what's missing
           if [ "$HAS_ABOUT_OUTPUT" = false ]; then
             if [ "$HAS_VERSION" = false ]; then
-              MISSING_INFO+=("Qwen Code version")
+              MISSING_INFO+=("Moli Code version")
             fi
             if [ "$HAS_OS_INFO" = false ]; then
               MISSING_INFO+=("operating system information")
@@ -126,7 +126,7 @@ jobs:
             Please run the following command and paste the complete output:
 
             \`\`\`bash
-            qwen
+            moli
             # Then in the interactive CLI, run:
             /about
             \`\`\`
@@ -138,7 +138,7 @@ jobs:
             Model                   coder-model
             Sandbox                 no sandbox
             OS                      darwin
-            Auth Method             qwen-oauth
+            Auth Method             moli-oauth
             \`\`\`
 
             Once you provide this information, we'll be able to assist you better. Thank you! 🙏`;

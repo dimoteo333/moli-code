@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { IMessageHandler } from './BaseMessageHandler.js';
-import type { QwenAgentManager } from '../../services/qwenAgentManager.js';
+import type { MoliAgentManager } from '../../services/moliAgentManager.js';
 import type { ConversationStore } from '../../services/conversationStore.js';
 import type {
   PermissionResponseMessage,
@@ -33,7 +33,7 @@ export class MessageRouter {
     | null = null;
 
   constructor(
-    agentManager: QwenAgentManager,
+    agentManager: MoliAgentManager,
     conversationStore: ConversationStore,
     currentConversationId: string | null,
     sendToWebView: (message: unknown) => void,

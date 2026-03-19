@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Code
+ * Copyright 2025 Moli Code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -253,7 +253,7 @@ describe('resumeHistoryUtils', () => {
                   nodeVersion: '20.x',
                   npmVersion: '10.x',
                   sandboxEnv: 'none',
-                  modelVersion: 'qwen',
+                  modelVersion: 'moli',
                   selectedAuthType: 'none',
                   ideClient: 'none',
                   sessionId: 'abc',

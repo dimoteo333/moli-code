@@ -53,8 +53,8 @@
 ```json
 {
   "agent_servers": {
-    "qwen": {
-      "command": "/path/to/qwen",
+    "moli": {
+      "command": "/path/to/moli",
       "args": ["--acp"],
       "env": {}
     }
@@ -70,12 +70,12 @@
 
 ### Agent not appearing
 
-- Run `qwen --version` in terminal to verify installation
+- Run `moli --version` in terminal to verify installation
 - Ensure your JetBrains IDE version supports ACP
 - Restart your JetBrains IDE
 
 ### Moli Code not responding
 
 - Check your internet connection
-- Verify CLI works by running `qwen` in terminal
-- [File an issue on GitHub](https://github.com/qwenlm/moli-code/issues) if the problem persists
+- Verify CLI works by running `moli` in terminal
+- [File an issue on GitHub](https://github.com/molilm/moli-code/issues) if the problem persists

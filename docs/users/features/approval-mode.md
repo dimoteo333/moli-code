@@ -53,7 +53,7 @@ To start a new session in Plan Mode, use the `/approval-mode` then select `plan`
 You can also run a query in Plan Mode directly with `-p` or `prompt`:
 
 ```bash
-qwen --prompt "What is machine learning?"
+moli --prompt "What is machine learning?"
 ```
 
 ### Example: Planning a complex refactor
@@ -115,7 +115,7 @@ Default Mode is the initial mode when you start Moli Code. If you've changed mod
 When running headless commands, Default Mode is the default behavior. You can explicitly specify it with:
 
 ```
-qwen --prompt "Analyze this code for potential bugs"
+moli --prompt "Analyze this code for potential bugs"
 ```
 
 ### Example: Safely implementing a feature
@@ -223,7 +223,7 @@ YOLO Mode grants Moli Code the highest permissions, automatically approving all 
 
 ```bash
 # Fully automated refactoring task
-qwen --prompt "Run the test suite, fix all failing tests, then commit changes"
+moli --prompt "Run the test suite, fix all failing tests, then commit changes"
 
 # Without human intervention, AI will:
 # 1. Run test commands (auto-approved)

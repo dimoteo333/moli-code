@@ -13,7 +13,7 @@ import { setGeminiMdFilename as mockSetGeminiMdFilename } from '../tools/memoryT
 import {
   DEFAULT_TELEMETRY_TARGET,
   DEFAULT_OTLP_ENDPOINT,
-  QwenLogger,
+  MoliLogger,
 } from '../telemetry/index.js';
 import type {
   ContentGenerator,
@@ -117,10 +117,10 @@ vi.mock('../tools/read-many-files', () => ({
 vi.mock('../tools/memoryTool', () => ({
   MemoryTool: createToolMock('save_memory'),
   setGeminiMdFilename: vi.fn(),
-  getCurrentGeminiMdFilename: vi.fn(() => 'QWEN.md'), // Mock the original filename
-  getAllGeminiMdFilenames: vi.fn(() => ['QWEN.md', 'AGENTS.md']),
-  DEFAULT_CONTEXT_FILENAME: 'QWEN.md',
-  QWEN_CONFIG_DIR: '.qwen',
+  getCurrentGeminiMdFilename: vi.fn(() => 'MOLI.md'), // Mock the original filename
+  getAllGeminiMdFilenames: vi.fn(() => ['MOLI.md', 'AGENTS.md']),
+  DEFAULT_CONTEXT_FILENAME: 'MOLI.md',
+  MOLI_CONFIG_DIR: '.moli',
 }));
 
 vi.mock('../core/contentGenerator.js');
@@ -197,7 +197,7 @@ import { BaseLlmClient } from '../core/baseLlmClient.js';
 vi.mock('../core/baseLlmClient.js');
 
 describe('Server Config (config.ts)', () => {
-  const MODEL = 'qwen3-coder-plus';
+  const MODEL = 'moli3-coder-plus';
 
   // Default mock for canUseRipgrep to return true (tests that care about ripgrep will override this)
   beforeEach(() => {
@@ -205,7 +205,7 @@ describe('Server Config (config.ts)', () => {
   });
   const SANDBOX: SandboxConfig = {
     command: 'docker',
-    image: 'qwen-code-sandbox',
+    image: 'moli-code-sandbox',
   };
   const TARGET_DIR = '/path/to/target';
   const DEBUG_MODE = false;
@@ -230,7 +230,7 @@ describe('Server Config (config.ts)', () => {
   beforeEach(() => {
     // Reset mocks if necessary
     vi.clearAllMocks();
-    vi.spyOn(QwenLogger.prototype, 'logStartSessionEvent').mockImplementation(
+    vi.spyOn(MoliLogger.prototype, 'logStartSessionEvent').mockImplementation(
       async () => undefined,
     );
 
@@ -292,7 +292,7 @@ describe('Server Config (config.ts)', () => {
       const authType = AuthType.USE_GEMINI;
       const mockContentConfig = {
         apiKey: 'test-key',
-        model: 'qwen3-coder-plus',
+        model: 'moli3-coder-plus',
         authType,
       };
 
@@ -336,7 +336,7 @@ describe('Server Config (config.ts)', () => {
   });
 
   describe('model switching optimization (MOLI_OAUTH)', () => {
-    it('should switch qwen-oauth model in-place without refreshing auth when safe', async () => {
+    it('should switch moli-oauth model in-place without refreshing auth when safe', async () => {
       const config = new Config(baseParams);
 
       const mockContentConfig: ContentGeneratorConfig = {
@@ -365,7 +365,7 @@ describe('Server Config (config.ts)', () => {
         embedContent: vi.fn(),
       } as unknown as ContentGenerator);
 
-      // Establish initial qwen-oauth content generator config/content generator.
+      // Establish initial moli-oauth content generator config/content generator.
       await config.refreshAuth(AuthType.MOLI_OAUTH);
 
       // Spy after initial refresh to ensure model switch does not re-trigger refreshAuth.
@@ -608,7 +608,7 @@ describe('Server Config (config.ts)', () => {
       });
       await config.initialize();
 
-      expect(QwenLogger.prototype.logStartSessionEvent).toHaveBeenCalledOnce();
+      expect(MoliLogger.prototype.logStartSessionEvent).toHaveBeenCalledOnce();
     });
   });
 
@@ -1318,7 +1318,7 @@ describe('Model Switching and Config Updates', () => {
     cwd: '/tmp',
     targetDir: '/path/to/target',
     debugMode: false,
-    model: 'qwen3-coder-plus',
+    model: 'moli3-coder-plus',
     usageStatisticsEnabled: false,
     telemetry: { enabled: false },
   };
@@ -1332,7 +1332,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Initialize with first model
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'qwen3-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 1_000_000,
@@ -1352,12 +1352,12 @@ describe('Model Switching and Config Updates', () => {
 
     // Verify initial config
     const contentGenConfig = config.getContentGeneratorConfig();
-    expect(contentGenConfig['model']).toBe('qwen3-coder-plus');
+    expect(contentGenConfig['model']).toBe('moli3-coder-plus');
     expect(contentGenConfig['contextWindowSize']).toBe(1_000_000);
 
     // Switch to a different model with different token limits
     const newConfig: ContentGeneratorConfig = {
-      ['model']: 'qwen-max',
+      ['model']: 'moli-max',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 128_000,
@@ -1387,7 +1387,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Verify all fields are updated
     const updatedConfig = config.getContentGeneratorConfig();
-    expect(updatedConfig['model']).toBe('qwen-max');
+    expect(updatedConfig['model']).toBe('moli-max');
     expect(updatedConfig['contextWindowSize']).toBe(128_000);
     expect(updatedConfig['samplingParams']?.temperature).toBe(0.8);
     expect(updatedConfig['enableCacheControl']).toBe(false);
@@ -1402,12 +1402,12 @@ describe('Model Switching and Config Updates', () => {
     expect(sources['enableCacheControl']?.kind).toBe('settings');
   });
 
-  it('should trigger full refresh when switching to non-qwen-oauth provider', async () => {
+  it('should trigger full refresh when switching to non-moli-oauth provider', async () => {
     const config = new Config(baseParams);
 
-    // Initialize with qwen-oauth
+    // Initialize with moli-oauth
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'qwen3-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 1_000_000,
@@ -1459,7 +1459,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Initialize with config that has undefined token limits
     const initialConfig: ContentGeneratorConfig = {
-      ['model']: 'qwen3-coder-plus',
+      ['model']: 'moli3-coder-plus',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: undefined,
@@ -1474,7 +1474,7 @@ describe('Model Switching and Config Updates', () => {
 
     // Switch to model with defined limits
     const newConfig: ContentGeneratorConfig = {
-      ['model']: 'qwen-max',
+      ['model']: 'moli-max',
       ['authType']: AuthType.MOLI_OAUTH,
       ['apiKey']: 'test-key',
       ['contextWindowSize']: 128_000,

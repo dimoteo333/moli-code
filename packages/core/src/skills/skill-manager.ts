@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -25,7 +25,7 @@ import { normalizeContent } from '../utils/textUtils.js';
 
 const debugLogger = createDebugLogger('SKILL_MANAGER');
 
-const QWEN_CONFIG_DIR = '.qwen';
+const MOLI_CONFIG_DIR = '.moli';
 const SKILLS_CONFIG_DIR = 'skills';
 const SKILL_MANIFEST_FILE = 'SKILL.md';
 
@@ -435,11 +435,11 @@ export class SkillManager {
       case 'project':
         return path.join(
           this.config.getProjectRoot(),
-          QWEN_CONFIG_DIR,
+          MOLI_CONFIG_DIR,
           SKILLS_CONFIG_DIR,
         );
       case 'user':
-        return path.join(os.homedir(), QWEN_CONFIG_DIR, SKILLS_CONFIG_DIR);
+        return path.join(os.homedir(), MOLI_CONFIG_DIR, SKILLS_CONFIG_DIR);
       case 'bundled':
         return this.bundledSkillsDir;
       case 'extension':

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -167,7 +167,7 @@ export const ServerListStep: React.FC<ServerListStepProps> = ({
       {servers.some((s) => s.status === 'disconnected' && !s.isDisabled) && (
         <Box marginTop={1}>
           <Text color={theme.status.warning}>
-            ※ {t('Run qwen --debug to see error logs')}
+            ※ {t('Run moli --debug to see error logs')}
           </Text>
         </Box>
       )}

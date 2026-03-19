@@ -1,6 +1,6 @@
 # Visual Studio Code
 
-> The VS Code extension (Beta) lets you see Qwen's changes in real-time through a native graphical interface integrated directly into your IDE, making it easier to access and interact with Moli Code.
+> The VS Code extension (Beta) lets you see Moli's changes in real-time through a native graphical interface integrated directly into your IDE, making it easier to access and interact with Moli Code.
 
 <br/>
 
@@ -10,8 +10,8 @@
 
 ### Features
 
-- **Native IDE experience**: Dedicated Moli Code sidebar panel accessed via the Qwen icon
-- **Auto-accept edits mode**: Automatically apply Qwen's changes as they're made
+- **Native IDE experience**: Dedicated Moli Code sidebar panel accessed via the Moli icon
+- **Auto-accept edits mode**: Automatically apply Moli's changes as they're made
 - **File management**: @-mention files or attach files and images using the system file picker
 - **Conversation history**: Access to past conversations
 - **Multiple sessions**: Run multiple Moli Code sessions simultaneously
@@ -22,7 +22,7 @@
 
 ### Installation
 
-Download and install the extension from the [Visual Studio Code Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=qwenlm.moli-code-vscode-ide-companion).
+Download and install the extension from the [Visual Studio Code Extension Marketplace](https://marketplace.visualstudio.com/items?itemName=molilm.moli-code-vscode-ide-companion).
 
 ## Troubleshooting
 
@@ -36,4 +36,4 @@ Download and install the extension from the [Visual Studio Code Extension Market
 
 - Check your internet connection
 - Start a new conversation to see if the issue persists
-- [File an issue on GitHub](https://github.com/qwenlm/moli-code/issues) if the problem continues
+- [File an issue on GitHub](https://github.com/molilm/moli-code/issues) if the problem continues

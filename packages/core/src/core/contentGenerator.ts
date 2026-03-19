@@ -54,7 +54,7 @@ export interface ContentGenerator {
 
 export enum AuthType {
   USE_OPENAI = 'openai',
-  MOLI_OAUTH = 'moli-oauth', // MOLI: Enterprise OAuth2 (renamed from QWEN_OAUTH)
+  MOLI_OAUTH = 'moli-oauth', // MOLI: Enterprise OAuth2 (renamed from MOLI_OAUTH)
   USE_GEMINI = 'gemini',
   USE_VERTEX_AI = 'vertex-ai',
   USE_ANTHROPIC = 'anthropic',

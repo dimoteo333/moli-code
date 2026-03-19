@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -64,8 +64,8 @@ describe('registerChatViewProviders', () => {
     >;
 
     expect(calls.map((call) => call[0])).toEqual([
-      'qwen-code.chatView.sidebar',
-      'qwen-code.chatView.secondary',
+      'moli-code.chatView.sidebar',
+      'moli-code.chatView.secondary',
     ]);
     expect(calls[0]?.[2]).toEqual({
       webviewOptions: { retainContextWhenHidden: true },
@@ -83,7 +83,7 @@ describe('registerChatViewProviders', () => {
 
     expect(executeCommand).toHaveBeenCalledWith(
       'setContext',
-      'qwen-code:doesNotSupportSecondarySidebar',
+      'moli-code:doesNotSupportSecondarySidebar',
       true,
     );
   });

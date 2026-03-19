@@ -31,8 +31,8 @@ export function parseAndFormatApiError(
   authType?: AuthType,
 ): string {
   if (isStructuredError(error)) {
-    // Qwen OAuth quota errors have their own user-friendly message; don't wrap them
-    if (error.message.startsWith('Qwen OAuth quota exceeded:')) {
+    // Moli OAuth quota errors have their own user-friendly message; don't wrap them
+    if (error.message.startsWith('Moli OAuth quota exceeded:')) {
       return error.message;
     }
 

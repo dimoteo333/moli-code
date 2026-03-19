@@ -213,9 +213,9 @@ describe('terminal-bench integration', () => {
     it(
       `should complete ${taskId} task with moli-code agent`,
       async () => {
-        rig.setup(`terminal-bench-qwen-${taskId}`);
+        rig.setup(`terminal-bench-moli-${taskId}`);
 
-        const outputPath = join(outputBase, `qwen-${taskId}`);
+        const outputPath = join(outputBase, `moli-${taskId}`);
 
         // Check if API key is available
         const apiKey = process.env['OPENAI_API_KEY'];
@@ -229,7 +229,7 @@ describe('terminal-bench integration', () => {
         const args = [
           'run',
           '--agent-import-path',
-          'integration-tests.terminal-bench.qwen_code:QwenCodeAgent',
+          'integration-tests.terminal-bench.moli_code:MoliCodeAgent',
           '--agent-kwarg',
           `api_key=${apiKey}`,
           '--agent-kwarg',

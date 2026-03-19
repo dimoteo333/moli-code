@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -22,7 +22,7 @@ const createMockExtension = (
     id: name,
     name,
     version,
-    path: `/home/user/.qwen/extensions/${name}`,
+    path: `/home/user/.moli/extensions/${name}`,
     isActive,
     installMetadata: {
       type: 'git',

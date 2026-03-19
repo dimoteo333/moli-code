@@ -6,7 +6,7 @@ Extensions and plugins from [Gemini CLI Extensions Gallery](https://geminicli.co
 
 ## Extension management
 
-We offer a suite of extension management tools using both `qwen extensions` CLI commands and `/extensions` slash commands within the interactive CLI.
+We offer a suite of extension management tools using both `moli extensions` CLI commands and `/extensions` slash commands within the interactive CLI.
 
 ### Runtime Extension Management (Slash Commands)
 
@@ -20,43 +20,43 @@ You can manage extensions at runtime within the interactive CLI using `/extensio
 
 ### CLI Extension Management
 
-You can also manage extensions using `qwen extensions` CLI commands. Note that changes made via CLI commands will be reflected in active CLI sessions on restart.
+You can also manage extensions using `moli extensions` CLI commands. Note that changes made via CLI commands will be reflected in active CLI sessions on restart.
 
 ### Installing an extension
 
-You can install an extension using `qwen extensions install` from multiple sources:
+You can install an extension using `moli extensions install` from multiple sources:
 
 #### From Claude Code Marketplace
 
 Moli Code also supports plugins from the [Claude Code Marketplace](https://claudemarketplaces.com/). Install from a marketplace and choose a plugin:
 
 ```bash
-qwen extensions install <marketplace-name>
+moli extensions install <marketplace-name>
 # or
-qwen extensions install <marketplace-github-url>
+moli extensions install <marketplace-github-url>
 ```
 
 If you want to install a specific plugin, you can use the format with plugin name:
 
 ```bash
-qwen extensions install <marketplace-name>:<plugin-name>
+moli extensions install <marketplace-name>:<plugin-name>
 # or
-qwen extensions install <marketplace-github-url>:<plugin-name>
+moli extensions install <marketplace-github-url>:<plugin-name>
 ```
 
 For example, to install the `prompts.chat` plugin from the [f/awesome-chatgpt-prompts](https://claudemarketplaces.com/plugins/f-awesome-chatgpt-prompts) marketplace:
 
 ```bash
-qwen extensions install f/awesome-chatgpt-prompts:prompts.chat
+moli extensions install f/awesome-chatgpt-prompts:prompts.chat
 # or
-qwen extensions install https://github.com/f/awesome-chatgpt-prompts:prompts.chat
+moli extensions install https://github.com/f/awesome-chatgpt-prompts:prompts.chat
 ```
 
 Claude plugins are automatically converted to Moli Code format during installation:
 
-- `claude-plugin.json` is converted to `qwen-extension.json`
-- Agent configurations are converted to Qwen subagent format
-- Skill configurations are converted to Qwen skill format
+- `claude-plugin.json` is converted to `moli-extension.json`
+- Agent configurations are converted to Moli subagent format
+- Skill configurations are converted to Moli skill format
 - Tool mappings are automatically handled
 
 You can quickly browse available extensions from different marketplaces using the `/extensions explore` command:
@@ -78,21 +78,21 @@ This command opens the respective marketplace in your default browser, allowing 
 Moli Code fully supports extensions from the [Gemini CLI Extensions Gallery](https://geminicli.com/extensions/). Simply install them using the git URL:
 
 ```bash
-qwen extensions install <gemini-cli-extension-github-url>
+moli extensions install <gemini-cli-extension-github-url>
 # or
-qwen extensions install <owner>/<repo>
+moli extensions install <owner>/<repo>
 ```
 
 Gemini extensions are automatically converted to Moli Code format during installation:
 
-- `gemini-extension.json` is converted to `qwen-extension.json`
+- `gemini-extension.json` is converted to `moli-extension.json`
 - TOML command files are automatically migrated to Markdown format
 - MCP servers, context files, and settings are preserved
 
 #### From Git Repository
 
 ```bash
-qwen extensions install https://github.com/github/github-mcp-server
+moli extensions install https://github.com/github/github-mcp-server
 ```
 
 This will install the github mcp server extension.
@@ -100,52 +100,52 @@ This will install the github mcp server extension.
 #### From Local Path
 
 ```bash
-qwen extensions install /path/to/your/extension
+moli extensions install /path/to/your/extension
 ```
 
-Note that we create a copy of the installed extension, so you will need to run `qwen extensions update` to pull in changes from both locally-defined extensions and those on GitHub.
+Note that we create a copy of the installed extension, so you will need to run `moli extensions update` to pull in changes from both locally-defined extensions and those on GitHub.
 
 ### Uninstalling an extension
 
-To uninstall, run `qwen extensions uninstall extension-name`, so, in the case of the install example:
+To uninstall, run `moli extensions uninstall extension-name`, so, in the case of the install example:
 
 ```
-qwen extensions uninstall qwen-cli-security
+moli extensions uninstall moli-cli-security
 ```
 
 ### Disabling an extension
 
 Extensions are, by default, enabled across all workspaces. You can disable an extension entirely or for specific workspace.
 
-For example, `qwen extensions disable extension-name` will disable the extension at the user level, so it will be disabled everywhere. `qwen extensions disable extension-name --scope=workspace` will only disable the extension in the current workspace.
+For example, `moli extensions disable extension-name` will disable the extension at the user level, so it will be disabled everywhere. `moli extensions disable extension-name --scope=workspace` will only disable the extension in the current workspace.
 
 ### Enabling an extension
 
-You can enable extensions using `qwen extensions enable extension-name`. You can also enable an extension for a specific workspace using `qwen extensions enable extension-name --scope=workspace` from within that workspace.
+You can enable extensions using `moli extensions enable extension-name`. You can also enable an extension for a specific workspace using `moli extensions enable extension-name --scope=workspace` from within that workspace.
 
 This is useful if you have an extension disabled at the top-level and only enabled in specific places.
 
 ### Updating an extension
 
-For extensions installed from a local path or a git repository, you can explicitly update to the latest version (as reflected in the `qwen-extension.json` `version` field) with `qwen extensions update extension-name`.
+For extensions installed from a local path or a git repository, you can explicitly update to the latest version (as reflected in the `moli-extension.json` `version` field) with `moli extensions update extension-name`.
 
 You can update all extensions with:
 
 ```
-qwen extensions update --all
+moli extensions update --all
 ```
 
 ## How it works
 
 On startup, Moli Code looks for extensions in `<home>/.moli/extensions`
 
-Extensions exist as a directory that contains a `qwen-extension.json` file. For example:
+Extensions exist as a directory that contains a `moli-extension.json` file. For example:
 
-`<home>/.moli/extensions/my-extension/qwen-extension.json`
+`<home>/.moli/extensions/my-extension/moli-extension.json`
 
-### `qwen-extension.json`
+### `moli-extension.json`
 
-The `qwen-extension.json` file contains the configuration for the extension. The file has the following structure:
+The `moli-extension.json` file contains the configuration for the extension. The file has the following structure:
 
 ```json
 {
@@ -188,30 +188,30 @@ The `qwen-extension.json` file contains the configuration for the extension. The
 
 ### Managing Extension Settings
 
-Extensions can require configuration through settings (such as API keys or credentials). These settings can be managed using the `qwen extensions settings` CLI command:
+Extensions can require configuration through settings (such as API keys or credentials). These settings can be managed using the `moli extensions settings` CLI command:
 
 **Set a setting value:**
 
 ```bash
-qwen extensions settings set <extension-name> <setting-name> [--scope user|workspace]
+moli extensions settings set <extension-name> <setting-name> [--scope user|workspace]
 ```
 
 **List all settings for an extension:**
 
 ```bash
-qwen extensions settings list <extension-name>
+moli extensions settings list <extension-name>
 ```
 
 **View current values (user and workspace):**
 
 ```bash
-qwen extensions settings show <extension-name> <setting-name>
+moli extensions settings show <extension-name> <setting-name>
 ```
 
 **Remove a setting value:**
 
 ```bash
-qwen extensions settings unset <extension-name> <setting-name> [--scope user|workspace]
+moli extensions settings unset <extension-name> <setting-name> [--scope user|workspace]
 ```
 
 Settings can be configured at two levels:
@@ -235,7 +235,7 @@ An extension named `gcp` with the following structure:
 
 ```
 .moli/extensions/gcp/
-├── qwen-extension.json
+├── moli-extension.json
 └── commands/
     ├── deploy.md
     └── gcs/
@@ -255,7 +255,7 @@ Extensions can provide custom skills by placing skill files in a `skills/` subdi
 
 ```
 .moli/extensions/my-extension/
-├── qwen-extension.json
+├── moli-extension.json
 └── skills/
     └── pdf-processor/
         └── SKILL.md
@@ -271,7 +271,7 @@ Extensions can provide custom subagents by placing agent configuration files in 
 
 ```
 .moli/extensions/my-extension/
-├── qwen-extension.json
+├── moli-extension.json
 └── agents/
     └── testing-expert.yaml
 ```
@@ -292,7 +292,7 @@ For example, if both a user and the `gcp` extension define a `deploy` command:
 
 ## Variables
 
-Moli Code extensions allow variable substitution in `qwen-extension.json`. This can be useful if e.g., you need the current directory to run an MCP server using `"cwd": "${extensionPath}${/}run.ts"`.
+Moli Code extensions allow variable substitution in `moli-extension.json`. This can be useful if e.g., you need the current directory to run an MCP server using `"cwd": "${extensionPath}${/}run.ts"`.
 
 **Supported variables:**
 

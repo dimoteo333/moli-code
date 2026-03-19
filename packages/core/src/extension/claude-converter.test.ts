@@ -9,7 +9,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
 import {
-  convertClaudeToQwenConfig,
+  convertClaudeToMoliConfig,
   mergeClaudeConfigs,
   isClaudePluginConfig,
   convertClaudePluginPackage,
@@ -18,14 +18,14 @@ import {
   type ClaudeMarketplaceConfig,
 } from './claude-converter.js';
 
-describe('convertClaudeToQwenConfig', () => {
+describe('convertClaudeToMoliConfig', () => {
   it('should convert basic Claude config', () => {
     const claudeConfig: ClaudePluginConfig = {
       name: 'claude-plugin',
       version: '1.0.0',
     };
 
-    const result = convertClaudeToQwenConfig(claudeConfig);
+    const result = convertClaudeToMoliConfig(claudeConfig);
 
     expect(result.name).toBe('claude-plugin');
     expect(result.version).toBe('1.0.0');
@@ -40,7 +40,7 @@ describe('convertClaudeToQwenConfig', () => {
       skills: ['skills/skill1'],
     };
 
-    const result = convertClaudeToQwenConfig(claudeConfig);
+    const result = convertClaudeToMoliConfig(claudeConfig);
 
     // Commands, skills, agents are collected as directories, not in config
     expect(result.name).toBe('full-plugin');
@@ -63,7 +63,7 @@ describe('convertClaudeToQwenConfig', () => {
       },
     };
 
-    const result = convertClaudeToQwenConfig(claudeConfig);
+    const result = convertClaudeToMoliConfig(claudeConfig);
 
     expect(result.lspServers).toEqual(claudeConfig.lspServers);
   });
@@ -73,7 +73,7 @@ describe('convertClaudeToQwenConfig', () => {
       version: '1.0.0',
     } as ClaudePluginConfig;
 
-    expect(() => convertClaudeToQwenConfig(invalidConfig)).toThrow();
+    expect(() => convertClaudeToMoliConfig(invalidConfig)).toThrow();
   });
 });
 
@@ -416,7 +416,7 @@ describe('convertClaudePluginPackage', () => {
       'crlf-agents-plugin',
     );
 
-    // Verify: agent file was properly parsed and converted into .qwen/agents folder structure
+    // Verify: agent file was properly parsed and converted into .moli/agents folder structure
     const convertedAgentsDir = path.join(result.convertedDir, 'agents');
     expect(fs.existsSync(convertedAgentsDir)).toBe(true);
 

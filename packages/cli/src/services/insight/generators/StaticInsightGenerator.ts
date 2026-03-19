@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Code
+ * Copyright 2025 Moli Code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -27,7 +27,7 @@ export class StaticInsightGenerator {
 
   // Ensure the output directory exists
   private async ensureOutputDirectory(): Promise<string> {
-    const outputDir = path.join(os.homedir(), '.qwen', 'insights');
+    const outputDir = path.join(os.homedir(), '.moli', 'insights');
     await fs.mkdir(outputDir, { recursive: true });
     return outputDir;
   }

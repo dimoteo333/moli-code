@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -97,7 +97,7 @@ describe('SkillManager', () => {
     name: 'test-skill',
     description: 'A test skill',
     level: 'project',
-    filePath: '/test/project/.qwen/skills/test-skill/SKILL.md',
+    filePath: '/test/project/.moli/skills/test-skill/SKILL.md',
     body: 'You are a helpful assistant with this skill.',
   };
 
@@ -202,8 +202,8 @@ You are a helpful assistant with this skill.
     });
 
     it('should determine level from file path', () => {
-      const projectPath = '/test/project/.qwen/skills/test-skill/SKILL.md';
-      const userPath = '/home/user/.qwen/skills/test-skill/SKILL.md';
+      const projectPath = '/test/project/.moli/skills/test-skill/SKILL.md';
+      const userPath = '/home/user/.moli/skills/test-skill/SKILL.md';
 
       const projectConfig = manager.parseSkillContent(
         validMarkdown,
@@ -508,13 +508,13 @@ Skill 3 content`);
     it('should return project-level base dir', () => {
       const baseDir = manager.getSkillsBaseDir('project');
 
-      expect(baseDir).toBe(path.join('/test/project', '.qwen', 'skills'));
+      expect(baseDir).toBe(path.join('/test/project', '.moli', 'skills'));
     });
 
     it('should return user-level base dir', () => {
       const baseDir = manager.getSkillsBaseDir('user');
 
-      expect(baseDir).toBe(path.join('/home/user', '.qwen', 'skills'));
+      expect(baseDir).toBe(path.join('/home/user', '.moli', 'skills'));
     });
 
     it('should return bundled-level base dir', () => {
@@ -532,8 +532,8 @@ Skill 3 content`);
 
   describe('bundled skills', () => {
     const bundledDirSegment = path.join('skills', 'bundled');
-    const projectDirSegment = path.join('.qwen', 'skills');
-    const userDirSegment = path.join('.qwen', 'skills');
+    const projectDirSegment = path.join('.moli', 'skills');
+    const userDirSegment = path.join('.moli', 'skills');
     const projectPrefix = path.join('/test/project');
     const userPrefix = path.join('/home/user');
 
@@ -550,7 +550,7 @@ Skill 3 content`);
       vi.mocked(fs.readdir).mockImplementation((dirPath) => {
         const pathStr = String(dirPath);
         const isBundled =
-          pathStr.endsWith(bundledDirSegment) && !pathStr.includes('.qwen');
+          pathStr.endsWith(bundledDirSegment) && !pathStr.includes('.moli');
         const isProject =
           pathStr.includes(projectDirSegment) &&
           pathStr.startsWith(projectPrefix);

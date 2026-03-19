@@ -3,7 +3,7 @@
 [![@moli-code/moli-code downloads](https://img.shields.io/npm/dw/@moli-code/moli-code.svg)](https://npm-compare.com/@moli-code/moli-code)
 [![@moli-code/moli-code version](https://img.shields.io/npm/v/@moli-code/moli-code.svg)](https://www.npmjs.com/package/@moli-code/moli-code)
 
-> Learn about Moli Code, Qwen's agentic coding tool that lives in your terminal and helps you turn ideas into code faster than ever before.
+> Learn about Moli Code, Moli's agentic coding tool that lives in your terminal and helps you turn ideas into code faster than ever before.
 
 ## Get started in 30 seconds
 
@@ -12,13 +12,13 @@
 **Linux / macOS**
 
 ```sh
-curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
+curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.sh | bash
 ```
 
 **Windows (Run as Administrator CMD)**
 
 ```sh
-curl -fsSL -o %TEMP%\install-qwen.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
+curl -fsSL -o %TEMP%\install-moli.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.bat && %TEMP%\install-moli.bat
 ```
 
 > [!note]
@@ -29,7 +29,7 @@ curl -fsSL -o %TEMP%\install-qwen.bat https://moli-code-assets.oss-cn-hangzhou.a
 
 ```bash
 cd your-project
-qwen
+moli
 ```
 
 Select **Moli OAuth (Free)** authentication and follow the prompts to log in. Then let's start with understanding your codebase. Try one of these commands:
@@ -48,7 +48,7 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 
 > [!note]
 >
-> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=qwenlm.moli-code-vscode-ide-companion) now.
+> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=molilm.moli-code-vscode-ide-companion) now.
 
 ## What Moli Code does for you
 
@@ -61,4 +61,4 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 
 - **Works in your terminal**: Not another chat window. Not another IDE. Moli Code meets you where you already work, with the tools you already love.
 - **Takes action**: Moli Code can directly edit files, run commands, and create commits. Need more? [MCP](./features/mcp) lets Moli Code read your design docs in Google Drive, update your tickets in Jira, or use _your_ custom developer tooling.
-- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | qwen -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `qwen -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.
+- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | moli -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `moli -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.

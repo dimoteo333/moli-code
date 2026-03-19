@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -15,17 +15,17 @@ import {
 
 type Logger = (message: string) => void;
 
-export const runQwenCodeCommand = 'qwen-code.runQwenCode';
-export const showDiffCommand = 'qwenCode.showDiff';
-export const openChatCommand = 'qwen-code.openChat';
-export const openNewChatTabCommand = 'qwenCode.openNewChatTab';
-export const loginCommand = 'qwen-code.login';
-export const focusChatCommand = 'qwen-code.focusChat';
-export const newConversationCommand = 'qwen-code.newConversation';
-export const showLogsCommand = 'qwen-code.showLogs';
+export const runMoliCodeCommand = 'moli-code.runMoliCode';
+export const showDiffCommand = 'moliCode.showDiff';
+export const openChatCommand = 'moli-code.openChat';
+export const openNewChatTabCommand = 'moliCode.openNewChatTab';
+export const loginCommand = 'moli-code.login';
+export const focusChatCommand = 'moli-code.focusChat';
+export const newConversationCommand = 'moli-code.newConversation';
+export const showLogsCommand = 'moli-code.showLogs';
 
 /**
- * Register all Qwen Code chat-related commands.
+ * Register all Moli Code chat-related commands.
  *
  * `openChat` and `newConversation` always open an editor tab, while
  * `focusChat` focuses the secondary sidebar (preferred) or primary sidebar.
@@ -103,7 +103,7 @@ export function registerNewCommands(
         await providers[providers.length - 1].forceReLogin();
       } else {
         vscode.window.showInformationMessage(
-          'Please open Qwen Code chat first before logging in.',
+          'Please open Moli Code chat first before logging in.',
         );
       }
     }),
@@ -136,7 +136,7 @@ export function registerNewCommands(
         outputChannel.show(true);
       } else {
         vscode.window.showWarningMessage(
-          'Qwen Code Companion log channel is not available.',
+          'Moli Code Companion log channel is not available.',
         );
       }
     }),

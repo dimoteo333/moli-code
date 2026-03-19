@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -39,7 +39,7 @@ export const useMoliAuth = (
   // Set up event listeners when authentication starts
   useEffect(() => {
     if (!isMoliAuth || !isAuthenticating) {
-      // Reset state when not authenticating or not Qwen auth
+      // Reset state when not authenticating or not Moli auth
       setMoliAuthState({
         deviceAuth: null,
         authStatus: 'idle',

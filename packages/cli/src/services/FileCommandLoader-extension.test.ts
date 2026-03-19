@@ -14,7 +14,7 @@ import { Storage } from '@dobby/moli-code-core';
 describe('FileCommandLoader - Extension Commands Support', () => {
   const projectRoot = '/test/project';
   const userCommandsDir = Storage.getUserCommandsDir();
-  const projectCommandsDir = path.join(projectRoot, '.qwen', 'commands');
+  const projectCommandsDir = path.join(projectRoot, '.moli', 'commands');
 
   afterEach(() => {
     mock.restore();
@@ -23,7 +23,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   it('should load commands from extension with config.commands path', async () => {
     const extensionDir = path.join(
       projectRoot,
-      '.qwen',
+      '.moli',
       'extensions',
       'test-ext',
     );
@@ -38,7 +38,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'qwen-extension.json': JSON.stringify(extensionConfig),
+        'moli-extension.json': JSON.stringify(extensionConfig),
         'custom-cmds': {
           'test.md':
             '---\ndescription: Test command from extension\n---\nDo something',
@@ -78,7 +78,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   it('should load commands from extension with multiple commands paths', async () => {
     const extensionDir = path.join(
       projectRoot,
-      '.qwen',
+      '.moli',
       'extensions',
       'multi-ext',
     );
@@ -93,7 +93,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'qwen-extension.json': JSON.stringify(extensionConfig),
+        'moli-extension.json': JSON.stringify(extensionConfig),
         commands1: {
           'cmd1.md': '---\n---\nCommand 1',
         },
@@ -133,7 +133,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   it('should fallback to default "commands" directory when config.commands not specified', async () => {
     const extensionDir = path.join(
       projectRoot,
-      '.qwen',
+      '.moli',
       'extensions',
       'default-ext',
     );
@@ -147,7 +147,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'qwen-extension.json': JSON.stringify(extensionConfig),
+        'moli-extension.json': JSON.stringify(extensionConfig),
         commands: {
           'default.md': '---\n---\nDefault command',
         },
@@ -183,7 +183,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   it('should handle extension without commands directory gracefully', async () => {
     const extensionDir = path.join(
       projectRoot,
-      '.qwen',
+      '.moli',
       'extensions',
       'no-cmds-ext',
     );
@@ -197,7 +197,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'qwen-extension.json': JSON.stringify(extensionConfig),
+        'moli-extension.json': JSON.stringify(extensionConfig),
         // No commands directory
       },
     });
@@ -230,7 +230,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   it('should set extensionName property for extension commands', async () => {
     const extensionDir = path.join(
       projectRoot,
-      '.qwen',
+      '.moli',
       'extensions',
       'prefix-ext',
     );
@@ -244,7 +244,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'qwen-extension.json': JSON.stringify(extensionConfig),
+        'moli-extension.json': JSON.stringify(extensionConfig),
         commands: {
           'mycommand.md': '---\n---\nMy command',
         },
@@ -279,14 +279,14 @@ describe('FileCommandLoader - Extension Commands Support', () => {
   });
 
   it('should load commands from multiple extensions in alphabetical order', async () => {
-    const ext1Dir = path.join(projectRoot, '.qwen', 'extensions', 'ext-b');
-    const ext2Dir = path.join(projectRoot, '.qwen', 'extensions', 'ext-a');
+    const ext1Dir = path.join(projectRoot, '.moli', 'extensions', 'ext-b');
+    const ext2Dir = path.join(projectRoot, '.moli', 'extensions', 'ext-a');
 
     mock({
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [ext1Dir]: {
-        'qwen-extension.json': JSON.stringify({
+        'moli-extension.json': JSON.stringify({
           name: 'ext-b',
           version: '1.0.0',
         }),
@@ -295,7 +295,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
         },
       },
       [ext2Dir]: {
-        'qwen-extension.json': JSON.stringify({
+        'moli-extension.json': JSON.stringify({
           name: 'ext-a',
           version: '1.0.0',
         }),

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -34,13 +34,13 @@ import {
 
 export interface SDKTestHelperOptions {
   /**
-   * Optional settings for .qwen/settings.json
+   * Optional settings for .moli/settings.json
    */
   settings?: Record<string, unknown>;
   /**
-   * Whether to create .qwen/settings.json
+   * Whether to create .moli/settings.json
    */
-  createQwenConfig?: boolean;
+  createMoliConfig?: boolean;
   /**
    * Whether to enable chat recording for this test.
    * - Set to `true` to enable recording (needed for session-id duplicate detection tests)
@@ -79,10 +79,10 @@ export class SDKTestHelper {
 
     await mkdir(this.testDir, { recursive: true });
 
-    // Optionally create .qwen/settings.json for CLI configuration
-    if (options.createQwenConfig !== false) {
-      const qwenDir = join(this.testDir, '.qwen');
-      await mkdir(qwenDir, { recursive: true });
+    // Optionally create .moli/settings.json for CLI configuration
+    if (options.createMoliConfig !== false) {
+      const moliDir = join(this.testDir, '.moli');
+      await mkdir(moliDir, { recursive: true });
 
       const optionsSettings = options.settings ?? {};
       const generalSettings =
@@ -104,7 +104,7 @@ export class SDKTestHelper {
       };
 
       await writeFile(
-        join(qwenDir, 'settings.json'),
+        join(moliDir, 'settings.json'),
         JSON.stringify(settings, null, 2),
         'utf-8',
       );
@@ -216,7 +216,7 @@ export interface MCPServerResult {
 const MCP_MATH_SERVER_SCRIPT = `#!/usr/bin/env node
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1006,7 +1006,7 @@ export function createSharedTestOptions(
   }
 
   return {
-    pathToQwenExecutable: TEST_CLI_PATH,
+    pathToMoliExecutable: TEST_CLI_PATH,
     ...overrides,
   };
 }

@@ -22,7 +22,7 @@ Add the following dependency to your Maven `pom.xml`:
 ```xml
 <dependency>
     <groupId>com.alibaba</groupId>
-    <artifactId>qwencode-sdk</artifactId>
+    <artifactId>molicode-sdk</artifactId>
     <version>{$version}</version>
 </dependency>
 ```
@@ -30,7 +30,7 @@ Add the following dependency to your Maven `pom.xml`:
 Or if using Gradle, add to your `build.gradle`:
 
 ```gradle
-implementation 'com.alibaba:qwencode-sdk:{$version}'
+implementation 'com.alibaba:molicode-sdk:{$version}'
 ```
 
 ## Building and Running
@@ -53,11 +53,11 @@ mvn install
 
 ## Quick Start
 
-The simplest way to use the SDK is through the `QwenCodeCli.simpleQuery()` method:
+The simplest way to use the SDK is through the `MoliCodeCli.simpleQuery()` method:
 
 ```java
 public static void runSimpleExample() {
-    List<String> result = QwenCodeCli.simpleQuery("hello world");
+    List<String> result = MoliCodeCli.simpleQuery("hello world");
     result.forEach(logger::info);
 }
 ```
@@ -67,7 +67,7 @@ For more advanced usage with custom transport options:
 ```java
 public static void runTransportOptionsExample() {
     TransportOptions options = new TransportOptions()
-            .setModel("qwen3-coder-flash")
+            .setModel("moli3-coder-flash")
             .setPermissionMode(PermissionMode.AUTO_EDIT)
             .setCwd("./")
             .setEnv(new HashMap<String, String>() {{put("CUSTOM_VAR", "value");}})
@@ -76,7 +76,7 @@ public static void runTransportOptionsExample() {
             .setMessageTimeout(new Timeout(90L, TimeUnit.SECONDS))
             .setAllowedTools(Arrays.asList("read_file", "write_file", "list_directory"));
 
-    List<String> result = QwenCodeCli.simpleQuery("who are you, what are your capabilities?", options);
+    List<String> result = MoliCodeCli.simpleQuery("who are you, what are your capabilities?", options);
     result.forEach(logger::info);
 }
 ```
@@ -85,7 +85,7 @@ For streaming content handling with custom content consumers:
 
 ```java
 public static void runStreamingExample() {
-    QwenCodeCli.simpleQuery("who are you, what are your capabilities?",
+    MoliCodeCli.simpleQuery("who are you, what are your capabilities?",
             new TransportOptions().setMessageTimeout(new Timeout(10L, TimeUnit.SECONDS)), new AssistantContentSimpleConsumers() {
 
                 @Override
@@ -124,13 +124,13 @@ public static void runStreamingExample() {
 }
 ```
 
-other examples see src/test/java/com/alibaba/qwen/code/cli/example
+other examples see src/test/java/com/alibaba/moli/code/cli/example
 
 ## Architecture
 
 The SDK follows a layered architecture:
 
-- **API Layer**: Provides the main entry points through `QwenCodeCli` class with simple static methods for basic usage
+- **API Layer**: Provides the main entry points through `MoliCodeCli` class with simple static methods for basic usage
 - **Session Layer**: Manages communication sessions with the Moli Code CLI through the `Session` class
 - **Transport Layer**: Handles the communication mechanism between the SDK and CLI process (currently using process transport via `ProcessTransport`)
 - **Protocol Layer**: Defines data structures for communication based on the CLI protocol
@@ -234,7 +234,7 @@ For proper operation, the following timeout relationships should be maintained:
 
 The `TransportOptions` class allows configuration of how the SDK communicates with the Moli Code CLI:
 
-- `pathToQwenExecutable`: Path to the Moli Code CLI executable
+- `pathToMoliExecutable`: Path to the Moli Code CLI executable
 - `cwd`: Working directory for the CLI process
 - `model`: AI model to use for the session
 - `permissionMode`: Permission mode that controls tool execution
@@ -252,7 +252,7 @@ The `TransportOptions` class allows configuration of how the SDK communicates wi
 
 ### Session Control Features
 
-- **Session creation**: Use `QwenCodeCli.newSession()` to create a new session with custom options
+- **Session creation**: Use `MoliCodeCli.newSession()` to create a new session with custom options
 - **Session management**: The `Session` class provides methods to send prompts, handle responses, and manage session state
 - **Session cleanup**: Always close sessions using `session.close()` to properly terminate the CLI process
 - **Session resumption**: Use `setResumeSessionId()` in `TransportOptions` to resume a previous session
@@ -282,9 +282,9 @@ The SDK provides specific exception types for different error scenarios:
 
 ## FAQ / Troubleshooting
 
-### Q: Do I need to install the Qwen CLI separately?
+### Q: Do I need to install the Moli CLI separately?
 
-A: yes, requires Qwen CLI 0.5.5 or higher.
+A: yes, requires Moli CLI 0.5.5 or higher.
 
 ### Q: What Java versions are supported?
 

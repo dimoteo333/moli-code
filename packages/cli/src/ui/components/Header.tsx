@@ -108,7 +108,7 @@ export const Header: React.FC<HeaderProps> = ({
       {showLogo && (
         <>
           <Box flexShrink={0}>
-            <Text color="#B48EFF">{displayLogo}</Text>
+            <Text color="#B19CD9">{displayLogo}</Text>
           </Box>
           {/* Fixed gap between logo and info panel */}
           <Box width={logoGap} />

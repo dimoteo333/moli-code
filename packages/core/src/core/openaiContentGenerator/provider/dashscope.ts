@@ -285,7 +285,7 @@ export class DashScopeOpenAICompatibleProvider
   private static readonly VISION_MODEL_EXACT_MATCHES = new Set(['coder-model']);
 
   private static readonly VISION_MODEL_PREFIX_PATTERNS = [
-    'qwen-vl', // qwen-vl-max, moli-vl-max-latest, etc.
+    'moli-vl', // moli-vl-max, moli-vl-max-latest, etc.
     'moli-vl-plus', // moli-vl-plus variants
     'moli3.5-plus', // moli3.5-plus (has built-in vision capabilities)
   ];

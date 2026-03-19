@@ -47,7 +47,7 @@ describe('validateNonInterActiveAuth', () => {
   let originalEnvVertexAi: string | undefined;
   let originalEnvGcp: string | undefined;
   let originalEnvOpenAiApiKey: string | undefined;
-  let originalEnvQwenOauth: string | undefined;
+  let originalEnvMoliOauth: string | undefined;
   let originalEnvGoogleApiKey: string | undefined;
   let originalEnvAnthropicApiKey: string | undefined;
   let processExitSpy: ReturnType<typeof vi.spyOn<[code?: number], never>>;
@@ -59,7 +59,7 @@ describe('validateNonInterActiveAuth', () => {
     originalEnvVertexAi = process.env['GOOGLE_GENAI_USE_VERTEXAI'];
     originalEnvGcp = process.env['GOOGLE_GENAI_USE_GCA'];
     originalEnvOpenAiApiKey = process.env['OPENAI_API_KEY'];
-    originalEnvQwenOauth = process.env['MOLI_OAUTH'];
+    originalEnvMoliOauth = process.env['MOLI_OAUTH'];
     originalEnvGoogleApiKey = process.env['GOOGLE_API_KEY'];
     originalEnvAnthropicApiKey = process.env['ANTHROPIC_API_KEY'];
     delete process.env['GEMINI_API_KEY'];
@@ -116,8 +116,8 @@ describe('validateNonInterActiveAuth', () => {
     } else {
       delete process.env['OPENAI_API_KEY'];
     }
-    if (originalEnvQwenOauth !== undefined) {
-      process.env['MOLI_OAUTH'] = originalEnvQwenOauth;
+    if (originalEnvMoliOauth !== undefined) {
+      process.env['MOLI_OAUTH'] = originalEnvMoliOauth;
     } else {
       delete process.env['MOLI_OAUTH'];
     }
@@ -280,7 +280,7 @@ describe('validateNonInterActiveAuth', () => {
       expect((e as Error).message).toContain('process.exit(1) called');
     }
     expect(mockWriteStderrLine).toHaveBeenCalledWith(
-      'The configured auth type is qwen-oauth, but the current auth type is openai. Please re-authenticate with the correct type.',
+      'The configured auth type is moli-oauth, but the current auth type is openai. Please re-authenticate with the correct type.',
     );
     expect(processExitSpy).toHaveBeenCalledWith(1);
   });
@@ -367,7 +367,7 @@ describe('validateNonInterActiveAuth', () => {
       expect(emitResultMock).toHaveBeenCalledWith({
         isError: true,
         errorMessage: expect.stringContaining(
-          'The configured auth type is qwen-oauth, but the current auth type is openai.',
+          'The configured auth type is moli-oauth, but the current auth type is openai.',
         ),
         durationMs: 0,
         apiDurationMs: 0,
@@ -504,7 +504,7 @@ describe('validateNonInterActiveAuth', () => {
       expect(emitResultMock).toHaveBeenCalledWith({
         isError: true,
         errorMessage: expect.stringContaining(
-          'The configured auth type is qwen-oauth, but the current auth type is openai.',
+          'The configured auth type is moli-oauth, but the current auth type is openai.',
         ),
         durationMs: 0,
         apiDurationMs: 0,

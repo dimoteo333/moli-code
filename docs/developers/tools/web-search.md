@@ -69,13 +69,13 @@ Pass API keys when running Moli Code:
 
 ```bash
 # Tavily
-qwen --tavily-api-key tvly-xxxxx
+moli --tavily-api-key tvly-xxxxx
 
 # Google
-qwen --google-api-key your-key --google-search-engine-id your-id
+moli --google-api-key your-key --google-search-engine-id your-id
 
 # Specify default provider
-qwen --web-search-default tavily
+moli --web-search-default tavily
 ```
 
 ### Backward Compatibility (Deprecated)
@@ -182,5 +182,5 @@ web_search(query="best practices for React 19", provider="dashscope")
 
 **Need help?**
 
-- Check your configuration: Run `qwen` and use the settings dialog
+- Check your configuration: Run `moli` and use the settings dialog
 - View your current settings in `~/.moli-code/settings.json` (macOS/Linux) or `%USERPROFILE%\.moli-code\settings.json` (Windows)

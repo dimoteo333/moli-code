@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 Qwen Team
+ * Copyright 2026 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -149,7 +149,7 @@ export class HookRegistry {
 ${untrusted.map((h: string) => `  - ${h}`).join('\n')}
 
 These hooks will be executed. If you did not configure these hooks or do not trust this project,
-please review the project settings (.qwen/settings.json) and remove them.`;
+please review the project settings (.moli/settings.json) and remove them.`;
         this.feedbackEmitter?.emitFeedback('warning', message);
 
         // Trust them so we don't warn again

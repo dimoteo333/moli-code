@@ -176,7 +176,7 @@ When an interactive command is running, you can send input to it from the Moli C
 
 ## Environment Variables
 
-When `run_shell_command` executes a command, it sets the `QWEN_CODE=1` environment variable in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the CLI.
+When `run_shell_command` executes a command, it sets the `MOLI_CODE=1` environment variable in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the CLI.
 
 ## Command Restrictions
 

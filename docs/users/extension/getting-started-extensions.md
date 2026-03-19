@@ -13,7 +13,7 @@ The easiest way to start is by using one of the built-in templates. We'll use th
 Run the following command to create a new directory called `my-first-extension` with the template files:
 
 ```bash
-qwen extensions new my-first-extension mcp-server
+moli extensions new my-first-extension mcp-server
 ```
 
 This will create a new directory with the following structure:
@@ -21,7 +21,7 @@ This will create a new directory with the following structure:
 ```
 my-first-extension/
 ├── example.ts
-├── qwen-extension.json
+├── moli-extension.json
 ├── package.json
 └── tsconfig.json
 ```
@@ -30,7 +30,7 @@ my-first-extension/
 
 Let's look at the key files in your new extension.
 
-### `qwen-extension.json`
+### `moli-extension.json`
 
 This is the manifest file for your extension. It tells Moli Code how to load and use your extension.
 
@@ -126,14 +126,14 @@ Before you can use the extension, you need to compile the TypeScript code and li
     npm run build
     ```
 
-    This will compile `example.ts` into `dist/example.js`, which is the file referenced in your `qwen-extension.json`.
+    This will compile `example.ts` into `dist/example.js`, which is the file referenced in your `moli-extension.json`.
 
 3.  **Link the extension:**
 
     The `link` command creates a symbolic link from the Moli Code extensions directory to your development directory. This means any changes you make will be reflected immediately without needing to reinstall.
 
     ```bash
-    qwen extensions link .
+    moli extensions link .
     ```
 
 Now, restart your Moli Code session. The new `fetch_posts` tool will be available. You can test it by asking: "fetch posts".
@@ -260,7 +260,7 @@ You can provide persistent context to the model by adding a `MOLI.md` file to yo
     You are an expert developer assistant. When the user asks you to fetch posts, use the `fetch_posts` tool. Be concise in your responses.
     ```
 
-2.  Update your `qwen-extension.json` to tell the CLI to load this file:
+2.  Update your `moli-extension.json` to tell the CLI to load this file:
 
     ```json
     {

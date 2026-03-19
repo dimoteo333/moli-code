@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -63,10 +63,10 @@ vi.mock('@dobby/moli-code-core', async (importOriginal) => {
   return {
     ...actual,
     Storage: {
-      getGlobalMoliDir: vi.fn().mockReturnValue('/mock/.qwen'),
+      getGlobalMoliDir: vi.fn().mockReturnValue('/mock/.moli'),
       getGlobalSettingsPath: vi
         .fn()
-        .mockReturnValue('/mock/.qwen/settings.json'),
+        .mockReturnValue('/mock/.moli/settings.json'),
     },
   };
 });
@@ -740,7 +740,7 @@ describe('languageCommand', () => {
       vi.mocked(i18n.detectSystemLanguage).mockReturnValue('en');
       vi.mocked(fs.readFileSync).mockReturnValue(
         `# Output language preference: English
-<!-- qwen-code:llm-output-language: English -->
+<!-- moli-code:llm-output-language: English -->
 `,
       );
 
@@ -753,7 +753,7 @@ describe('languageCommand', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue(
         `# Output language preference: English
-<!-- qwen-code:llm-output-language: English -->
+<!-- moli-code:llm-output-language: English -->
 `,
       );
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -51,7 +51,7 @@ describe('useMoliAuth', () => {
     vi.clearAllMocks();
   });
 
-  it('should initialize with default state when not Qwen auth', () => {
+  it('should initialize with default state when not Moli auth', () => {
     const { result } = renderHook(() =>
       useMoliAuth(AuthType.USE_GEMINI, false),
     );
@@ -64,7 +64,7 @@ describe('useMoliAuth', () => {
     expect(result.current.cancelMoliAuth).toBeInstanceOf(Function);
   });
 
-  it('should initialize with default state when Qwen auth but not authenticating', () => {
+  it('should initialize with default state when Moli auth but not authenticating', () => {
     const { result } = renderHook(() =>
       useMoliAuth(AuthType.MOLI_OAUTH, false),
     );
@@ -77,7 +77,7 @@ describe('useMoliAuth', () => {
     expect(result.current.cancelMoliAuth).toBeInstanceOf(Function);
   });
 
-  it('should set up event listeners when Qwen auth and authenticating', () => {
+  it('should set up event listeners when Moli auth and authenticating', () => {
     renderHook(() => useMoliAuth(AuthType.MOLI_OAUTH, true));
 
     expect(mockMoliOAuth2Events.on).toHaveBeenCalledWith(
@@ -248,7 +248,7 @@ describe('useMoliAuth', () => {
       },
     );
 
-    // Change to non-Qwen auth
+    // Change to non-Moli auth
     rerender({ pendingAuthType: AuthType.USE_GEMINI, isAuthenticating: true });
 
     expect(mockMoliOAuth2Events.off).toHaveBeenCalledWith(
@@ -298,7 +298,7 @@ describe('useMoliAuth', () => {
     );
   });
 
-  it('should reset state when switching from Qwen auth to another auth type', () => {
+  it('should reset state when switching from Moli auth to another auth type', () => {
     let handleDeviceAuth: (deviceAuth: DeviceAuthorizationData) => void;
 
     mockMoliOAuth2Events.on.mockImplementation((event, handler) => {
@@ -416,7 +416,7 @@ describe('useMoliAuth', () => {
     expect(oauthResult.current.moliAuthState.authStatus).toBe('idle');
   });
 
-  it('should initialize with idle status when starting authentication with Qwen auth', () => {
+  it('should initialize with idle status when starting authentication with Moli auth', () => {
     const { result } = renderHook(() => useMoliAuth(AuthType.MOLI_OAUTH, true));
 
     expect(result.current.moliAuthState.authStatus).toBe('idle');

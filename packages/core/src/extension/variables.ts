@@ -9,8 +9,8 @@ import path from 'node:path';
 import { MOLI_DIR } from '../config/storage.js';
 
 export const EXTENSIONS_DIRECTORY_NAME = path.join(MOLI_DIR, 'extensions');
-export const EXTENSIONS_CONFIG_FILENAME = 'qwen-extension.json';
-export const INSTALL_METADATA_FILENAME = '.qwen-extension-install.json';
+export const EXTENSIONS_CONFIG_FILENAME = 'moli-extension.json';
+export const INSTALL_METADATA_FILENAME = '.moli-extension-install.json';
 export const EXTENSION_SETTINGS_FILENAME = '.env';
 
 export type JsonObject = { [key: string]: JsonValue };

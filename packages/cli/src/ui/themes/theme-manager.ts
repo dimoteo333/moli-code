@@ -15,8 +15,8 @@ import { DefaultLight } from './default-light.js';
 import { DefaultDark } from './default.js';
 import { ShadesOfPurple } from './shades-of-purple.js';
 import { XCode } from './xcode.js';
-import { QwenLight } from './qwen-light.js';
-import { QwenDark } from './qwen-dark.js';
+import { MoliLight } from './moli-light.js';
+import { MoliDark } from './moli-dark.js';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import * as os from 'node:os';
@@ -37,7 +37,7 @@ export interface ThemeDisplay {
   isCustom?: boolean;
 }
 
-export const DEFAULT_THEME: Theme = QwenDark;
+export const DEFAULT_THEME: Theme = MoliDark;
 
 class ThemeManager {
   private readonly availableThemes: Theme[];
@@ -55,8 +55,8 @@ class ThemeManager {
       GitHubDark,
       GitHubLight,
       GoogleCode,
-      QwenLight,
-      QwenDark,
+      MoliLight,
+      MoliDark,
       ShadesOfPurple,
       XCode,
       ANSI,
@@ -195,12 +195,12 @@ class ThemeManager {
       }),
     );
 
-    // Separate Qwen themes
-    const qwenThemes = builtInThemes.filter(
-      (theme) => theme.name === QwenLight.name || theme.name === QwenDark.name,
+    // Separate Moli themes
+    const moliThemes = builtInThemes.filter(
+      (theme) => theme.name === MoliLight.name || theme.name === MoliDark.name,
     );
     const otherBuiltInThemes = builtInThemes.filter(
-      (theme) => theme.name !== QwenLight.name && theme.name !== QwenDark.name,
+      (theme) => theme.name !== MoliLight.name && theme.name !== MoliDark.name,
     );
 
     // Sort other themes by type and then name
@@ -229,8 +229,8 @@ class ThemeManager {
       },
     );
 
-    // Combine Qwen themes first, then sorted others
-    return [...qwenThemes, ...sortedOtherThemes];
+    // Combine Moli themes first, then sorted others
+    return [...moliThemes, ...sortedOtherThemes];
   }
 
   /**

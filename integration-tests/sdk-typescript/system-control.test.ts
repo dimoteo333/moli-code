@@ -109,7 +109,7 @@ describe('System Control (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          model: 'qwen3-max',
+          model: 'moli3-max',
           debug: false,
         },
       });
@@ -165,7 +165,7 @@ describe('System Control (E2E)', () => {
         expect(firstResponseReceived).toBe(true);
 
         // Perform control operation: set model
-        await q.setModel('qwen3-vl-plus');
+        await q.setModel('moli3-vl-plus');
 
         // Resume the input stream
         resume();
@@ -183,10 +183,10 @@ describe('System Control (E2E)', () => {
 
         expect(secondResponseReceived).toBe(true);
 
-        // Verify system messages - model should change from qwen3-max to qwen3-vl-plus
+        // Verify system messages - model should change from moli3-max to moli3-vl-plus
         expect(systemMessages.length).toBeGreaterThanOrEqual(2);
-        expect(systemMessages[0].model).toBeOneOf(['qwen3-max', 'coder-model']);
-        expect(systemMessages[1].model).toBe('qwen3-vl-plus');
+        expect(systemMessages[0].model).toBeOneOf(['moli3-max', 'coder-model']);
+        expect(systemMessages[1].model).toBe('moli3-vl-plus');
       } finally {
         await q.close();
       }
@@ -242,7 +242,7 @@ describe('System Control (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          model: 'qwen3-max',
+          model: 'moli3-max',
           debug: false,
         },
       });
@@ -283,7 +283,7 @@ describe('System Control (E2E)', () => {
         ]);
 
         // First model change
-        await q.setModel('qwen3-turbo');
+        await q.setModel('moli3-turbo');
         resumeResolve1!();
 
         // Wait for second response
@@ -295,7 +295,7 @@ describe('System Control (E2E)', () => {
         ]);
 
         // Second model change
-        await q.setModel('qwen3-vl-plus');
+        await q.setModel('moli3-vl-plus');
         resumeResolve2!();
 
         // Wait for third response
@@ -308,9 +308,9 @@ describe('System Control (E2E)', () => {
 
         // Verify we received system messages for each model
         expect(systemMessages.length).toBeGreaterThanOrEqual(3);
-        expect(systemMessages[0].model).toBeOneOf(['qwen3-max', 'coder-model']);
-        expect(systemMessages[1].model).toBe('qwen3-turbo');
-        expect(systemMessages[2].model).toBe('qwen3-vl-plus');
+        expect(systemMessages[0].model).toBeOneOf(['moli3-max', 'coder-model']);
+        expect(systemMessages[1].model).toBe('moli3-turbo');
+        expect(systemMessages[2].model).toBe('moli3-vl-plus');
       } finally {
         await q.close();
       }
@@ -322,13 +322,13 @@ describe('System Control (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          model: 'qwen3-max',
+          model: 'moli3-max',
         },
       });
 
       await q.close();
 
-      await expect(q.setModel('qwen3-turbo')).rejects.toThrow(
+      await expect(q.setModel('moli3-turbo')).rejects.toThrow(
         'Query is closed',
       );
     });
@@ -354,7 +354,7 @@ describe('System Control (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          model: 'qwen3-max',
+          model: 'moli3-max',
           debug: false,
         },
       });
@@ -414,7 +414,7 @@ describe('System Control (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          model: 'qwen3-max',
+          model: 'moli3-max',
         },
       });
 

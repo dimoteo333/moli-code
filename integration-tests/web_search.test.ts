@@ -16,7 +16,7 @@ describe('web_search', () => {
       !!process.env['GOOGLE_SEARCH_ENGINE_ID'];
 
     // Skip if no provider is configured
-    // Note: DashScope provider is automatically available for Qwen OAuth users,
+    // Note: DashScope provider is automatically available for Moli OAuth users,
     // but we can't easily detect that in tests without actual OAuth credentials
     if (!hasTavilyKey && !hasGoogleKey) {
       console.warn(

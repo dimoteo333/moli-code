@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 Qwen Team
+ * Copyright 2026 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -224,7 +224,7 @@ export class HookRunner {
         ...process.env,
         GEMINI_PROJECT_DIR: input.cwd,
         CLAUDE_PROJECT_DIR: input.cwd, // For compatibility
-        QWEN_PROJECT_DIR: input.cwd, // For Qwen Code compatibility
+        MOLI_PROJECT_DIR: input.cwd, // For Moli Code compatibility
         ...hookConfig.env,
       };
 

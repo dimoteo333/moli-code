@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -773,7 +773,7 @@ export class ModelsConfig {
     }
 
     // max_tokens fallback: auto-detect from model when not set by provider.
-    // Without this, requests to non-Qwen models (Claude, GPT, etc.) may omit
+    // Without this, requests to non-Moli models (Claude, GPT, etc.) may omit
     // max_tokens entirely, causing the API to use a small default (e.g. 4096)
     // and truncating long responses mid-tool-call.
     if (!this._generationConfig.samplingParams?.max_tokens) {

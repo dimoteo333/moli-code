@@ -779,13 +779,18 @@ export class AuthEvent implements BaseTelemetryEvent {
   'event.name': 'auth';
   'event.timestamp': string;
   auth_type: AuthType;
-  action_type: 'auto' | 'manual' | 'coding-plan';
+  action_type: 'auto' | 'manual' | 'coding-plan' | 'molimate' | 'local-config';
   status: 'success' | 'error' | 'cancelled';
   error_message?: string;
 
   constructor(
     auth_type: AuthType,
-    action_type: 'auto' | 'manual' | 'coding-plan',
+    action_type:
+      | 'auto'
+      | 'manual'
+      | 'coding-plan'
+      | 'molimate'
+      | 'local-config',
     status: 'success' | 'error' | 'cancelled',
     error_message?: string,
   ) {

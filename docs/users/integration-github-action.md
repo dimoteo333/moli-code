@@ -4,13 +4,13 @@
 
 `moli-code-action` is a GitHub Action that integrates [Moli Code] into your development workflow via the [Moli Code CLI]. It acts both as an autonomous agent for critical routine coding tasks, and an on-demand collaborator you can quickly delegate work to.
 
-Use it to perform GitHub pull request reviews, triage issues, perform code analysis and modification, and more using [Moli Code] conversationally (e.g., `@qwencoder fix this issue`) directly inside your GitHub repositories.
+Use it to perform GitHub pull request reviews, triage issues, perform code analysis and modification, and more using [Moli Code] conversationally (e.g., `@molicoder fix this issue`) directly inside your GitHub repositories.
 
 ## Features
 
 - **Automation**: Trigger workflows based on events (e.g. issue opening) or schedules (e.g. nightly).
 - **On-demand Collaboration**: Trigger workflows in issue and pull request
-  comments by mentioning the [Moli Code CLI](./features/commands) (e.g., `@qwencoder /review`).
+  comments by mentioning the [Moli Code CLI](./features/commands) (e.g., `@molicoder /review`).
 - **Extensible with Tools**: Leverage [Moli Code](../developers/tools/introduction.md) models' tool-calling capabilities to interact with other CLIs like the [GitHub CLI] (`gh`).
 - **Customizable**: Use a `MOLI.md` file in your repository to provide
   project-specific instructions and context to [Moli Code CLI](./features/commands).
@@ -19,17 +19,17 @@ Use it to perform GitHub pull request reviews, triage issues, perform code analy
 
 Get started with Moli Code CLI in your repository in just a few minutes:
 
-### 1. Get a Qwen API Key
+### 1. Get a Moli API Key
 
 Obtain your API key from [DashScope](https://help.aliyun.com/zh/model-studio/moli-code) (Alibaba Cloud's AI platform)
 
 ### 2. Add it as a GitHub Secret
 
-Store your API key as a secret named `QWEN_API_KEY` in your repository:
+Store your API key as a secret named `MOLI_API_KEY` in your repository:
 
 - Go to your repository's **Settings > Secrets and variables > Actions**
 - Click **New repository secret**
-- Name: `QWEN_API_KEY`, Value: your API key
+- Name: `MOLI_API_KEY`, Value: your API key
 
 ### 3. Update your .gitignore
 
@@ -52,7 +52,7 @@ You have two options to set up a workflow:
 1. Start the Moli Code CLI in your terminal:
 
    ```shell
-   qwen
+   moli
    ```
 
 2. In Moli Code CLI in your terminal, type:
@@ -63,28 +63,28 @@ You have two options to set up a workflow:
 
 **Option B: Manually copy workflows**
 
-1. Copy the pre-built workflows from the [`examples/workflows`](./common-workflow) directory to your repository's `.github/workflows` directory. Note: the `qwen-dispatch.yml` workflow must also be copied, which triggers the workflows to run.
+1. Copy the pre-built workflows from the [`examples/workflows`](./common-workflow) directory to your repository's `.github/workflows` directory. Note: the `moli-dispatch.yml` workflow must also be copied, which triggers the workflows to run.
 
 ### 5. Try it out
 
 **Pull Request Review:**
 
 - Open a pull request in your repository and wait for automatic review
-- Comment `@qwencoder /review` on an existing pull request to manually trigger a review
+- Comment `@molicoder /review` on an existing pull request to manually trigger a review
 
 **Issue Triage:**
 
 - Open an issue and wait for automatic triage
-- Comment `@qwencoder /triage` on existing issues to manually trigger triaging
+- Comment `@molicoder /triage` on existing issues to manually trigger triaging
 
 **General AI Assistance:**
 
-- In any issue or pull request, mention `@qwencoder` followed by your request
+- In any issue or pull request, mention `@molicoder` followed by your request
 - Examples:
-  - `@qwencoder explain this code change`
-  - `@qwencoder suggest improvements for this function`
-  - `@qwencoder help me debug this error`
-  - `@qwencoder write unit tests for this component`
+  - `@molicoder explain this code change`
+  - `@molicoder suggest improvements for this function`
+  - `@molicoder help me debug this error`
+  - `@molicoder write unit tests for this component`
 
 ## Workflows
 
@@ -112,24 +112,24 @@ This type of action can be used to invoke a general-purpose, conversational Moli
 
 <!-- BEGIN_AUTOGEN_INPUTS -->
 
-- <a name="__input_qwen_api_key"></a><a href="#user-content-__input_qwen_api_key"><code>qwen*api_key</code></a>: *(Optional)\_ The API key for the Qwen API.
+- <a name="__input_moli_api_key"></a><a href="#user-content-__input_moli_api_key"><code>moli*api_key</code></a>: *(Optional)\_ The API key for the Moli API.
 
-- <a name="__input_qwen_cli_version"></a><a href="#user-content-__input_qwen_cli_version"><code>qwen*cli_version</code></a>: *(Optional, default: `latest`)\_ The version of the Moli Code CLI to install. Can be "latest", "preview", "nightly", a specific version number, or a git branch, tag, or commit. For more information, see [Moli Code CLI releases](https://github.com/QwenLM/moli-code-action/blob/main/docs/releases.md).
+- <a name="__input_moli_cli_version"></a><a href="#user-content-__input_moli_cli_version"><code>moli*cli_version</code></a>: *(Optional, default: `latest`)\_ The version of the Moli Code CLI to install. Can be "latest", "preview", "nightly", a specific version number, or a git branch, tag, or commit. For more information, see [Moli Code CLI releases](https://github.com/MoliLM/moli-code-action/blob/main/docs/releases.md).
 
-- <a name="__input_qwen_debug"></a><a href="#user-content-__input_qwen_debug"><code>qwen*debug</code></a>: *(Optional)\_ Enable debug logging and output streaming.
+- <a name="__input_moli_debug"></a><a href="#user-content-__input_moli_debug"><code>moli*debug</code></a>: *(Optional)\_ Enable debug logging and output streaming.
 
-- <a name="__input_qwen_model"></a><a href="#user-content-__input_qwen_model"><code>qwen*model</code></a>: *(Optional)\_ The model to use with Moli Code.
+- <a name="__input_moli_model"></a><a href="#user-content-__input_moli_model"><code>moli*model</code></a>: *(Optional)\_ The model to use with Moli Code.
 
-- <a name="__input_prompt"></a><a href="#user-content-__input_prompt"><code>prompt</code></a>: _(Optional, default: `You are a helpful assistant.`)_ A string passed to the Moli Code CLI's [`--prompt` argument](https://github.com/QwenLM/moli-code-action/blob/main/docs/cli/configuration.md#command-line-arguments).
+- <a name="__input_prompt"></a><a href="#user-content-__input_prompt"><code>prompt</code></a>: _(Optional, default: `You are a helpful assistant.`)_ A string passed to the Moli Code CLI's [`--prompt` argument](https://github.com/MoliLM/moli-code-action/blob/main/docs/cli/configuration.md#command-line-arguments).
 
 - <a name="__input_settings"></a><a href="#user-content-__input_settings"><code>settings</code></a>: _(Optional)_ A JSON string written to `.moli/settings.json` to configure the CLI's _project_ settings.
-  For more details, see the documentation on [settings files](https://github.com/QwenLM/moli-code-action/blob/main/docs/cli/configuration.md#settings-files).
+  For more details, see the documentation on [settings files](https://github.com/MoliLM/moli-code-action/blob/main/docs/cli/configuration.md#settings-files).
 
 - <a name="__input_use_moli_code_assist"></a><a href="#user-content-__input_use_moli_code_assist"><code>use*moli_code_assist</code></a>: *(Optional, default: `false`)\_ Whether to use Code Assist for Moli Code model access instead of the default Moli Code API key.
-  For more information, see the [Moli Code CLI documentation](https://github.com/QwenLM/moli-code-action/blob/main/docs/cli/authentication.md).
+  For more information, see the [Moli Code CLI documentation](https://github.com/MoliLM/moli-code-action/blob/main/docs/cli/authentication.md).
 
 - <a name="__input_use_vertex_ai"></a><a href="#user-content-__input_use_vertex_ai"><code>use*vertex_ai</code></a>: *(Optional, default: `false`)\_ Whether to use Vertex AI for Moli Code model access instead of the default Moli Code API key.
-  For more information, see the [Moli Code CLI documentation](https://github.com/QwenLM/moli-code-action/blob/main/docs/cli/authentication.md).
+  For more information, see the [Moli Code CLI documentation](https://github.com/MoliLM/moli-code-action/blob/main/docs/cli/authentication.md).
 
 - <a name="__input_extensions"></a><a href="#user-content-__input_extensions"><code>extensions</code></a>: _(Optional)_ A list of Moli Code CLI extensions to install.
 
@@ -158,7 +158,7 @@ We recommend setting the following values as repository variables so they can be
 | Name               | Description                                               | Type     | Required | When Required             |
 | ------------------ | --------------------------------------------------------- | -------- | -------- | ------------------------- |
 | `DEBUG`            | Enables debug logging for the Moli Code CLI.              | Variable | No       | Never                     |
-| `QWEN_CLI_VERSION` | Controls which version of the Moli Code CLI is installed. | Variable | No       | Pinning the CLI version   |
+| `MOLI_CLI_VERSION` | Controls which version of the Moli Code CLI is installed. | Variable | No       | Pinning the CLI version   |
 | `APP_ID`           | GitHub App ID for custom authentication.                  | Variable | No       | Using a custom GitHub App |
 
 To add a repository variable:
@@ -175,7 +175,7 @@ You can set the following secrets in your repository:
 
 | Name              | Description                                   | Required | When Required                              |
 | ----------------- | --------------------------------------------- | -------- | ------------------------------------------ |
-| `QWEN_API_KEY`    | Your Qwen API key from DashScope.             | Yes      | Required for all workflows that call Qwen. |
+| `MOLI_API_KEY`    | Your Moli API key from DashScope.             | Yes      | Required for all workflows that call Moli. |
 | `APP_PRIVATE_KEY` | Private key for your GitHub App (PEM format). | No       | Using a custom GitHub App.                 |
 
 To add a secret:
@@ -199,7 +199,7 @@ You can authenticate with GitHub in two ways:
 2. **Custom GitHub App (Recommended):** For the most secure and flexible
    authentication, we recommend creating a custom GitHub App.
 
-For detailed setup instructions for both Qwen and GitHub authentication, go to the
+For detailed setup instructions for both Moli and GitHub authentication, go to the
 [**Authentication documentation**](./configuration/auth).
 
 ## Extensions
@@ -233,9 +233,9 @@ follow for a given repository.
 Contributions are welcome! Check out the Moli Code CLI **Contributing Guide** for more details on how to get started.
 
 [secrets]: https://docs.github.com/en/actions/security-guides/using-secrets-in-github-actions
-[Moli Code]: https://github.com/QwenLM/moli-code
+[Moli Code]: https://github.com/MoliLM/moli-code
 [DashScope]: https://dashscope.console.aliyun.com/apiKey
-[Moli Code CLI]: https://github.com/QwenLM/moli-code-action/
+[Moli Code CLI]: https://github.com/MoliLM/moli-code-action/
 [variables]: https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-variables#creating-configuration-variables-for-a-repository
 [GitHub CLI]: https://docs.github.com/en/github-cli/github-cli
-[MOLI.md]: https://github.com/QwenLM/moli-code-action/blob/main/docs/cli/configuration.md#context-files-hierarchical-instructional-context
+[MOLI.md]: https://github.com/MoliLM/moli-code-action/blob/main/docs/cli/configuration.md#context-files-hierarchical-instructional-context

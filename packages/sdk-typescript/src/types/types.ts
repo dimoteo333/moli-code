@@ -193,7 +193,7 @@ export interface QueryOptions {
   /**
    * The AI model to use for the query session.
    * This takes precedence over the environment variables `OPENAI_MODEL` and `MOLI_MODEL`
-   * @example 'moli-max', 'qwen-plus', 'moli-turbo'
+   * @example 'moli-max', 'moli-plus', 'moli-turbo'
    */
   model?: string;
 

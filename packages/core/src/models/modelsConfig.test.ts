@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -444,7 +444,7 @@ describe('ModelsConfig', () => {
     // it should be re-resolved by other layers in refreshAuth
   });
 
-  it('should always force Qwen OAuth apiKey placeholder when applying model defaults', async () => {
+  it('should always force Moli OAuth apiKey placeholder when applying model defaults', async () => {
     // Simulate a stale/explicit apiKey existing before switching models.
     const modelsConfig = new ModelsConfig({
       initialAuthType: AuthType.MOLI_OAUTH,
@@ -453,7 +453,7 @@ describe('ModelsConfig', () => {
       },
     });
 
-    // Switching within qwen-oauth triggers applyResolvedModelDefaults().
+    // Switching within moli-oauth triggers applyResolvedModelDefaults().
     await modelsConfig.switchModel(AuthType.MOLI_OAUTH, 'coder-model');
 
     const gc = currentGenerationConfig(modelsConfig);
@@ -496,7 +496,7 @@ describe('ModelsConfig', () => {
     expect(sources['customHeaders']?.kind).toBe('modelProviders');
   });
 
-  it('should apply Qwen OAuth apiKey placeholder during syncAfterAuthRefresh for fresh users', () => {
+  it('should apply Moli OAuth apiKey placeholder during syncAfterAuthRefresh for fresh users', () => {
     // Fresh user: authType not selected yet (currentAuthType undefined).
     const modelsConfig = new ModelsConfig();
 
@@ -522,13 +522,13 @@ describe('ModelsConfig', () => {
       },
     });
 
-    // User switches to qwen-oauth via AuthDialog
+    // User switches to moli-oauth via AuthDialog
     // refreshAuth calls syncAfterAuthRefresh with the current model (gpt-4o)
-    // which doesn't exist in qwen-oauth registry, so it should use default
+    // which doesn't exist in moli-oauth registry, so it should use default
     modelsConfig.syncAfterAuthRefresh(AuthType.MOLI_OAUTH, 'gpt-4o');
 
     const gc = currentGenerationConfig(modelsConfig);
-    // Should use default qwen-oauth model (coder-model), not the OPENAI model
+    // Should use default moli-oauth model (coder-model), not the OPENAI model
     expect(gc.model).toBe('coder-model');
     expect(gc.apiKey).toBe('MOLI_OAUTH_DYNAMIC_TOKEN');
     expect(gc.apiKeyEnvKey).toBeUndefined();
@@ -552,16 +552,16 @@ describe('ModelsConfig', () => {
       model: 'gpt-4o',
     });
 
-    // User switches to qwen-oauth
+    // User switches to moli-oauth
     // Since authType is not USE_OPENAI, manual credentials should be cleared
-    // and default qwen-oauth model should be applied
+    // and default moli-oauth model should be applied
     modelsConfig.syncAfterAuthRefresh(AuthType.MOLI_OAUTH, 'gpt-4o');
 
     const gc = currentGenerationConfig(modelsConfig);
-    // Should use default qwen-oauth model, not preserve manual OpenAI credentials
+    // Should use default moli-oauth model, not preserve manual OpenAI credentials
     expect(gc.model).toBe('coder-model');
     expect(gc.apiKey).toBe('MOLI_OAUTH_DYNAMIC_TOKEN');
-    // baseUrl should be set to qwen-oauth default, not preserved from manual OpenAI config
+    // baseUrl should be set to moli-oauth default, not preserved from manual OpenAI config
     expect(gc.baseUrl).toBe('DYNAMIC_MOLI_OAUTH_BASE_URL');
     expect(gc.apiKeyEnvKey).toBeUndefined();
   });
@@ -715,7 +715,7 @@ describe('ModelsConfig', () => {
   });
 
   describe('getAllConfiguredModels', () => {
-    it('should return all models across all authTypes and put qwen-oauth first', () => {
+    it('should return all models across all authTypes and put moli-oauth first', () => {
       const modelProvidersConfig: ModelProvidersConfig = {
         openai: [
           {
@@ -755,27 +755,27 @@ describe('ModelsConfig', () => {
 
       const allModels = modelsConfig.getAllConfiguredModels();
 
-      // qwen-oauth models should be ordered first
-      const firstNonQwenIndex = allModels.findIndex(
+      // moli-oauth models should be ordered first
+      const firstNonMoliIndex = allModels.findIndex(
         (m) => m.authType !== AuthType.MOLI_OAUTH,
       );
-      expect(firstNonQwenIndex).toBeGreaterThan(0);
+      expect(firstNonMoliIndex).toBeGreaterThan(0);
       expect(
         allModels
-          .slice(0, firstNonQwenIndex)
+          .slice(0, firstNonMoliIndex)
           .every((m) => m.authType === AuthType.MOLI_OAUTH),
       ).toBe(true);
       expect(
         allModels
-          .slice(firstNonQwenIndex)
+          .slice(firstNonMoliIndex)
           .every((m) => m.authType !== AuthType.MOLI_OAUTH),
       ).toBe(true);
 
-      // Should include qwen-oauth models (hard-coded)
-      const qwenModels = allModels.filter(
+      // Should include moli-oauth models (hard-coded)
+      const moliModels = allModels.filter(
         (m) => m.authType === AuthType.MOLI_OAUTH,
       );
-      expect(qwenModels.length).toBeGreaterThan(0);
+      expect(moliModels.length).toBeGreaterThan(0);
 
       // Should include openai models
       const openaiModels = allModels.filter(
@@ -805,12 +805,12 @@ describe('ModelsConfig', () => {
 
       const allModels = modelsConfig.getAllConfiguredModels();
 
-      // Should still include qwen-oauth models (hard-coded)
+      // Should still include moli-oauth models (hard-coded)
       expect(allModels.length).toBeGreaterThan(0);
-      const qwenModels = allModels.filter(
+      const moliModels = allModels.filter(
         (m) => m.authType === AuthType.MOLI_OAUTH,
       );
-      expect(qwenModels.length).toBeGreaterThan(0);
+      expect(moliModels.length).toBeGreaterThan(0);
     });
 
     it('should return models with correct structure', () => {
@@ -845,7 +845,7 @@ describe('ModelsConfig', () => {
       expect(testModel?.capabilities?.vision).toBe(true);
     });
 
-    it('should support filtering by authTypes and still put qwen-oauth first when included', () => {
+    it('should support filtering by authTypes and still put moli-oauth first when included', () => {
       const modelProvidersConfig: ModelProvidersConfig = {
         openai: [
           {
@@ -869,7 +869,7 @@ describe('ModelsConfig', () => {
         modelProvidersConfig,
       });
 
-      // Filter: OpenAI only (should not include qwen-oauth)
+      // Filter: OpenAI only (should not include moli-oauth)
       const openaiOnly = modelsConfig.getAllConfiguredModels([
         AuthType.USE_OPENAI,
       ]);
@@ -878,20 +878,20 @@ describe('ModelsConfig', () => {
       );
       expect(openaiOnly.map((m) => m.id)).toContain('openai-model-1');
 
-      // Filter: include qwen-oauth but request it later -> still ordered first
-      const withQwen = modelsConfig.getAllConfiguredModels([
+      // Filter: include moli-oauth but request it later -> still ordered first
+      const withMoli = modelsConfig.getAllConfiguredModels([
         AuthType.USE_OPENAI,
         AuthType.MOLI_OAUTH,
         AuthType.USE_ANTHROPIC,
       ]);
-      expect(withQwen.length).toBeGreaterThan(0);
-      const firstNonQwenIndex = withQwen.findIndex(
+      expect(withMoli.length).toBeGreaterThan(0);
+      const firstNonMoliIndex = withMoli.findIndex(
         (m) => m.authType !== AuthType.MOLI_OAUTH,
       );
-      expect(firstNonQwenIndex).toBeGreaterThan(0);
+      expect(firstNonMoliIndex).toBeGreaterThan(0);
       expect(
-        withQwen
-          .slice(0, firstNonQwenIndex)
+        withMoli
+          .slice(0, firstNonMoliIndex)
           .every((m) => m.authType === AuthType.MOLI_OAUTH),
       ).toBe(true);
     });
@@ -1395,19 +1395,19 @@ describe('ModelsConfig', () => {
       // Reload with empty config
       modelsConfig.reloadModelProvidersConfig({});
 
-      // Only qwen-oauth models should remain
+      // Only moli-oauth models should remain
       const models = modelsConfig.getAllConfiguredModels();
       expect(models.every((m) => m.authType === 'moli-oauth')).toBe(true);
     });
 
-    it('should preserve qwen-oauth models after reload', () => {
+    it('should preserve moli-oauth models after reload', () => {
       const modelsConfig = new ModelsConfig({
         modelProvidersConfig: {
           openai: [{ id: 'gpt-4', name: 'GPT-4' }],
         },
       });
 
-      const initialQwenModels = modelsConfig
+      const initialMoliModels = modelsConfig
         .getAllConfiguredModels()
         .filter((m) => m.authType === 'moli-oauth');
 
@@ -1415,11 +1415,11 @@ describe('ModelsConfig', () => {
         gemini: [{ id: 'gemini-pro', name: 'Gemini Pro' }],
       });
 
-      // qwen-oauth models should still exist
-      const qwenModelsAfterReload = modelsConfig
+      // moli-oauth models should still exist
+      const moliModelsAfterReload = modelsConfig
         .getAllConfiguredModels()
         .filter((m) => m.authType === 'moli-oauth');
-      expect(qwenModelsAfterReload.length).toBe(initialQwenModels.length);
+      expect(moliModelsAfterReload.length).toBe(initialMoliModels.length);
     });
 
     it('should handle reload with undefined config', () => {

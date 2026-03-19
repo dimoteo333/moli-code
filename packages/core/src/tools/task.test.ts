@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -51,14 +51,14 @@ describe('TaskTool', () => {
       description: 'Specialized agent for searching and analyzing files',
       systemPrompt: 'You are a file search specialist.',
       level: 'project',
-      filePath: '/project/.qwen/agents/file-search.md',
+      filePath: '/project/.moli/agents/file-search.md',
     },
     {
       name: 'code-review',
       description: 'Agent for reviewing code quality and best practices',
       systemPrompt: 'You are a code review specialist.',
       level: 'user',
-      filePath: '/home/user/.qwen/agents/code-review.md',
+      filePath: '/home/user/.moli/agents/code-review.md',
     },
   ];
 
@@ -252,7 +252,7 @@ describe('TaskTool', () => {
           description: 'A brand new agent',
           systemPrompt: 'Do new things.',
           level: 'project',
-          filePath: '/project/.qwen/agents/new-agent.md',
+          filePath: '/project/.moli/agents/new-agent.md',
         },
       ];
 
@@ -277,7 +277,7 @@ describe('TaskTool', () => {
           description: 'A test agent',
           systemPrompt: 'Test prompt',
           level: 'project',
-          filePath: '/project/.qwen/agents/test-agent.md',
+          filePath: '/project/.moli/agents/test-agent.md',
         },
       ];
 

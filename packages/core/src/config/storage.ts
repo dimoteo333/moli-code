@@ -78,7 +78,7 @@ export class Storage {
   }
 
   getMoliDir(): string {
-    // MOLI: renamed from getQwenDir
+    // MOLI: renamed from getMoliDir
     return path.join(this.targetDir, MOLI_DIR);
   }
 

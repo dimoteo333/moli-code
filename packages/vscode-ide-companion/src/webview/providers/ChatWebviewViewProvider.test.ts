@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen Team
+ * Copyright 2025 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,7 +20,7 @@ describe('ChatWebviewViewProvider', () => {
 
     const mockWebviewView = {
       webview: {},
-      viewType: 'qwen-code.chatView.sidebar',
+      viewType: 'moli-code.chatView.sidebar',
     };
 
     await viewProvider.resolveWebviewView(mockWebviewView as never);
@@ -28,7 +28,7 @@ describe('ChatWebviewViewProvider', () => {
     expect(factory).toHaveBeenCalledTimes(1);
     expect(mockProvider.attachToView).toHaveBeenCalledWith(
       mockWebviewView,
-      'qwen-code.chatView.sidebar',
+      'moli-code.chatView.sidebar',
     );
   });
 

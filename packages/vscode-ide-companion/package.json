@@ -1,13 +1,13 @@
 {
   "name": "moli-code-vscode-ide-companion",
-  "displayName": "Qwen Code Companion",
-  "description": "Enable Qwen Code with direct access to your VS Code workspace.",
+  "displayName": "Moli Code Companion",
+  "description": "Enable Moli Code with direct access to your VS Code workspace.",
   "version": "0.12.5",
-  "publisher": "qwenlm",
+  "publisher": "dobby",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/QwenLM/qwen-code.git",
+    "url": "https://github.com/MoliLM/moli-code.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -19,159 +19,159 @@
     "AI"
   ],
   "keywords": [
-    "qwen-code",
-    "qwen code",
-    "qwen",
-    "qwen code",
+    "moli-code",
+    "moli code",
+    "moli",
+    "moli code",
     "cli",
     "ide integration",
     "ide companion"
   ],
   "activationEvents": [
     "onStartupFinished",
-    "onView:qwen-code.chatView.sidebar",
-    "onView:qwen-code.chatView.secondary",
-    "onCommand:qwen-code.openChat",
-    "onCommand:qwen-code.focusChat",
-    "onCommand:qwen-code.newConversation",
-    "onCommand:qwen-code.showLogs"
+    "onView:moli-code.chatView.sidebar",
+    "onView:moli-code.chatView.secondary",
+    "onCommand:moli-code.openChat",
+    "onCommand:moli-code.focusChat",
+    "onCommand:moli-code.newConversation",
+    "onCommand:moli-code.showLogs"
   ],
   "contributes": {
     "jsonValidation": [
       {
-        "fileMatch": "**/.qwen/settings.json",
+        "fileMatch": "**/.moli/settings.json",
         "url": "./schemas/settings.schema.json"
       }
     ],
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "qwen-code-sidebar",
-          "title": "Qwen Code",
+          "id": "moli-code-sidebar",
+          "title": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "qwen-code:doesNotSupportSecondarySidebar"
+          "when": "moli-code:doesNotSupportSecondarySidebar"
         }
       ],
       "secondarySidebar": [
         {
-          "id": "qwen-code-secondary",
-          "title": "Qwen Code",
+          "id": "moli-code-secondary",
+          "title": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "!qwen-code:doesNotSupportSecondarySidebar"
+          "when": "!moli-code:doesNotSupportSecondarySidebar"
         }
       ]
     },
     "views": {
-      "qwen-code-sidebar": [
+      "moli-code-sidebar": [
         {
           "type": "webview",
-          "id": "qwen-code.chatView.sidebar",
-          "name": "Qwen Code",
+          "id": "moli-code.chatView.sidebar",
+          "name": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "qwen-code:doesNotSupportSecondarySidebar"
+          "when": "moli-code:doesNotSupportSecondarySidebar"
         }
       ],
-      "qwen-code-secondary": [
+      "moli-code-secondary": [
         {
           "type": "webview",
-          "id": "qwen-code.chatView.secondary",
-          "name": "Qwen Code",
+          "id": "moli-code.chatView.secondary",
+          "name": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "!qwen-code:doesNotSupportSecondarySidebar"
+          "when": "!moli-code:doesNotSupportSecondarySidebar"
         }
       ]
     },
     "languages": [
       {
-        "id": "qwen-diff-editable"
+        "id": "moli-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "qwen.diff.accept",
-        "title": "Qwen Code: Accept Current Diff",
+        "command": "moli.diff.accept",
+        "title": "Moli Code: Accept Current Diff",
         "icon": "$(check)"
       },
       {
-        "command": "qwen.diff.cancel",
-        "title": "Qwen Code: Close Diff Editor",
+        "command": "moli.diff.cancel",
+        "title": "Moli Code: Close Diff Editor",
         "icon": "$(close)"
       },
       {
-        "command": "qwen-code.runQwenCode",
-        "title": "Qwen Code: Run"
+        "command": "moli-code.runMoliCode",
+        "title": "Moli Code: Run"
       },
       {
-        "command": "qwen-code.showNotices",
-        "title": "Qwen Code: View Third-Party Notices"
+        "command": "moli-code.showNotices",
+        "title": "Moli Code: View Third-Party Notices"
       },
       {
-        "command": "qwen-code.openChat",
-        "title": "Qwen Code: Open",
+        "command": "moli-code.openChat",
+        "title": "Moli Code: Open",
         "icon": "./assets/icon.png"
       },
       {
-        "command": "qwen-code.login",
-        "title": "Qwen Code: Login"
+        "command": "moli-code.login",
+        "title": "Moli Code: Login"
       },
       {
-        "command": "qwen-code.focusChat",
-        "title": "Qwen Code: Focus Chat View"
+        "command": "moli-code.focusChat",
+        "title": "Moli Code: Focus Chat View"
       },
       {
-        "command": "qwen-code.newConversation",
-        "title": "Qwen Code: New Conversation"
+        "command": "moli-code.newConversation",
+        "title": "Moli Code: New Conversation"
       },
       {
-        "command": "qwen-code.showLogs",
-        "title": "Qwen Code: Show Logs"
+        "command": "moli-code.showLogs",
+        "title": "Moli Code: Show Logs"
       }
     ],
     "menus": {
       "commandPalette": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible"
+          "command": "moli.diff.accept",
+          "when": "moli.diff.isVisible"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible"
+          "command": "moli.diff.cancel",
+          "when": "moli.diff.isVisible"
         },
         {
-          "command": "qwen-code.login",
+          "command": "moli-code.login",
           "when": "false"
         }
       ],
       "editor/title": [
         {
-          "command": "qwen.diff.accept",
-          "when": "qwen.diff.isVisible",
+          "command": "moli.diff.accept",
+          "when": "moli.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "qwen.diff.cancel",
-          "when": "qwen.diff.isVisible",
+          "command": "moli.diff.cancel",
+          "when": "moli.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "qwen-code.openChat",
+          "command": "moli-code.openChat",
           "group": "navigation"
         }
       ]
     },
     "keybindings": [
       {
-        "command": "qwen.diff.accept",
+        "command": "moli.diff.accept",
         "key": "ctrl+s",
-        "when": "qwen.diff.isVisible"
+        "when": "moli.diff.isVisible"
       },
       {
-        "command": "qwen.diff.accept",
+        "command": "moli.diff.accept",
         "key": "cmd+s",
-        "when": "qwen.diff.isVisible"
+        "when": "moli.diff.isVisible"
       },
       {
-        "command": "qwen-code.focusChat",
+        "command": "moli-code.focusChat",
         "key": "ctrl+shift+l",
         "mac": "cmd+shift+l"
       }

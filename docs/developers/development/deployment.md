@@ -21,7 +21,7 @@ This is the recommended way for end-users to install Moli Code. It involves down
   Then, run the CLI from anywhere:
 
   ```bash
-  qwen
+  moli
   ```
 
 - **NPX execution:**
@@ -41,12 +41,12 @@ For security and isolation, Moli Code can be run inside a container. This is the
   You can run the published sandbox image directly. This is useful for environments where you only have Docker and want to run the CLI.
   ```bash
   # Run the published sandbox image
-  docker run --rm -it ghcr.io/qwenlm/moli-code:0.0.11
+  docker run --rm -it ghcr.io/molilm/moli-code:0.0.11
   ```
 - **Using the `--sandbox` flag:**
   If you have Moli Code installed locally (using the standard installation described above), you can instruct it to run inside the sandbox container.
   ```bash
-  qwen --sandbox -y -p "your prompt here"
+  moli --sandbox -y -p "your prompt here"
   ```
 
 ---
@@ -68,8 +68,8 @@ Contributors to the project will want to run the CLI directly from the source co
   # Link the local cli package to your global node_modules
   npm link packages/cli
 
-  # Now you can run your local version using the `qwen` command
-  qwen
+  # Now you can run your local version using the `moli` command
+  moli
   ```
 
 ---
@@ -80,7 +80,7 @@ You can run the most recently committed version of Moli Code directly from the G
 
 ```bash
 # Execute the CLI directly from the main branch on GitHub
-npx https://github.com/QwenLM/moli-code
+npx https://github.com/MoliLM/moli-code
 ```
 
 ## Deployment architecture

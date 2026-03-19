@@ -37,7 +37,7 @@ jobs:
   prepare:
     runs-on: 'ubuntu-latest'
     if: |-
-      ${{ github.repository == 'QwenLM/qwen-code' }}
+      ${{ github.repository == 'MoliLM/moli-code' }}
     permissions:
       contents: 'read'
     outputs:
@@ -137,7 +137,7 @@ jobs:
         if: |-
           ${{ github.event.inputs.force_skip_tests != 'true' }}
         run: |
-          npm run build --workspace=@qwen-code/webui
+          npm run build --workspace=@moli-code/webui
 
       - name: 'Run Tests'
         if: |-
@@ -220,7 +220,7 @@ jobs:
           VSCODE_TARGET: '${{ matrix.target }}'
         run: |
           # Build and stage the extension + bundled CLI
-          npm --workspace=qwen-code-vscode-ide-companion run prepackage
+          npm --workspace=moli-code-vscode-ide-companion run prepackage
 
       - name: 'Package VSIX (platform-specific)'
         if: "${{ matrix.target != '' }}"
@@ -228,10 +228,10 @@ jobs:
         run: |-
           if [[ "${{ needs.prepare.outputs.is_preview }}" == "true" ]]; then
             vsce package --no-dependencies --pre-release --target ${{ matrix.target }} \
-              --out ../../qwen-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-${{ matrix.target }}.vsix
+              --out ../../moli-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-${{ matrix.target }}.vsix
           else
             vsce package --no-dependencies --target ${{ matrix.target }} \
-              --out ../../qwen-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-${{ matrix.target }}.vsix
+              --out ../../moli-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-${{ matrix.target }}.vsix
           fi
         shell: 'bash'
 
@@ -241,10 +241,10 @@ jobs:
         run: |-
           if [[ "${{ needs.prepare.outputs.is_preview }}" == "true" ]]; then
             vsce package --no-dependencies --pre-release \
-              --out ../../qwen-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-universal.vsix
+              --out ../../moli-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-universal.vsix
           else
             vsce package --no-dependencies \
-              --out ../../qwen-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-universal.vsix
+              --out ../../moli-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-universal.vsix
           fi
         shell: 'bash'
 
@@ -252,7 +252,7 @@ jobs:
         uses: 'actions/upload-artifact@v4'
         with:
           name: "vsix-${{ matrix.target || 'universal' }}"
-          path: 'qwen-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-*.vsix'
+          path: 'moli-code-vscode-companion-${{ needs.prepare.outputs.release_version }}-*.vsix'
           if-no-files-found: 'error'
 
   # Third job: Publish all VSIXes to marketplaces

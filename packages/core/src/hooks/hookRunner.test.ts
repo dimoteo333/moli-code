@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 Qwen Team
+ * Copyright 2026 Moli Team
  * SPDX-License-Identifier: Apache-2.0
  */
 

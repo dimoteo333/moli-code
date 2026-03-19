@@ -31,7 +31,7 @@ vi.mock(import('node:fs/promises'), async (importOriginal) => {
 
 vi.mock('os');
 
-const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+const MEMORY_SECTION_HEADER = '## Moli Added Memories';
 
 // Define a type for our fsAdapter to ensure consistency
 interface FsAdapter {
@@ -99,7 +99,7 @@ describe('MemoryTool', () => {
     let testFilePath: string;
 
     beforeEach(() => {
-      testFilePath = path.join(os.homedir(), '.qwen', DEFAULT_CONTEXT_FILENAME);
+      testFilePath = path.join(os.homedir(), '.moli', DEFAULT_CONTEXT_FILENAME);
     });
 
     it('should create section and save a fact if file does not exist', async () => {
@@ -220,7 +220,7 @@ describe('MemoryTool', () => {
       // Use getCurrentGeminiMdFilename for the default expectation before any setGeminiMdFilename calls in a test
       const expectedFilePath = path.join(
         os.homedir(),
-        '.qwen',
+        '.moli',
         getCurrentGeminiMdFilename(), // This will be DEFAULT_CONTEXT_FILENAME unless changed by a test
       );
 
@@ -338,17 +338,17 @@ describe('MemoryTool', () => {
       expect(result).not.toBe(false);
 
       if (result && result.type === 'edit') {
-        const expectedPath = path.join('~', '.qwen', 'QWEN.md');
+        const expectedPath = path.join('~', '.moli', 'MOLI.md');
         expect(result.title).toBe(
           `Confirm Memory Save: ${expectedPath} (global)`,
         );
-        expect(result.fileName).toContain(path.join('mock', 'home', '.qwen'));
-        expect(result.fileName).toContain('QWEN.md');
-        expect(result.fileDiff).toContain('Index: QWEN.md');
-        expect(result.fileDiff).toContain('+## Qwen Added Memories');
+        expect(result.fileName).toContain(path.join('mock', 'home', '.moli'));
+        expect(result.fileName).toContain('MOLI.md');
+        expect(result.fileDiff).toContain('Index: MOLI.md');
+        expect(result.fileDiff).toContain('+## Moli Added Memories');
         expect(result.fileDiff).toContain('+- Test fact');
         expect(result.originalContent).toBe('');
-        expect(result.newContent).toContain('## Qwen Added Memories');
+        expect(result.newContent).toContain('## Moli Added Memories');
         expect(result.newContent).toContain('- Test fact');
       }
     });
@@ -362,16 +362,16 @@ describe('MemoryTool', () => {
       expect(result).not.toBe(false);
 
       if (result && result.type === 'edit') {
-        const expectedPath = path.join(process.cwd(), 'QWEN.md');
+        const expectedPath = path.join(process.cwd(), 'MOLI.md');
         expect(result.title).toBe(
           `Confirm Memory Save: ${expectedPath} (project)`,
         );
         expect(result.fileName).toBe(expectedPath);
-        expect(result.fileDiff).toContain('Index: QWEN.md');
-        expect(result.fileDiff).toContain('+## Qwen Added Memories');
+        expect(result.fileDiff).toContain('Index: MOLI.md');
+        expect(result.fileDiff).toContain('+## Moli Added Memories');
         expect(result.fileDiff).toContain('+- Test fact');
         expect(result.originalContent).toBe('');
-        expect(result.newContent).toContain('## Qwen Added Memories');
+        expect(result.newContent).toContain('## Moli Added Memories');
         expect(result.newContent).toContain('- Test fact');
       }
     });
@@ -380,7 +380,7 @@ describe('MemoryTool', () => {
       const params = { fact: 'Test fact', scope: 'global' as const };
       const memoryFilePath = path.join(
         os.homedir(),
-        '.qwen',
+        '.moli',
         getCurrentGeminiMdFilename(),
       );
 
@@ -417,7 +417,7 @@ describe('MemoryTool', () => {
       const params = { fact: 'Test fact', scope: 'global' as const };
       const memoryFilePath = path.join(
         os.homedir(),
-        '.qwen',
+        '.moli',
         getCurrentGeminiMdFilename(),
       );
 
@@ -472,7 +472,7 @@ describe('MemoryTool', () => {
       const params = { fact: 'Test fact', scope: 'global' as const };
       const memoryFilePath = path.join(
         os.homedir(),
-        '.qwen',
+        '.moli',
         getCurrentGeminiMdFilename(),
       );
 
@@ -497,7 +497,7 @@ describe('MemoryTool', () => {
     it('should handle existing memory file with content for global scope', async () => {
       const params = { fact: 'New fact', scope: 'global' as const };
       const existingContent =
-        'Some existing content.\n\n## Qwen Added Memories\n- Old fact\n';
+        'Some existing content.\n\n## Moli Added Memories\n- Old fact\n';
 
       // Mock fs.readFile to return existing content
       vi.mocked(fs.readFile).mockResolvedValue(existingContent);
@@ -509,11 +509,11 @@ describe('MemoryTool', () => {
       expect(result).not.toBe(false);
 
       if (result && result.type === 'edit') {
-        const expectedPath = path.join('~', '.qwen', 'QWEN.md');
+        const expectedPath = path.join('~', '.moli', 'MOLI.md');
         expect(result.title).toBe(
           `Confirm Memory Save: ${expectedPath} (global)`,
         );
-        expect(result.fileDiff).toContain('Index: QWEN.md');
+        expect(result.fileDiff).toContain('Index: MOLI.md');
         expect(result.fileDiff).toContain('+- New fact');
         expect(result.originalContent).toBe(existingContent);
         expect(result.newContent).toContain('- Old fact');
@@ -533,10 +533,10 @@ describe('MemoryTool', () => {
         expect(result.title).toContain('Choose Memory Location');
         expect(result.title).toContain('GLOBAL');
         expect(result.title).toContain('PROJECT');
-        expect(result.fileName).toBe('QWEN.md');
+        expect(result.fileName).toBe('MOLI.md');
         expect(result.fileDiff).toContain('Test fact');
-        expect(result.fileDiff).toContain('--- QWEN.md');
-        expect(result.fileDiff).toContain('+++ QWEN.md');
+        expect(result.fileDiff).toContain('--- MOLI.md');
+        expect(result.fileDiff).toContain('+++ MOLI.md');
         expect(result.fileDiff).toContain('+- Test fact');
         expect(result.originalContent).toContain('scope: global');
         expect(result.originalContent).toContain('INSTRUCTIONS:');
@@ -552,8 +552,8 @@ describe('MemoryTool', () => {
       expect(result).not.toBe(false);
 
       if (result && result.type === 'edit') {
-        const globalPath = path.join('~', '.qwen', 'QWEN.md');
-        const projectPath = path.join(process.cwd(), 'QWEN.md');
+        const globalPath = path.join('~', '.moli', 'MOLI.md');
+        const projectPath = path.join(process.cwd(), 'MOLI.md');
 
         expect(result.fileDiff).toContain(`Global: ${globalPath}`);
         expect(result.fileDiff).toContain(`Project: ${projectPath}`);
@@ -575,7 +575,7 @@ describe('MemoryTool', () => {
       const invocation = memoryTool.build(params);
       const description = invocation.getDescription();
 
-      const expectedPath = path.join('~', '.qwen', 'QWEN.md');
+      const expectedPath = path.join('~', '.moli', 'MOLI.md');
       expect(description).toBe(`${expectedPath} (global)`);
     });
 
@@ -584,7 +584,7 @@ describe('MemoryTool', () => {
       const invocation = memoryTool.build(params);
       const description = invocation.getDescription();
 
-      const expectedPath = path.join(process.cwd(), 'QWEN.md');
+      const expectedPath = path.join(process.cwd(), 'MOLI.md');
       expect(description).toBe(`${expectedPath} (project)`);
     });
 
@@ -593,8 +593,8 @@ describe('MemoryTool', () => {
       const invocation = memoryTool.build(params);
       const description = invocation.getDescription();
 
-      const globalPath = path.join('~', '.qwen', 'QWEN.md');
-      const projectPath = path.join(process.cwd(), 'QWEN.md');
+      const globalPath = path.join('~', '.moli', 'MOLI.md');
+      const projectPath = path.join(process.cwd(), 'MOLI.md');
       expect(description).toBe(
         `CHOOSE: ${globalPath} (global) OR ${projectPath} (project)`,
       );

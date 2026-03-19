@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Qwen
+ * Copyright 2025 Moli
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -980,7 +980,7 @@ export class OpenAIContentConverter {
       let toolCallsTruncated = false;
       if (choice.finish_reason) {
         // Detect truncation the provider may not report correctly.
-        // Some providers (e.g. DashScope/Qwen) send "stop" or "tool_calls"
+        // Some providers (e.g. DashScope/Moli) send "stop" or "tool_calls"
         // even when output was cut off mid-JSON due to max_tokens.
         toolCallsTruncated =
           this.streamingToolCallParser.hasIncompleteToolCalls();
