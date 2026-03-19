@@ -46,14 +46,12 @@ export function MolimateEmployeeIdInput({
         const trimmedId = employeeId.trim();
 
         if (!trimmedId) {
-          setError(t('Employee ID cannot be empty.'));
+          setError(t('행번을 입력해주세요.'));
           return;
         }
 
         if (!validateEmployeeId(trimmedId)) {
-          setError(
-            t('Invalid employee ID. Only alphanumeric characters are allowed.'),
-          );
+          setError(t('행번은 영문과 숫자로만 구성되어야 합니다.'));
           return;
         }
 
@@ -71,7 +69,7 @@ export function MolimateEmployeeIdInput({
     <Box flexDirection="column">
       <Box marginTop={1}>
         <Text color={theme.text.primary}>
-          {t('Enter your employee ID to authenticate with Molimate')}
+          {t('행번을 입력해 몰리메이트를 인증하세요.')}
         </Text>
       </Box>
 
@@ -79,7 +77,7 @@ export function MolimateEmployeeIdInput({
         <TextInput
           value={employeeId}
           onChange={setEmployeeId}
-          placeholder="e.g., ABC123"
+          placeholder="e.g., 23100613"
           isActive={!isValidating}
         />
       </Box>
@@ -92,15 +90,13 @@ export function MolimateEmployeeIdInput({
 
       {isValidating && (
         <Box marginTop={1}>
-          <Text color={Colors.AccentBlue}>
-            {t('Validating employee ID...')}
-          </Text>
+          <Text color={Colors.AccentBlue}>{t('행번을 검증하는 중...')}</Text>
         </Box>
       )}
 
       <Box marginTop={1}>
         <Text color={theme.text.secondary}>
-          {t('Enter to submit, Esc to go back')}
+          {t('Enter를 눌러 제출, Esc를 눌러 뒤로 가기')}
         </Text>
       </Box>
     </Box>

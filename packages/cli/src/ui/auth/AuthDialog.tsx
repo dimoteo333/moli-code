@@ -33,8 +33,8 @@ type ViewLevel =
 export function AuthDialog(): React.JSX.Element {
   const { authError } = useUIState();
   const {
+    validateMolimateEmployee,
     handleMolimateAuthSubmit,
-    handleMolimateModelSelect,
     handleLocalConfigSubmit,
     onAuthError,
   } = useUIActions();
@@ -79,23 +79,32 @@ export function AuthDialog(): React.JSX.Element {
   };
 
   const handleMolimateEmployeeIdSubmit = async (employeeId: string) => {
+    setErrorMessage(null);
+    onAuthError(null);
+
+    // Validate employee ID via Molimate HTTP request before showing model selection
+    const result = await validateMolimateEmployee(employeeId);
+    if (!result.success) {
+      setErrorMessage(result.message || t('Molimate Auth failed'));
+      return;
+    }
+
     setMolimateEmployeeId(employeeId);
     setViewLevel('molimate-model-select');
   };
 
   const handleMolimateModelSelection = async (
-    model: 'moli3-coder' | 'gpt-oss-120b',
+    model: 'qwen3-coder' | 'gpt-oss-120b',
   ) => {
     setViewLevel('molimate-timer');
     setTimerExpired(false);
 
-    await handleMolimateAuthSubmit(molimateEmployeeId);
-    await handleMolimateModelSelect(model);
+    await handleMolimateAuthSubmit(molimateEmployeeId, model);
   };
 
   const handleTimerTimeout = () => {
     setTimerExpired(true);
-    setErrorMessage(t('Time has expired.'));
+    setErrorMessage(t('시간이 초과되었습니다.'));
   };
 
   const handleTimerCancel = () => {
@@ -149,7 +158,7 @@ export function AuthDialog(): React.JSX.Element {
         if (config.getAuthType() === undefined) {
           setErrorMessage(
             t(
-              'You must select an auth method to proceed. Press Ctrl+C again to exit.',
+              '인증 방식을 선택해야 합니다. 계속하려면 Ctrl+C를 다시 누르세요.',
             ),
           );
           return;
@@ -200,7 +209,7 @@ export function AuthDialog(): React.JSX.Element {
         onTimeout={handleTimerTimeout}
         onCancel={handleTimerCancel}
         initialSeconds={120}
-        message={t('Authenticating with Molimate...')}
+        message={t('인증 중...')}
       />
     </Box>
   );
@@ -218,17 +227,17 @@ export function AuthDialog(): React.JSX.Element {
   const getViewTitle = () => {
     switch (viewLevel) {
       case 'main':
-        return t('Select Authentication Method');
+        return t('인증 방식 선택');
       case 'molimate-auth':
-        return t('Molimate Authentication');
+        return t('몰리메이트 인증');
       case 'molimate-model-select':
-        return t('Select Model');
+        return t('모델 선택');
       case 'molimate-timer':
-        return t('Authenticating...');
+        return t('인증 중...');
       case 'local-config':
-        return t('Local Environment Configuration');
+        return t('로컬 환경 설정');
       default:
-        return t('Select Authentication Method');
+        return t('인증 방식 선택');
     }
   };
 
@@ -261,12 +270,12 @@ export function AuthDialog(): React.JSX.Element {
           </Box>
           <Box>
             <Text color={theme.text.primary}>
-              {t('Terms of Services and Privacy Notice')}:
+              {t('이용약관 및 개인정보처리방침')}:
             </Text>
           </Box>
           <Box>
             <Text color={theme.text.secondary} underline>
-              https://molilm.github.io/moli-code-docs/en/users/support/tos-privacy/
+              자세한 내용은 몰리코드 홈페이지에서 확인하세요.
             </Text>
           </Box>
         </>

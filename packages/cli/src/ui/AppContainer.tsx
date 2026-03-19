@@ -409,6 +409,7 @@ export const AppContainer = (props: AppContainerProps) => {
     handleCodingPlanSubmit,
     openAuthDialog,
     cancelAuthentication,
+    validateMolimateEmployee,
     handleMolimateAuthSubmit,
     handleMolimateModelSelect,
     handleLocalConfigSubmit,
@@ -1580,6 +1581,7 @@ export const AppContainer = (props: AppContainerProps) => {
       temporaryCloseFeedbackDialog,
       submitFeedback,
       // Molimate authentication
+      validateMolimateEmployee,
       handleMolimateAuthSubmit,
       handleMolimateModelSelect,
       // Local configuration
@@ -1632,6 +1634,7 @@ export const AppContainer = (props: AppContainerProps) => {
       temporaryCloseFeedbackDialog,
       submitFeedback,
       // Molimate authentication
+      validateMolimateEmployee,
       handleMolimateAuthSubmit,
       handleMolimateModelSelect,
       // Local configuration

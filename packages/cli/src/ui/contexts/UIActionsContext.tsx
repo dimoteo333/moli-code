@@ -84,7 +84,13 @@ export interface UIActions {
   temporaryCloseFeedbackDialog: () => void;
   submitFeedback: (rating: number) => void;
   // Molimate authentication
-  handleMolimateAuthSubmit: (employeeId: string) => Promise<void>;
+  validateMolimateEmployee: (
+    employeeId: string,
+  ) => Promise<{ success: boolean; message?: string }>;
+  handleMolimateAuthSubmit: (
+    employeeId: string,
+    model: MolimateModel,
+  ) => Promise<void>;
   handleMolimateModelSelect: (model: MolimateModel) => Promise<void>;
   // Local configuration
   handleLocalConfigSubmit: (values: LocalConfigValues) => Promise<void>;

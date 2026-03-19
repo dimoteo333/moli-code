@@ -12,7 +12,7 @@ import { useKeypress } from '../hooks/useKeypress.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { t } from '../../i18n/index.js';
 
-export type MolimateModel = 'moli3-coder' | 'gpt-oss-120b';
+export type MolimateModel = 'qwen3-coder' | 'gpt-oss-120b';
 
 interface MolimateModelSelectorProps {
   onSelect: (model: MolimateModel) => void;
@@ -27,11 +27,11 @@ export function MolimateModelSelector({
 
   const modelItems = [
     {
-      key: 'moli3-coder',
-      title: 'Moli3-Coder',
-      label: 'Moli3-Coder',
+      key: 'qwen3-coder',
+      title: 'Qwen3-Coder',
+      label: 'Qwen3-Coder',
       description: t('Code-focused model optimized for programming tasks'),
-      value: 'moli3-coder' as MolimateModel,
+      value: 'qwen3-coder' as MolimateModel,
     },
     {
       key: 'gpt-oss-120b',

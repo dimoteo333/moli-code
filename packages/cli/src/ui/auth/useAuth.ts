@@ -468,35 +468,49 @@ export const useAuthCommand = (
   }, [onAuthError]);
 
   /**
-   * Handle Molimate authentication submit - authenticates with employee ID
-   * and saves hardcoded API keys to settings
+   * Validate employee ID with Molimate HTTP request (POST to molimateUrl).
+   * Called before model selection to verify the employee ID is valid.
+   */
+  const validateMolimateEmployee = useCallback(
+    async (
+      employeeId: string,
+    ): Promise<{ success: boolean; message?: string }> => {
+      // Validate employee ID format
+      if (!validateEmployeeId(employeeId)) {
+        return {
+          success: false,
+          message: t(
+            'Invalid employee ID. Only alphanumeric characters are allowed.',
+          ),
+        };
+      }
+
+      // Call the Molimate auth service
+      const authResponse = await authenticateWithMolimate(employeeId);
+      if (!authResponse.success) {
+        return {
+          success: false,
+          message:
+            authResponse.message ||
+            t('Authentication failed. Please check your employee ID.'),
+        };
+      }
+
+      return { success: true };
+    },
+    [],
+  );
+
+  /**
+   * Handle Molimate authentication submit - saves hardcoded API keys to settings.
+   * Called after employee ID validation and model selection.
    */
   const handleMolimateAuthSubmit = useCallback(
-    async (employeeId: string) => {
+    async (employeeId: string, model: MolimateModel) => {
       setIsAuthenticating(true);
       setAuthError(null);
 
       try {
-        // Validate employee ID
-        if (!validateEmployeeId(employeeId)) {
-          setAuthError(
-            t('Invalid employee ID. Only alphanumeric characters are allowed.'),
-          );
-          handleAuthFailure(new Error('Invalid employee ID'));
-          return;
-        }
-
-        // Call the Molimate auth service
-        const authResponse = await authenticateWithMolimate(employeeId);
-        if (!authResponse.success) {
-          setAuthError(
-            authResponse.message ||
-              t('Authentication failed. Please check your employee ID.'),
-          );
-          handleAuthFailure(new Error(authResponse.message));
-          return;
-        }
-
         // Get persist scope
         const persistScope = getPersistScopeForModelSelection(settings);
 
@@ -507,11 +521,11 @@ export const useAuthCommand = (
         // Build provider model configs with hardcoded API keys
         const providerModels: ProviderModelConfig[] = [
           {
-            id: 'moli3-coder',
-            name: 'moli3-coder',
+            id: 'qwen3-coder',
+            name: 'qwen3-coder',
             baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'Moli3-Coder via moli',
-            envKey: 'MODEL_API_KEY_moli3-coder',
+            description: 'Qwen3-Coder via moli',
+            envKey: 'MODEL_API_KEY_qwen3-coder',
           },
           {
             id: 'gpt-oss-120b',
@@ -544,7 +558,7 @@ export const useAuthCommand = (
         // Persist hardcoded API keys
         settings.setValue(
           persistScope,
-          'env.MODEL_API_KEY_moli3-coder',
+          'env.MODEL_API_KEY_qwen3-coder',
           'sk-cj-12axvbiej12',
         );
         settings.setValue(
@@ -553,13 +567,13 @@ export const useAuthCommand = (
           'sk-ei-bkoiwormc42',
         );
 
-        // Persist auth type and default model
+        // Persist auth type and selected model
         settings.setValue(
           persistScope,
           'security.auth.selectedType',
           AuthType.USE_OPENAI,
         );
-        settings.setValue(persistScope, 'model.name', 'moli3-coder');
+        settings.setValue(persistScope, 'model.name', model);
 
         // Hot-reload model providers configuration before refreshAuth
         const updatedModelProviders: ModelProvidersConfig = {
@@ -587,7 +601,8 @@ export const useAuthCommand = (
           {
             type: MessageType.INFO,
             text: t(
-              'Authenticated successfully with Molimate. Default model: moli3-coder',
+              'Authenticated successfully with Molimate. Default model: {{modelName}}',
+              { modelName: model },
             ),
           },
           Date.now(),
@@ -621,7 +636,7 @@ export const useAuthCommand = (
         // Sync to process.env for immediate use
         const envKey = `MODEL_API_KEY_${model}`;
         const apiKey =
-          model === 'moli3-coder' ? 'sk-cj-12axvbiej12' : 'sk-ei-bkoiwormc42';
+          model === 'qwen3-coder' ? 'sk-cj-12axvbiej12' : 'sk-ei-bkoiwormc42';
         process.env[envKey] = apiKey;
 
         // Refresh auth to apply changes
@@ -671,12 +686,12 @@ export const useAuthCommand = (
 
         if (values.moli3CoderApiKey) {
           providerModels.push({
-            id: 'moli3-coder',
-            name: 'moli3-coder',
+            id: 'qwen3-coder',
+            name: 'qwen3-coder',
             baseUrl:
               values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
             description: 'Moli3-Coder via local config',
-            envKey: 'MODEL_API_KEY_moli3-coder',
+            envKey: 'MODEL_API_KEY_qwen3-coder',
           });
         }
 
@@ -697,7 +712,7 @@ export const useAuthCommand = (
           )?.[AuthType.USE_OPENAI] || [];
         const nonLocalConfigs = existingConfigs.filter(
           (config) =>
-            config.id !== 'moli3-coder' && config.id !== 'gpt-oss-120b',
+            config.id !== 'qwen3-coder' && config.id !== 'gpt-oss-120b',
         );
 
         // Merge with new configs
@@ -714,11 +729,11 @@ export const useAuthCommand = (
         if (values.moli3CoderApiKey) {
           settings.setValue(
             persistScope,
-            'env.MODEL_API_KEY_moli3-coder',
+            'env.MODEL_API_KEY_qwen3-coder',
             values.moli3CoderApiKey,
           );
           // Sync to process.env immediately
-          process.env['MODEL_API_KEY_moli3-coder'] = values.moli3CoderApiKey;
+          process.env['MODEL_API_KEY_qwen3-coder'] = values.moli3CoderApiKey;
         }
 
         if (values.gptOss120bApiKey) {
@@ -740,7 +755,7 @@ export const useAuthCommand = (
 
         // Set default model
         const defaultModel = values.moli3CoderApiKey
-          ? 'moli3-coder'
+          ? 'qwen3-coder'
           : 'gpt-oss-120b';
         settings.setValue(persistScope, 'model.name', defaultModel);
 
@@ -804,6 +819,7 @@ export const useAuthCommand = (
     handleCodingPlanSubmit,
     openAuthDialog,
     cancelAuthentication,
+    validateMolimateEmployee,
     handleMolimateAuthSubmit,
     handleMolimateModelSelect,
     handleLocalConfigSubmit,
