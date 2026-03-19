@@ -57,7 +57,9 @@ describe('CLI Path Utilities', () => {
     it('should throw descriptive error when bundled CLI not found', () => {
       mockFs.existsSync.mockReturnValue(false);
 
-      expect(() => findBundledCliPath()).toThrow('Bundled moli CLI not found');
+      expect(() => findBundledCliPath()).toThrow(
+        'Bundled moli-code CLI not found',
+      );
       expect(() => findBundledCliPath()).toThrow('Searched locations:');
     });
   });
@@ -84,7 +86,9 @@ describe('CLI Path Utilities', () => {
       it('should throw when bundled CLI not found', () => {
         mockFs.existsSync.mockReturnValue(false);
 
-        expect(() => prepareSpawnInfo()).toThrow('Bundled moli CLI not found');
+        expect(() => prepareSpawnInfo()).toThrow(
+          'Bundled moli-code CLI not found',
+        );
       });
     });
 
