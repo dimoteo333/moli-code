@@ -42,12 +42,12 @@ export function MolimateEmployeeIdInput({
         const trimmedId = employeeId.trim();
 
         if (!trimmedId) {
-          setError(t('행번을 입력해주세요.'));
+          setError(t('Please enter your employee ID.'));
           return;
         }
 
         if (!validateEmployeeId(trimmedId)) {
-          setError(t('행번은 영문과 숫자로만 구성되어야 합니다.'));
+          setError(t('Employee ID must contain only alphanumeric characters.'));
           return;
         }
 
@@ -63,7 +63,7 @@ export function MolimateEmployeeIdInput({
     <Box flexDirection="column">
       <Box marginTop={1}>
         <Text color={theme.text.primary}>
-          {t('행번을 입력해 몰리메이트를 인증하세요.')}
+          {t('Enter your employee ID to authenticate with Molimate.')}
         </Text>
       </Box>
 
@@ -83,7 +83,7 @@ export function MolimateEmployeeIdInput({
 
       <Box marginTop={1}>
         <Text color={theme.text.secondary}>
-          {t('Enter를 눌러 제출, Esc를 눌러 뒤로 가기')}
+          {t('Press Enter to submit, Esc to go back')}
         </Text>
       </Box>
     </Box>

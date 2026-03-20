@@ -177,8 +177,6 @@ export default {
     'Enter to select, ↑↓ to navigate, Esc to close',
   'Esc to go back': 'Esc to go back',
   'Enter to confirm, Esc to cancel': 'Enter to confirm, Esc to cancel',
-  'Enter to select, ↑↓ to navigate, Esc to go back':
-    'Enter to select, ↑↓ to navigate, Esc to go back',
   'Enter to submit, Esc to go back': 'Enter to submit, Esc to go back',
   'Invalid step: {{step}}': 'Invalid step: {{step}}',
   'No subagents found.': 'No subagents found.',
@@ -1706,4 +1704,48 @@ export default {
     '↑/↓: Navigate | Space/Enter: Toggle | Esc: Cancel',
   '↑/↓: Navigate | Enter: Select | Esc: Cancel':
     '↑/↓: Navigate | Enter: Select | Esc: Cancel',
+
+  // ============================================================================
+  // Molimate Authentication
+  // ============================================================================
+  'Authenticate with Molimate': 'Authenticate with Molimate',
+  'Molimate authentication': 'Molimate authentication',
+  'Authenticate using employee ID': 'Authenticate using employee ID',
+  'Run in local environment': 'Run in local environment',
+  'Local environment': 'Local environment',
+  'Manual configuration': 'Manual configuration',
+  'Employee ID must contain only alphanumeric characters.':
+    'Employee ID must contain only alphanumeric characters.',
+  'Authentication failed.': 'Authentication failed.',
+  'You must select an authentication method. Press Ctrl+C again to exit.':
+    'You must select an authentication method. Press Ctrl+C again to exit.',
+  'Select authentication method': 'Select authentication method',
+  'Authenticating...': 'Authenticating...',
+  'Local environment setup': 'Local environment setup',
+  'Terms of Service and Privacy Policy': 'Terms of Service and Privacy Policy',
+  'For more details, please visit the MoliCode homepage.':
+    'For more details, please visit the MoliCode homepage.',
+  'Molimate authentication failed:': 'Molimate authentication failed:',
+  'Molimate authentication failed: {{status}} {{statusText}}':
+    'Molimate authentication failed: {{status}} {{statusText}}',
+  'Molimate authentication timed out': 'Molimate authentication timed out',
+  'Authentication request timed out. Please try again.':
+    'Authentication request timed out. Please try again.',
+  'Please enter your employee ID.': 'Please enter your employee ID.',
+  'Enter your employee ID to authenticate with Molimate.':
+    'Enter your employee ID to authenticate with Molimate.',
+  'Press Enter to submit, Esc to go back':
+    'Press Enter to submit, Esc to go back',
+  'Time expired.': 'Time expired.',
+  'Authentication session has expired. Please try again.':
+    'Authentication session has expired. Please try again.',
+  'Press any key to return to authentication method selection.':
+    'Press any key to return to authentication method selection.',
+  '(Press ESC to cancel)': '(Press ESC to cancel)',
+  'Select a model to use': 'Select a model to use',
+  'Code-focused model optimized for programming tasks':
+    'Code-focused model optimized for programming tasks',
+  'Large-scale general purpose model': 'Large-scale general purpose model',
+  'Enter to select, ↑↓ to navigate, Esc to go back':
+    'Enter to select, ↑↓ to navigate, Esc to go back',
 };

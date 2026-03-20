@@ -18,7 +18,10 @@ import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
 import { useConfig } from '../contexts/ConfigContext.js';
 import { t } from '../../i18n/index.js';
-import { validateEmployeeId , authenticateWithMolimate } from '../../services/molimateAuthService.js';
+import {
+  validateEmployeeId,
+  authenticateWithMolimate,
+} from '../../services/molimateAuthService.js';
 
 // Main menu option type
 type MainOption = 'MOLIMATE' | 'LOCAL';
@@ -46,16 +49,16 @@ export function AuthDialog(): React.JSX.Element {
   const mainItems = [
     {
       key: 'MOLIMATE',
-      title: t('몰리메이트로 인증'),
-      label: t('몰리메이트 인증'),
-      description: t('사번을 입력하여 인증'),
+      title: t('Authenticate with Molimate'),
+      label: t('Molimate authentication'),
+      description: t('Authenticate using employee ID'),
       value: 'MOLIMATE' as MainOption,
     },
     {
       key: 'LOCAL',
-      title: t('로컬 환경에서 실행'),
-      label: t('로컬 환경'),
-      description: t('수동 설정'),
+      title: t('Run in local environment'),
+      label: t('Local environment'),
+      description: t('Manual configuration'),
       value: 'LOCAL' as MainOption,
     },
   ];
@@ -81,7 +84,9 @@ export function AuthDialog(): React.JSX.Element {
 
     // Only validate format locally - HTTP validation happens after model selection
     if (!validateEmployeeId(employeeId)) {
-      setErrorMessage(t('행번은 영문과 숫자로만 구성되어야 합니다.'));
+      setErrorMessage(
+        t('Employee ID must contain only alphanumeric characters.'),
+      );
       return;
     }
 
@@ -90,7 +95,7 @@ export function AuthDialog(): React.JSX.Element {
   };
 
   const handleMolimateModelSelection = async (
-    model: 'qwen3-coder' | 'gpt-oss-120b',
+    model: 'share-Qwen3-Coder-30B-A3' | 'gpt-oss-120b',
   ) => {
     setViewLevel('molimate-timer');
     setTimerExpired(false);
@@ -100,7 +105,7 @@ export function AuthDialog(): React.JSX.Element {
     const authResponse = await authenticateWithMolimate(molimateEmployeeId);
     if (!authResponse.success) {
       setTimerExpired(true);
-      setErrorMessage(authResponse.message || t('인증에 실패했습니다.'));
+      setErrorMessage(authResponse.message || t('Authentication failed.'));
       return;
     }
 
@@ -110,7 +115,7 @@ export function AuthDialog(): React.JSX.Element {
 
   const handleTimerTimeout = () => {
     setTimerExpired(true);
-    setErrorMessage(t('시간이 초과되었습니다.'));
+    setErrorMessage(t('Time expired.'));
   };
 
   const handleTimerCancel = () => {
@@ -164,7 +169,7 @@ export function AuthDialog(): React.JSX.Element {
         if (config.getAuthType() === undefined) {
           setErrorMessage(
             t(
-              '인증 방식을 선택해야 합니다. 계속하려면 Ctrl+C를 다시 누르세요.',
+              'You must select an authentication method. Press Ctrl+C again to exit.',
             ),
           );
           return;
@@ -215,7 +220,7 @@ export function AuthDialog(): React.JSX.Element {
         onTimeout={handleTimerTimeout}
         onCancel={handleTimerCancel}
         initialSeconds={120}
-        message={t('인증 중...')}
+        message={t('Authenticating...')}
       />
     </Box>
   );
@@ -233,17 +238,17 @@ export function AuthDialog(): React.JSX.Element {
   const getViewTitle = () => {
     switch (viewLevel) {
       case 'main':
-        return t('인증 방식 선택');
+        return t('Select authentication method');
       case 'molimate-auth':
-        return t('몰리메이트 인증');
+        return t('Molimate authentication');
       case 'molimate-model-select':
-        return t('모델 선택');
+        return t('Select Model');
       case 'molimate-timer':
-        return t('인증 중...');
+        return t('Authenticating...');
       case 'local-config':
-        return t('로컬 환경 설정');
+        return t('Local environment setup');
       default:
-        return t('인증 방식 선택');
+        return t('Select authentication method');
     }
   };
 
@@ -276,12 +281,12 @@ export function AuthDialog(): React.JSX.Element {
           </Box>
           <Box>
             <Text color={theme.text.primary}>
-              {t('이용약관 및 개인정보처리방침')}:
+              {t('Terms of Service and Privacy Policy')}:
             </Text>
           </Box>
           <Box>
             <Text color={theme.text.secondary} underline>
-              자세한 내용은 몰리코드 홈페이지에서 확인하세요.
+              {t('For more details, please visit the MoliCode homepage.')}
             </Text>
           </Box>
         </>

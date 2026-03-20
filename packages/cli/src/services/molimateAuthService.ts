@@ -6,10 +6,11 @@
 
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { formatTLSError } from '../utils/httpsAgent.js';
+import { t } from '../i18n/index.js';
 
 const logger = createDebugLogger('MOLIMATE_AUTH_SERVICE');
 
-const MOLIMATE_URL = 'https://test.api.com/v1';
+const MOLIMATE_URL = 'https://testai.api.com/api/auth/login';
 const DEFAULT_TIMEOUT_MS = 120000; // 120 seconds
 
 export interface MolimateAuthRequest {
@@ -64,10 +65,16 @@ export async function authenticateWithMolimate(
 
     if (!response.ok) {
       const errorText = await response.text();
-      logger.error('몰리메이트 인증 실패:', response.status, errorText);
+      logger.error('Molimate auth failed:', response.status, errorText);
       return {
         success: false,
-        message: `몰리메이트 인증 실패: ${response.status} ${response.statusText}`,
+        message: t(
+          'Molimate authentication failed: {{status}} {{statusText}}',
+          {
+            status: String(response.status),
+            statusText: response.statusText,
+          },
+        ),
       };
     }
 
@@ -80,10 +87,10 @@ export async function authenticateWithMolimate(
 
     // Handle abort error (timeout)
     if (error instanceof Error && error.name === 'AbortError') {
-      logger.error('몰리메이트 인증 시간 초과');
+      logger.error('Molimate auth timed out');
       return {
         success: false,
-        message: 'Authentication request timed out. Please try again.',
+        message: t('Authentication request timed out. Please try again.'),
       };
     }
 

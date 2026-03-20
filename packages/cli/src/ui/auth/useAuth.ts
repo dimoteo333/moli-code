@@ -521,16 +521,16 @@ export const useAuthCommand = (
         // Build provider model configs with hardcoded API keys
         const providerModels: ProviderModelConfig[] = [
           {
-            id: 'qwen3-coder',
-            name: 'qwen3-coder',
+            id: 'share-Qwen3-Coder-30B-A3',
+            name: 'share-Qwen3-Coder-30B-A3',
             baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'Qwen3-Coder via moli',
-            envKey: 'MODEL_API_KEY_qwen3-coder',
+            description: 'share-Qwen3-Coder-30B-A3 via moli',
+            envKey: 'MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
           },
           {
             id: 'gpt-oss-120b',
             name: 'gpt-oss-120b',
-            baseUrl: 'https://testai.apitest.com/oss-mode/v1',
+            baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
             description: 'gpt-oss-120b via moli',
             envKey: 'MODEL_API_KEY_gpt-oss-120b',
           },
@@ -558,14 +558,18 @@ export const useAuthCommand = (
         // Persist hardcoded API keys
         settings.setValue(
           persistScope,
-          'env.MODEL_API_KEY_qwen3-coder',
-          'sk-cj-12axvbiej12',
+          'env.MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
+          'sk-cj1223123',
         );
         settings.setValue(
           persistScope,
           'env.MODEL_API_KEY_gpt-oss-120b',
-          'sk-ei-bkoiwormc42',
+          'sk-cj122312324',
         );
+
+        // Sync to process.env immediately so refreshAuth can read the API keys
+        process.env['MODEL_API_KEY_share-Qwen3-Coder-30B-A3'] = 'sk-cj1223123';
+        process.env['MODEL_API_KEY_gpt-oss-120b'] = 'sk-cj122312324';
 
         // Persist auth type and selected model
         settings.setValue(
@@ -636,7 +640,9 @@ export const useAuthCommand = (
         // Sync to process.env for immediate use
         const envKey = `MODEL_API_KEY_${model}`;
         const apiKey =
-          model === 'qwen3-coder' ? 'sk-cj-12axvbiej12' : 'sk-ei-bkoiwormc42';
+          model === 'share-Qwen3-Coder-30B-A3'
+            ? 'sk-cj1223123'
+            : 'sk-cj122312324';
         process.env[envKey] = apiKey;
 
         // Refresh auth to apply changes
@@ -686,12 +692,12 @@ export const useAuthCommand = (
 
         if (values.moli3CoderApiKey) {
           providerModels.push({
-            id: 'qwen3-coder',
-            name: 'qwen3-coder',
+            id: 'share-Qwen3-Coder-30B-A3',
+            name: 'share-Qwen3-Coder-30B-A3',
             baseUrl:
               values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
             description: 'Moli3-Coder via local config',
-            envKey: 'MODEL_API_KEY_qwen3-coder',
+            envKey: 'MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
           });
         }
 
@@ -699,7 +705,8 @@ export const useAuthCommand = (
           providerModels.push({
             id: 'gpt-oss-120b',
             name: 'gpt-oss-120b',
-            baseUrl: values.baseUrl || 'https://testai.apitest.com/oss-mode/v1',
+            baseUrl:
+              values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
             description: 'gpt-oss-120b via local config',
             envKey: 'MODEL_API_KEY_gpt-oss-120b',
           });
@@ -712,7 +719,8 @@ export const useAuthCommand = (
           )?.[AuthType.USE_OPENAI] || [];
         const nonLocalConfigs = existingConfigs.filter(
           (config) =>
-            config.id !== 'qwen3-coder' && config.id !== 'gpt-oss-120b',
+            config.id !== 'share-Qwen3-Coder-30B-A3' &&
+            config.id !== 'gpt-oss-120b',
         );
 
         // Merge with new configs
@@ -729,11 +737,12 @@ export const useAuthCommand = (
         if (values.moli3CoderApiKey) {
           settings.setValue(
             persistScope,
-            'env.MODEL_API_KEY_qwen3-coder',
+            'env.MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
             values.moli3CoderApiKey,
           );
           // Sync to process.env immediately
-          process.env['MODEL_API_KEY_qwen3-coder'] = values.moli3CoderApiKey;
+          process.env['MODEL_API_KEY_share-Qwen3-Coder-30B-A3'] =
+            values.moli3CoderApiKey;
         }
 
         if (values.gptOss120bApiKey) {
@@ -755,7 +764,7 @@ export const useAuthCommand = (
 
         // Set default model
         const defaultModel = values.moli3CoderApiKey
-          ? 'qwen3-coder'
+          ? 'share-Qwen3-Coder-30B-A3'
           : 'gpt-oss-120b';
         settings.setValue(persistScope, 'model.name', defaultModel);
 

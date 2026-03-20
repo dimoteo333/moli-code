@@ -35,10 +35,13 @@ export async function initializeApp(
   settings: LoadedSettings,
 ): Promise<InitializationResult> {
   // Initialize i18n system
+  // Language priority: env var > user settings > schema default ('ko')
+  // Note: schema default 'ko' is not auto-applied to settings.merged,
+  // so we must explicitly fall back to 'ko' here to match the schema.
   const languageSetting =
     process.env['MOLI_CODE_LANG'] ||
     (settings.merged.general?.language as string) ||
-    'auto';
+    'ko';
   await initializeI18n(languageSetting as SupportedLanguage | 'auto');
 
   // Use authType from modelsConfig which respects CLI --auth-type argument
