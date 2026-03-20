@@ -11,12 +11,10 @@ import { TextInput } from './shared/TextInput.js';
 import { theme } from '../semantic-colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { t } from '../../i18n/index.js';
-import { Colors } from '../colors.js';
 
 interface MolimateEmployeeIdInputProps {
   onSubmit: (employeeId: string) => void;
   onCancel: () => void;
-  onAuthStart?: () => void;
 }
 
 /**
@@ -32,11 +30,9 @@ function validateEmployeeId(employeeId: string): boolean {
 export function MolimateEmployeeIdInput({
   onSubmit,
   onCancel,
-  onAuthStart,
 }: MolimateEmployeeIdInputProps): React.JSX.Element {
   const [employeeId, setEmployeeId] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [isValidating, setIsValidating] = useState(false);
 
   useKeypress(
     (key) => {
@@ -55,14 +51,12 @@ export function MolimateEmployeeIdInput({
           return;
         }
 
-        // Submit the employee ID
-        setIsValidating(true);
+        // Submit the employee ID (format already validated)
         setError(null);
-        onAuthStart?.();
         onSubmit(trimmedId);
       }
     },
-    { isActive: !isValidating },
+    { isActive: true },
   );
 
   return (
@@ -78,19 +72,12 @@ export function MolimateEmployeeIdInput({
           value={employeeId}
           onChange={setEmployeeId}
           placeholder="e.g., 23100613"
-          isActive={!isValidating}
         />
       </Box>
 
       {error && (
         <Box marginTop={1}>
           <Text color={theme.status.error}>{error}</Text>
-        </Box>
-      )}
-
-      {isValidating && (
-        <Box marginTop={1}>
-          <Text color={Colors.AccentBlue}>{t('행번을 검증하는 중...')}</Text>
         </Box>
       )}
 

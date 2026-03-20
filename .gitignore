@@ -84,3 +84,4 @@ integration-tests/terminal-capture/scenarios/screenshots/
 *storybook.log
 storybook-static
 moli-code-offline-dev.tar.gz
+moli-code-*.tgz

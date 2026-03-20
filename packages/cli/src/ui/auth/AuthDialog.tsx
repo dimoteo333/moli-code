@@ -18,6 +18,7 @@ import { useUIState } from '../contexts/UIStateContext.js';
 import { useUIActions } from '../contexts/UIActionsContext.js';
 import { useConfig } from '../contexts/ConfigContext.js';
 import { t } from '../../i18n/index.js';
+import { validateEmployeeId , authenticateWithMolimate } from '../../services/molimateAuthService.js';
 
 // Main menu option type
 type MainOption = 'MOLIMATE' | 'LOCAL';
@@ -32,12 +33,8 @@ type ViewLevel =
 
 export function AuthDialog(): React.JSX.Element {
   const { authError } = useUIState();
-  const {
-    validateMolimateEmployee,
-    handleMolimateAuthSubmit,
-    handleLocalConfigSubmit,
-    onAuthError,
-  } = useUIActions();
+  const { handleMolimateAuthSubmit, handleLocalConfigSubmit, onAuthError } =
+    useUIActions();
   const config = useConfig();
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -82,10 +79,9 @@ export function AuthDialog(): React.JSX.Element {
     setErrorMessage(null);
     onAuthError(null);
 
-    // Validate employee ID via Molimate HTTP request before showing model selection
-    const result = await validateMolimateEmployee(employeeId);
-    if (!result.success) {
-      setErrorMessage(result.message || t('Molimate Auth failed'));
+    // Only validate format locally - HTTP validation happens after model selection
+    if (!validateEmployeeId(employeeId)) {
+      setErrorMessage(t('행번은 영문과 숫자로만 구성되어야 합니다.'));
       return;
     }
 
@@ -98,7 +94,17 @@ export function AuthDialog(): React.JSX.Element {
   ) => {
     setViewLevel('molimate-timer');
     setTimerExpired(false);
+    setErrorMessage(null);
 
+    // Make HTTP call to Molimate API with 120-second timeout
+    const authResponse = await authenticateWithMolimate(molimateEmployeeId);
+    if (!authResponse.success) {
+      setTimerExpired(true);
+      setErrorMessage(authResponse.message || t('인증에 실패했습니다.'));
+      return;
+    }
+
+    // On success, save settings and complete authentication
     await handleMolimateAuthSubmit(molimateEmployeeId, model);
   };
 
