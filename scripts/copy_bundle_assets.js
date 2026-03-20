@@ -91,6 +91,18 @@ if (existsSync(bundledSkillsDir)) {
   );
 }
 
+// Copy molimate.config.json so it's available next to the bundled cli.js
+const molimateConfigSrc = join(root, 'packages', 'cli', 'molimate.config.json');
+if (existsSync(molimateConfigSrc)) {
+  copyFileSync(molimateConfigSrc, join(distDir, 'molimate.config.json'));
+  console.log('Copied molimate.config.json to dist/');
+} else {
+  console.warn(
+    `Warning: molimate.config.json not found at ${molimateConfigSrc}. ` +
+      'Copy molimate.config.example.json to molimate.config.json and fill in your values.',
+  );
+}
+
 console.log('\n✅ All bundle assets copied to dist/');
 
 /**

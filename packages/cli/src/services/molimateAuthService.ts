@@ -7,13 +7,12 @@
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { formatTLSError, initializeCustomCerts } from '../utils/httpsAgent.js';
 import { t } from '../i18n/index.js';
+import { getMolimateConfig } from '../constants/molimateConfig.js';
 
 const logger = createDebugLogger('MOLIMATE_AUTH_SERVICE');
 
 // Inject Windows system certificates into Node.js trust store on startup
 initializeCustomCerts();
-
-const MOLIMATE_URL = 'https://testai.api.com/api/auth/login';
 const DEFAULT_TIMEOUT_MS = 120000; // 120 seconds
 
 export interface MolimateAuthRequest {
@@ -54,7 +53,7 @@ export async function authenticateWithMolimate(
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(MOLIMATE_URL, {
+    const response = await fetch(getMolimateConfig().molimateAuthUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

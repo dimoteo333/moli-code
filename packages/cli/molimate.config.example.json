@@ -1,0 +1,13 @@
+{
+  "molimateAuthUrl": "https://your-auth-server.com/api/auth/login",
+  "defaultBaseUrl": "https://your-api-server.com/compatible-mode/v1",
+  "models": [
+    {
+      "id": "your-model-id",
+      "displayName": "Your Model Display Name",
+      "description": "Description of the model",
+      "envKey": "MODEL_API_KEY_your-model-id",
+      "apiKey": "sk-your-api-key-here"
+    }
+  ]
+}

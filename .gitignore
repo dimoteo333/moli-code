@@ -85,3 +85,6 @@ integration-tests/terminal-capture/scenarios/screenshots/
 storybook-static
 moli-code-offline-dev.tar.gz
 moli-code-*.tgz
+
+# Molimate config (contains API keys and URLs)
+packages/cli/molimate.config.json

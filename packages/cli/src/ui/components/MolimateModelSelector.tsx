@@ -11,8 +11,9 @@ import { theme } from '../semantic-colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { DescriptiveRadioButtonSelect } from './shared/DescriptiveRadioButtonSelect.js';
 import { t } from '../../i18n/index.js';
+import { getMolimateConfig } from '../../constants/molimateConfig.js';
 
-export type MolimateModel = 'share-Qwen3-Coder-30B-A3' | 'gpt-oss-120b';
+export type MolimateModel = string;
 
 interface MolimateModelSelectorProps {
   onSelect: (model: MolimateModel) => void;
@@ -25,22 +26,14 @@ export function MolimateModelSelector({
 }: MolimateModelSelectorProps): React.JSX.Element {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
-  const modelItems = [
-    {
-      key: 'share-Qwen3-Coder-30B-A3',
-      title: 'share-Qwen3-Coder-30B-A3',
-      label: 'share-Qwen3-Coder-30B-A3',
-      description: t('Code-focused model optimized for programming tasks'),
-      value: 'share-Qwen3-Coder-30B-A3' as MolimateModel,
-    },
-    {
-      key: 'gpt-oss-120b',
-      title: 'GPT-OSS-120B',
-      label: 'GPT-OSS-120B',
-      description: t('Large-scale general purpose model'),
-      value: 'gpt-oss-120b' as MolimateModel,
-    },
-  ];
+  const molimateConfig = getMolimateConfig();
+  const modelItems = molimateConfig.models.map((m) => ({
+    key: m.id,
+    title: m.displayName,
+    label: m.displayName,
+    description: t(m.description),
+    value: m.id,
+  }));
 
   useKeypress(
     (key) => {
@@ -51,11 +44,11 @@ export function MolimateModelSelector({
     { isActive: true },
   );
 
-  const handleSelect = (value: MolimateModel) => {
+  const handleSelect = (value: string) => {
     onSelect(value);
   };
 
-  const handleHighlight = (value: MolimateModel) => {
+  const handleHighlight = (value: string) => {
     const index = modelItems.findIndex((item) => item.value === value);
     if (index !== -1) {
       setSelectedIndex(index);

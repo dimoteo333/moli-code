@@ -40,8 +40,8 @@ import {
   authenticateWithMolimate,
   validateEmployeeId,
 } from '../../services/molimateAuthService.js';
-import type { MolimateModel } from '../components/MolimateModelSelector.js';
 import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
+import { getMolimateConfig } from '../../constants/molimateConfig.js';
 
 export type { MoliAuthState } from '../hooks/useMoliAuth.js';
 
@@ -396,7 +396,7 @@ export const useAuthCommand = (
             type: MessageType.INFO,
             text: t(
               'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.',
-              { region: t('Alibaba Cloud Coding Plan') },
+              { region: t('Moli Plan') },
             ),
           },
           Date.now(),
@@ -506,11 +506,13 @@ export const useAuthCommand = (
    * Called after employee ID validation and model selection.
    */
   const handleMolimateAuthSubmit = useCallback(
-    async (employeeId: string, model: MolimateModel) => {
+    async (employeeId: string, model: string) => {
       setIsAuthenticating(true);
       setAuthError(null);
 
       try {
+        const molimateConfig = getMolimateConfig();
+
         // Get persist scope
         const persistScope = getPersistScopeForModelSelection(settings);
 
@@ -518,23 +520,16 @@ export const useAuthCommand = (
         const settingsFile = settings.forScope(persistScope);
         backupSettingsFile(settingsFile.path);
 
-        // Build provider model configs with hardcoded API keys
-        const providerModels: ProviderModelConfig[] = [
-          {
-            id: 'share-Qwen3-Coder-30B-A3',
-            name: 'share-Qwen3-Coder-30B-A3',
-            baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'share-Qwen3-Coder-30B-A3 via moli',
-            envKey: 'MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
-          },
-          {
-            id: 'gpt-oss-120b',
-            name: 'gpt-oss-120b',
-            baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'gpt-oss-120b via moli',
-            envKey: 'MODEL_API_KEY_gpt-oss-120b',
-          },
-        ];
+        // Build provider model configs from molimate config
+        const providerModels: ProviderModelConfig[] = molimateConfig.models.map(
+          (m) => ({
+            id: m.id,
+            name: m.id,
+            baseUrl: molimateConfig.defaultBaseUrl,
+            description: `${m.id} via moli`,
+            envKey: m.envKey,
+          }),
+        );
 
         // Get existing configs and filter out coding plan configs
         const existingConfigs =
@@ -555,21 +550,12 @@ export const useAuthCommand = (
           updatedConfigs,
         );
 
-        // Persist hardcoded API keys
-        settings.setValue(
-          persistScope,
-          'env.MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
-          'sk-cj1223123',
-        );
-        settings.setValue(
-          persistScope,
-          'env.MODEL_API_KEY_gpt-oss-120b',
-          'sk-cj122312324',
-        );
-
-        // Sync to process.env immediately so refreshAuth can read the API keys
-        process.env['MODEL_API_KEY_share-Qwen3-Coder-30B-A3'] = 'sk-cj1223123';
-        process.env['MODEL_API_KEY_gpt-oss-120b'] = 'sk-cj122312324';
+        // Persist API keys from molimate config
+        for (const m of molimateConfig.models) {
+          settings.setValue(persistScope, `env.${m.envKey}`, m.apiKey);
+          // Sync to process.env immediately so refreshAuth can read the API keys
+          process.env[m.envKey] = m.apiKey;
+        }
 
         // Persist auth type and selected model
         settings.setValue(
@@ -630,20 +616,19 @@ export const useAuthCommand = (
    * Handle Molimate model selection - updates the selected model
    */
   const handleMolimateModelSelect = useCallback(
-    async (model: MolimateModel) => {
+    async (model: string) => {
       try {
+        const molimateConfig = getMolimateConfig();
         const persistScope = getPersistScopeForModelSelection(settings);
 
         // Update the selected model
         settings.setValue(persistScope, 'model.name', model);
 
         // Sync to process.env for immediate use
-        const envKey = `MODEL_API_KEY_${model}`;
-        const apiKey =
-          model === 'share-Qwen3-Coder-30B-A3'
-            ? 'sk-cj1223123'
-            : 'sk-cj122312324';
-        process.env[envKey] = apiKey;
+        const modelDef = molimateConfig.models.find((m) => m.id === model);
+        if (modelDef) {
+          process.env[modelDef.envKey] = modelDef.apiKey;
+        }
 
         // Refresh auth to apply changes
         await config.refreshAuth(AuthType.USE_OPENAI);
@@ -681,6 +666,7 @@ export const useAuthCommand = (
       setAuthError(null);
 
       try {
+        const molimateConfig = getMolimateConfig();
         const persistScope = getPersistScopeForModelSelection(settings);
 
         // Backup settings file before modification
@@ -690,37 +676,35 @@ export const useAuthCommand = (
         // Build provider model configs
         const providerModels: ProviderModelConfig[] = [];
 
-        if (values.moli3CoderApiKey) {
-          providerModels.push({
-            id: 'share-Qwen3-Coder-30B-A3',
-            name: 'share-Qwen3-Coder-30B-A3',
-            baseUrl:
-              values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'Moli3-Coder via local config',
-            envKey: 'MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
-          });
-        }
+        // Map local config API key fields to molimate config models
+        const localApiKeys: Record<string, string | undefined> = {
+          'share-Qwen3-Coder-30B-A3': values.moli3CoderApiKey,
+          'gpt-oss-120b': values.gptOss120bApiKey,
+        };
 
-        if (values.gptOss120bApiKey) {
-          providerModels.push({
-            id: 'gpt-oss-120b',
-            name: 'gpt-oss-120b',
-            baseUrl:
-              values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'gpt-oss-120b via local config',
-            envKey: 'MODEL_API_KEY_gpt-oss-120b',
-          });
+        for (const modelDef of molimateConfig.models) {
+          const apiKey = localApiKeys[modelDef.id];
+          if (apiKey) {
+            providerModels.push({
+              id: modelDef.id,
+              name: modelDef.id,
+              baseUrl: values.baseUrl || molimateConfig.defaultBaseUrl,
+              description: `${modelDef.displayName} via local config`,
+              envKey: modelDef.envKey,
+            });
+          }
         }
 
         // Get existing configs and filter out conflicting ones
+        const molimateModelIds = new Set(
+          molimateConfig.models.map((m) => m.id),
+        );
         const existingConfigs =
           (
             settings.merged.modelProviders as ModelProvidersConfig | undefined
           )?.[AuthType.USE_OPENAI] || [];
         const nonLocalConfigs = existingConfigs.filter(
-          (config) =>
-            config.id !== 'share-Qwen3-Coder-30B-A3' &&
-            config.id !== 'gpt-oss-120b',
+          (config) => !molimateModelIds.has(config.id),
         );
 
         // Merge with new configs
@@ -734,25 +718,13 @@ export const useAuthCommand = (
         );
 
         // Save API keys
-        if (values.moli3CoderApiKey) {
-          settings.setValue(
-            persistScope,
-            'env.MODEL_API_KEY_share-Qwen3-Coder-30B-A3',
-            values.moli3CoderApiKey,
-          );
-          // Sync to process.env immediately
-          process.env['MODEL_API_KEY_share-Qwen3-Coder-30B-A3'] =
-            values.moli3CoderApiKey;
-        }
-
-        if (values.gptOss120bApiKey) {
-          settings.setValue(
-            persistScope,
-            'env.MODEL_API_KEY_gpt-oss-120b',
-            values.gptOss120bApiKey,
-          );
-          // Sync to process.env immediately
-          process.env['MODEL_API_KEY_gpt-oss-120b'] = values.gptOss120bApiKey;
+        for (const modelDef of molimateConfig.models) {
+          const apiKey = localApiKeys[modelDef.id];
+          if (apiKey) {
+            settings.setValue(persistScope, `env.${modelDef.envKey}`, apiKey);
+            // Sync to process.env immediately
+            process.env[modelDef.envKey] = apiKey;
+          }
         }
 
         // Set auth type
@@ -762,10 +734,9 @@ export const useAuthCommand = (
           AuthType.USE_OPENAI,
         );
 
-        // Set default model
-        const defaultModel = values.moli3CoderApiKey
-          ? 'share-Qwen3-Coder-30B-A3'
-          : 'gpt-oss-120b';
+        // Set default model - use first model that has an API key provided
+        const defaultModel =
+          providerModels[0]?.id || molimateConfig.models[0]?.id || '';
         settings.setValue(persistScope, 'model.name', defaultModel);
 
         // Hot-reload model providers configuration before refreshAuth

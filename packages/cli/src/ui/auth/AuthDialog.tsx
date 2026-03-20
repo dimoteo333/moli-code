@@ -94,9 +94,7 @@ export function AuthDialog(): React.JSX.Element {
     setViewLevel('molimate-model-select');
   };
 
-  const handleMolimateModelSelection = async (
-    model: 'share-Qwen3-Coder-30B-A3' | 'gpt-oss-120b',
-  ) => {
+  const handleMolimateModelSelection = async (model: string) => {
     setViewLevel('molimate-timer');
     setTimerExpired(false);
     setErrorMessage(null);
