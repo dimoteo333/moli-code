@@ -4,85 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os';
+import { execSync } from 'node:child_process';
+import tls from 'node:tls';
 import { createDebugLogger } from '@dobby/moli-code-core';
 
 const logger = createDebugLogger('HTTPS_AGENT');
 
 /**
- * Get custom CA certificates from various sources
+ * Extract CA certificates from Windows certificate store using certutil.
+ * Parses PEM-formatted certificate blocks from certutil output.
  * @returns Array of PEM-formatted certificate strings
  */
-function getCustomCACerts(): string[] {
+function extractWindowsCerts(): string[] {
   const certs: string[] = [];
+  // Machine-level Root and CA stores cover corporate/enterprise certificates
+  const stores = ['Root', 'CA'];
 
-  // 1. Check NODE_EXTRA_CA_CERTS environment variable (Node.js standard)
-  const extraCertsPath = process.env['NODE_EXTRA_CA_CERTS'];
-  if (extraCertsPath) {
+  for (const store of stores) {
     try {
-      const certContent = fs.readFileSync(extraCertsPath, 'utf-8');
-      certs.push(certContent);
-      logger.debug(
-        'Loaded CA certificates from NODE_EXTRA_CA_CERTS:',
-        extraCertsPath,
-      );
-    } catch (error) {
-      logger.error('Failed to read NODE_EXTRA_CA_CERTS:', error);
-    }
-  }
+      const output = execSync(`certutil -store ${store}`, {
+        encoding: 'utf-8',
+        timeout: 15000,
+        windowsHide: true,
+      });
 
-  // 2. Check MOLIMATE_CA_CERT_PATH environment variable (project-specific)
-  const molimateCertPath = process.env['MOLIMATE_CA_CERT_PATH'];
-  if (molimateCertPath) {
-    try {
-      const certContent = fs.readFileSync(molimateCertPath, 'utf-8');
-      certs.push(certContent);
-      logger.debug(
-        'Loaded CA certificates from MOLIMATE_CA_CERT_PATH:',
-        molimateCertPath,
-      );
-    } catch (error) {
-      logger.error('Failed to read MOLIMATE_CA_CERT_PATH:', error);
-    }
-  }
-
-  // 3. Check common certificate bundle locations
-  const commonCertPaths: Array<[string, string]> = [];
-
-  if (process.platform === 'win32') {
-    // Windows certificate bundle locations
-    commonCertPaths.push(
-      [process.env['LOCALAPPDATA'] || '', 'Certificates/custom-ca.crt'],
-      [process.env['ALLUSERSPROFILE'] || '', 'Certificates/custom-ca.crt'],
-      ['C:\\', 'certs\\custom-ca.crt'],
-    );
-  } else if (process.platform === 'darwin') {
-    // macOS certificate bundle locations
-    commonCertPaths.push(
-      [os.homedir(), '.config/moli-code/custom-ca.crt'],
-      ['/usr/local/etc', 'moli-code/custom-ca.crt'],
-    );
-  } else {
-    // Linux certificate bundle locations
-    commonCertPaths.push(
-      [os.homedir(), '.config/moli-code/custom-ca.crt'],
-      ['/etc', 'moli-code/custom-ca.crt'],
-    );
-  }
-
-  for (const [baseDir, filename] of commonCertPaths) {
-    const fullPath = path.join(baseDir, filename);
-    try {
-      if (fs.existsSync(fullPath)) {
-        const certContent = fs.readFileSync(fullPath, 'utf-8');
-        certs.push(certContent);
-        logger.debug('Loaded CA certificates from common path:', fullPath);
+      const pemRegex =
+        /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
+      const matches = output.match(pemRegex);
+      if (matches) {
+        certs.push(...matches);
       }
     } catch (error) {
-      // Ignore errors for optional certificate paths
-      logger.error('Failed to read CA certificates:', error);
+      logger.error(
+        `Failed to read Windows certificate store "${store}":`,
+        error,
+      );
     }
   }
 
@@ -90,48 +46,59 @@ function getCustomCACerts(): string[] {
 }
 
 /**
- * Create fetch options with custom SSL certificate support
- * @param timeoutMs - Request timeout in milliseconds
- * @returns Fetch options object with proper SSL configuration
+ * Monkey-patch tls.createSecureContext to include Windows system certificates.
+ * This ensures all TLS connections (including fetch/undici) trust
+ * certificates from the Windows certificate store.
  */
-export function createSecureFetchOptions(
-  timeoutMs: number = 120000,
-): RequestInit {
-  const options: RequestInit = {
-    signal: AbortSignal.timeout(timeoutMs),
+function injectCertsIntoTLS(windowsCerts: string[]): void {
+  if (windowsCerts.length === 0) return;
+
+  const origCreateSecureContext = tls.createSecureContext;
+
+  tls.createSecureContext = function (options?: tls.SecureContextOptions) {
+    // If caller provided custom ca, merge with Windows certs.
+    // If not, use Node.js default root certs + Windows certs.
+    const existingCA = options?.ca
+      ? Array.isArray(options.ca)
+        ? options.ca
+        : [options.ca]
+      : tls.rootCertificates;
+
+    const mergedOptions = {
+      ...options,
+      ca: [...existingCA, ...windowsCerts],
+    };
+
+    return origCreateSecureContext.call(tls, mergedOptions);
   };
-
-  // Note: Node.js's native fetch automatically respects:
-  // - NODE_EXTRA_CA_CERTS environment variable
-  // - NODE_TLS_REJECT_UNAUTHORIZED environment variable
-  // - System certificate store (on Windows, macOS, Linux)
-  //
-  // For additional custom certificates, users can set:
-  // - MOLIMATE_CA_CERT_PATH=/path/to/custom-ca.crt
-  //
-  // The certificates are loaded at module initialization time
-
-  return options;
 }
 
 /**
- * Initialize custom CA certificates for the process
- * This should be called once at application startup
+ * Initialize Windows certificate store CA certificates for Node.js.
+ * Uses certutil to extract certificates and injects them into Node.js's TLS trust store.
+ * This should be called once at application startup.
  */
 export function initializeCustomCerts(): void {
-  const certs = getCustomCACerts();
+  if (process.platform !== 'win32') {
+    logger.debug(
+      'Skipping Windows certificate injection: not running on Windows',
+    );
+    return;
+  }
 
-  if (certs.length > 0) {
-    // Combine all certificates into a single string
-    const combinedCerts = certs.join('\n');
+  try {
+    const certs = extractWindowsCerts();
 
-    // Set NODE_EXTRA_CA_CERTS to the combined certificates
-    // Node.js will automatically use these certificates for all HTTPS requests
-    process.env['NODE_EXTRA_CA_CERTS'] = combinedCerts;
-
-    logger.debug(`Initialized ${certs.length} custom CA certificate(s)`);
-  } else {
-    logger.debug('No custom CA certificates found');
+    if (certs.length > 0) {
+      injectCertsIntoTLS(certs);
+      logger.debug(
+        `Injected ${certs.length} certificates from Windows certificate store`,
+      );
+    } else {
+      logger.debug('No certificates found in Windows certificate store');
+    }
+  } catch (error) {
+    logger.error('Failed to initialize Windows certificates:', error);
   }
 }
 
@@ -156,14 +123,14 @@ export function formatTLSError(error: unknown): string {
       return `SSL/TLS Certificate Error: ${errorMessage}
 
 Troubleshooting:
-- If your network uses a corporate TLS inspection CA, set NODE_EXTRA_CA_CERTS:
-  export NODE_EXTRA_CA_CERTS=/path/to/your/corporate-ca.crt
+- If your network uses a corporate TLS inspection CA, import it into the Windows certificate store:
+  certutil -addstore -f "Root" your-corporate-ca.crt
 
-- Or set MOLIMATE_CA_CERT_PATH:
-  export MOLIMATE_CA_CERT_PATH=/path/to/your/corporate-ca.crt
+- Alternatively, set NODE_EXTRA_CA_CERTS:
+  set NODE_EXTRA_CA_CERTS=C:\\path\\to\\your\\corporate-ca.crt
 
 - For development only (insecure), you can disable certificate verification:
-  export NODE_TLS_REJECT_UNAUTHORIZED=0
+  set NODE_TLS_REJECT_UNAUTHORIZED=0
 
   WARNING: This is insecure and should never be used in production!`;
     }

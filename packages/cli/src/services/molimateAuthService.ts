@@ -5,10 +5,13 @@
  */
 
 import { createDebugLogger } from '@dobby/moli-code-core';
-import { formatTLSError } from '../utils/httpsAgent.js';
+import { formatTLSError, initializeCustomCerts } from '../utils/httpsAgent.js';
 import { t } from '../i18n/index.js';
 
 const logger = createDebugLogger('MOLIMATE_AUTH_SERVICE');
+
+// Inject Windows system certificates into Node.js trust store on startup
+initializeCustomCerts();
 
 const MOLIMATE_URL = 'https://testai.api.com/api/auth/login';
 const DEFAULT_TIMEOUT_MS = 120000; // 120 seconds
