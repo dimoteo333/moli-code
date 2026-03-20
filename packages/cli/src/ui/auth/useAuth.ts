@@ -673,27 +673,18 @@ export const useAuthCommand = (
         const settingsFile = settings.forScope(persistScope);
         backupSettingsFile(settingsFile.path);
 
-        // Build provider model configs
-        const providerModels: ProviderModelConfig[] = [];
-
-        // Map local config API key fields to molimate config models
-        const localApiKeys: Record<string, string | undefined> = {
-          'share-Qwen3-Coder-30B-A3': values.moli3CoderApiKey,
-          'gpt-oss-120b': values.gptOss120bApiKey,
-        };
-
-        for (const modelDef of molimateConfig.models) {
-          const apiKey = localApiKeys[modelDef.id];
-          if (apiKey) {
-            providerModels.push({
-              id: modelDef.id,
-              name: modelDef.id,
-              baseUrl: values.baseUrl || molimateConfig.defaultBaseUrl,
-              description: `${modelDef.displayName} via local config`,
-              envKey: modelDef.envKey,
-            });
-          }
-        }
+        // Build provider model config for the user-specified model
+        const modelId = values.modelName;
+        const envKey = `OPENAI_API_KEY_${modelId.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
+        const providerModels: ProviderModelConfig[] = [
+          {
+            id: modelId,
+            name: modelId,
+            baseUrl: values.baseUrl || molimateConfig.defaultBaseUrl,
+            description: `${modelId} via local config`,
+            envKey,
+          },
+        ];
 
         // Get existing configs and filter out conflicting ones
         const molimateModelIds = new Set(
@@ -717,15 +708,9 @@ export const useAuthCommand = (
           updatedConfigs,
         );
 
-        // Save API keys
-        for (const modelDef of molimateConfig.models) {
-          const apiKey = localApiKeys[modelDef.id];
-          if (apiKey) {
-            settings.setValue(persistScope, `env.${modelDef.envKey}`, apiKey);
-            // Sync to process.env immediately
-            process.env[modelDef.envKey] = apiKey;
-          }
-        }
+        // Save API key
+        settings.setValue(persistScope, `env.${envKey}`, values.apiKey);
+        process.env[envKey] = values.apiKey;
 
         // Set auth type
         settings.setValue(
@@ -734,10 +719,8 @@ export const useAuthCommand = (
           AuthType.USE_OPENAI,
         );
 
-        // Set default model - use first model that has an API key provided
-        const defaultModel =
-          providerModels[0]?.id || molimateConfig.models[0]?.id || '';
-        settings.setValue(persistScope, 'model.name', defaultModel);
+        // Set default model
+        settings.setValue(persistScope, 'model.name', modelId);
 
         // Hot-reload model providers configuration before refreshAuth
         const updatedModelProviders: ModelProvidersConfig = {
@@ -766,7 +749,7 @@ export const useAuthCommand = (
             type: MessageType.INFO,
             text: t(
               'Local configuration saved successfully. Default model: {{modelName}}',
-              { modelName: defaultModel },
+              { modelName: modelId },
             ),
           },
           Date.now(),

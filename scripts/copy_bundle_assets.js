@@ -36,7 +36,7 @@ const cliLocalesDir = join(
   'i18n',
   'locales',
 );
-const distLocalesDir = join(distDir, 'src', 'i18n', 'locales');
+const distLocalesDir = join(distDir, 'locales');
 
 // Create the dist directory if it doesn't exist
 if (!existsSync(distDir)) {

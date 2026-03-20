@@ -182,8 +182,6 @@ export default {
     'Enter로 선택, ↑↓로 이동, Esc로 닫기',
   'Esc to go back': 'Esc로 뒤로 가기',
   'Enter to confirm, Esc to cancel': 'Enter로 확인, Esc로 취소',
-  'Enter to select, ↑↓ to navigate, Esc to go back':
-    'Enter로 선택, ↑↓로 이동, Esc로 뒤로 가기',
   'Enter to submit, Esc to go back': 'Enter로 제출, Esc로 뒤로 가기',
   'Invalid step: {{step}}': '잘못된 단계: {{step}}',
   'No subagents found.': '서브에이전트를 찾을 수 없어요.',
@@ -1643,4 +1641,23 @@ export default {
   'Code-focused model optimized for programming tasks':
     '프로그래밍 작업에 최적화된 코드 중심 모델',
   'Large-scale general purpose model': '대규모 범용 모델',
+  'Enter to select, ↑↓ to navigate, Esc to go back':
+    'Enter로 선택, ↑↓로 이동, Esc로 뒤로 가기',
+
+  // ============================================================================
+  // LocalConfigWizard
+  // ============================================================================
+  'Local Environment Configuration': '로컬 환경 설정',
+  'Step 1: Enter model name (required)': '1단계: 모델명 입력 (필수)',
+  'Model name is required.': '모델명은 필수입니다.',
+  'Step 2: Enter API key (required)': '2단계: API 키 입력 (필수)',
+  'API key is required.': 'API 키는 필수입니다.',
+  'Step 3: Enter Base URL (optional)': '3단계: Base URL 입력 (선택사항)',
+  'Default: {{defaultUrl}}': '기본값: {{defaultUrl}}',
+  'Enter to continue, Esc to go back': 'Enter로 계속, Esc로 뒤로 가기',
+  'Confirm Configuration': '설정 확인',
+  'Model Name:': '모델명:',
+  'Base URL:': 'Base URL:',
+  'Enter to save configuration, Esc to go back':
+    'Enter로 설정 저장, Esc로 뒤로 가기',
 };

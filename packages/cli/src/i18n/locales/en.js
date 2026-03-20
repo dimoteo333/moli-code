@@ -1748,4 +1748,21 @@ export default {
   'Large-scale general purpose model': 'Large-scale general purpose model',
   'Enter to select, ↑↓ to navigate, Esc to go back':
     'Enter to select, ↑↓ to navigate, Esc to go back',
+
+  // ============================================================================
+  // LocalConfigWizard
+  // ============================================================================
+  'Local Environment Configuration': 'Local Environment Configuration',
+  'Step 1: Enter model name (required)': 'Step 1: Enter model name (required)',
+  'Model name is required.': 'Model name is required.',
+  'Step 2: Enter API key (required)': 'Step 2: Enter API key (required)',
+  'API key is required.': 'API key is required.',
+  'Step 3: Enter Base URL (optional)': 'Step 3: Enter Base URL (optional)',
+  'Default: {{defaultUrl}}': 'Default: {{defaultUrl}}',
+  'Enter to continue, Esc to go back': 'Enter to continue, Esc to go back',
+  'Confirm Configuration': 'Confirm Configuration',
+  'Model Name:': 'Model Name:',
+  'Base URL:': 'Base URL:',
+  'Enter to save configuration, Esc to go back':
+    'Enter to save configuration, Esc to go back',
 };

@@ -14,8 +14,8 @@ import { t } from '../../i18n/index.js';
 import { Colors } from '../colors.js';
 
 export interface LocalConfigValues {
-  moli3CoderApiKey: string;
-  gptOss120bApiKey: string;
+  modelName: string;
+  apiKey: string;
   baseUrl: string;
 }
 
@@ -24,7 +24,7 @@ interface LocalConfigWizardProps {
   onCancel: () => void;
 }
 
-type WizardStep = 'moli-api-key' | 'gpt-api-key' | 'base-url' | 'confirm';
+type WizardStep = 'model-name' | 'api-key' | 'base-url' | 'confirm';
 
 const DEFAULT_BASE_URL = 'https://testai.apitest.com/compatible-mode/v1';
 
@@ -32,9 +32,9 @@ export function LocalConfigWizard({
   onSubmit,
   onCancel,
 }: LocalConfigWizardProps): React.JSX.Element {
-  const [step, setStep] = useState<WizardStep>('moli-api-key');
-  const [moli3CoderApiKey, setMoli3CoderApiKey] = useState('');
-  const [gptOss120bApiKey, setGptOss120bApiKey] = useState('');
+  const [step, setStep] = useState<WizardStep>('model-name');
+  const [modelName, setModelName] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [baseUrl, setBaseUrl] = useState(DEFAULT_BASE_URL);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,14 +42,20 @@ export function LocalConfigWizard({
     setError(null);
 
     switch (step) {
-      case 'moli-api-key':
-        if (!moli3CoderApiKey.trim()) {
-          setError(t('API key for Moli3-Coder is required.'));
+      case 'model-name':
+        if (!modelName.trim()) {
+          setError(t('Model name is required.'));
           return;
         }
-        setStep('gpt-api-key');
+        setApiKey('');
+        setStep('api-key');
         break;
-      case 'gpt-api-key':
+      case 'api-key':
+        if (!apiKey.trim()) {
+          setError(t('API key is required.'));
+          return;
+        }
+        setBaseUrl(DEFAULT_BASE_URL);
         setStep('base-url');
         break;
       case 'base-url':
@@ -57,8 +63,8 @@ export function LocalConfigWizard({
         break;
       case 'confirm':
         onSubmit({
-          moli3CoderApiKey: moli3CoderApiKey.trim(),
-          gptOss120bApiKey: gptOss120bApiKey.trim(),
+          modelName: modelName.trim(),
+          apiKey: apiKey.trim(),
           baseUrl: baseUrl.trim() || DEFAULT_BASE_URL,
         });
         break;
@@ -71,14 +77,14 @@ export function LocalConfigWizard({
     setError(null);
 
     switch (step) {
-      case 'moli-api-key':
+      case 'model-name':
         onCancel();
         break;
-      case 'gpt-api-key':
-        setStep('moli-api-key');
+      case 'api-key':
+        setStep('model-name');
         break;
       case 'base-url':
-        setStep('gpt-api-key');
+        setStep('api-key');
         break;
       case 'confirm':
         setStep('base-url');
@@ -101,19 +107,19 @@ export function LocalConfigWizard({
 
   const renderStep = () => {
     switch (step) {
-      case 'moli-api-key':
+      case 'model-name':
         return (
           <>
             <Box marginTop={1}>
               <Text color={theme.text.primary}>
-                {t('Step 1: Enter API key for Moli3-Coder (required)')}
+                {t('Step 1: Enter model name (required)')}
               </Text>
             </Box>
             <Box marginTop={1}>
               <TextInput
-                value={moli3CoderApiKey}
-                onChange={setMoli3CoderApiKey}
-                placeholder="sk-cj-..."
+                value={modelName}
+                onChange={setModelName}
+                placeholder="e.g. share-Qwen3-Coder-30B-A3"
               />
             </Box>
             <Box marginTop={1}>
@@ -124,19 +130,19 @@ export function LocalConfigWizard({
           </>
         );
 
-      case 'gpt-api-key':
+      case 'api-key':
         return (
           <>
             <Box marginTop={1}>
               <Text color={theme.text.primary}>
-                {t('Step 2: Enter API key for GPT-OSS-120B (optional)')}
+                {t('Step 2: Enter API key (required)')}
               </Text>
             </Box>
             <Box marginTop={1}>
               <TextInput
-                value={gptOss120bApiKey}
-                onChange={setGptOss120bApiKey}
-                placeholder="sk-ei-... (leave empty to skip)"
+                value={apiKey}
+                onChange={setApiKey}
+                placeholder="sk-..."
               />
             </Box>
             <Box marginTop={1}>
@@ -186,13 +192,10 @@ export function LocalConfigWizard({
 
             <Box marginTop={1} flexDirection="column">
               <Text color={Colors.AccentGreen}>
-                {t('Moli3-Coder API Key:')} {moli3CoderApiKey.slice(0, 10)}...
+                {t('Model Name:')} {modelName}
               </Text>
               <Text color={Colors.AccentGreen}>
-                {t('GPT-OSS-120B API Key:')}{' '}
-                {gptOss120bApiKey
-                  ? `${gptOss120bApiKey.slice(0, 10)}...`
-                  : t('(not set)')}
+                {t('API Key:')} {apiKey.slice(0, 10)}...
               </Text>
               <Text color={Colors.AccentGreen}>
                 {t('Base URL:')} {baseUrl || DEFAULT_BASE_URL}

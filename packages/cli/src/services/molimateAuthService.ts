@@ -4,10 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Agent } from 'undici';
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { formatTLSError, initializeCustomCerts } from '../utils/httpsAgent.js';
 import { t } from '../i18n/index.js';
 import { getMolimateConfig } from '../constants/molimateConfig.js';
+
+const insecureAgent = new Agent({
+  connect: { rejectUnauthorized: false },
+});
 
 const logger = createDebugLogger('MOLIMATE_AUTH_SERVICE');
 
@@ -63,6 +68,8 @@ export async function authenticateWithMolimate(
         newJoinYn: isNewJoin ? 'Y' : 'N',
       } as MolimateAuthRequest),
       signal: controller.signal,
+      // @ts-expect-error -- dispatcher is a valid undici option for Node.js fetch
+      dispatcher: insecureAgent,
     });
 
     if (!response.ok) {

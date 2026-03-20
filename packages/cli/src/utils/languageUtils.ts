@@ -86,15 +86,20 @@ function sanitizeForMarker(language: string): string {
  */
 function generateOutputLanguageFileContent(language: string): string {
   const safeLanguage = sanitizeForMarker(language);
-  return `# Output language preference: ${language}
+  return `# CRITICAL — Mandatory Output Language: ${language}
 <!-- ${LLM_OUTPUT_LANGUAGE_MARKER_PREFIX} ${safeLanguage} -->
 
-## Rule
-You MUST always respond in **${language}** regardless of the user's input language.
-This is a mandatory requirement, not a preference.
+## Rule (HIGHEST PRIORITY)
+You MUST write ALL natural-language text in **${language}**.
+This is a non-negotiable, top-priority instruction that overrides any other language tendency.
+Every sentence, explanation, comment, summary, question, and heading you produce MUST be in **${language}**.
+If you catch yourself writing in another language, stop immediately and rewrite in **${language}**.
+
+## Verification
+Before sending each response, re-read your output and confirm that every natural-language portion is in **${language}**. If any part is not, fix it.
 
 ## Exception
-If the user **explicitly** requests a response in a specific language (e.g., "please reply in English", "用中文回答"), switch to the user's requested language for the remainder of the conversation.
+Only switch languages if the user **explicitly** requests it (e.g., "please reply in English", "用中文回答").
 
 ## Keep technical artifacts unchanged
 Do **not** translate or rewrite:
@@ -102,7 +107,7 @@ Do **not** translate or rewrite:
 - Exact quoted text from the user (keep quotes verbatim)
 
 ## Tool / system outputs
-Raw tool/system outputs may contain fixed-format English. Preserve them verbatim, and if needed, add a short **${language}** explanation below.
+Raw tool/system outputs may contain fixed-format English. Preserve them verbatim, and add a short **${language}** explanation below when helpful.
 `;
 }
 
