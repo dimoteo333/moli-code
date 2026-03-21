@@ -6,8 +6,6 @@
 
 **몰리 코드(Moli Code)** 는 터미널에 최적화된 오픈소스 AI 에이전트입니다. 대규모 코드베이스를 이해하고, 반복적인 작업을 자동화하며, 더 빠른 개발을 할 수 있도록 돕습니다.
 
-![](https://gw.alicdn.com/imgextra/i1/O1CN01D2DviS1wwtEtMwIzJ_!!6000000006373-2-tps-1600-900.png)
-
 ## 몰리 코드를 선택해야 하는 이유
 
 - **다양한 프로토콜 및 사내 연동**: OpenAI / Anthropic / Gemini 호환 API를 사용하거나, 사내 **몰리메이트(Molimate)** 인증을 통해 사용할 수 있습니다.

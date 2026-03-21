@@ -40,8 +40,8 @@ import {
   authenticateWithMolimate,
   validateEmployeeId,
 } from '../../services/molimateAuthService.js';
-import type { MolimateModel } from '../components/MolimateModelSelector.js';
 import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
+import { getMolimateConfig } from '../../constants/molimateConfig.js';
 
 export type { MoliAuthState } from '../hooks/useMoliAuth.js';
 
@@ -396,7 +396,7 @@ export const useAuthCommand = (
             type: MessageType.INFO,
             text: t(
               'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.',
-              { region: t('Alibaba Cloud Coding Plan') },
+              { region: t('Moli Plan') },
             ),
           },
           Date.now(),
@@ -506,11 +506,13 @@ export const useAuthCommand = (
    * Called after employee ID validation and model selection.
    */
   const handleMolimateAuthSubmit = useCallback(
-    async (employeeId: string, model: MolimateModel) => {
+    async (employeeId: string, model: string) => {
       setIsAuthenticating(true);
       setAuthError(null);
 
       try {
+        const molimateConfig = getMolimateConfig();
+
         // Get persist scope
         const persistScope = getPersistScopeForModelSelection(settings);
 
@@ -518,23 +520,16 @@ export const useAuthCommand = (
         const settingsFile = settings.forScope(persistScope);
         backupSettingsFile(settingsFile.path);
 
-        // Build provider model configs with hardcoded API keys
-        const providerModels: ProviderModelConfig[] = [
-          {
-            id: 'qwen3-coder',
-            name: 'qwen3-coder',
-            baseUrl: 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'Qwen3-Coder via moli',
-            envKey: 'MODEL_API_KEY_qwen3-coder',
-          },
-          {
-            id: 'gpt-oss-120b',
-            name: 'gpt-oss-120b',
-            baseUrl: 'https://testai.apitest.com/oss-mode/v1',
-            description: 'gpt-oss-120b via moli',
-            envKey: 'MODEL_API_KEY_gpt-oss-120b',
-          },
-        ];
+        // Build provider model configs from molimate config
+        const providerModels: ProviderModelConfig[] = molimateConfig.models.map(
+          (m) => ({
+            id: m.id,
+            name: m.id,
+            baseUrl: molimateConfig.defaultBaseUrl,
+            description: `${m.id} via moli`,
+            envKey: m.envKey,
+          }),
+        );
 
         // Get existing configs and filter out coding plan configs
         const existingConfigs =
@@ -555,17 +550,12 @@ export const useAuthCommand = (
           updatedConfigs,
         );
 
-        // Persist hardcoded API keys
-        settings.setValue(
-          persistScope,
-          'env.MODEL_API_KEY_qwen3-coder',
-          'sk-cj-12axvbiej12',
-        );
-        settings.setValue(
-          persistScope,
-          'env.MODEL_API_KEY_gpt-oss-120b',
-          'sk-ei-bkoiwormc42',
-        );
+        // Persist API keys from molimate config
+        for (const m of molimateConfig.models) {
+          settings.setValue(persistScope, `env.${m.envKey}`, m.apiKey);
+          // Sync to process.env immediately so refreshAuth can read the API keys
+          process.env[m.envKey] = m.apiKey;
+        }
 
         // Persist auth type and selected model
         settings.setValue(
@@ -626,18 +616,19 @@ export const useAuthCommand = (
    * Handle Molimate model selection - updates the selected model
    */
   const handleMolimateModelSelect = useCallback(
-    async (model: MolimateModel) => {
+    async (model: string) => {
       try {
+        const molimateConfig = getMolimateConfig();
         const persistScope = getPersistScopeForModelSelection(settings);
 
         // Update the selected model
         settings.setValue(persistScope, 'model.name', model);
 
         // Sync to process.env for immediate use
-        const envKey = `MODEL_API_KEY_${model}`;
-        const apiKey =
-          model === 'qwen3-coder' ? 'sk-cj-12axvbiej12' : 'sk-ei-bkoiwormc42';
-        process.env[envKey] = apiKey;
+        const modelDef = molimateConfig.models.find((m) => m.id === model);
+        if (modelDef) {
+          process.env[modelDef.envKey] = modelDef.apiKey;
+        }
 
         // Refresh auth to apply changes
         await config.refreshAuth(AuthType.USE_OPENAI);
@@ -675,44 +666,36 @@ export const useAuthCommand = (
       setAuthError(null);
 
       try {
+        const molimateConfig = getMolimateConfig();
         const persistScope = getPersistScopeForModelSelection(settings);
 
         // Backup settings file before modification
         const settingsFile = settings.forScope(persistScope);
         backupSettingsFile(settingsFile.path);
 
-        // Build provider model configs
-        const providerModels: ProviderModelConfig[] = [];
-
-        if (values.moli3CoderApiKey) {
-          providerModels.push({
-            id: 'qwen3-coder',
-            name: 'qwen3-coder',
-            baseUrl:
-              values.baseUrl || 'https://testai.apitest.com/compatible-mode/v1',
-            description: 'Moli3-Coder via local config',
-            envKey: 'MODEL_API_KEY_qwen3-coder',
-          });
-        }
-
-        if (values.gptOss120bApiKey) {
-          providerModels.push({
-            id: 'gpt-oss-120b',
-            name: 'gpt-oss-120b',
-            baseUrl: values.baseUrl || 'https://testai.apitest.com/oss-mode/v1',
-            description: 'gpt-oss-120b via local config',
-            envKey: 'MODEL_API_KEY_gpt-oss-120b',
-          });
-        }
+        // Build provider model config for the user-specified model
+        const modelId = values.modelName;
+        const envKey = `OPENAI_API_KEY_${modelId.replace(/[^a-zA-Z0-9]/g, '_').toUpperCase()}`;
+        const providerModels: ProviderModelConfig[] = [
+          {
+            id: modelId,
+            name: modelId,
+            baseUrl: values.baseUrl || molimateConfig.defaultBaseUrl,
+            description: `${modelId} via local config`,
+            envKey,
+          },
+        ];
 
         // Get existing configs and filter out conflicting ones
+        const molimateModelIds = new Set(
+          molimateConfig.models.map((m) => m.id),
+        );
         const existingConfigs =
           (
             settings.merged.modelProviders as ModelProvidersConfig | undefined
           )?.[AuthType.USE_OPENAI] || [];
         const nonLocalConfigs = existingConfigs.filter(
-          (config) =>
-            config.id !== 'qwen3-coder' && config.id !== 'gpt-oss-120b',
+          (config) => !molimateModelIds.has(config.id),
         );
 
         // Merge with new configs
@@ -725,26 +708,9 @@ export const useAuthCommand = (
           updatedConfigs,
         );
 
-        // Save API keys
-        if (values.moli3CoderApiKey) {
-          settings.setValue(
-            persistScope,
-            'env.MODEL_API_KEY_qwen3-coder',
-            values.moli3CoderApiKey,
-          );
-          // Sync to process.env immediately
-          process.env['MODEL_API_KEY_qwen3-coder'] = values.moli3CoderApiKey;
-        }
-
-        if (values.gptOss120bApiKey) {
-          settings.setValue(
-            persistScope,
-            'env.MODEL_API_KEY_gpt-oss-120b',
-            values.gptOss120bApiKey,
-          );
-          // Sync to process.env immediately
-          process.env['MODEL_API_KEY_gpt-oss-120b'] = values.gptOss120bApiKey;
-        }
+        // Save API key
+        settings.setValue(persistScope, `env.${envKey}`, values.apiKey);
+        process.env[envKey] = values.apiKey;
 
         // Set auth type
         settings.setValue(
@@ -754,10 +720,7 @@ export const useAuthCommand = (
         );
 
         // Set default model
-        const defaultModel = values.moli3CoderApiKey
-          ? 'qwen3-coder'
-          : 'gpt-oss-120b';
-        settings.setValue(persistScope, 'model.name', defaultModel);
+        settings.setValue(persistScope, 'model.name', modelId);
 
         // Hot-reload model providers configuration before refreshAuth
         const updatedModelProviders: ModelProvidersConfig = {
@@ -786,7 +749,7 @@ export const useAuthCommand = (
             type: MessageType.INFO,
             text: t(
               'Local configuration saved successfully. Default model: {{modelName}}',
-              { modelName: defaultModel },
+              { modelName: modelId },
             ),
           },
           Date.now(),

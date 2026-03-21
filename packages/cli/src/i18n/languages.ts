@@ -7,6 +7,7 @@
 export type SupportedLanguage =
   | 'en'
   | 'zh'
+  | 'ko'
   | 'ru'
   | 'de'
   | 'ja'
@@ -60,6 +61,12 @@ export const SUPPORTED_LANGUAGES: readonly LanguageDefinition[] = [
     id: 'pt-BR',
     fullName: 'Portuguese',
     nativeName: 'Português',
+  },
+  {
+    code: 'ko',
+    id: 'ko-KR',
+    fullName: 'Korean',
+    nativeName: '한국어',
   },
 ];
 

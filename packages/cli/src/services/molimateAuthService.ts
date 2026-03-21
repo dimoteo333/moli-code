@@ -4,11 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { Agent } from 'undici';
 import { createDebugLogger } from '@dobby/moli-code-core';
+import { formatTLSError, initializeCustomCerts } from '../utils/httpsAgent.js';
+import { t } from '../i18n/index.js';
+import { getMolimateConfig } from '../constants/molimateConfig.js';
+
+const insecureAgent = new Agent({
+  connect: { rejectUnauthorized: false },
+});
 
 const logger = createDebugLogger('MOLIMATE_AUTH_SERVICE');
 
-const MOLIMATE_URL = 'https://apiauth.molicode.com/api/moliauth';
+// Inject Windows system certificates into Node.js trust store on startup
+initializeCustomCerts();
+const DEFAULT_TIMEOUT_MS = 120000; // 120 seconds
 
 export interface MolimateAuthRequest {
   username: string;
@@ -29,16 +39,26 @@ export interface MolimateAuthResponse {
  * Authenticate with Molimate using employee ID
  * @param username - The employee ID (alphanumeric only)
  * @param isNewJoin - Whether this is a new join user
+ * @param timeoutMs - Request timeout in milliseconds (default: 120000ms = 120 seconds)
  * @returns Promise with authentication response
  */
 export async function authenticateWithMolimate(
   username: string,
   isNewJoin: boolean = false,
+  timeoutMs: number = DEFAULT_TIMEOUT_MS,
 ): Promise<MolimateAuthResponse> {
-  logger.debug('Authenticating with Molimate:', { username, isNewJoin });
+  logger.debug('Authenticating with Molimate:', {
+    username,
+    isNewJoin,
+    timeoutMs,
+  });
+
+  // Create AbortController with timeout
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(MOLIMATE_URL, {
+    const response = await fetch(getMolimateConfig().molimateAuthUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -47,6 +67,9 @@ export async function authenticateWithMolimate(
         username,
         newJoinYn: isNewJoin ? 'Y' : 'N',
       } as MolimateAuthRequest),
+      signal: controller.signal,
+      // @ts-expect-error -- dispatcher is a valid undici option for Node.js fetch
+      dispatcher: insecureAgent,
     });
 
     if (!response.ok) {
@@ -54,7 +77,13 @@ export async function authenticateWithMolimate(
       logger.error('Molimate auth failed:', response.status, errorText);
       return {
         success: false,
-        message: `Authentication failed: ${response.status} ${response.statusText}`,
+        message: t(
+          'Molimate authentication failed: {{status}} {{statusText}}',
+          {
+            status: String(response.status),
+            statusText: response.statusText,
+          },
+        ),
       };
     }
 
@@ -62,12 +91,29 @@ export async function authenticateWithMolimate(
     logger.debug('Molimate auth response:', data);
     return data;
   } catch (error) {
-    logger.error('Molimate auth error:', error);
+    // Clear timeout if request completes before timeout
+    clearTimeout(timeoutId);
+
+    // Handle abort error (timeout)
+    if (error instanceof Error && error.name === 'AbortError') {
+      logger.error('Molimate auth timed out');
+      return {
+        success: false,
+        message: t('Authentication request timed out. Please try again.'),
+      };
+    }
+
+    // Format error with TLS-specific handling
+    const formattedError = formatTLSError(error);
+    logger.error('Molimate auth error:', formattedError);
+
     return {
       success: false,
-      message:
-        error instanceof Error ? error.message : 'Unknown error occurred',
+      message: formattedError,
     };
+  } finally {
+    // Always clear timeout
+    clearTimeout(timeoutId);
   }
 }
 

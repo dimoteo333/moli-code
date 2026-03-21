@@ -152,7 +152,15 @@ const distPackageJson = {
     moli: 'cli.js',
     'moli-code': 'cli.js',
   },
-  files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
+  files: [
+    'cli.js',
+    'vendor',
+    '*.sb',
+    'README.md',
+    'LICENSE',
+    'locales',
+    'molimate.config.json',
+  ],
   config: rootPackageJson.config,
   dependencies: {},
   // Removed optionalDependencies for offline installation

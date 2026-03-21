@@ -92,16 +92,18 @@ export function MolimateTimerDisplay({
         width="100%"
       >
         <Text bold color={Colors.AccentRed}>
-          {t('시간이 초과되었습니다.')}
+          {t('Time expired.')}
         </Text>
 
         <Box marginTop={1}>
-          <Text>{t('인증 세션이 만료되었습니다. 다시 시도해주세요.')}</Text>
+          <Text>
+            {t('Authentication session has expired. Please try again.')}
+          </Text>
         </Box>
 
         <Box marginTop={1}>
           <Text color={Colors.Gray}>
-            {t('인증 방식 선택으로 돌아가려면 아무 키나 누르세요.')}
+            {t('Press any key to return to authentication method selection.')}
           </Text>
         </Box>
       </Box>
@@ -125,9 +127,9 @@ export function MolimateTimerDisplay({
 
       <Box marginTop={1} justifyContent="space-between">
         <Text color={Colors.Gray}>
-          {t('남은 시간:')} {formatTime(timeRemaining)}
+          {t('Time remaining:')} {formatTime(timeRemaining)}
         </Text>
-        <Text color={Colors.AccentPurple}>{t('(ESC를 눌러 취소)')}</Text>
+        <Text color={Colors.AccentPurple}>{t('(Press ESC to cancel)')}</Text>
       </Box>
     </Box>
   );

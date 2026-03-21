@@ -182,8 +182,6 @@ export default {
     'Enter로 선택, ↑↓로 이동, Esc로 닫기',
   'Esc to go back': 'Esc로 뒤로 가기',
   'Enter to confirm, Esc to cancel': 'Enter로 확인, Esc로 취소',
-  'Enter to select, ↑↓ to navigate, Esc to go back':
-    'Enter로 선택, ↑↓로 이동, Esc로 뒤로 가기',
   'Enter to submit, Esc to go back': 'Enter로 제출, Esc로 뒤로 가기',
   'Invalid step: {{step}}': '잘못된 단계: {{step}}',
   'No subagents found.': '서브에이전트를 찾을 수 없어요.',
@@ -1601,4 +1599,65 @@ export default {
     '↑/↓: 이동 | Space/Enter: 전환 | Esc: 취소',
   '↑/↓: Navigate | Enter: Select | Esc: Cancel':
     '↑/↓: 이동 | Enter: 선택 | Esc: 취소',
+
+  // ============================================================================
+  // Molimate Authentication
+  // ============================================================================
+  'Authenticate with Molimate': '몰리메이트로 인증',
+  'Molimate authentication': '몰리메이트 인증',
+  'Authenticate using employee ID': '사번을 입력하여 인증',
+  'Run in local environment': '로컬 환경에서 실행',
+  'Local environment': '로컬 환경',
+  'Manual configuration': '수동 설정',
+  'Employee ID must contain only alphanumeric characters.':
+    '행번은 영문과 숫자로만 구성되어야 합니다.',
+  'Authentication failed.': '인증에 실패했습니다.',
+  'You must select an authentication method. Press Ctrl+C again to exit.':
+    '인증 방식을 선택해야 합니다. 계속하려면 Ctrl+C를 다시 누르세요.',
+  'Select authentication method': '인증 방식 선택',
+  'Authenticating...': '인증 중...',
+  'Local environment setup': '로컬 환경 설정',
+  'Terms of Service and Privacy Policy': '이용약관 및 개인정보처리방침',
+  'For more details, please visit the MoliCode homepage.':
+    '자세한 내용은 몰리코드 홈페이지에서 확인하세요.',
+  'Molimate authentication failed:': '몰리메이트 인증 실패:',
+  'Molimate authentication failed: {{status}} {{statusText}}':
+    '몰리메이트 인증 실패: {{status}} {{statusText}}',
+  'Molimate authentication timed out': '몰리메이트 인증 시간 초과',
+  'Authentication request timed out. Please try again.':
+    '인증 요청이 시간 초과되었습니다. 다시 시도해주세요.',
+  'Please enter your employee ID.': '행번을 입력해주세요.',
+  'Enter your employee ID to authenticate with Molimate.':
+    '행번을 입력해 몰리메이트를 인증하세요.',
+  'Press Enter to submit, Esc to go back':
+    'Enter를 눌러 제출, Esc를 눌러 뒤로 가기',
+  'Time expired.': '시간이 초과되었습니다.',
+  'Authentication session has expired. Please try again.':
+    '인증 세션이 만료되었습니다. 다시 시도해주세요.',
+  'Press any key to return to authentication method selection.':
+    '인증 방식 선택으로 돌아가려면 아무 키나 누르세요.',
+  '(Press ESC to cancel)': '(ESC를 눌러 취소)',
+  'Select a model to use': '사용할 모델 선택',
+  'Code-focused model optimized for programming tasks':
+    '프로그래밍 작업에 최적화된 코드 중심 모델',
+  'Large-scale general purpose model': '대규모 범용 모델',
+  'Enter to select, ↑↓ to navigate, Esc to go back':
+    'Enter로 선택, ↑↓로 이동, Esc로 뒤로 가기',
+
+  // ============================================================================
+  // LocalConfigWizard
+  // ============================================================================
+  'Local Environment Configuration': '로컬 환경 설정',
+  'Step 1: Enter model name (required)': '1단계: 모델명 입력 (필수)',
+  'Model name is required.': '모델명은 필수입니다.',
+  'Step 2: Enter API key (required)': '2단계: API 키 입력 (필수)',
+  'API key is required.': 'API 키는 필수입니다.',
+  'Step 3: Enter Base URL (optional)': '3단계: Base URL 입력 (선택사항)',
+  'Default: {{defaultUrl}}': '기본값: {{defaultUrl}}',
+  'Enter to continue, Esc to go back': 'Enter로 계속, Esc로 뒤로 가기',
+  'Confirm Configuration': '설정 확인',
+  'Model Name:': '모델명:',
+  'Base URL:': 'Base URL:',
+  'Enter to save configuration, Esc to go back':
+    'Enter로 설정 저장, Esc로 뒤로 가기',
 };
