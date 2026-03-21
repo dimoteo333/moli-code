@@ -87,7 +87,7 @@ describe('<AppHeader />', () => {
 
   it('shows the header with all info when banner is visible', () => {
     const { lastFrame } = renderWithProviders(createMockUIState());
-    expect(lastFrame()).toContain('>_ 몰리코드');
+    expect(lastFrame()).toContain('>_ Moli Code');
     expect(lastFrame()).toContain('gemini-pro');
     expect(lastFrame()).toContain('/projects/moli-code');
   });

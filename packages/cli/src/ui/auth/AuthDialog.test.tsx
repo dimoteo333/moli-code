@@ -7,7 +7,8 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { AuthDialog } from './AuthDialog.js';
 import { LoadedSettings } from '../../config/settings.js';
-import type { Config , AuthType } from '@dobby/moli-code-core';
+import type { Config } from '@dobby/moli-code-core';
+import { AuthType } from '@dobby/moli-code-core';
 import { renderWithProviders } from '../../test-utils/render.js';
 import { UIStateContext } from '../contexts/UIStateContext.js';
 import { UIActionsContext } from '../contexts/UIActionsContext.js';
@@ -15,6 +16,7 @@ import type { UIState } from '../contexts/UIStateContext.js';
 import type { UIActions } from '../contexts/UIActionsContext.js';
 
 const createMockUIState = (overrides: Partial<UIState> = {}): UIState => {
+  // AuthDialog only uses authError and pendingAuthType
   const baseState = {
     authError: null,
     pendingAuthType: undefined,
@@ -27,13 +29,10 @@ const createMockUIState = (overrides: Partial<UIState> = {}): UIState => {
 };
 
 const createMockUIActions = (overrides: Partial<UIActions> = {}): UIActions => {
+  // AuthDialog only uses handleAuthSelect
   const baseActions = {
     handleAuthSelect: vi.fn(),
     handleRetryLastPrompt: vi.fn(),
-    validateMolimateEmployee: vi.fn(),
-    handleMolimateAuthSubmit: vi.fn(),
-    handleLocalConfigSubmit: vi.fn(),
-    onAuthError: vi.fn(),
   } as Partial<UIActions>;
 
   return {
@@ -42,52 +41,19 @@ const createMockUIActions = (overrides: Partial<UIActions> = {}): UIActions => {
   } as UIActions;
 };
 
-const createDefaultSettings = (): LoadedSettings =>
-  new LoadedSettings(
-    {
-      settings: { ui: { customThemes: {} }, mcpServers: {} },
-      originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
-      path: '',
-    },
-    {
-      settings: {},
-      originalSettings: {},
-      path: '',
-    },
-    {
-      settings: {
-        security: { auth: { selectedType: undefined } },
-        ui: { customThemes: {} },
-        mcpServers: {},
-      },
-      originalSettings: {
-        security: { auth: { selectedType: undefined } },
-        ui: { customThemes: {} },
-        mcpServers: {},
-      },
-      path: '',
-    },
-    {
-      settings: { ui: { customThemes: {} }, mcpServers: {} },
-      originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
-      path: '',
-    },
-    true,
-    new Set(),
-  );
-
 const renderAuthDialog = (
   settings: LoadedSettings,
   uiStateOverrides: Partial<UIState> = {},
   uiActionsOverrides: Partial<UIActions> = {},
   configAuthType: AuthType | undefined = undefined,
+  configApiKey: string | undefined = undefined,
 ) => {
   const uiState = createMockUIState(uiStateOverrides);
   const uiActions = createMockUIActions(uiActionsOverrides);
 
   const mockConfig = {
     getAuthType: vi.fn(() => configAuthType),
-    getContentGeneratorConfig: vi.fn(() => ({ apiKey: undefined })),
+    getContentGeneratorConfig: vi.fn(() => ({ apiKey: configApiKey })),
   } as unknown as Config;
 
   return renderWithProviders(
@@ -107,6 +73,8 @@ describe('AuthDialog', () => {
 
   beforeEach(() => {
     originalEnv = { ...process.env };
+    process.env['GEMINI_API_KEY'] = '';
+    process.env['MOLI_DEFAULT_AUTH_TYPE'] = '';
     vi.clearAllMocks();
   });
 
@@ -114,8 +82,45 @@ describe('AuthDialog', () => {
     process.env = originalEnv;
   });
 
-  it('should show an error if initial auth error is provided', () => {
-    const settings = createDefaultSettings();
+  it('should show an error if the initial auth type is invalid', () => {
+    process.env['GEMINI_API_KEY'] = '';
+
+    const settings: LoadedSettings = new LoadedSettings(
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      {
+        settings: {},
+        originalSettings: {},
+        path: '',
+      },
+      {
+        settings: {
+          security: {
+            auth: {
+              selectedType: AuthType.USE_GEMINI,
+            },
+          },
+        },
+        originalSettings: {
+          security: {
+            auth: {
+              selectedType: AuthType.USE_GEMINI,
+            },
+          },
+        },
+        path: '',
+      },
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      true,
+      new Set(),
+    );
 
     const { lastFrame } = renderAuthDialog(settings, {
       authError: 'GEMINI_API_KEY  environment variable not found',
@@ -126,32 +131,307 @@ describe('AuthDialog', () => {
     );
   });
 
-  it('should render main auth selection view with Molimate and Local options', () => {
-    const settings = createDefaultSettings();
-    const { lastFrame } = renderAuthDialog(settings);
+  describe('GEMINI_API_KEY environment variable', () => {
+    it('should detect GEMINI_API_KEY environment variable', () => {
+      process.env['GEMINI_API_KEY'] = 'foobar';
 
-    // Should show the title
-    expect(lastFrame()).toContain('인증 방식 선택');
-    // Should show Molimate auth option
-    expect(lastFrame()).toContain('몰리메이트로 인증');
-    // Should show Local option
-    expect(lastFrame()).toContain('로컬 환경에서 실행');
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      // Since the auth dialog shows API Key option now,
+      // it won't show GEMINI_API_KEY messages
+      expect(lastFrame()).toContain('API Key');
+    });
+
+    it('should not show the GEMINI_API_KEY message if MOLI_DEFAULT_AUTH_TYPE is set to something else', () => {
+      process.env['GEMINI_API_KEY'] = 'foobar';
+      process.env['MOLI_DEFAULT_AUTH_TYPE'] = AuthType.USE_OPENAI;
+
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      expect(lastFrame()).not.toContain(
+        'Existing API key detected (GEMINI_API_KEY)',
+      );
+    });
+
+    it('should show the GEMINI_API_KEY message if MOLI_DEFAULT_AUTH_TYPE is set to use api key', () => {
+      process.env['GEMINI_API_KEY'] = 'foobar';
+      process.env['MOLI_DEFAULT_AUTH_TYPE'] = AuthType.USE_OPENAI;
+
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      // Since the auth dialog shows API Key option now,
+      // it won't show GEMINI_API_KEY messages
+      expect(lastFrame()).toContain('API Key');
+    });
   });
 
-  it('should show terms and privacy notice', () => {
-    const settings = createDefaultSettings();
-    const { lastFrame } = renderAuthDialog(settings);
+  describe('MOLI_DEFAULT_AUTH_TYPE environment variable', () => {
+    it('should select the auth type specified by MOLI_DEFAULT_AUTH_TYPE', () => {
+      // MOLI_OAUTH is the only valid AuthType that can be selected via env var
+      // API-KEY is not an AuthType enum value, so it cannot be selected this way
+      process.env['MOLI_DEFAULT_AUTH_TYPE'] = AuthType.MOLI_OAUTH;
 
-    expect(lastFrame()).toContain('이용약관 및 개인정보처리방침');
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      // MOLI_OAUTH is the first option, so it should be selected
+      expect(lastFrame()).toContain('Moli OAuth');
+    });
+
+    it('should fall back to default if MOLI_DEFAULT_AUTH_TYPE is not set', () => {
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      // Default is Moli OAuth (first option)
+      expect(lastFrame()).toContain('Moli OAuth');
+    });
+
+    it('should show an error and fall back to default if MOLI_DEFAULT_AUTH_TYPE is invalid', () => {
+      process.env['MOLI_DEFAULT_AUTH_TYPE'] = 'invalid-auth-type';
+
+      const settings: LoadedSettings = new LoadedSettings(
+        {
+          settings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          originalSettings: {
+            security: { auth: { selectedType: undefined } },
+            ui: { customThemes: {} },
+            mcpServers: {},
+          },
+          path: '',
+        },
+        {
+          settings: {},
+          originalSettings: {},
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        {
+          settings: { ui: { customThemes: {} }, mcpServers: {} },
+          originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+          path: '',
+        },
+        true,
+        new Set(),
+      );
+
+      const { lastFrame } = renderAuthDialog(settings);
+
+      // Since the auth dialog doesn't show MOLI_DEFAULT_AUTH_TYPE errors anymore,
+      // it will just show the default Moli OAuth option
+      expect(lastFrame()).toContain('Moli OAuth');
+    });
   });
 
-  it('should show error message when pressing escape without auth method selected', async () => {
-    const settings = createDefaultSettings();
+  it('should prevent exiting when no auth method is selected and show error message', async () => {
+    const handleAuthSelect = vi.fn();
+    const settings: LoadedSettings = new LoadedSettings(
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      {
+        settings: {},
+        originalSettings: {},
+        path: '',
+      },
+      {
+        settings: {
+          security: { auth: { selectedType: undefined } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        originalSettings: {
+          security: { auth: { selectedType: undefined } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        path: '',
+      },
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      true,
+      new Set(),
+    );
 
     const { lastFrame, stdin, unmount } = renderAuthDialog(
       settings,
       {},
-      {},
+      { handleAuthSelect },
       undefined, // config.getAuthType() returns undefined
     );
     await wait();
@@ -160,23 +440,56 @@ describe('AuthDialog', () => {
     stdin.write('\u001b'); // ESC key
     await wait();
 
-    // Should show error message in Korean
+    // Should show error message instead of calling handleAuthSelect
     await vi.waitFor(() => {
       const frame = lastFrame();
-      expect(frame).toContain('인증 방식을 선택해야 합니다');
+      expect(frame).toContain('You must select an auth method');
+      expect(frame).toContain('Press Ctrl+C again to exit');
     });
+    expect(handleAuthSelect).not.toHaveBeenCalled();
     unmount();
   });
 
   it('should not exit if there is already an error message', async () => {
-    const settings = createDefaultSettings();
-    const onAuthError = vi.fn();
+    const handleAuthSelect = vi.fn();
+    const settings: LoadedSettings = new LoadedSettings(
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      {
+        settings: {},
+        originalSettings: {},
+        path: '',
+      },
+      {
+        settings: {
+          security: { auth: { selectedType: undefined } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        originalSettings: {
+          security: { auth: { selectedType: undefined } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        path: '',
+      },
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      true,
+      new Set(),
+    );
 
     const { lastFrame, stdin, unmount } = renderAuthDialog(
       settings,
       { authError: 'Initial error' },
-      { onAuthError },
-      undefined,
+      { handleAuthSelect },
+      undefined, // config.getAuthType() returns undefined
     );
     await wait();
 
@@ -186,20 +499,60 @@ describe('AuthDialog', () => {
     stdin.write('\u001b'); // ESC key
     await wait();
 
+    // Should not call handleAuthSelect
+    expect(handleAuthSelect).not.toHaveBeenCalled();
     unmount();
   });
 
-  it('should show Molimate employee ID description', () => {
-    const settings = createDefaultSettings();
-    const { lastFrame } = renderAuthDialog(settings);
+  it('should allow exiting when auth method is already selected', async () => {
+    const handleAuthSelect = vi.fn();
+    const settings: LoadedSettings = new LoadedSettings(
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      {
+        settings: {},
+        originalSettings: {},
+        path: '',
+      },
+      {
+        settings: {
+          security: { auth: { selectedType: AuthType.USE_OPENAI } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        originalSettings: {
+          security: { auth: { selectedType: AuthType.USE_OPENAI } },
+          ui: { customThemes: {} },
+          mcpServers: {},
+        },
+        path: '',
+      },
+      {
+        settings: { ui: { customThemes: {} }, mcpServers: {} },
+        originalSettings: { ui: { customThemes: {} }, mcpServers: {} },
+        path: '',
+      },
+      true,
+      new Set(),
+    );
 
-    expect(lastFrame()).toContain('사번을 입력하여 인증');
-  });
+    const { stdin, unmount } = renderAuthDialog(
+      settings,
+      {},
+      { handleAuthSelect },
+      AuthType.USE_OPENAI, // config.getAuthType() returns USE_OPENAI
+    );
+    await wait();
 
-  it('should show local config description', () => {
-    const settings = createDefaultSettings();
-    const { lastFrame } = renderAuthDialog(settings);
+    // Simulate pressing escape key
+    stdin.write('\u001b'); // ESC key
+    await wait();
 
-    expect(lastFrame()).toContain('수동 설정');
+    // Should call handleAuthSelect with undefined to exit
+    expect(handleAuthSelect).toHaveBeenCalledWith(undefined);
+    unmount();
   });
 });

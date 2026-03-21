@@ -33,7 +33,7 @@ describe('<Header />', () => {
     useTerminalSizeMock.mockReturnValue({ columns: 60, rows: 24 });
     const { lastFrame } = render(<Header {...defaultProps} />);
     expect(lastFrame()).not.toContain('██╔═══██╗');
-    expect(lastFrame()).toContain('>_ 몰리코드');
+    expect(lastFrame()).toContain('>_ Moli Code');
   });
 
   it('displays the version number', () => {
@@ -64,11 +64,11 @@ describe('<Header />', () => {
     expect(lastFrame()).toContain('API Key');
   });
 
-  it('displays default auth when auth type is not set', () => {
+  it('displays Unknown when auth type is not set', () => {
     const { lastFrame } = render(
       <Header {...defaultProps} authDisplayType={undefined} />,
     );
-    expect(lastFrame()).toContain('몰리');
+    expect(lastFrame()).toContain('Unknown');
   });
 
   it('displays working directory', () => {
