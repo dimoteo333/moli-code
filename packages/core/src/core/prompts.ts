@@ -138,7 +138,7 @@ export function getCoreSystemPrompt(
   const basePrompt = systemMdEnabled
     ? fs.readFileSync(systemMdPath, 'utf8')
     : `
-You are Moli Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
+You are Moli Code, an interactive CLI agent developed by Dobby, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
 # Core Mandates
 

@@ -135,6 +135,17 @@ export class OpenAIContentConverter {
   }
 
   /**
+   * Strip chat-template special tokens that some models leak into response content.
+   * e.g. Solar Pro3 outputs `<|content|>` at the beginning of responses.
+   */
+  private stripSpecialTokens(text: string): string {
+    return text.replace(
+      /<\|(?:content|endoftext|im_start|im_end|pad|eos|bos)\|>/g,
+      '',
+    );
+  }
+
+  /**
    * Convert Gemini tool parameters to OpenAI JSON Schema format
    */
   convertGeminiToolParametersToOpenAI(
@@ -837,7 +848,10 @@ export class OpenAIContentConverter {
 
       // Handle text content
       if (choice.message.content) {
-        parts.push({ text: choice.message.content });
+        const cleaned = this.stripSpecialTokens(choice.message.content);
+        if (cleaned) {
+          parts.push({ text: cleaned });
+        }
       }
 
       // Handle tool calls
@@ -947,7 +961,10 @@ export class OpenAIContentConverter {
       // Handle text content
       if (choice.delta?.content) {
         if (typeof choice.delta.content === 'string') {
-          parts.push({ text: choice.delta.content });
+          const cleaned = this.stripSpecialTokens(choice.delta.content);
+          if (cleaned) {
+            parts.push({ text: cleaned });
+          }
         }
       }
 

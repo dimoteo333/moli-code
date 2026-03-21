@@ -49,10 +49,10 @@ export function normalize(model: string): string {
   // - dates (e.g., -20250219), -v1, version numbers, 'latest', 'preview' etc.
   s = s.replace(/-preview/g, '');
   // Special handling for model names that include date/version as part of the model identifier
-  // - Moli models: moli-plus-latest, moli-flash-latest, moli-vl-max-latest
+  // - qwen models: qwen-plus-latest, qwen-flash-latest, qwen-vl-max-latest
   // - Kimi models: kimi-k2-0905, kimi-k2-0711, etc. (keep date for version distinction)
   if (
-    !s.match(/^moli-(?:plus|flash|vl-max)-latest$/) &&
+    !s.match(/^qwen-(?:plus|flash|vl-max)-latest$/) &&
     !s.match(/^kimi-k2-\d{4}$/)
   ) {
     // Regex breakdown:
@@ -98,22 +98,28 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-/, LIMITS['200k']], // All Claude models: 200K
 
   // -------------------
-  // Alibaba / Moli
+  // Alibaba / qwen
   // -------------------
   // Commercial API models (1,000,000 context)
-  [/^moli3-coder-plus/, LIMITS['1m']],
-  [/^moli3-coder-flash/, LIMITS['1m']],
-  [/^moli3\.5-plus/, LIMITS['1m']],
-  [/^moli-plus-latest$/, LIMITS['1m']],
-  [/^moli-flash-latest$/, LIMITS['1m']],
+  [/^qwen3-coder-plus/, LIMITS['1m']],
+  [/^qwen3-coder-flash/, LIMITS['1m']],
+  [/^qwen3\.5-plus/, LIMITS['1m']],
+  [/^qwen-plus-latest$/, LIMITS['1m']],
+  [/^qwen-flash-latest$/, LIMITS['1m']],
   [/^coder-model$/, LIMITS['1m']],
   // Commercial API models (256K context)
-  [/^moli3-max/, LIMITS['256k']],
-  [/^moli-max/, LIMITS['256k']],
-  // Open-source Moli3 variants: 256K native
-  [/^moli3-coder-/, LIMITS['256k']],
-  // Moli fallback (VL, turbo, plus, 2.5, etc.): 128K
-  [/^moli/, LIMITS['256k']],
+  [/^qwen3-max/, LIMITS['256k']],
+  [/^qwen-max/, LIMITS['256k']],
+  // Open-source qwen3 variants: 256K native
+  [/^qwen3-coder-/, LIMITS['256k']],
+  // qwen fallback (VL, turbo, plus, 2.5, etc.): 128K
+  [/^qwen/, LIMITS['256k']],
+
+  // -------------------
+  // Upstage Solar
+  // -------------------
+  [/^solar-pro3/, LIMITS['128k']],
+  [/^solar/, LIMITS['128k']],
 
   // -------------------
   // DeepSeek
@@ -163,12 +169,16 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-sonnet-4-6/, LIMITS['64k']], // Sonnet 4.6: 64K
   [/^claude-/, LIMITS['64k']], // Claude fallback: 64K
 
-  // Alibaba / Moli
-  [/^moli3\.5/, LIMITS['64k']],
+  // Alibaba / qwen
+  [/^qwen3\.5/, LIMITS['64k']],
   [/^coder-model$/, LIMITS['64k']],
-  [/^moli3-max/, LIMITS['64k']],
-  [/^moli-max/, LIMITS['64k']],
-  [/^moli/, LIMITS['8k']], // Moli fallback (VL, turbo, plus, etc.): 8K
+  [/^qwen3-max/, LIMITS['64k']],
+  [/^qwen-max/, LIMITS['64k']],
+  [/^qwen/, LIMITS['8k']], // qwen fallback (VL, turbo, plus, etc.): 8K
+
+  // Upstage Solar
+  [/^solar-pro3/, LIMITS['128k']],
+  [/^solar/, LIMITS['16k']],
 
   // DeepSeek
   [/^deepseek-reasoner/, LIMITS['64k']],
