@@ -202,25 +202,47 @@ export class TestRig {
 
   sync() {
     // ensure file system is done before spawning
-    execSync('sync', { cwd: this.testDir! });
+    // Note: 'sync' command is not available on Windows
+    if (process.platform !== 'win32') {
+      execSync('sync', { cwd: this.testDir! });
+    }
   }
 
   /**
    * The command and args to use to invoke Moli Code CLI. Allows us to switch
-   * between using the bundled gemini.js (the default) and using the installed
-   * 'moli-code' (used to verify npm bundles).
+   * between using the bundled cli.js (the default), using the installed
+   * 'moli-code' (used to verify npm bundles), or using a SEA executable
+   * (used to verify single executable applications).
    */
   private _getCommandAndArgs(extraInitialArgs: string[] = []): {
     command: string;
     initialArgs: string[];
   } {
+    const seaPath = process.env.INTEGRATION_TEST_SEA_PATH;
     const isNpmReleaseTest =
-      process.env.INTEGRATION_TEST_USE_INSTALLED_GEMINI === 'true';
-    const command = isNpmReleaseTest ? 'moli-code' : 'node';
-    const initialArgs = isNpmReleaseTest
-      ? ['--no-chat-recording', ...extraInitialArgs]
-      : [this.bundlePath, '--no-chat-recording', ...extraInitialArgs];
-    return { command, initialArgs };
+      process.env.INTEGRATION_TEST_USE_INSTALLED_MOLI === 'true';
+
+    if (seaPath) {
+      // Use SEA executable
+      return {
+        command: seaPath,
+        initialArgs: ['--no-chat-recording', ...extraInitialArgs],
+      };
+    } else if (isNpmReleaseTest) {
+      return {
+        command: 'moli-code',
+        initialArgs: ['--no-chat-recording', ...extraInitialArgs],
+      };
+    } else {
+      return {
+        command: 'node',
+        initialArgs: [
+          this.bundlePath,
+          '--no-chat-recording',
+          ...extraInitialArgs,
+        ],
+      };
+    }
   }
 
   run(
