@@ -176,8 +176,8 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^qwen-max/, LIMITS['64k']],
   [/^qwen/, LIMITS['8k']], // qwen fallback (VL, turbo, plus, etc.): 8K
 
-  // Upstage Solar
-  [/^solar-pro3/, LIMITS['128k']],
+  // Upstage Solar (128K total context shared between input+output)
+  [/^solar-pro3/, LIMITS['64k']],
   [/^solar/, LIMITS['16k']],
 
   // DeepSeek
