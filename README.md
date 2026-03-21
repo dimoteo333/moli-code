@@ -2,7 +2,7 @@
 
 <br/>
 
-<img src="molicode-logo.png" alt="몰리코드" width="300"/>
+<img src="molicode-logo.png" alt="몰리코드" width="500"/>
 
 **몰리와 함께하는 AI 한 발짝 — 당신만의 코드를 이해하는 AI 에이전트**
 
