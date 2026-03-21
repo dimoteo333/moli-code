@@ -86,5 +86,8 @@ storybook-static
 moli-code-offline-dev.tar.gz
 moli-code-*.tgz
 
+# SEA build output
+dist-sea
+
 # Molimate config (contains API keys and URLs)
 packages/cli/molimate.config.json
