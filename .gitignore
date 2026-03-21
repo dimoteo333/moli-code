@@ -91,3 +91,6 @@ dist-sea
 
 # Molimate config (contains API keys and URLs)
 packages/cli/molimate.config.json
+
+# Slides src and html
+docs/slides

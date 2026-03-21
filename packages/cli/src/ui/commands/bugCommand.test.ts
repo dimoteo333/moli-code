@@ -70,7 +70,7 @@ Sandbox: test
 Proxy: no proxy
 Memory Usage: 100 MB`;
     const expectedUrl =
-      'https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=' +
+      'https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=' +
       encodeURIComponent(`\n${expectedInfo}\n`);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);
@@ -158,7 +158,7 @@ Sandbox: test
 Proxy: no proxy
 Memory Usage: 100 MB`;
     const expectedUrl =
-      'https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&title=OpenAI%20bug&info=' +
+      'https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&title=OpenAI%20bug&info=' +
       encodeURIComponent(`\n${expectedInfo}\n`);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);

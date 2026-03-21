@@ -36,4 +36,4 @@ Download and install the extension from the [Visual Studio Code Extension Market
 
 - Check your internet connection
 - Start a new conversation to see if the issue persists
-- [File an issue on GitHub](https://github.com/molilm/moli-code/issues) if the problem continues
+- [File an issue on GitHub](https://github.com/dimoteo333/moli-code/issues) if the problem continues

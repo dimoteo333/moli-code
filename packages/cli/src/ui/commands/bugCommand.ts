@@ -32,7 +32,7 @@ export const bugCommand: SlashCommand = {
       .join('\n');
 
     let bugReportUrl =
-      'https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&title={title}&info={info}';
+      'https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&title={title}&info={info}';
 
     const bugCommandSettings = context.services.config?.getBugCommand();
     if (bugCommandSettings?.urlTemplate) {

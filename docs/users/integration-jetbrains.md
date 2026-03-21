@@ -78,4 +78,4 @@
 
 - Check your internet connection
 - Verify CLI works by running `moli` in terminal
-- [File an issue on GitHub](https://github.com/molilm/moli-code/issues) if the problem persists
+- [File an issue on GitHub](https://github.com/dimoteo333/moli-code/issues) if the problem persists

@@ -48,8 +48,8 @@ Seamlessly integrate [Moli Code](https://github.com/MoliLM/moli-code) into Visua
 
 ## Feedback & Issues
 
-- 🐛 [Report bugs](https://github.com/MoliLM/moli-code/issues/new?template=bug_report.yml&labels=bug,vscode-ide-companion)
-- 💡 [Request features](https://github.com/MoliLM/moli-code/issues/new?template=feature_request.yml&labels=enhancement,vscode-ide-companion)
+- 🐛 [Report bugs](https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&labels=bug,vscode-ide-companion)
+- 💡 [Request features](https://github.com/dimoteo333/moli-code/issues/new?template=feature_request.yml&labels=enhancement,vscode-ide-companion)
 - 📖 [Documentation](https://molilm.github.io/moli-code-docs/)
 - 📋 [Changelog](https://github.com/MoliLM/moli-code/releases)
 

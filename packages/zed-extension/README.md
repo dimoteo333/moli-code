@@ -92,7 +92,7 @@ If the agent server starts successfully but you experience problems during use:
 
 You can report issues at either:
 
-- [Moli Code Issues](https://github.com/MoliLM/moli-code/issues)
+- [Moli Code Issues](https://github.com/dimoteo333/moli-code/issues)
 - [Moli Code Zed Extension Issues](https://github.com/MoliLM/moli-code-zed-extension/issues)
 
 ## Documentation
@@ -103,7 +103,7 @@ You can report issues at either:
 
 ## Support
 
-- [Report Issues](https://github.com/MoliLM/moli-code/issues)
+- [Report Issues](https://github.com/dimoteo333/moli-code/issues)
 - [Moli Code Discussions](https://github.com/MoliLM/moli-code/discussions)
 - [Zed Community](https://zed.dev/community)
 

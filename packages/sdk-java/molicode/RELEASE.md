@@ -141,7 +141,7 @@ Planned improvements for upcoming releases:
 
 For support, bug reports, or contributions:
 
-- Issue Tracker: https://github.com/MoliLM/moli-code/issues
+- Issue Tracker: https://github.com/dimoteo333/moli-code/issues
 - Documentation: Refer to README.md and Javadoc
 - Contributions: Pull requests are welcome following the project's contribution guidelines
 
