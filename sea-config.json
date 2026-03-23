@@ -2,5 +2,18 @@
   "main": "dist-sea/cli.cjs",
   "output": "dist-sea/sea-prep.blob",
   "disableExperimentalSEAWarning": true,
-  "useCodeCache": false
+  "useCodeCache": false,
+  "assets": {
+    "bundled/review/SKILL.md": "dist-sea/assets/bundled/review/SKILL.md",
+    "locales/de.js": "dist-sea/assets/locales/de.js",
+    "locales/en.js": "dist-sea/assets/locales/en.js",
+    "locales/ja.js": "dist-sea/assets/locales/ja.js",
+    "locales/ko.js": "dist-sea/assets/locales/ko.js",
+    "locales/pt.js": "dist-sea/assets/locales/pt.js",
+    "locales/ru.js": "dist-sea/assets/locales/ru.js",
+    "locales/zh.js": "dist-sea/assets/locales/zh.js",
+    "molimate.config.json": "dist-sea/assets/molimate.config.json",
+    "vendor/ripgrep/COPYING": "dist-sea/assets/vendor/ripgrep/COPYING",
+    "vendor/ripgrep/x64-win32/rg.exe": "dist-sea/assets/vendor/ripgrep/x64-win32/rg.exe"
+  }
 }
