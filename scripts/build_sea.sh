@@ -12,7 +12,9 @@
 # Output:
 #   dist-sea/moli-code        (macOS/Linux binary)
 #   dist-sea/moli-code.exe    (Windows exe)
-#   dist-sea/assets/          (required runtime assets: ripgrep, locales, etc.)
+#
+# All runtime assets (ripgrep, locales, config, skills) are embedded into the
+# executable via Node.js SEA Assets API — no external assets/ folder needed.
 
 set -e
 
@@ -33,15 +35,11 @@ echo "Target: $([ "$TARGET_WINDOWS" = true ] && echo 'Windows x64' || echo 'Curr
 echo ""
 
 # Step 1: Build the project
-echo "[1/6] Building project..."
+echo "[1/7] Building project..."
 npm run build
 
-# Step 2: Create CJS bundle for SEA
-echo "[2/6] Creating CJS bundle for SEA..."
-node esbuild.sea.config.js
-
-# Step 3: Copy runtime assets
-echo "[3/6] Copying runtime assets..."
+# Step 2: Copy runtime assets into dist-sea/assets/ (before esbuild, which reads them)
+echo "[2/7] Copying runtime assets..."
 ASSETS_DIR="dist-sea/assets"
 rm -rf "$ASSETS_DIR"
 mkdir -p "$ASSETS_DIR"
@@ -60,8 +58,20 @@ done
 
 echo "   Assets copied to $ASSETS_DIR"
 
-# Step 4: Generate SEA blob
-echo "[4/6] Generating SEA blob..."
+# Step 3: Generate sea-config.json with embedded assets
+echo "[3/7] Generating SEA config with embedded assets..."
+if [ "$TARGET_WINDOWS" = true ]; then
+  node scripts/generate_sea_assets.js --windows
+else
+  node scripts/generate_sea_assets.js
+fi
+
+# Step 4: Create CJS bundle for SEA (reads sea-config.json for asset keys)
+echo "[4/7] Creating CJS bundle for SEA..."
+node esbuild.sea.config.js
+
+# Step 5: Generate SEA blob (now includes embedded assets)
+echo "[5/7] Generating SEA blob..."
 node --experimental-sea-config sea-config.json
 
 # Helper: download official Node.js binary (Homebrew builds lack SEA fuse)
@@ -74,48 +84,49 @@ download_node_binary() {
     local cached="$cache_dir/node-${NODE_DL_VERSION}-win-x64.exe"
     if [ ! -f "$cached" ]; then
       local url="https://nodejs.org/dist/${NODE_DL_VERSION}/win-x64/node.exe"
-      echo "   Downloading $url ..."
+      echo "   Downloading $url ..." >&2
       curl -L -o "$cached" "$url"
     else
-      echo "   Using cached $cached"
+      echo "   Using cached $cached" >&2
     fi
     echo "$cached"
   else
     local cached="$cache_dir/node-${NODE_DL_VERSION}-${platform}"
     if [ ! -f "$cached" ]; then
       local url="https://nodejs.org/dist/${NODE_DL_VERSION}/node-${NODE_DL_VERSION}-${platform}.tar.gz"
-      echo "   Downloading $url ..."
+      echo "   Downloading $url ..." >&2
       curl -L -o "${cached}.tar.gz" "$url"
       tar xzf "${cached}.tar.gz" -C "$cache_dir" "node-${NODE_DL_VERSION}-${platform}/bin/node"
       mv "$cache_dir/node-${NODE_DL_VERSION}-${platform}/bin/node" "$cached"
       rm -rf "$cache_dir/node-${NODE_DL_VERSION}-${platform}" "${cached}.tar.gz"
     else
-      echo "   Using cached $cached"
+      echo "   Using cached $cached" >&2
     fi
     echo "$cached"
   fi
 }
 
-# Step 5 & 6: Build the executable
+# Step 6 & 7: Build the executable
 if [ "$TARGET_WINDOWS" = true ]; then
-  echo "[5/6] Preparing Windows Node.js binary..."
+  echo "[6/7] Preparing Windows Node.js binary..."
   NODE_BIN=$(download_node_binary "win-x64")
   DEST_EXE="dist-sea/moli-code.exe"
   cp "$NODE_BIN" "$DEST_EXE"
 
-  echo "[6/6] Injecting SEA blob into Windows exe..."
+  echo "[7/7] Injecting SEA blob into Windows exe..."
   npx --yes postject "$DEST_EXE" NODE_SEA_BLOB dist-sea/sea-prep.blob \
     --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 \
     --overwrite
+
+  # Clean up build artifacts (keep only the exe)
+  rm -rf dist-sea/assets dist-sea/cli.cjs dist-sea/sea-prep.blob dist-sea/.node-cache
 
   EXE_SIZE=$(du -h "$DEST_EXE" | cut -f1)
   echo ""
   echo "=== Build Complete ==="
   echo "Executable: $DEST_EXE ($EXE_SIZE)"
-  echo "Assets:     $ASSETS_DIR/"
   echo ""
-  echo "To run on Windows, copy both 'moli-code.exe' and 'assets/' folder"
-  echo "to the same directory, then run:"
+  echo "All assets are embedded — just run:"
   echo "  moli-code.exe"
 
 else
@@ -128,7 +139,7 @@ else
     *)             echo "Unsupported architecture: $ARCH"; exit 1 ;;
   esac
 
-  echo "[5/6] Preparing Node.js binary ($PLATFORM)..."
+  echo "[6/7] Preparing Node.js binary ($PLATFORM)..."
   NODE_BIN=$(download_node_binary "$PLATFORM")
   DEST_BIN="dist-sea/moli-code"
   cp "$NODE_BIN" "$DEST_BIN"
@@ -139,7 +150,7 @@ else
     codesign --remove-signature "$DEST_BIN" 2>/dev/null || true
   fi
 
-  echo "[6/6] Injecting SEA blob..."
+  echo "[7/7] Injecting SEA blob..."
   npx --yes postject "$DEST_BIN" NODE_SEA_BLOB dist-sea/sea-prep.blob \
     --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 \
     --overwrite \
@@ -152,12 +163,14 @@ else
 
   chmod +x "$DEST_BIN"
 
+  # Clean up build artifacts (keep only the binary)
+  rm -rf dist-sea/assets dist-sea/cli.cjs dist-sea/sea-prep.blob dist-sea/.node-cache
+
   BIN_SIZE=$(du -h "$DEST_BIN" | cut -f1)
   echo ""
   echo "=== Build Complete ==="
   echo "Executable: $DEST_BIN ($BIN_SIZE)"
-  echo "Assets:     $ASSETS_DIR/"
   echo ""
-  echo "To run:"
+  echo "All assets are embedded — just run:"
   echo "  ./dist-sea/moli-code"
 fi
