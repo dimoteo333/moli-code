@@ -108,12 +108,27 @@ download_node_binary() {
 
 # Step 6 & 7: Build the executable
 if [ "$TARGET_WINDOWS" = true ]; then
-  echo "[6/7] Preparing Windows Node.js binary..."
+  echo "[6/8] Preparing Windows Node.js binary..."
   NODE_BIN=$(download_node_binary "win-x64")
   DEST_EXE="dist-sea/moli-code.exe"
   cp "$NODE_BIN" "$DEST_EXE"
 
-  echo "[7/7] Injecting SEA blob into Windows exe..."
+  # Set custom application icon BEFORE postject (smaller file = faster rcedit)
+  if [ -f "logo.ico" ]; then
+    echo "[7/8] Setting application icon..."
+    RCEDIT_BIN="node_modules/rcedit/bin/rcedit-x64.exe"
+    if [ -f "$RCEDIT_BIN" ]; then
+      "$RCEDIT_BIN" "$DEST_EXE" --set-icon "logo.ico"
+    else
+      echo "   rcedit not found, installing..."
+      npm install --no-save rcedit >&2
+      "$RCEDIT_BIN" "$DEST_EXE" --set-icon "logo.ico"
+    fi
+  else
+    echo "   Warning: logo.ico not found, skipping icon step"
+  fi
+
+  echo "[8/8] Injecting SEA blob into Windows exe..."
   npx --yes postject "$DEST_EXE" NODE_SEA_BLOB dist-sea/sea-prep.blob \
     --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 \
     --overwrite
