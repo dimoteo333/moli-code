@@ -236,7 +236,13 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
       typeof params.subagent_type !== 'string' ||
       params.subagent_type.trim() === ''
     ) {
-      return 'Parameter "subagent_type" must be a non-empty string.';
+      if (this.availableSubagents.length === 1) {
+        (params as unknown as Record<string, unknown>)['subagent_type'] =
+          this.availableSubagents[0]!.name;
+      } else {
+        const availableNames = this.availableSubagents.map((s) => s.name);
+        return `Parameter "subagent_type" must be a non-empty string. Available subagent types: ${availableNames.join(', ')}`;
+      }
     }
 
     // Validate that the subagent exists

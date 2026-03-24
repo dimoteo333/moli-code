@@ -280,7 +280,7 @@ describe('SchemaValidator', () => {
       expect(SchemaValidator.validate(schema, params)).toBeNull();
     });
 
-    it('should gracefully handle unsupported schema versions', () => {
+    it('should gracefully handle unsupported schema versions (draft-2019-09)', () => {
       // draft-2019-09 is not supported by Ajv by default
       const schema = {
         $schema: 'https://json-schema.org/draft/2019-09/schema',
@@ -292,6 +292,61 @@ describe('SchemaValidator', () => {
       const params = { value: 'test' };
       // Should skip validation and return null (graceful degradation)
       expect(SchemaValidator.validate(schema, params)).toBeNull();
+    });
+  });
+
+  describe('property name remapping', () => {
+    const readFileSchema = {
+      type: 'object',
+      properties: {
+        absolute_path: { type: 'string' },
+        offset: { type: 'number' },
+        limit: { type: 'number' },
+      },
+      required: ['absolute_path'],
+    };
+
+    it('should remap known alias abs_path to absolute_path', () => {
+      const params: Record<string, unknown> = { abs_path: '/foo/bar' };
+      expect(SchemaValidator.validate(readFileSchema, params)).toBeNull();
+      expect(params['absolute_path']).toBe('/foo/bar');
+      expect(params['abs_path']).toBeUndefined();
+    });
+
+    it('should remap known alias file_path to absolute_path', () => {
+      const params: Record<string, unknown> = { file_path: '/foo/bar' };
+      expect(SchemaValidator.validate(readFileSchema, params)).toBeNull();
+      expect(params['absolute_path']).toBe('/foo/bar');
+    });
+
+    it('should remap typo via Levenshtein (absolut_path → absolute_path)', () => {
+      const params: Record<string, unknown> = { absolut_path: '/foo/bar' };
+      expect(SchemaValidator.validate(readFileSchema, params)).toBeNull();
+      expect(params['absolute_path']).toBe('/foo/bar');
+    });
+
+    it('should not remap unrelated keys (no false positive)', () => {
+      const params: Record<string, unknown> = { xyz: '/foo/bar' };
+      expect(SchemaValidator.validate(readFileSchema, params)).not.toBeNull();
+    });
+
+    it('should not overwrite existing valid key when alias also present', () => {
+      const params: Record<string, unknown> = {
+        abs_path: '/wrong',
+        absolute_path: '/correct',
+      };
+      expect(SchemaValidator.validate(readFileSchema, params)).toBeNull();
+      expect(params['absolute_path']).toBe('/correct');
+    });
+
+    it('should combine name remapping with type coercion', () => {
+      const params: Record<string, unknown> = {
+        abs_path: '/foo/bar',
+        offset: '10',
+      };
+      expect(SchemaValidator.validate(readFileSchema, params)).toBeNull();
+      expect(params['absolute_path']).toBe('/foo/bar');
+      expect(params['offset']).toBe(10);
     });
   });
 });
