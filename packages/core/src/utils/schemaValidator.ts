@@ -100,8 +100,12 @@ export class SchemaValidator {
 
     let valid = validate(data);
     if (!valid && validate.errors) {
-      // Coerce string boolean values ("true"/"false") to actual booleans
-      fixBooleanValues(data as Record<string, unknown>);
+      // Coerce mistyped values from LLMs (string booleans, string numbers,
+      // stringified arrays/objects) before retrying validation.
+      const dataRecord = data as Record<string, unknown>;
+      fixBooleanValues(dataRecord);
+      fixNumberValues(dataRecord, anySchema);
+      fixStringifiedJsonValues(dataRecord, anySchema);
 
       valid = validate(data);
       if (!valid && validate.errors) {
@@ -134,6 +138,83 @@ function fixBooleanValues(data: Record<string, unknown>) {
         data[key] = true;
       } else if (lower === 'false') {
         data[key] = false;
+      }
+    }
+  }
+}
+
+/**
+ * Coerces string numeric values to actual numbers when the schema expects a number.
+ * This handles cases where LLMs return "0", "42", "3.14" strings instead of number values.
+ */
+function fixNumberValues(
+  data: Record<string, unknown>,
+  schema: AnySchema,
+): void {
+  if (typeof schema !== 'object' || schema === null) return;
+  const schemaObj = schema as Record<string, unknown>;
+  const properties = schemaObj['properties'] as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  if (!properties) return;
+
+  for (const key of Object.keys(data)) {
+    if (!(key in data) || !(key in properties)) continue;
+    const propSchema = properties[key];
+    const value = data[key];
+
+    if (
+      propSchema &&
+      (propSchema['type'] === 'number' || propSchema['type'] === 'integer') &&
+      typeof value === 'string'
+    ) {
+      const num = Number(value);
+      if (!isNaN(num) && value.trim() !== '') {
+        data[key] = num;
+      }
+    }
+  }
+}
+
+/**
+ * Coerces stringified JSON arrays/objects back to their proper types when the
+ * schema expects an array or object. This handles cases where LLMs return
+ * '[{"id":"1",...}]' as a string instead of an actual array value.
+ */
+function fixStringifiedJsonValues(
+  data: Record<string, unknown>,
+  schema: AnySchema,
+): void {
+  if (typeof schema !== 'object' || schema === null) return;
+  const schemaObj = schema as Record<string, unknown>;
+  const properties = schemaObj['properties'] as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  if (!properties) return;
+
+  for (const key of Object.keys(data)) {
+    if (!(key in data) || !(key in properties)) continue;
+    const propSchema = properties[key];
+    const value = data[key];
+
+    if (
+      propSchema &&
+      (propSchema['type'] === 'array' || propSchema['type'] === 'object') &&
+      typeof value === 'string'
+    ) {
+      try {
+        const parsed = JSON.parse(value);
+        if (
+          (propSchema['type'] === 'array' && Array.isArray(parsed)) ||
+          (propSchema['type'] === 'object' &&
+            typeof parsed === 'object' &&
+            parsed !== null &&
+            !Array.isArray(parsed))
+        ) {
+          data[key] = parsed;
+        }
+      } catch {
+        // Not valid JSON, leave as-is
       }
     }
   }

@@ -439,6 +439,18 @@ export class TodoWriteTool extends BaseDeclarativeTool<
   }
 
   override validateToolParams(params: TodoWriteParams): string | null {
+    // Coerce stringified todos array from LLMs that return JSON strings
+    if (typeof params.todos === 'string') {
+      try {
+        const parsed = JSON.parse(params.todos as unknown as string);
+        if (Array.isArray(parsed)) {
+          params.todos = parsed;
+        }
+      } catch {
+        // Fall through to the array check below
+      }
+    }
+
     // Validate todos array
     if (!Array.isArray(params.todos)) {
       return 'Parameter "todos" must be an array.';

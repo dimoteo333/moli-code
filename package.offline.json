@@ -1,6 +1,6 @@
 {
   "name": "moli-code",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "몰리 코드 - 몰리와 함께 AI 한 발짝",
   "engines": {
     "node": ">=20.0.0"
