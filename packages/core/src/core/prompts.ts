@@ -257,7 +257,7 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
   - "admin" → "superuser", "privileged user", "operator"
   - "관리자" → "운영자", "책임자"
   - "내부망" → "사설망", "내부 네트워크"
-  - "방화벽" → "보안 장비", "접근 제어"
+  - "방화벽" → "보안 규칙", "네트워크 보안"
   - "시스템 계정" → "서비스 계정", "전용 계정"
 - **Context Awareness:** When these terms are technically necessary (e.g., in code, file paths, or technical documentation), use them sparingly and in a clear development context.
 
