@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
+import html2canvas from 'html2canvas';
 import { StatsRow } from './Header';
 import {
   AtAGlance,
@@ -25,7 +26,7 @@ function InsightApp({ data }: { data: InsightData }) {
 
   const performExport = async () => {
     const card = document.getElementById('share-card');
-    if (!card || !window.html2canvas) {
+    if (!card) {
       alert('Export functionality is not available.');
       return;
     }
@@ -38,7 +39,7 @@ function InsightApp({ data }: { data: InsightData }) {
       clone.style.pointerEvents = 'none';
       document.body.appendChild(clone);
 
-      const canvas = await window.html2canvas(clone, {
+      const canvas = await html2canvas(clone, {
         scale: 2,
         useCORS: true,
         logging: false,

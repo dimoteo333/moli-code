@@ -19,7 +19,8 @@ export default defineConfig({
       formats: ['iife'],
     },
     rollupOptions: {
-      external: ['react', 'react-dom', 'react-dom/client'],
+      // Include React/ReactDOM in bundle for offline support
+      // external: ['react', 'react-dom', 'react-dom/client'],
       output: {
         globals: {
           react: 'React',
