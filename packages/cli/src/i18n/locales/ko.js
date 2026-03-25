@@ -1660,4 +1660,8 @@ export default {
   'Base URL:': 'Base URL:',
   'Enter to save configuration, Esc to go back':
     'Enter로 설정 저장, Esc로 뒤로 가기',
+
+  // Remote version check
+  'remote.update.available': '새 버전 사용 가능! {{current}} → {{latest}}',
+  'remote.update.download': '다운로드',
 };

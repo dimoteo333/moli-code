@@ -17,6 +17,7 @@ export interface MolimateModelDef {
 }
 
 export interface MolimateConfig {
+  url?: string;
   molimateAuthUrl: string;
   defaultBaseUrl: string;
   models: MolimateModelDef[];
@@ -65,6 +66,18 @@ export function getMolimateConfig(): MolimateConfig {
       `Missing molimate.config.json at ${configPath}.\n` +
         'Copy molimate.config.example.json to molimate.config.json and fill in your values.',
     );
+  }
+}
+
+/**
+ * Non-throwing variant of getMolimateConfig.
+ * Returns null if the config file is missing or unreadable.
+ */
+export function getMolimateConfigSafe(): MolimateConfig | null {
+  try {
+    return getMolimateConfig();
+  } catch {
+    return null;
   }
 }
 

@@ -1,4 +1,5 @@
 {
+  "url": "https://your-frontend-server.com",
   "molimateAuthUrl": "https://your-auth-server.com/api/auth/login",
   "defaultBaseUrl": "https://your-api-server.com/compatible-mode/v1",
   "models": [

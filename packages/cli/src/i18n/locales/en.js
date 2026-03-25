@@ -1765,4 +1765,8 @@ export default {
   'Base URL:': 'Base URL:',
   'Enter to save configuration, Esc to go back':
     'Enter to save configuration, Esc to go back',
+
+  // Remote version check
+  'remote.update.available': 'Update available! {{current}} → {{latest}}',
+  'remote.update.download': 'Download',
 };

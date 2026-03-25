@@ -39,6 +39,8 @@ import { useKittyKeyboardProtocol } from './ui/hooks/useKittyKeyboardProtocol.js
 import { themeManager } from './ui/themes/theme-manager.js';
 import { detectAndEnableKittyProtocol } from './ui/utils/kittyProtocolDetector.js';
 import { checkForUpdates } from './ui/utils/updateCheck.js';
+import { checkForRemoteUpdates } from './ui/utils/remoteVersionCheck.js';
+import { handleRemoteUpdate } from './utils/handleRemoteUpdate.js';
 import {
   cleanupCheckpoints,
   registerCleanup,
@@ -200,6 +202,15 @@ export async function startInteractiveUI(
       .catch((err) => {
         // Silently ignore update check errors.
         debugLogger.warn(`Update check failed: ${err}`);
+      });
+
+    // Remote server version check (runs in parallel, independent)
+    checkForRemoteUpdates()
+      .then((info) => {
+        handleRemoteUpdate(info);
+      })
+      .catch((err) => {
+        debugLogger.warn(`Remote update check failed: ${err}`);
       });
   }
 
