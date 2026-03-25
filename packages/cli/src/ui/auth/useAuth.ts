@@ -525,7 +525,7 @@ export const useAuthCommand = (
           (m) => ({
             id: m.id,
             name: m.id,
-            baseUrl: molimateConfig.defaultBaseUrl,
+            baseUrl: m.baseUrl ?? molimateConfig.defaultBaseUrl,
             description: `${m.id} via moli`,
             envKey: m.envKey,
           }),

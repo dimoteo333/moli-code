@@ -22,6 +22,8 @@ import {
   validateEmployeeId,
   authenticateWithMolimate,
 } from '../../services/molimateAuthService.js';
+import { fetchRemoteMolimateConfig } from '../../constants/molimateConfig.js';
+import { getErrorMessage } from '@dobby/moli-code-core';
 
 // Main menu option type
 type MainOption = 'MOLIMATE' | 'LOCAL';
@@ -29,6 +31,7 @@ type MainOption = 'MOLIMATE' | 'LOCAL';
 // View level for navigation
 type ViewLevel =
   | 'main'
+  | 'loading-config'
   | 'molimate-auth'
   | 'molimate-model-select'
   | 'molimate-timer'
@@ -44,6 +47,7 @@ export function AuthDialog(): React.JSX.Element {
   const [viewLevel, setViewLevel] = useState<ViewLevel>('main');
   const [molimateEmployeeId, setMolimateEmployeeId] = useState<string>('');
   const [timerExpired, setTimerExpired] = useState(false);
+  const [configError, setConfigError] = useState<string | null>(null);
 
   // Main authentication entries (two options)
   const mainItems = [
@@ -65,16 +69,25 @@ export function AuthDialog(): React.JSX.Element {
 
   const handleMainSelect = async (value: MainOption) => {
     setErrorMessage(null);
+    setConfigError(null);
     onAuthError(null);
 
-    if (value === 'MOLIMATE') {
-      setViewLevel('molimate-auth');
-      return;
-    }
+    setViewLevel('loading-config');
 
-    if (value === 'LOCAL') {
-      setViewLevel('local-config');
-      return;
+    try {
+      await fetchRemoteMolimateConfig();
+      if (value === 'MOLIMATE') {
+        setViewLevel('molimate-auth');
+      } else if (value === 'LOCAL') {
+        setViewLevel('local-config');
+      }
+    } catch (e) {
+      setConfigError(
+        t('Failed to load remote configuration: {{message}}', {
+          message: getErrorMessage(e),
+        }),
+      );
+      setViewLevel('main');
     }
   };
 
@@ -133,6 +146,7 @@ export function AuthDialog(): React.JSX.Element {
     onAuthError(null);
 
     switch (viewLevel) {
+      case 'loading-config':
       case 'molimate-auth':
       case 'local-config':
         setViewLevel('main');
@@ -223,6 +237,15 @@ export function AuthDialog(): React.JSX.Element {
     </Box>
   );
 
+  // Render loading config state
+  const renderLoadingConfigView = () => (
+    <Box marginTop={1}>
+      <Text color={theme.text.secondary}>
+        {t('Fetching remote configuration...')}
+      </Text>
+    </Box>
+  );
+
   // Render local config wizard
   const renderLocalConfigView = () => (
     <Box marginTop={1}>
@@ -237,6 +260,8 @@ export function AuthDialog(): React.JSX.Element {
     switch (viewLevel) {
       case 'main':
         return t('Select authentication method');
+      case 'loading-config':
+        return t('Loading configuration...');
       case 'molimate-auth':
         return t('Molimate authentication');
       case 'molimate-model-select':
@@ -261,14 +286,17 @@ export function AuthDialog(): React.JSX.Element {
       <Text bold>{getViewTitle()}</Text>
 
       {viewLevel === 'main' && renderMainView()}
+      {viewLevel === 'loading-config' && renderLoadingConfigView()}
       {viewLevel === 'molimate-auth' && renderMolimateAuthView()}
       {viewLevel === 'molimate-model-select' && renderMolimateModelSelectView()}
       {viewLevel === 'molimate-timer' && renderMolimateTimerView()}
       {viewLevel === 'local-config' && renderLocalConfigView()}
 
-      {(authError || errorMessage) && (
+      {(authError || errorMessage || configError) && (
         <Box marginTop={1}>
-          <Text color={theme.status.error}>{authError || errorMessage}</Text>
+          <Text color={theme.status.error}>
+            {authError || errorMessage || configError}
+          </Text>
         </Box>
       )}
 

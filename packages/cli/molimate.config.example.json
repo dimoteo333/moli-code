@@ -8,7 +8,16 @@
       "displayName": "Your Model Display Name",
       "description": "Description of the model",
       "envKey": "MODEL_API_KEY_your-model-id",
-      "apiKey": "sk-your-api-key-here"
+      "apiKey": "sk-your-api-key-here",
+      "baseUrl": "https://your-api-server.com/compatible-mode/v1"
+    },
+    {
+      "id": "your-model-id-two",
+      "displayName": "Your Model Two Display Name",
+      "description": "Description of the model two",
+      "envKey": "MODEL_API_KEY_your-model-id-two",
+      "apiKey": "sk-your-api-key-here",
+      "baseUrl": "https://another-api-server.com/compatible-mode/v1"
     }
   ]
 }

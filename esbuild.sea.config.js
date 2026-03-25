@@ -186,13 +186,14 @@ const seaPreamble = `
     var _path = require('path');
     var _crypto = require('crypto');
 
-    // Stable temp dir based on exe path — reuses across runs of the same exe
-    var _exeHash = _crypto.createHash('md5').update(process.execPath).digest('hex').slice(0, 8);
+    // Stable temp dir based on exe path + mtime — invalidates when exe is rebuilt
+    var _exeMtime = _fs.statSync(process.execPath).mtimeMs.toString();
+    var _exeHash = _crypto.createHash('md5').update(process.execPath + '\\n' + _exeMtime).digest('hex').slice(0, 8);
     var _tempBase = _path.join(_os.tmpdir(), 'moli-code-sea-' + _exeHash);
 
     var _assetKeys = ${JSON.stringify(assetKeys)};
 
-    // Only extract if sentinel is missing (first run or after cleanup)
+    // Only extract if sentinel is missing (first run or exe was rebuilt)
     var _sentinel = _path.join(_tempBase, '.sea-extracted');
     if (!_fs.existsSync(_sentinel)) {
       _fs.mkdirSync(_tempBase, { recursive: true });
