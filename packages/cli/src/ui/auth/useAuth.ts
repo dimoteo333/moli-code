@@ -577,16 +577,7 @@ export const useAuthCommand = (
         // Refresh auth with the new configuration
         await config.refreshAuth(AuthType.USE_OPENAI);
 
-        // Success handling - close dialog first
-        setAuthError(null);
-        setAuthState(AuthState.Authenticated);
-        setIsAuthDialogOpen(false);
-        setIsAuthenticating(false);
-
-        // Trigger UI refresh (this will redraw the chat interface)
-        onAuthChange?.();
-
-        // Log success
+        // Log success first (before any UI updates)
         const authEvent = new AuthEvent(
           AuthType.USE_OPENAI,
           'manual',
@@ -594,20 +585,27 @@ export const useAuthCommand = (
         );
         logAuth(config, authEvent);
 
-        // Add success message AFTER dialog is closed and UI is refreshed
-        // This ensures the message appears only once in the chat interface
-        setTimeout(() => {
-          addItem(
-            {
-              type: MessageType.INFO,
-              text: t(
-                'Authenticated successfully with Molimate. Default model: {{modelName}}',
-                { modelName: model },
-              ),
-            },
-            Date.now(),
-          );
-        }, 0);
+        // Add success message BEFORE UI refresh
+        // This ensures message is added only once to history
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: t(
+              'Authenticated successfully with Molimate. Default model: {{modelName}}',
+              { modelName: model },
+            ),
+          },
+          Date.now(),
+        );
+
+        // Success handling - update state AFTER adding message
+        setAuthError(null);
+        setAuthState(AuthState.Authenticated);
+        setIsAuthDialogOpen(false);
+        setIsAuthenticating(false);
+
+        // Trigger UI refresh last (after message is in history)
+        onAuthChange?.();
       } catch (error) {
         handleAuthFailure(error);
       }
