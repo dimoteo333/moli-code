@@ -577,26 +577,14 @@ export const useAuthCommand = (
         // Refresh auth with the new configuration
         await config.refreshAuth(AuthType.USE_OPENAI);
 
-        // Success handling
+        // Success handling - close dialog first
         setAuthError(null);
         setAuthState(AuthState.Authenticated);
         setIsAuthDialogOpen(false);
         setIsAuthenticating(false);
 
-        // Trigger UI refresh
+        // Trigger UI refresh (this will redraw the chat interface)
         onAuthChange?.();
-
-        // Add success message
-        addItem(
-          {
-            type: MessageType.INFO,
-            text: t(
-              'Authenticated successfully with Molimate. Default model: {{modelName}}',
-              { modelName: model },
-            ),
-          },
-          Date.now(),
-        );
 
         // Log success
         const authEvent = new AuthEvent(
@@ -605,6 +593,21 @@ export const useAuthCommand = (
           'success',
         );
         logAuth(config, authEvent);
+
+        // Add success message AFTER dialog is closed and UI is refreshed
+        // This ensures the message appears only once in the chat interface
+        setTimeout(() => {
+          addItem(
+            {
+              type: MessageType.INFO,
+              text: t(
+                'Authenticated successfully with Molimate. Default model: {{modelName}}',
+                { modelName: model },
+              ),
+            },
+            Date.now(),
+          );
+        }, 0);
       } catch (error) {
         handleAuthFailure(error);
       }

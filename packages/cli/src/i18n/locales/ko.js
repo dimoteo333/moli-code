@@ -1570,6 +1570,8 @@ export default {
     '{{region}}로 성공적으로 인증되었어요. API 키와 모델 구성이 settings.json에 저장되었어요 (백업됨).',
   'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.':
     '{{region}}로 성공적으로 인증되었어요. API 키와 모델 구성이 settings.json에 저장되었어요.',
+  'Authenticated successfully with Molimate. Default model: {{modelName}}':
+    'Molimate로 성공적으로 인증되었어요. 기본 모델: {{modelName}}',
   'Tip: Use /model to switch between available Coding Plan models.':
     '팁: /model을 사용하여 사용 가능한 코딩 플랜 모델 간에 전환하세요.',
 
