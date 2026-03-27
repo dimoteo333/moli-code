@@ -72,15 +72,16 @@ export function AuthDialog(): React.JSX.Element {
     setConfigError(null);
     onAuthError(null);
 
+    if (value === 'LOCAL') {
+      setViewLevel('local-config');
+      return;
+    }
+
     setViewLevel('loading-config');
 
     try {
       await fetchRemoteMolimateConfig();
-      if (value === 'MOLIMATE') {
-        setViewLevel('molimate-auth');
-      } else if (value === 'LOCAL') {
-        setViewLevel('local-config');
-      }
+      setViewLevel('molimate-auth');
     } catch (e) {
       setConfigError(
         t('Failed to load remote configuration: {{message}}', {
