@@ -1,6 +1,6 @@
 {
   "name": "@dobby/moli-code-webui",
-  "version": "0.14.3",
+  "version": "0.3.0",
   "description": "Shared UI components for Moli Code packages",
   "type": "module",
   "main": "./dist/index.cjs",

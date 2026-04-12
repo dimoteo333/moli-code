@@ -1,6 +1,6 @@
 {
   "name": "@dobby/moli-code-web-templates",
-  "version": "0.14.3",
+  "version": "0.3.0",
   "description": "Web templates bundled as embeddable JS/CSS strings",
   "repository": {
     "type": "git",

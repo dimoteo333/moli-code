@@ -2,7 +2,7 @@
   "name": "moli-code-vscode-ide-companion",
   "displayName": "Moli Code Companion",
   "description": "Enable Moli Code with direct access to your VS Code workspace.",
-  "version": "0.14.3",
+  "version": "0.3.0",
   "publisher": "qwenlm",
   "icon": "assets/icon.png",
   "repository": {
