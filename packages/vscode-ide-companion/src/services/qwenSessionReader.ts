@@ -40,7 +40,7 @@ export interface QwenSession {
 }
 
 export class QwenSessionReader {
-  private qwenDir: string;
+  private moliDir: string;
 
   constructor() {
     this.moliDir = path.join(os.homedir(), '.moli');

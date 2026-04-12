@@ -1,0 +1,24 @@
+{
+  "name": "moli-code",
+  "version": "0.3.0",
+  "description": "몰리 코드 - 몰리와 함께 AI 한 발짝",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "type": "module",
+  "repository": {},
+  "bin": {
+    "moli": "dist/cli.js",
+    "moli-code": "dist/cli.js"
+  },
+  "files": ["dist/", "README.md", "LICENSE"],
+  "dependencies": {},
+  "optionalDependencies": {
+    "@lydell/node-pty": "1.1.0",
+    "@lydell/node-pty-darwin-arm64": "1.1.0",
+    "@lydell/node-pty-darwin-x64": "1.1.0",
+    "@lydell/node-pty-linux-x64": "1.1.0",
+    "@lydell/node-pty-win32-arm64": "1.1.0",
+    "@lydell/node-pty-win32-x64": "1.1.0"
+  }
+}

@@ -151,7 +151,7 @@ export const reconnectCommand: CommandModule = {
   describe: 'Reconnect MCP server(s)',
   builder: (yargs) =>
     yargs
-      .usage('Usage: qwen mcp reconnect [options] [server-name]')
+      .usage('Usage: moli mcp reconnect [options] [server-name]')
       .positional('server-name', {
         describe: 'Name of the server to reconnect',
         type: 'string',

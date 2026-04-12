@@ -193,9 +193,9 @@ export async function parseArguments(): Promise<CliArgs> {
 
   const yargsInstance = yargs(rawArgv)
     .locale('en')
-    .scriptName('qwen')
+    .scriptName('moli')
     .usage(
-      'Usage: qwen [options] [command]\n\nMoli Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
+      'Usage: moli [options] [command]\n\nMoli Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
     .option('telemetry', {
       type: 'boolean',

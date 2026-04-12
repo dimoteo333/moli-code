@@ -21,7 +21,7 @@ import type { QwenSession } from './qwenSessionReader.js';
  * when ACP methods are unavailable or fail.
  */
 export class QwenSessionManager {
-  private qwenDir: string;
+  private moliDir: string;
 
   constructor() {
     this.moliDir = path.join(os.homedir(), '.moli');

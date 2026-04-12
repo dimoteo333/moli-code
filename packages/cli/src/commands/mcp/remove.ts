@@ -49,7 +49,7 @@ export const removeCommand: CommandModule = {
   describe: 'Remove a server',
   builder: (yargs) =>
     yargs
-      .usage('Usage: qwen mcp remove [options] <name>')
+      .usage('Usage: moli mcp remove [options] <name>')
       .positional('name', {
         describe: 'Name of the server',
         type: 'string',
