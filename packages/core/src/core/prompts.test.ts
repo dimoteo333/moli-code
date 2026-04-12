@@ -16,7 +16,7 @@ import { isGitRepository } from '../utils/gitUtils.js';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { QWEN_CONFIG_DIR } from '../tools/memoryTool.js';
+import { MOLI_CONFIG_DIR } from '../tools/memoryTool.js';
 
 // Mock tool names if they are dynamically generated or complex
 vi.mock('../tools/ls', () => ({ LSTool: { Name: 'list_directory' } }));
@@ -41,8 +41,8 @@ vi.mock('node:fs');
 describe('Core System Prompt (prompts.ts)', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.stubEnv('QWEN_SYSTEM_MD', undefined);
-    vi.stubEnv('QWEN_WRITE_SYSTEM_MD', undefined);
+    vi.stubEnv('MOLI_SYSTEM_MD', undefined);
+    vi.stubEnv('MOLI_WRITE_SYSTEM_MD', undefined);
   });
 
   it('should return the base prompt when no userMemory is provided', () => {
@@ -153,33 +153,33 @@ describe('Core System Prompt (prompts.ts)', () => {
     expect(prompt).toMatchSnapshot();
   });
 
-  describe('QWEN_SYSTEM_MD environment variable', () => {
-    it('should use default prompt when QWEN_SYSTEM_MD is "false"', () => {
-      vi.stubEnv('QWEN_SYSTEM_MD', 'false');
+  describe('MOLI_SYSTEM_MD environment variable', () => {
+    it('should use default prompt when MOLI_SYSTEM_MD is "false"', () => {
+      vi.stubEnv('MOLI_SYSTEM_MD', 'false');
       const prompt = getCoreSystemPrompt();
       expect(fs.readFileSync).not.toHaveBeenCalled();
       expect(prompt).not.toContain('custom system prompt');
     });
 
-    it('should use default prompt when QWEN_SYSTEM_MD is "0"', () => {
-      vi.stubEnv('QWEN_SYSTEM_MD', '0');
+    it('should use default prompt when MOLI_SYSTEM_MD is "0"', () => {
+      vi.stubEnv('MOLI_SYSTEM_MD', '0');
       const prompt = getCoreSystemPrompt();
       expect(fs.readFileSync).not.toHaveBeenCalled();
       expect(prompt).not.toContain('custom system prompt');
     });
 
-    it('should throw error if QWEN_SYSTEM_MD points to a non-existent file', () => {
+    it('should throw error if MOLI_SYSTEM_MD points to a non-existent file', () => {
       const customPath = '/non/existent/path/system.md';
-      vi.stubEnv('QWEN_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_SYSTEM_MD', customPath);
       vi.mocked(fs.existsSync).mockReturnValue(false);
       expect(() => getCoreSystemPrompt()).toThrow(
         `missing system prompt file '${path.resolve(customPath)}'`,
       );
     });
 
-    it('should read from default path when QWEN_SYSTEM_MD is "true"', () => {
-      const defaultPath = path.resolve(path.join(QWEN_CONFIG_DIR, 'system.md'));
-      vi.stubEnv('QWEN_SYSTEM_MD', 'true');
+    it('should read from default path when MOLI_SYSTEM_MD is "true"', () => {
+      const defaultPath = path.resolve(path.join(MOLI_CONFIG_DIR, 'system.md'));
+      vi.stubEnv('MOLI_SYSTEM_MD', 'true');
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue('custom system prompt');
 
@@ -188,9 +188,9 @@ describe('Core System Prompt (prompts.ts)', () => {
       expect(prompt).toBe('custom system prompt');
     });
 
-    it('should read from default path when QWEN_SYSTEM_MD is "1"', () => {
-      const defaultPath = path.resolve(path.join(QWEN_CONFIG_DIR, 'system.md'));
-      vi.stubEnv('QWEN_SYSTEM_MD', '1');
+    it('should read from default path when MOLI_SYSTEM_MD is "1"', () => {
+      const defaultPath = path.resolve(path.join(MOLI_CONFIG_DIR, 'system.md'));
+      vi.stubEnv('MOLI_SYSTEM_MD', '1');
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue('custom system prompt');
 
@@ -199,9 +199,9 @@ describe('Core System Prompt (prompts.ts)', () => {
       expect(prompt).toBe('custom system prompt');
     });
 
-    it('should read from custom path when QWEN_SYSTEM_MD provides one, preserving case', () => {
+    it('should read from custom path when MOLI_SYSTEM_MD provides one, preserving case', () => {
       const customPath = path.resolve('/custom/path/SyStEm.Md');
-      vi.stubEnv('QWEN_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_SYSTEM_MD', customPath);
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue('custom system prompt');
 
@@ -210,12 +210,12 @@ describe('Core System Prompt (prompts.ts)', () => {
       expect(prompt).toBe('custom system prompt');
     });
 
-    it('should expand tilde in custom path when QWEN_SYSTEM_MD is set', () => {
+    it('should expand tilde in custom path when MOLI_SYSTEM_MD is set', () => {
       const homeDir = '/Users/test';
       vi.spyOn(os, 'homedir').mockReturnValue(homeDir);
       const customPath = '~/custom/system.md';
       const expectedPath = path.join(homeDir, 'custom/system.md');
-      vi.stubEnv('QWEN_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_SYSTEM_MD', customPath);
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue('custom system prompt');
 
@@ -228,22 +228,22 @@ describe('Core System Prompt (prompts.ts)', () => {
     });
   });
 
-  describe('QWEN_WRITE_SYSTEM_MD environment variable', () => {
-    it('should not write to file when QWEN_WRITE_SYSTEM_MD is "false"', () => {
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', 'false');
+  describe('MOLI_WRITE_SYSTEM_MD environment variable', () => {
+    it('should not write to file when MOLI_WRITE_SYSTEM_MD is "false"', () => {
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', 'false');
       getCoreSystemPrompt();
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
 
-    it('should not write to file when QWEN_WRITE_SYSTEM_MD is "0"', () => {
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', '0');
+    it('should not write to file when MOLI_WRITE_SYSTEM_MD is "0"', () => {
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', '0');
       getCoreSystemPrompt();
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
 
-    it('should write to default path when QWEN_WRITE_SYSTEM_MD is "true"', () => {
-      const defaultPath = path.resolve(path.join(QWEN_CONFIG_DIR, 'system.md'));
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', 'true');
+    it('should write to default path when MOLI_WRITE_SYSTEM_MD is "true"', () => {
+      const defaultPath = path.resolve(path.join(MOLI_CONFIG_DIR, 'system.md'));
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', 'true');
       getCoreSystemPrompt();
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         defaultPath,
@@ -251,9 +251,9 @@ describe('Core System Prompt (prompts.ts)', () => {
       );
     });
 
-    it('should write to default path when QWEN_WRITE_SYSTEM_MD is "1"', () => {
-      const defaultPath = path.resolve(path.join(QWEN_CONFIG_DIR, 'system.md'));
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', '1');
+    it('should write to default path when MOLI_WRITE_SYSTEM_MD is "1"', () => {
+      const defaultPath = path.resolve(path.join(MOLI_CONFIG_DIR, 'system.md'));
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', '1');
       getCoreSystemPrompt();
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         defaultPath,
@@ -261,9 +261,9 @@ describe('Core System Prompt (prompts.ts)', () => {
       );
     });
 
-    it('should write to custom path when QWEN_WRITE_SYSTEM_MD provides one', () => {
+    it('should write to custom path when MOLI_WRITE_SYSTEM_MD provides one', () => {
       const customPath = path.resolve('/custom/path/system.md');
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', customPath);
       getCoreSystemPrompt();
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         customPath,
@@ -271,12 +271,12 @@ describe('Core System Prompt (prompts.ts)', () => {
       );
     });
 
-    it('should expand tilde in custom path when QWEN_WRITE_SYSTEM_MD is set', () => {
+    it('should expand tilde in custom path when MOLI_WRITE_SYSTEM_MD is set', () => {
       const homeDir = '/Users/test';
       vi.spyOn(os, 'homedir').mockReturnValue(homeDir);
       const customPath = '~/custom/system.md';
       const expectedPath = path.join(homeDir, 'custom/system.md');
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', customPath);
       getCoreSystemPrompt();
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         path.resolve(expectedPath),
@@ -284,12 +284,12 @@ describe('Core System Prompt (prompts.ts)', () => {
       );
     });
 
-    it('should expand tilde in custom path when QWEN_WRITE_SYSTEM_MD is just ~', () => {
+    it('should expand tilde in custom path when MOLI_WRITE_SYSTEM_MD is just ~', () => {
       const homeDir = '/Users/test';
       vi.spyOn(os, 'homedir').mockReturnValue(homeDir);
       const customPath = '~';
       const expectedPath = homeDir;
-      vi.stubEnv('QWEN_WRITE_SYSTEM_MD', customPath);
+      vi.stubEnv('MOLI_WRITE_SYSTEM_MD', customPath);
       getCoreSystemPrompt();
       expect(fs.writeFileSync).toHaveBeenCalledWith(
         path.resolve(expectedPath),

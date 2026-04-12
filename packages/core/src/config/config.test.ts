@@ -126,7 +126,7 @@ vi.mock('../tools/memoryTool', () => ({
   getCurrentGeminiMdFilename: vi.fn(() => 'QWEN.md'), // Mock the original filename
   getAllGeminiMdFilenames: vi.fn(() => ['QWEN.md', 'AGENTS.md']),
   DEFAULT_CONTEXT_FILENAME: 'QWEN.md',
-  QWEN_CONFIG_DIR: '.moli',
+  MOLI_CONFIG_DIR: '.moli',
 }));
 
 vi.mock('../core/contentGenerator.js');
