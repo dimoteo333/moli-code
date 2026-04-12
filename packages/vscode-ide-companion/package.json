@@ -2,12 +2,12 @@
   "name": "moli-code-vscode-ide-companion",
   "displayName": "Moli Code Companion",
   "description": "Enable Moli Code with direct access to your VS Code workspace.",
-  "version": "0.12.5",
-  "publisher": "dobby",
+  "version": "0.14.3",
+  "publisher": "qwenlm",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/MoliLM/moli-code.git",
+    "url": "https://github.com/QwenLM/moli-code.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -20,9 +20,9 @@
   ],
   "keywords": [
     "moli-code",
-    "moli code",
-    "moli",
-    "moli code",
+    "qwen code",
+    "qwen",
+    "qwen code",
     "cli",
     "ide integration",
     "ide companion"
@@ -39,7 +39,7 @@
   "contributes": {
     "jsonValidation": [
       {
-        "fileMatch": "**/.moli/settings.json",
+        "fileMatch": "**/.qwen/settings.json",
         "url": "./schemas/settings.schema.json"
       }
     ],
@@ -49,7 +49,7 @@
           "id": "moli-code-sidebar",
           "title": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "moli-code:doesNotSupportSecondarySidebar"
+          "when": "!moli-code:supportsSecondarySidebar"
         }
       ],
       "secondarySidebar": [
@@ -57,7 +57,7 @@
           "id": "moli-code-secondary",
           "title": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "!moli-code:doesNotSupportSecondarySidebar"
+          "when": "moli-code:supportsSecondarySidebar"
         }
       ]
     },
@@ -68,7 +68,7 @@
           "id": "moli-code.chatView.sidebar",
           "name": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "moli-code:doesNotSupportSecondarySidebar"
+          "when": "!moli-code:supportsSecondarySidebar"
         }
       ],
       "moli-code-secondary": [
@@ -77,23 +77,23 @@
           "id": "moli-code.chatView.secondary",
           "name": "Moli Code",
           "icon": "assets/sidebar-icon.svg",
-          "when": "!moli-code:doesNotSupportSecondarySidebar"
+          "when": "moli-code:supportsSecondarySidebar"
         }
       ]
     },
     "languages": [
       {
-        "id": "moli-diff-editable"
+        "id": "qwen-diff-editable"
       }
     ],
     "commands": [
       {
-        "command": "moli.diff.accept",
+        "command": "qwen.diff.accept",
         "title": "Moli Code: Accept Current Diff",
         "icon": "$(check)"
       },
       {
-        "command": "moli.diff.cancel",
+        "command": "qwen.diff.cancel",
         "title": "Moli Code: Close Diff Editor",
         "icon": "$(close)"
       },
@@ -130,12 +130,12 @@
     "menus": {
       "commandPalette": [
         {
-          "command": "moli.diff.accept",
-          "when": "moli.diff.isVisible"
+          "command": "qwen.diff.accept",
+          "when": "qwen.diff.isVisible"
         },
         {
-          "command": "moli.diff.cancel",
-          "when": "moli.diff.isVisible"
+          "command": "qwen.diff.cancel",
+          "when": "qwen.diff.isVisible"
         },
         {
           "command": "moli-code.login",
@@ -144,13 +144,13 @@
       ],
       "editor/title": [
         {
-          "command": "moli.diff.accept",
-          "when": "moli.diff.isVisible",
+          "command": "qwen.diff.accept",
+          "when": "qwen.diff.isVisible",
           "group": "navigation"
         },
         {
-          "command": "moli.diff.cancel",
-          "when": "moli.diff.isVisible",
+          "command": "qwen.diff.cancel",
+          "when": "qwen.diff.isVisible",
           "group": "navigation"
         },
         {
@@ -161,14 +161,14 @@
     },
     "keybindings": [
       {
-        "command": "moli.diff.accept",
+        "command": "qwen.diff.accept",
         "key": "ctrl+s",
-        "when": "moli.diff.isVisible"
+        "when": "qwen.diff.isVisible"
       },
       {
-        "command": "moli.diff.accept",
+        "command": "qwen.diff.accept",
         "key": "cmd+s",
-        "when": "moli.diff.isVisible"
+        "when": "qwen.diff.isVisible"
       },
       {
         "command": "moli-code.focusChat",
@@ -207,7 +207,6 @@
     "@types/vscode": "^1.85.0",
     "@typescript-eslint/eslint-plugin": "^8.31.1",
     "@typescript-eslint/parser": "^8.31.1",
-    "@vscode/vsce": "^3.6.0",
     "autoprefixer": "^10.4.22",
     "esbuild": "^0.25.3",
     "eslint": "^9.25.1",

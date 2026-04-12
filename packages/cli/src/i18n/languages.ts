@@ -1,17 +1,17 @@
 /**
  * @license
- * Copyright 2025 Moli team
+ * Copyright 2025 Qwen team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 export type SupportedLanguage =
   | 'en'
   | 'zh'
-  | 'ko'
   | 'ru'
   | 'de'
   | 'ja'
   | 'pt'
+  | 'ko'
   | string;
 
 export interface LanguageDefinition {

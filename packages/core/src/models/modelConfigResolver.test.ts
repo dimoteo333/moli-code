@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,7 +10,7 @@ import {
   validateModelConfig,
 } from './modelConfigResolver.js';
 import { AuthType } from '../core/contentGenerator.js';
-import { DEFAULT_MOLI_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
+import { DEFAULT_QWEN_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
 
 describe('modelConfigResolver', () => {
   describe('resolveModelConfig', () => {
@@ -127,24 +127,24 @@ describe('modelConfigResolver', () => {
         expect(result.sources['apiKey'].via?.kind).toBe('modelProviders');
       });
 
-      it('reads MOLI_MODEL as fallback for OPENAI_MODEL', () => {
+      it('reads QWEN_MODEL as fallback for OPENAI_MODEL', () => {
         const result = resolveModelConfig({
           authType: AuthType.USE_OPENAI,
           cli: {},
           settings: {},
           env: {
-            MOLI_MODEL: 'moli-model',
+            QWEN_MODEL: 'qwen-model',
             OPENAI_API_KEY: 'key',
           },
         });
 
-        expect(result.config.model).toBe('moli-model');
-        expect(result.sources['model'].envKey).toBe('MOLI_MODEL');
+        expect(result.config.model).toBe('qwen-model');
+        expect(result.sources['model'].envKey).toBe('QWEN_MODEL');
       });
     });
 
-    describe('Moli OAuth auth type', () => {
-      it('uses default model for Moli OAuth', () => {
+    describe('Qwen OAuth auth type', () => {
+      it('uses default model for Qwen OAuth', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {},
@@ -152,12 +152,12 @@ describe('modelConfigResolver', () => {
           env: {},
         });
 
-        expect(result.config.model).toBe(DEFAULT_MOLI_MODEL);
+        expect(result.config.model).toBe(DEFAULT_QWEN_MODEL);
         expect(result.config.apiKey).toBe('MOLI_OAUTH_DYNAMIC_TOKEN');
         expect(result.sources['apiKey'].kind).toBe('computed');
       });
 
-      it('allows coder-model for Moli OAuth', () => {
+      it('allows coder-model for Qwen OAuth', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {
@@ -171,7 +171,7 @@ describe('modelConfigResolver', () => {
         expect(result.sources['model'].kind).toBe('cli');
       });
 
-      it('warns and falls back for unsupported Moli OAuth models', () => {
+      it('warns and falls back for unsupported Qwen OAuth models', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {
@@ -181,7 +181,7 @@ describe('modelConfigResolver', () => {
           env: {},
         });
 
-        expect(result.config.model).toBe(DEFAULT_MOLI_MODEL);
+        expect(result.config.model).toBe(DEFAULT_QWEN_MODEL);
         expect(result.warnings).toHaveLength(1);
         expect(result.warnings[0]).toContain('unsupported-model');
       });
@@ -311,10 +311,10 @@ describe('modelConfigResolver', () => {
       expect(result.errors[0].message).toContain('Missing model');
     });
 
-    it('always passes for Moli OAuth', () => {
+    it('always passes for Qwen OAuth', () => {
       const result = validateModelConfig({
         authType: AuthType.MOLI_OAUTH,
-        model: DEFAULT_MOLI_MODEL,
+        model: DEFAULT_QWEN_MODEL,
         apiKey: 'MOLI_OAUTH_DYNAMIC_TOKEN',
       });
 

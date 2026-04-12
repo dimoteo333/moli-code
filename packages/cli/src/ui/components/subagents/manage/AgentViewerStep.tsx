@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -39,6 +39,13 @@ export const AgentViewerStep = ({ selectedAgent }: AgentViewerStepProps) => {
           <Text color={theme.text.primary}>{t('Tools: ')}</Text>
           <Text>{toolsDisplay}</Text>
         </Box>
+
+        {agent.model && (
+          <Box>
+            <Text color={theme.text.primary}>{t('Model: ')}</Text>
+            <Text>{agent.model}</Text>
+          </Box>
+        )}
 
         {shouldShowColor(agent.color) && (
           <Box>

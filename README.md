@@ -1,97 +1,273 @@
 <div align="center">
 
-<br/>
+[![npm version](https://img.shields.io/npm/v/@dobby/moli-code.svg)](https://www.npmjs.com/package/@dobby/moli-code)
+[![License](https://img.shields.io/github/license/QwenLM/moli-code.svg)](./LICENSE)
+[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)
+[![Downloads](https://img.shields.io/npm/dm/@dobby/moli-code.svg)](https://www.npmjs.com/package/@dobby/moli-code)
 
-<img src="molicode-logo.png" alt="몰리코드" width="500"/>
+<a href="https://trendshift.io/repositories/15287" target="_blank"><img src="https://trendshift.io/api/badge/repositories/15287" alt="QwenLM%2Fmoli-code | Trendshift" style="width: 250px; height: 55px;" width="250" height="55"/></a>
 
-**몰리와 함께하는 AI 한 발짝 — 당신만의 코드를 이해하는 AI 에이전트**
+**An open-source AI agent that lives in your terminal.**
 
-[![Release](https://img.shields.io/badge/release-v0.2.0-blue)](https://molicode.vercel.app)
-[![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-lightgrey)]()
-[![Lang](https://img.shields.io/badge/lang-한국어-green)]()
-
-<br/>
-
-<img src="molicode-init.png" alt="Moli Code 초기 실행 화면" width="680"/>
-
-<br/>
+<a href="https://qwenlm.github.io/moli-code-docs/zh/users/overview">中文</a> |
+<a href="https://qwenlm.github.io/moli-code-docs/de/users/overview">Deutsch</a> |
+<a href="https://qwenlm.github.io/moli-code-docs/fr/users/overview">français</a> |
+<a href="https://qwenlm.github.io/moli-code-docs/ja/users/overview">日本語</a> |
+<a href="https://qwenlm.github.io/moli-code-docs/ru/users/overview">Русский</a> |
+<a href="https://qwenlm.github.io/moli-code-docs/pt-BR/users/overview">Português (Brasil)</a>
 
 </div>
 
----
+## 🎉 News
 
-**몰리 코드**는 내부 윈도우 개발 환경에 최적화된 **AI 코딩 에이전트**입니다.
-복잡한 코드베이스를 즉시 파악하고, 다양한 업무 문의 해결부터 테스트까지 — 개발자가 업무에만 집중할 수 있는 환경을 만들어줍니다.
+- **2026-04-02**: Qwen3.6-Plus is now live! Sign in via Qwen OAuth to use it directly, or get an API key from [Alibaba Cloud ModelStudio](https://modelstudio.console.alibabacloud.com/ap-southeast-1?tab=doc#/doc/?type=model&url=2840914_2&modelId=qwen3.6-plus) to access it through the OpenAI-compatible API.
 
-<br/>
+- **2026-02-16**: Qwen3.5-Plus is now live!
 
-## 왜 몰리 코드인가요?
+## Why Moli Code?
 
-|                         | 특징                             | 설명                                                                     |
-| ----------------------- | -------------------------------- | ------------------------------------------------------------------------ |
-| **다양한 모델**         | OpenAI · Anthropic · Gemini 호환 | 원하는 LLM을 자유롭게 연결하거나, 사내 **몰리메이트** 인증으로 즉시 시작 |
-| **에이전트 워크플로우** | 스킬 · 서브에이전트 · 내장 도구  | 단순 질답을 넘어, 자동화된 멀티스텝 워크플로우 수행                      |
-| **터미널 퍼스트**       | CLI 중심 + IDE 통합              | 터미널에서 바로 실행하고, VS Code · Eclipse 등과 연동                    |
-| **한국어 네이티브**     | 에이전트 전체 한국어 지원        | 프롬프트부터 응답, UI까지 완전한 한국어 경험                             |
+Moli Code is an open-source AI agent for the terminal, optimized for Qwen series models. It helps you understand large codebases, automate tedious work, and ship faster.
 
----
+- **Multi-protocol, OAuth free tier**: use OpenAI / Anthropic / Gemini-compatible APIs, or sign in with Qwen OAuth for 1,000 free requests/day.
+- **Open-source, co-evolving**: both the framework and the Qwen3-Coder model are open-source—and they ship and evolve together.
+- **Agentic workflow, feature-rich**: rich built-in tools (Skills, SubAgents) for a full agentic workflow and a Claude Code-like experience.
+- **Terminal-first, IDE-friendly**: built for developers who live in the command line, with optional integration for VS Code, Zed, and JetBrains IDEs.
 
-## 빠른 시작
+![](https://gw.alicdn.com/imgextra/i1/O1CN01D2DviS1wwtEtMwIzJ_!!6000000006373-2-tps-1600-900.png)
 
-### 1. 설치
+## Installation
 
-```
-https://molicode.vercel.app
-```
+### Quick Install (Recommended)
 
-### 2. 실행
+#### Linux / macOS
 
 ```bash
-# 프로젝트 폴더에서 몰리 코드 실행
-cd your-project/
-moli-code
+bash -c "$(curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh)"
 ```
 
-### 3. 인증 설정
+#### Windows (Run as Administrator CMD)
+
+```cmd
+curl -fsSL -o %TEMP%\install-qwen.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
+```
+
+> **Note**: It's recommended to restart your terminal after installation to ensure environment variables take effect.
+
+### Manual Installation
+
+#### Prerequisites
+
+Make sure you have Node.js 20 or later installed. Download it from [nodejs.org](https://nodejs.org/en/download).
+
+#### NPM
 
 ```bash
-# 세션 내에서 인증 메뉴 호출
+npm install -g @dobby/moli-code@latest
+```
+
+#### Homebrew (macOS, Linux)
+
+```bash
+brew install moli-code
+```
+
+## Quick Start
+
+```bash
+# Start Moli Code (interactive)
+qwen
+
+# Then, in the session:
+/help
 /auth
 ```
 
-처음 실행 시 인증을 설정하라는 메시지가 표시됩니다. `/auth` 명령어로 언제든 인증 방식을 전환할 수 있습니다.
+On first use, you'll be prompted to sign in. You can run `/auth` anytime to switch authentication methods.
 
-### 4. 사용해보기
+Example prompts:
 
 ```text
-이 프로젝트는 어떤 역할을 하나요?
-코드베이스 구조를 자세하게 설명해줘.
-이 함수를 리팩토링하는 것을 도와줘.
-이 모듈에 대한 단위 테스트(Unit test)를 생성해줘.
+What does this project do?
+Explain the codebase structure.
+Help me refactor this function.
+Generate unit tests for this module.
 ```
 
----
+<details>
+<summary>Click to watch a demo video</summary>
 
-## 인증
+<video src="https://cloud.video.taobao.com/vod/HLfyppnCHplRV9Qhz2xSqeazHeRzYtG-EYJnHAqtzkQ.mp4" controls>
+Your browser does not support the video tag.
+</video>
 
-몰리 코드는 두 가지 인증 방식을 지원합니다.
+</details>
 
-### 몰리메이트 인증 (권장)
+## 🦞 Use Moli Code for Coding Tasks in Claw
 
-사번을 입력하여 간편하게 인증하는 사내 지원 방식입니다.
+Copy the prompt below and paste it into your agent:
+
+```
+Use Moli Code as a coding agent. First, fetch and read this skill reference:
+https://raw.githubusercontent.com/QwenLM/moli-code/refs/heads/main/.qwen/skills/moli-code-claw/SKILL.md
+Then follow the instructions inside to install, authenticate, and use Moli Code via acpx for all coding tasks.
+```
+
+## Authentication
+
+Moli Code supports two authentication methods:
+
+- **Qwen OAuth (recommended & free)**: sign in with your `qwen.ai` account in a browser.
+- **API-KEY**: use an API key to connect to any supported provider (OpenAI, Anthropic, Google GenAI, Alibaba Cloud ModelStudio, and other compatible endpoints).
+
+#### Qwen OAuth (recommended)
+
+Start `qwen`, then run:
 
 ```bash
 /auth
-# → "몰리메이트로 인증" 선택 → 사번 입력
 ```
 
-### 로컬 환경 구성
+Choose **Qwen OAuth** and complete the browser flow. Your credentials are cached locally so you usually won't need to log in again.
 
-외부 모델(OpenAI, Anthropic, 커스텀 API 등)을 직접 설정하여 사용합니다.
-`/auth` → "로컬 환경" 선택 후 API 엔드포인트와 모델명을 입력하면 `~/.moli/settings.json`이 자동 구성됩니다.
+> **Note:** In non-interactive or headless environments (e.g., CI, SSH, containers), you typically **cannot** complete the OAuth browser login flow. In these cases, please use the API-KEY authentication method.
+
+#### API-KEY (flexible)
+
+Use this if you want more flexibility over which provider and model to use. Supports multiple protocols:
+
+- **OpenAI-compatible**: Alibaba Cloud ModelStudio, ModelScope, OpenAI, OpenRouter, and other OpenAI-compatible providers
+- **Anthropic**: Claude models
+- **Google GenAI**: Gemini models
+
+The **recommended** way to configure models and providers is by editing `~/.qwen/settings.json` (create it if it doesn't exist). This file lets you define all available models, API keys, and default settings in one place.
+
+##### Quick Setup in 3 Steps
+
+**Step 1:** Create or edit `~/.qwen/settings.json`
+
+Here is a complete example:
+
+```json
+{
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "qwen3.6-plus",
+        "name": "qwen3.6-plus",
+        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "description": "Qwen3-Coder via Dashscope",
+        "envKey": "DASHSCOPE_API_KEY"
+      }
+    ]
+  },
+  "env": {
+    "DASHSCOPE_API_KEY": "sk-xxxxxxxxxxxxx"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "openai"
+    }
+  },
+  "model": {
+    "name": "qwen3.6-plus"
+  }
+}
+```
+
+**Step 2:** Understand each field
+
+| Field                        | What it does                                                                                                                          |
+| ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `modelProviders`             | Declares which models are available and how to connect to them. Keys like `openai`, `anthropic`, `gemini` represent the API protocol. |
+| `modelProviders[].id`        | The model ID sent to the API (e.g. `qwen3.6-plus`, `gpt-4o`).                                                                         |
+| `modelProviders[].envKey`    | The name of the environment variable that holds your API key.                                                                         |
+| `modelProviders[].baseUrl`   | The API endpoint URL (required for non-default endpoints).                                                                            |
+| `env`                        | A fallback place to store API keys (lowest priority; prefer `.env` files or `export` for sensitive keys).                             |
+| `security.auth.selectedType` | The protocol to use on startup (`openai`, `anthropic`, `gemini`, `vertex-ai`).                                                        |
+| `model.name`                 | The default model to use when Moli Code starts.                                                                                       |
+
+**Step 3:** Start Moli Code — your configuration takes effect automatically:
+
+```bash
+qwen
+```
+
+Use the `/model` command at any time to switch between all configured models.
+
+##### More Examples
 
 <details>
-<summary><b>settings.json 커스텀 설정 예시</b></summary>
+<summary>Coding Plan (Alibaba Cloud ModelStudio) — fixed monthly fee, higher quotas</summary>
+
+```json
+{
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "qwen3.6-plus",
+        "name": "qwen3.6-plus (Coding Plan)",
+        "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
+        "description": "qwen3.6-plus from ModelStudio Coding Plan",
+        "envKey": "BAILIAN_CODING_PLAN_API_KEY"
+      },
+      {
+        "id": "qwen3.5-plus",
+        "name": "qwen3.5-plus (Coding Plan)",
+        "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
+        "description": "qwen3.5-plus with thinking enabled from ModelStudio Coding Plan",
+        "envKey": "BAILIAN_CODING_PLAN_API_KEY",
+        "generationConfig": {
+          "extra_body": {
+            "enable_thinking": true
+          }
+        }
+      },
+      {
+        "id": "glm-4.7",
+        "name": "glm-4.7 (Coding Plan)",
+        "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
+        "description": "glm-4.7 with thinking enabled from ModelStudio Coding Plan",
+        "envKey": "BAILIAN_CODING_PLAN_API_KEY",
+        "generationConfig": {
+          "extra_body": {
+            "enable_thinking": true
+          }
+        }
+      },
+      {
+        "id": "kimi-k2.5",
+        "name": "kimi-k2.5 (Coding Plan)",
+        "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
+        "description": "kimi-k2.5 with thinking enabled from ModelStudio Coding Plan",
+        "envKey": "BAILIAN_CODING_PLAN_API_KEY",
+        "generationConfig": {
+          "extra_body": {
+            "enable_thinking": true
+          }
+        }
+      }
+    ]
+  },
+  "env": {
+    "BAILIAN_CODING_PLAN_API_KEY": "sk-xxxxxxxxxxxxx"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "openai"
+    }
+  },
+  "model": {
+    "name": "qwen3.6-plus"
+  }
+}
+```
+
+> Subscribe to the Coding Plan and get your API key at [Alibaba Cloud ModelStudio(Beijing)](https://bailian.console.aliyun.com/cn-beijing?tab=coding-plan#/efm/coding-plan-index) or [Alibaba Cloud ModelStudio(intl)](https://modelstudio.console.alibabacloud.com/?tab=coding-plan#/efm/coding-plan-index).
+
+</details>
+
+<details>
+<summary>Multiple providers (OpenAI + Anthropic + Gemini)</summary>
 
 ```json
 {
@@ -110,11 +286,19 @@ moli-code
         "name": "Claude Sonnet 4",
         "envKey": "ANTHROPIC_API_KEY"
       }
+    ],
+    "gemini": [
+      {
+        "id": "gemini-2.5-pro",
+        "name": "Gemini 2.5 Pro",
+        "envKey": "GEMINI_API_KEY"
+      }
     ]
   },
   "env": {
-    "OPENAI_API_KEY": "sk-...",
-    "ANTHROPIC_API_KEY": "sk-ant-..."
+    "OPENAI_API_KEY": "sk-xxxxxxxxxxxxx",
+    "ANTHROPIC_API_KEY": "sk-ant-xxxxxxxxxxxxx",
+    "GEMINI_API_KEY": "AIzaxxxxxxxxxxxxx"
   },
   "security": {
     "auth": {
@@ -129,93 +313,155 @@ moli-code
 
 </details>
 
-> **보안 주의사항:** 버전 관리 시스템(Git 등)에 절대로 API 키를 커밋하지 마세요. `~/.moli/settings.json` 파일은 반드시 로컬에 안전하게 보관해야 합니다.
+<details>
+<summary>Enable thinking mode (for supported models like qwen3.5-plus)</summary>
 
----
+```json
+{
+  "modelProviders": {
+    "openai": [
+      {
+        "id": "qwen3.5-plus",
+        "name": "qwen3.5-plus (thinking)",
+        "envKey": "DASHSCOPE_API_KEY",
+        "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
+        "generationConfig": {
+          "extra_body": {
+            "enable_thinking": true
+          }
+        }
+      }
+    ]
+  },
+  "env": {
+    "DASHSCOPE_API_KEY": "sk-xxxxxxxxxxxxx"
+  },
+  "security": {
+    "auth": {
+      "selectedType": "openai"
+    }
+  },
+  "model": {
+    "name": "qwen3.5-plus"
+  }
+}
+```
 
-## 사용법
+</details>
 
-### 대화형 모드
+> **Tip:** You can also set API keys via `export` in your shell or `.env` files, which take higher priority than `settings.json` → `env`. See the [authentication guide](https://qwenlm.github.io/moli-code-docs/en/users/configuration/auth/) for full details.
 
-프로젝트 폴더에서 `moli-code`를 실행하면 인터페이스가 열립니다. `@` 기호로 파일/폴더를 컨텍스트로 참조할 수 있습니다.
+> **Security note:** Never commit API keys to version control. The `~/.qwen/settings.json` file is in your home directory and should stay private.
+
+## Usage
+
+As an open-source terminal agent, you can use Moli Code in four primary ways:
+
+1. Interactive mode (terminal UI)
+2. Headless mode (scripts, CI)
+3. IDE integration (VS Code, Zed)
+4. TypeScript SDK
+
+#### Interactive mode
 
 ```bash
 cd your-project/
-moli-code
+qwen
 ```
 
-### 헤드리스 모드
+Run `qwen` in your project folder to launch the interactive terminal UI. Use `@` to reference local files (for example `@src/main.ts`).
 
-인터랙티브 UI 없이 단일 입력에 대한 결과만 받으려면 `-p` 플래그를 사용하세요. CI/CD 파이프라인이나 스크립트에 유용합니다.
+#### Headless mode
 
 ```bash
-moli-code -p "방금 수정한 코드를 리뷰하고 요약해줘."
+cd your-project/
+qwen -p "your question"
 ```
 
-### IDE 통합
+Use `-p` to run Moli Code without the interactive UI—ideal for scripts, automation, and CI/CD. Learn more: [Headless mode](https://qwenlm.github.io/moli-code-docs/en/users/features/headless).
 
-VS Code, Eclipse 등 주요 IDE와 연동하여 사용할 수 있습니다.
+#### IDE integration
 
-- [VS Code 통합 가이드](docs/users/integration-vscode.md)
+Use Moli Code inside your editor (VS Code, Zed, and JetBrains IDEs):
 
----
+- [Use in VS Code](https://qwenlm.github.io/moli-code-docs/en/users/integration-vscode/)
+- [Use in Zed](https://qwenlm.github.io/moli-code-docs/en/users/integration-zed/)
+- [Use in JetBrains IDEs](https://qwenlm.github.io/moli-code-docs/en/users/integration-jetbrains/)
 
-## 명령어 레퍼런스
+#### TypeScript SDK
 
-### 세션 명령어
+Build on top of Moli Code with the TypeScript SDK:
 
-| 명령어           | 설명                                          |
-| ---------------- | --------------------------------------------- |
-| `/help`          | 사용 가능한 전체 명령어와 단축키 도움말       |
-| `/agents`        | 사용자 맞춤형 서브에이전트 관리 및 생성       |
-| `/auth`          | 인증 방법 변경 (몰리메이트 / 로컬 환경)       |
-| `/approval-mode` | 계획모드 · 기본모드 · 자동편집모드 · yolo모드 |
-| `/clear`         | 대화 기록과 컨텍스트 초기화                   |
-| `/compress`      | 토큰 절약을 위한 대화 기록 압축               |
-| `/stats`         | 세션 사용량 및 상세 통계                      |
-| `/bug`           | 버그 리포트                                   |
-| `/exit`          | 종료                                          |
+- [Use the Moli Code SDK](./packages/sdk-typescript/README.md)
 
-### 키보드 단축키
+## Commands & Shortcuts
 
-| 단축키              | 설명                      |
-| ------------------- | ------------------------- |
-| `Ctrl+C`            | 현재 작업 취소            |
-| `Ctrl+D`            | 종료 (입력창 비어있을 때) |
-| `↑ / ↓`             | 프롬프트 히스토리 탐색    |
-| `Shift+Tab` / `Tab` | 도구 승인 자동 모드 토글  |
+### Session Commands
 
-> **Tip:** `!` 접두사로 셸 명령어를 직접 실행할 수 있습니다. (예: `!npm run build`, `!ls -al`)
+- `/help` - Display available commands
+- `/clear` - Clear conversation history
+- `/compress` - Compress history to save tokens
+- `/stats` - Show current session information
+- `/bug` - Submit a bug report
+- `/exit` or `/quit` - Exit Moli Code
 
----
+### Keyboard Shortcuts
 
-## 설정 파일
+- `Ctrl+C` - Cancel current operation
+- `Ctrl+D` - Exit (on empty line)
+- `Up/Down` - Navigate command history
 
-| 파일 위치               | 적용 범위            | 설명                                  |
-| ----------------------- | -------------------- | ------------------------------------- |
-| `~/.moli/settings.json` | 사용자 (User)        | 모든 세션에 적용. API 키 및 기본 설정 |
-| `.moli/settings.json`   | 프로젝트 (Workspace) | 프로젝트별 설정. 사용자 설정보다 우선 |
+> Learn more about [Commands](https://qwenlm.github.io/moli-code-docs/en/users/features/commands/)
+>
+> **Tip**: In YOLO mode (`--yolo`), vision switching happens automatically without prompts when images are detected. Learn more about [Approval Mode](https://qwenlm.github.io/moli-code-docs/en/users/features/approval-mode/)
 
----
+## Configuration
 
-## 문제 해결
+Moli Code can be configured via `settings.json`, environment variables, and CLI flags.
 
-사용 중 문제가 발생하면 CLI 창에서 `/bug` 명령어를 입력하거나, 에이전트에게 직접 오류 상황을 설명해주세요.
+| File                    | Scope         | Description                                                                             |
+| ----------------------- | ------------- | --------------------------------------------------------------------------------------- |
+| `~/.qwen/settings.json` | User (global) | Applies to all your Moli Code sessions. **Recommended for `modelProviders` and `env`.** |
+| `.qwen/settings.json`   | Project       | Applies only when running Moli Code in this project. Overrides user settings.           |
 
-자세한 내용은 [문제 해결 가이드](docs/users/support/troubleshooting.md)를 참고하세요.
+The most commonly used top-level fields in `settings.json`:
 
----
+| Field                        | Description                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `modelProviders`             | Define available models per protocol (`openai`, `anthropic`, `gemini`, `vertex-ai`).                 |
+| `env`                        | Fallback environment variables (e.g. API keys). Lower priority than shell `export` and `.env` files. |
+| `security.auth.selectedType` | The protocol to use on startup (e.g. `openai`).                                                      |
+| `model.name`                 | The default model to use when Moli Code starts.                                                      |
 
-## 감사 인사
+> See the [Authentication](#api-key-flexible) section above for complete `settings.json` examples, and the [settings reference](https://qwenlm.github.io/moli-code-docs/en/users/configuration/settings/) for all available options.
 
-본 프로젝트는 [Google Gemini CLI](https://github.com/google-gemini/gemini-cli) 및 [Qwen-Code](https://github.com/QwenLM/qwen-code)에 기반을 두고 있습니다. 뛰어난 개발자분들의 결과물에 깊은 감사를 표합니다. 몰리 코드는 이를 바탕으로 커스텀 프레임워크/솔루션 연계, LLM 모델 연동 및 한국어 지원 등 내부 환경에 특화된 기능들을 추가·개선했습니다.
+## Benchmark Results
 
----
+### Terminal-Bench Performance
 
-<div align="center">
+| Agent     | Model              | Accuracy |
+| --------- | ------------------ | -------- |
+| Moli Code | Qwen3-Coder-480A35 | 37.5%    |
+| Moli Code | Qwen3-Coder-30BA3B | 31.3%    |
 
-**[설치하기](https://molicode.vercel.app)** · **[문제 해결](docs/users/support/troubleshooting.md)**
+## Ecosystem
 
-AI와 함께 성장하려는 도비가.
+Looking for a graphical interface?
 
-</div>
+- [**AionUi**](https://github.com/iOfficeAI/AionUi) A modern GUI for command-line AI tools including Moli Code
+- [**Gemini CLI Desktop**](https://github.com/Piebald-AI/gemini-cli-desktop) A cross-platform desktop/web/mobile UI for Moli Code
+
+## Troubleshooting
+
+If you encounter issues, check the [troubleshooting guide](https://qwenlm.github.io/moli-code-docs/en/users/support/troubleshooting/).
+
+To report a bug from within the CLI, run `/bug` and include a short title and repro steps.
+
+## Connect with Us
+
+- Discord: https://discord.gg/RN7tqZCeDK
+- Dingtalk: https://qr.dingtalk.com/action/joingroup?code=v1,k1,+FX6Gf/ZDlTahTIRi8AEQhIaBlqykA0j+eBKKdhLeAE=&_dt_no_comment=1&origin=1
+
+## Acknowledgments
+
+This project is based on [Google Gemini CLI](https://github.com/google-gemini/gemini-cli). We acknowledge and appreciate the excellent work of the Gemini CLI team. Our main contribution focuses on parser-level adaptations to better support Qwen-Coder models.

@@ -133,7 +133,7 @@ export class DataProcessor {
           type: 'object',
           additionalProperties: { type: 'number' },
         },
-        Moli_helpfulness: {
+        Qwen_helpfulness: {
           type: 'string',
           enum: [
             'unhelpful',
@@ -183,7 +183,7 @@ export class DataProcessor {
         'goal_categories',
         'outcome',
         'user_satisfaction_counts',
-        'Moli_helpfulness',
+        'Qwen_helpfulness',
         'session_type',
         'friction_counts',
         'friction_detail',
@@ -510,7 +510,7 @@ export class DataProcessor {
     const schemaImprovements = {
       type: 'object',
       properties: {
-        Moli_md_additions: {
+        Qwen_md_additions: {
           type: 'array',
           items: {
             type: 'object',
@@ -549,7 +549,7 @@ export class DataProcessor {
           },
         },
       },
-      required: ['Moli_md_additions', 'features_to_try', 'usage_patterns'],
+      required: ['Qwen_md_additions', 'features_to_try', 'usage_patterns'],
     };
 
     // 7. Interaction Style
@@ -754,7 +754,7 @@ ${sessionSummaries}
 FRICTION DETAILS:
 ${frictionDetails}
 
-USER INSTRUCTIONS TO Moli:
+USER INSTRUCTIONS TO Qwen:
 None captured`;
   }
 

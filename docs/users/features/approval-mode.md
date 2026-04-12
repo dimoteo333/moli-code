@@ -1,6 +1,6 @@
 # Approval Mode
 
-Moli Code offers three distinct permission modes that allow you to flexibly control how AI interacts with your code and system based on task complexity and risk level.
+Moli Code offers four distinct permission modes that allow you to flexibly control how AI interacts with your code and system based on task complexity and risk level.
 
 ## Permission Modes Comparison
 
@@ -40,6 +40,18 @@ You can switch into Plan Mode during a session using **Shift+Tab** (or **Tab** o
 
 If you are in Normal Mode, **Shift+Tab** (or **Tab** on Windows) first switches into `auto-edits` Mode, indicated by `⏵⏵ accept edits on` at the bottom of the terminal. A subsequent **Shift+Tab** (or **Tab** on Windows) will switch into Plan Mode, indicated by `⏸ plan mode`.
 
+**Use the `/plan` command**
+
+The `/plan` command provides a quick shortcut for entering and exiting Plan Mode:
+
+```bash
+/plan                          # Enter plan mode
+/plan refactor the auth module # Enter plan mode and start planning
+/plan exit                     # Exit plan mode, restore previous mode
+```
+
+When you exit Plan Mode with `/plan exit`, your previous approval mode is automatically restored (e.g., if you were in Auto-Edit before entering Plan Mode, you'll return to Auto-Edit).
+
 **Start a new session in Plan Mode**
 
 To start a new session in Plan Mode, use the `/approval-mode` then select `plan`
@@ -53,20 +65,16 @@ To start a new session in Plan Mode, use the `/approval-mode` then select `plan`
 You can also run a query in Plan Mode directly with `-p` or `prompt`:
 
 ```bash
-moli --prompt "What is machine learning?"
+qwen --prompt "What is machine learning?"
 ```
 
 ### Example: Planning a complex refactor
 
 ```bash
-/approval-mode plan
+/plan I need to refactor our authentication system to use OAuth2. Create a detailed migration plan.
 ```
 
-```
-I need to refactor our authentication system to use OAuth2. Create a detailed migration plan.
-```
-
-Moli Code analyzes the current implementation and create a comprehensive plan. Refine with follow-ups:
+Moli Code enters Plan Mode and analyzes the current implementation to create a comprehensive plan. Refine with follow-ups:
 
 ```
 What about backward compatibility?
@@ -76,7 +84,7 @@ How should we handle database migration?
 ### Configure Plan Mode as default
 
 ```json
-// .moli/settings.json
+// .qwen/settings.json
 {
   "permissions": {
     "defaultMode": "plan"
@@ -115,7 +123,7 @@ Default Mode is the initial mode when you start Moli Code. If you've changed mod
 When running headless commands, Default Mode is the default behavior. You can explicitly specify it with:
 
 ```
-moli --prompt "Analyze this code for potential bugs"
+qwen --prompt "Analyze this code for potential bugs"
 ```
 
 ### Example: Safely implementing a feature
@@ -139,7 +147,7 @@ You can review each proposed change and approve or reject it individually.
 ### Configure Default Mode as default
 
 ```bash
-// .moli/settings.json
+// .qwen/settings.json
 {
   "permissions": {
 "defaultMode": "default"
@@ -209,7 +217,7 @@ YOLO Mode grants Moli Code the highest permissions, automatically approving all 
 ### Configuration Example
 
 ```bash
-// .moli/settings.json
+// .qwen/settings.json
 {
   "permissions": {
 "defaultMode": "yolo",
@@ -223,7 +231,7 @@ YOLO Mode grants Moli Code the highest permissions, automatically approving all 
 
 ```bash
 # Fully automated refactoring task
-moli --prompt "Run the test suite, fix all failing tests, then commit changes"
+qwen --prompt "Run the test suite, fix all failing tests, then commit changes"
 
 # Without human intervention, AI will:
 # 1. Run test commands (auto-approved)
@@ -235,7 +243,7 @@ moli --prompt "Run the test suite, fix all failing tests, then commit changes"
 
 ### Keyboard Shortcut Switching
 
-During a Moli Code session, use **Shift+Tab**​ (or **Tab** on Windows) to quickly cycle through the three modes:
+During a Moli Code session, use **Shift+Tab**​ (or **Tab** on Windows) to quickly cycle through the four modes:
 
 ```
 Default Mode → Auto-Edit Mode → YOLO Mode → Plan Mode → Default Mode
@@ -244,8 +252,8 @@ Default Mode → Auto-Edit Mode → YOLO Mode → Plan Mode → Default Mode
 ### Persistent Configuration
 
 ```
-// Project-level: ./.moli/settings.json
-// User-level: ~/.moli/settings.json
+// Project-level: ./.qwen/settings.json
+// User-level: ~/.qwen/settings.json
 {
   "permissions": {
 "defaultMode": "auto-edit",  // or "plan" or "yolo"

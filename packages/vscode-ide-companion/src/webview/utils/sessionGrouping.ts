@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Re-export session grouping utilities from webui for backward compatibility

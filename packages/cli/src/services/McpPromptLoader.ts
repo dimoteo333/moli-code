@@ -5,7 +5,10 @@
  */
 
 import type { Config } from '@dobby/moli-code-core';
-import { getErrorMessage, getMCPServerPrompts } from '@dobby/moli-code-core';
+import {
+  getErrorMessage,
+  getMCPServerPrompts,
+} from '@dobby/moli-code-core';
 import type {
   CommandContext,
   SlashCommand,

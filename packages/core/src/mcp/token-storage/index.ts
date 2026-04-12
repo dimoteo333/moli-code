@@ -11,4 +11,4 @@ export * from './hybrid-token-storage.js';
 
 export const DEFAULT_SERVICE_NAME = 'moli-code-oauth';
 export const FORCE_ENCRYPTED_FILE_ENV_VAR =
-  'MOLI_CODE_FORCE_ENCRYPTED_FILE_STORAGE';
+  'QWEN_CODE_FORCE_ENCRYPTED_FILE_STORAGE';

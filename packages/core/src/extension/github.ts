@@ -21,6 +21,7 @@ import {
   type ExtensionManager,
 } from './extensionManager.js';
 import type { ExtensionInstallMetadata } from '../config/config.js';
+import { checkNpmUpdate } from './npm.js';
 
 const debugLogger = createDebugLogger('EXT_GITHUB');
 
@@ -173,6 +174,9 @@ export async function checkForExtensionUpdate(
     }
     return ExtensionUpdateState.UP_TO_DATE;
   }
+  if (installMetadata?.type === 'npm') {
+    return checkNpmUpdate(installMetadata);
+  }
   if (
     !installMetadata ||
     installMetadata.originSource === 'Claude' ||
@@ -298,7 +302,7 @@ export async function downloadFromGitHubRelease(
     // For regular github releases, the repository is put inside of a top level
     // directory. In this case we should see exactly two file in the destination
     // dir, the archive and the directory. If we see that, validate that the
-    // dir has a moli extension configuration file (or gemini-extension.json
+    // dir has a qwen extension configuration file (or gemini-extension.json
     // which will be converted later) and then move all files from the directory
     // up one level into the destination directory.
     const entries = await fs.promises.readdir(destination, {
@@ -307,7 +311,7 @@ export async function downloadFromGitHubRelease(
     if (entries.length === 2) {
       const lonelyDir = entries.find((entry) => entry.isDirectory());
       if (lonelyDir) {
-        const hasMoliConfig = fs.existsSync(
+        const hasQwenConfig = fs.existsSync(
           path.join(destination, lonelyDir.name, EXTENSIONS_CONFIG_FILENAME),
         );
         const hasGeminiConfig = fs.existsSync(
@@ -324,7 +328,7 @@ export async function downloadFromGitHubRelease(
           path.join(destination, lonelyDir.name, '.claude-plugin/plugin.json'),
         );
         if (
-          hasMoliConfig ||
+          hasQwenConfig ||
           hasGeminiConfig ||
           hasMarketplaceConfig ||
           hasClaudePluginConfig

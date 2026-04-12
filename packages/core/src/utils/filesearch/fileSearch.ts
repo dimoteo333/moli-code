@@ -18,7 +18,7 @@ export interface FileSearchOptions {
   projectRoot: string;
   ignoreDirs: string[];
   useGitignore: boolean;
-  useMoliignore: boolean;
+  useQwenignore: boolean;
   cache: boolean;
   cacheTtl: number;
   enableRecursiveFileSearch: boolean;

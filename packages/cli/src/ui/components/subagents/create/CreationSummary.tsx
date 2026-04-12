@@ -1,13 +1,16 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useCallback, useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import type { WizardStepProps } from '../types.js';
-import type { SubagentManager, SubagentConfig } from '@dobby/moli-code-core';
+import type {
+  SubagentManager,
+  SubagentConfig,
+} from '@dobby/moli-code-core';
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { theme } from '../../../semantic-colors.js';
 import { shouldShowColor, getColorForDisplay } from '../utils.js';
@@ -260,8 +263,8 @@ export function CreationSummary({
           <Text color={theme.text.primary}>{t('Location: ')}</Text>
           <Text>
             {state.location === 'project'
-              ? t('Project Level (.moli/agents/)')
-              : t('User Level (~/.moli/agents/)')}
+              ? t('Project Level (.qwen/agents/)')
+              : t('User Level (~/.qwen/agents/)')}
           </Text>
         </Box>
 

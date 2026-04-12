@@ -1,6 +1,6 @@
 # Examples
 
-This directory contains example implementations demonstrating various ways to use the `@moli-code/webui` library.
+This directory contains example implementations demonstrating various ways to use the `@dobby/moli-code-webui` library.
 
 ## Available Examples
 

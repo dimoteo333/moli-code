@@ -50,10 +50,10 @@ describe('handleAtCommand', () => {
       isSandboxed: () => false,
       getFileService: () => new FileDiscoveryService(testRootDir),
       getFileFilteringRespectGitIgnore: () => true,
-      getFileFilteringRespectMoliIgnore: () => true,
+      getFileFilteringRespectQwenIgnore: () => true,
       getFileFilteringOptions: () => ({
         respectGitIgnore: true,
-        respectMoliIgnore: true,
+        respectQwenIgnore: true,
       }),
       getFileSystemService: () => new StandardFileSystemService(),
       getEnableRecursiveFileSearch: vi.fn(() => true),
@@ -521,17 +521,17 @@ describe('handleAtCommand', () => {
     });
   });
 
-  describe('moli-ignore filtering', () => {
-    it('should skip moli-ignored files in @ commands', async () => {
+  describe('qwen-ignore filtering', () => {
+    it('should skip qwen-ignored files in @ commands', async () => {
       await createTestFile(
         path.join(testRootDir, '.moliignore'),
         'build/output.js',
       );
-      const moliIgnoredFile = await createTestFile(
+      const qwenIgnoredFile = await createTestFile(
         path.join(testRootDir, 'build', 'output.js'),
         'console.log("Hello");',
       );
-      const query = `@${moliIgnoredFile}`;
+      const query = `@${qwenIgnoredFile}`;
 
       const result = await handleAtCommand({
         query,
@@ -546,10 +546,10 @@ describe('handleAtCommand', () => {
         shouldProceed: true,
       });
       expect(mockOnDebugMessage).toHaveBeenCalledWith(
-        `Path ${moliIgnoredFile} is moli-ignored and will be skipped.`,
+        `Path ${qwenIgnoredFile} is qwen-ignored and will be skipped.`,
       );
       expect(mockOnDebugMessage).toHaveBeenCalledWith(
-        `Ignored 1 files:\nMoli-ignored: ${moliIgnoredFile}`,
+        `Ignored 1 files:\nQwen-ignored: ${qwenIgnoredFile}`,
       );
     });
   });
@@ -584,7 +584,7 @@ describe('handleAtCommand', () => {
     });
   });
 
-  it('should handle mixed moli-ignored and valid files', async () => {
+  it('should handle mixed qwen-ignored and valid files', async () => {
     await createTestFile(
       path.join(testRootDir, '.moliignore'),
       'dist/bundle.js',
@@ -593,11 +593,11 @@ describe('handleAtCommand', () => {
       path.join(testRootDir, 'src', 'main.ts'),
       '// Main application entry',
     );
-    const moliIgnoredFile = await createTestFile(
+    const qwenIgnoredFile = await createTestFile(
       path.join(testRootDir, 'dist', 'bundle.js'),
       'console.log("bundle");',
     );
-    const query = `@${validFile} @${moliIgnoredFile}`;
+    const query = `@${validFile} @${qwenIgnoredFile}`;
 
     const result = await handleAtCommand({
       query,
@@ -609,7 +609,7 @@ describe('handleAtCommand', () => {
 
     expect(result).toMatchObject({
       processedQuery: [
-        { text: `@${validFile} @${moliIgnoredFile}` },
+        { text: `@${validFile} @${qwenIgnoredFile}` },
         { text: '\n--- Content from referenced files ---' },
         { text: `\nContent from ${validFile}:\n` },
         { text: '// Main application entry' },
@@ -618,10 +618,10 @@ describe('handleAtCommand', () => {
       shouldProceed: true,
     });
     expect(mockOnDebugMessage).toHaveBeenCalledWith(
-      `Path ${moliIgnoredFile} is moli-ignored and will be skipped.`,
+      `Path ${qwenIgnoredFile} is qwen-ignored and will be skipped.`,
     );
     expect(mockOnDebugMessage).toHaveBeenCalledWith(
-      `Ignored 1 files:\nMoli-ignored: ${moliIgnoredFile}`,
+      `Ignored 1 files:\nQwen-ignored: ${qwenIgnoredFile}`,
     );
   });
 

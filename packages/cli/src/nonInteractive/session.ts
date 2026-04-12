@@ -1,10 +1,13 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config, ConfigInitializeOptions } from '@dobby/moli-code-core';
+import type {
+  Config,
+  ConfigInitializeOptions,
+} from '@dobby/moli-code-core';
 import { createDebugLogger } from '@dobby/moli-code-core';
 import { StreamJsonInputReader } from './io/StreamJsonInputReader.js';
 import { StreamJsonOutputAdapter } from './io/StreamJsonOutputAdapter.js';

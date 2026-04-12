@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 import type {
@@ -53,7 +53,7 @@ export interface UsageStatsPayload {
   tokenLimit?: number | null;
 }
 
-export interface MoliAgentCallbacks {
+export interface QwenAgentCallbacks {
   onMessage?: (message: ChatMessage) => void;
   onStreamChunk?: (chunk: string) => void;
   onThoughtChunk?: (chunk: string) => void;
@@ -78,6 +78,7 @@ export interface MoliAgentCallbacks {
   onModelChanged?: (model: ModelInfo) => void;
   onAvailableCommands?: (commands: AvailableCommand[]) => void;
   onAvailableModels?: (models: ModelInfo[]) => void;
+  onDisconnected?: (code: number | null, signal: string | null) => void;
 }
 
 export interface ToolCallUpdate {

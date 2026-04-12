@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as vscode from 'vscode';
-import { MoliAgentManager } from '../../services/moliAgentManager.js';
+import { QwenAgentManager } from '../../services/qwenAgentManager.js';
 import { ConversationStore } from '../../services/conversationStore.js';
 import type {
   RequestPermissionRequest,
@@ -16,10 +16,11 @@ import type {
   PermissionResponseMessage,
   AskUserQuestionResponseMessage,
 } from '../../types/webviewMessageTypes.js';
-import { PanelManager } from './PanelManager.js';
+import { PanelManager, getLocalResourceRoots } from './PanelManager.js';
 import { MessageHandler } from './MessageHandler.js';
 import { WebViewContent } from './WebViewContent.js';
 import { getFileName } from '../utils/webviewUtils.js';
+import { createImagePathResolver } from '../utils/imageHandler.js';
 import { type ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import { isAuthenticationRequiredError } from '../../utils/authErrors.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
@@ -27,7 +28,7 @@ import { getErrorMessage } from '../../utils/errorMessage.js';
 export class WebViewProvider {
   private panelManager: PanelManager;
   private messageHandler: MessageHandler;
-  private agentManager: MoliAgentManager;
+  private agentManager: QwenAgentManager;
   private conversationStore: ConversationStore;
   private disposables: vscode.Disposable[] = [];
   private agentInitialized = false; // Track if agent has been initialized
@@ -46,6 +47,8 @@ export class WebViewProvider {
   private authState: boolean | null = null;
   /** Cached available models for re-sending on webview ready */
   private cachedAvailableModels: ModelInfo[] | null = null;
+  /** Model to apply once a new editor-tab session is initialized */
+  private initialModelId: string | null = null;
   /** Reference to a WebviewView webview (sidebar/panel/secondary) when attached via attachToView */
   private attachedWebview: vscode.Webview | null = null;
   /**
@@ -56,12 +59,13 @@ export class WebViewProvider {
   private isViewHost = false;
   /** Guards against concurrent auth-restore / connection init */
   private initializationPromise: Promise<void> | null = null;
+  private isReconnecting = false;
 
   constructor(
     private context: vscode.ExtensionContext,
     private extensionUri: vscode.Uri,
   ) {
-    this.agentManager = new MoliAgentManager();
+    this.agentManager = new QwenAgentManager();
     this.conversationStore = new ConversationStore(context);
     this.panelManager = new PanelManager(extensionUri, () => {
       // Panel dispose callback — unblock any pending ACP Promises
@@ -75,6 +79,8 @@ export class WebViewProvider {
         this.pendingAskUserQuestionResolve = null;
         this.pendingAskUserQuestionRequest = null;
       }
+      // Disconnect the ACP agent process to prevent orphan processes
+      this.agentManager.disconnect();
       this.disposables.forEach((d) => d.dispose());
     });
     this.messageHandler = new MessageHandler(
@@ -88,6 +94,10 @@ export class WebViewProvider {
     this.messageHandler.setLoginHandler(async () => {
       await this.forceReLogin();
     });
+
+    // Setup file watchers for cache invalidation
+    const fileWatcherDisposable = this.messageHandler.setupFileWatchers();
+    this.disposables.push(fileWatcherDisposable);
 
     // Setup agent callbacks
     this.agentManager.onMessage((message) => {
@@ -211,7 +221,7 @@ export class WebViewProvider {
       });
     });
 
-    // Note: Tool call updates are handled in handleSessionUpdate within MoliAgentManager
+    // Note: Tool call updates are handled in handleSessionUpdate within QwenAgentManager
     // and sent via onStreamChunk callback
     this.agentManager.onToolCall((update) => {
       // Always surface tool calls; they are part of the live assistant flow.
@@ -251,25 +261,6 @@ export class WebViewProvider {
 
     this.agentManager.onPermissionRequest(
       async (request: RequestPermissionRequest) => {
-        // Auto-approve in auto/yolo mode (no UI, no diff)
-        if (this.isAutoMode()) {
-          const options = request.options || [];
-          const pick = (substr: string) =>
-            options.find((o) =>
-              (o.optionId || '').toLowerCase().includes(substr),
-            )?.optionId;
-          const pickByKind = (k: string) =>
-            options.find((o) => (o.kind || '').toLowerCase().includes(k))
-              ?.optionId;
-          const optionId =
-            pick('allow_once') ||
-            pickByKind('allow') ||
-            pick('proceed') ||
-            options[0]?.optionId ||
-            'allow_once';
-          return optionId;
-        }
-
         // Send permission request to WebView
         this.sendMessageToWebView({
           type: 'permissionRequest',
@@ -316,8 +307,8 @@ export class WebViewProvider {
               optionId === 'cancel' ||
               optionId.toLowerCase().includes('reject');
 
-            // Always close open moli-diff editors after any permission decision
-            void vscode.commands.executeCommand('moli.diff.closeAll');
+            // Always close open qwen-diff editors after any permission decision
+            void vscode.commands.executeCommand('qwen.diff.closeAll');
 
             if (isCancel) {
               // Fire and forget — cancel generation and update UI
@@ -387,7 +378,7 @@ export class WebViewProvider {
               })();
             } else {
               // Allowed/proceeded — suppress diff re-open briefly
-              void vscode.commands.executeCommand('moli.diff.suppressBriefly');
+              void vscode.commands.executeCommand('qwen.diff.suppressBriefly');
             }
           };
           // Store handler in message handler
@@ -449,6 +440,16 @@ export class WebViewProvider {
         });
       },
     );
+
+    this.agentManager.onDisconnected((code, signal) => {
+      console.log(
+        `[WebViewProvider] Agent disconnected (code: ${code}, signal: ${signal})`,
+      );
+      // Only auto-reconnect for unexpected disconnects
+      if (this.agentInitialized && !this.isReconnecting) {
+        this.attemptAutoReconnect();
+      }
+    });
   }
 
   /**
@@ -472,10 +473,10 @@ export class WebViewProvider {
     // Configure webview options
     webview.options = {
       enableScripts: true,
-      localResourceRoots: [
-        vscode.Uri.joinPath(this.extensionUri, 'dist'),
-        vscode.Uri.joinPath(this.extensionUri, 'assets'),
-      ],
+      localResourceRoots: getLocalResourceRoots(
+        this.extensionUri,
+        vscode.workspace.workspaceFolders,
+      ),
     };
 
     // Store reference so sendMessageToWebView can reach it
@@ -494,6 +495,10 @@ export class WebViewProvider {
         }
         if (message.type === 'webviewReady') {
           this.handleWebviewReady();
+          return;
+        }
+        if (message.type === 'resolveImagePaths') {
+          this.handleResolveImagePaths(message.data, webview);
           return;
         }
         if (this.handleNewChatByContext(message)) {
@@ -588,6 +593,8 @@ export class WebViewProvider {
     // Clean up when the view is disposed
     webviewView.onDidDispose(() => {
       this.attachedWebview = null;
+      // Disconnect the ACP agent process to prevent orphan processes
+      this.agentManager.disconnect();
       this.disposables.forEach((d) => d.dispose());
     });
 
@@ -647,6 +654,10 @@ export class WebViewProvider {
         }
         if (message.type === 'webviewReady') {
           this.handleWebviewReady();
+          return;
+        }
+        if (message.type === 'resolveImagePaths') {
+          this.handleResolveImagePaths(message.data, newPanel.webview);
           return;
         }
         // Allow webview to request updating the VS Code tab title
@@ -765,6 +776,13 @@ export class WebViewProvider {
     await this.attemptAuthStateRestoration();
   }
 
+  setInitialModelId(modelId: string | null | undefined): void {
+    this.initialModelId =
+      typeof modelId === 'string' && modelId.trim().length > 0
+        ? modelId.trim()
+        : null;
+  }
+
   /**
    * Attempt to restore authentication state and initialize connection
    * This is called when the webview is first shown
@@ -826,7 +844,7 @@ export class WebViewProvider {
       const bundledCliEntry = vscode.Uri.joinPath(
         this.extensionUri,
         'dist',
-        'moli-cli',
+        'qwen-cli',
         'cli.js',
       ).fsPath;
 
@@ -864,7 +882,7 @@ export class WebViewProvider {
           });
         }
 
-        // Load messages from the current Moli session
+        // Load messages from the current Qwen session
         const sessionReady = await this.loadCurrentSessionMessages(options);
 
         if (sessionReady) {
@@ -882,7 +900,7 @@ export class WebViewProvider {
         const errorMsg = getErrorMessage(_error);
         console.error('[WebViewProvider] Agent connection error:', _error);
         vscode.window.showWarningMessage(
-          `Failed to connect to Moli CLI: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
+          `Failed to connect to Qwen CLI: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
         );
         // Fallback to empty conversation
         await this.initializeEmptyConversation();
@@ -968,6 +986,53 @@ export class WebViewProvider {
   }
 
   /**
+   * Attempt to automatically reconnect after unexpected ACP process death.
+   * Uses exponential backoff with a maximum number of attempts.
+   */
+  private async attemptAutoReconnect(): Promise<void> {
+    if (this.isReconnecting) {
+      return;
+    }
+    this.isReconnecting = true;
+    this.agentInitialized = false;
+
+    const maxAttempts = 3;
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      console.log(
+        `[WebViewProvider] Auto-reconnect attempt ${attempt}/${maxAttempts}`,
+      );
+
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      try {
+        await this.doInitializeAgentConnection();
+        console.log('[WebViewProvider] Auto-reconnect succeeded');
+        this.isReconnecting = false;
+        return;
+      } catch (error) {
+        console.error(
+          `[WebViewProvider] Auto-reconnect attempt ${attempt} failed:`,
+          error,
+        );
+      }
+    }
+
+    // All attempts exhausted
+    this.isReconnecting = false;
+    console.error('[WebViewProvider] Auto-reconnect failed after all attempts');
+
+    this.sendMessageToWebView({
+      type: 'agentConnectionError',
+      data: {
+        message:
+          'Lost connection to Qwen agent and auto-reconnect failed. Please use the refresh button to try again.',
+      },
+    });
+  }
+
+  /**
    * Refresh connection without clearing auth cache
    * Called when restoring WebView after VSCode restart
    */
@@ -1017,7 +1082,7 @@ export class WebViewProvider {
   }
 
   /**
-   * Load messages from current Moli session
+   * Load messages from current Qwen session
    * Skips session restoration and creates a new session directly
    */
   private async loadCurrentSessionMessages(options?: {
@@ -1079,6 +1144,10 @@ export class WebViewProvider {
         sessionReady = true;
       }
 
+      if (sessionReady) {
+        await this.applyInitialModelSelection();
+      }
+
       await this.initializeEmptyConversation();
     } catch (_error) {
       const errorMsg = getErrorMessage(_error);
@@ -1094,6 +1163,24 @@ export class WebViewProvider {
     }
 
     return sessionReady;
+  }
+
+  private async applyInitialModelSelection(): Promise<void> {
+    if (!this.initialModelId) {
+      return;
+    }
+
+    const modelId = this.initialModelId;
+    this.initialModelId = null;
+
+    try {
+      await this.agentManager.setModelFromUi(modelId);
+    } catch (error) {
+      console.warn(
+        '[WebViewProvider] Failed to apply initial model selection:',
+        error,
+      );
+    }
   }
 
   /**
@@ -1203,7 +1290,7 @@ export class WebViewProvider {
    * Context-aware handler for the "New Chat" action (openNewChatTab message).
    *
    * - View host (sidebar / secondary bar): resets the conversation in-place by
-   *   routing to the newMoliSession handler (includes auth checks and UI clearing).
+   *   routing to the newQwenSession handler (includes auth checks and UI clearing).
    * - Editor tab: returns false so the message falls through to
    *   SessionMessageHandler which opens a brand-new editor tab.
    *
@@ -1216,7 +1303,7 @@ export class WebViewProvider {
     if (message.type !== 'openNewChatTab' || !this.isViewHost) {
       return false;
     }
-    void this.messageHandler.route({ type: 'newMoliSession', data: {} });
+    void this.messageHandler.route({ type: 'newQwenSession', data: {} });
     return true;
   }
 
@@ -1225,12 +1312,42 @@ export class WebViewProvider {
    */
   private sendMessageToWebView(message: unknown): void {
     this.updateAuthStateFromMessage(message);
-    const panel = this.panelManager.getPanel();
-    if (panel) {
-      panel.webview.postMessage(message);
-    } else if (this.attachedWebview) {
-      this.attachedWebview.postMessage(message);
+    this.getActiveWebview()?.postMessage(message);
+  }
+
+  private handleResolveImagePaths(
+    data: unknown,
+    targetWebview?: vscode.Webview,
+  ): void {
+    const webview = targetWebview ?? this.getActiveWebview();
+    if (!webview) {
+      return;
     }
+
+    const payload = data as
+      | { paths?: string[]; requestId?: number }
+      | undefined;
+    const paths = Array.isArray(payload?.paths) ? (payload?.paths ?? []) : [];
+
+    const workspaceFolders = vscode.workspace.workspaceFolders ?? [];
+    const workspaceRoots = workspaceFolders.map((folder) => folder.uri.fsPath);
+
+    const resolveImagePaths = createImagePathResolver({
+      workspaceRoots,
+      toWebviewUri: (filePath: string) =>
+        webview.asWebviewUri(vscode.Uri.file(filePath)).toString(),
+    });
+
+    const resolved = resolveImagePaths(paths);
+
+    webview.postMessage({
+      type: 'imagePathsResolved',
+      data: { resolved, requestId: payload?.requestId },
+    });
+  }
+
+  private getActiveWebview(): vscode.Webview | null {
+    return this.panelManager.getPanel()?.webview ?? this.attachedWebview;
   }
 
   /**
@@ -1374,6 +1491,10 @@ export class WebViewProvider {
         }
         if (message.type === 'webviewReady') {
           this.handleWebviewReady();
+          return;
+        }
+        if (message.type === 'resolveImagePaths') {
+          this.handleResolveImagePaths(message.data, panel.webview);
           return;
         }
         if (message.type === 'updatePanelTitle') {
@@ -1581,7 +1702,7 @@ export class WebViewProvider {
       const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
       const workingDir = workspaceFolder?.uri.fsPath || process.cwd();
 
-      // Create new Moli session via agent manager
+      // Create new Qwen session via agent manager
       await this.agentManager.createNewSession(workingDir);
 
       // Clear current conversation UI

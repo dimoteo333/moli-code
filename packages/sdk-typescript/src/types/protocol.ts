@@ -122,7 +122,7 @@ export interface SDKSystemMessage {
   model?: string;
   permission_mode?: string;
   slash_commands?: string[];
-  moli_code_version?: string;
+  qwen_code_version?: string;
   output_style?: string;
   agents?: string[];
   skills?: string[];
@@ -545,12 +545,6 @@ export function isToolResultBlock(block: any): block is ToolResultBlock {
 
 export type SubagentLevel = 'session';
 
-export interface ModelConfig {
-  model?: string;
-  temp?: number;
-  top_p?: number;
-}
-
 export interface RunConfig {
   max_time_minutes?: number;
   max_turns?: number;
@@ -563,7 +557,7 @@ export interface SubagentConfig {
   systemPrompt: string;
   level: SubagentLevel;
   filePath?: string;
-  modelConfig?: Partial<ModelConfig>;
+  model?: string;
   runConfig?: Partial<RunConfig>;
   color?: string;
   readonly isBuiltin?: boolean;
@@ -571,7 +565,7 @@ export interface SubagentConfig {
 
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 

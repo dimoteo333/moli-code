@@ -15,20 +15,20 @@ This is the recommended way for end-users to install Moli Code. It involves down
 - **Global install:**
 
   ```bash
-  npm install -g @moli-code/moli-code
+  npm install -g @dobby/moli-code
   ```
 
   Then, run the CLI from anywhere:
 
   ```bash
-  moli
+  qwen
   ```
 
 - **NPX execution:**
 
   ```bash
   # Execute the latest version from NPM without a global install
-  npx @moli-code/moli-code
+  npx @dobby/moli-code
   ```
 
 ---
@@ -41,12 +41,12 @@ For security and isolation, Moli Code can be run inside a container. This is the
   You can run the published sandbox image directly. This is useful for environments where you only have Docker and want to run the CLI.
   ```bash
   # Run the published sandbox image
-  docker run --rm -it ghcr.io/molilm/moli-code:0.0.11
+  docker run --rm -it ghcr.io/qwenlm/moli-code:0.0.11
   ```
 - **Using the `--sandbox` flag:**
   If you have Moli Code installed locally (using the standard installation described above), you can instruct it to run inside the sandbox container.
   ```bash
-  moli --sandbox -y -p "your prompt here"
+  qwen --sandbox -y -p "your prompt here"
   ```
 
 ---
@@ -68,8 +68,8 @@ Contributors to the project will want to run the CLI directly from the source co
   # Link the local cli package to your global node_modules
   npm link packages/cli
 
-  # Now you can run your local version using the `moli` command
-  moli
+  # Now you can run your local version using the `qwen` command
+  qwen
   ```
 
 ---
@@ -80,7 +80,7 @@ You can run the most recently committed version of Moli Code directly from the G
 
 ```bash
 # Execute the CLI directly from the main branch on GitHub
-npx https://github.com/MoliLM/moli-code
+npx https://github.com/QwenLM/moli-code
 ```
 
 ## Deployment architecture
@@ -91,8 +91,8 @@ The execution methods described above are made possible by the following archite
 
 Moli Code project is a monorepo that publishes core packages to the NPM registry:
 
-- `@moli-code/moli-code-core`: The backend, handling logic and tool execution.
-- `@moli-code/moli-code`: The user-facing frontend.
+- `@dobby/moli-code-core`: The backend, handling logic and tool execution.
+- `@dobby/moli-code`: The user-facing frontend.
 
 These packages are used when performing the standard installation and when running Moli Code from the source.
 
@@ -100,7 +100,7 @@ These packages are used when performing the standard installation and when runni
 
 There are two distinct build processes used, depending on the distribution channel:
 
-- **NPM publication:** For publishing to the NPM registry, the TypeScript source code in `@moli-code/moli-code-core` and `@moli-code/moli-code` is transpiled into standard JavaScript using the TypeScript Compiler (`tsc`). The resulting `dist/` directory is what gets published in the NPM package. This is a standard approach for TypeScript libraries.
+- **NPM publication:** For publishing to the NPM registry, the TypeScript source code in `@dobby/moli-code-core` and `@dobby/moli-code` is transpiled into standard JavaScript using the TypeScript Compiler (`tsc`). The resulting `dist/` directory is what gets published in the NPM package. This is a standard approach for TypeScript libraries.
 
 - **GitHub `npx` execution:** When running the latest version of Moli Code directly from GitHub, a different process is triggered by the `prepare` script in `package.json`. This script uses `esbuild` to bundle the entire application and its dependencies into a single, self-contained JavaScript file. This bundle is created on-the-fly on the user's machine and is not checked into the repository.
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,7 +14,7 @@ import {
   type ResolvedModelConfig,
   type AvailableModel,
 } from './types.js';
-import { DEFAULT_MOLI_MODEL } from '../config/models.js';
+import { DEFAULT_QWEN_MODEL } from '../config/models.js';
 import { MOLI_OAUTH_MODELS } from './constants.js';
 import { createDebugLogger } from '../utils/debugLogger.js';
 
@@ -160,7 +160,7 @@ export class ModelRegistry {
     authType: AuthType,
   ): ResolvedModelConfig | undefined {
     if (authType === AuthType.MOLI_OAUTH) {
-      return this.getModel(authType, DEFAULT_MOLI_MODEL);
+      return this.getModel(authType, DEFAULT_QWEN_MODEL);
     }
     const models = this.modelsByAuthType.get(authType);
     if (!models || models.size === 0) return undefined;

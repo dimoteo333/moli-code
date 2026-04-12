@@ -54,9 +54,11 @@ import {
   logExtensionDisable,
   logExtensionInstallEvent,
   logExtensionUninstall,
+  logHookCall,
+  logApiError,
 } from './loggers.js';
 import * as metrics from './metrics.js';
-import { MoliLogger } from './moli-logger/moli-logger.js';
+import { QwenLogger } from './qwen-logger/qwen-logger.js';
 import * as sdk from './sdk.js';
 import { ToolCallDecision } from './tool-call-decision.js';
 import {
@@ -75,6 +77,8 @@ import {
   ExtensionDisableEvent,
   ExtensionInstallEvent,
   ExtensionUninstallEvent,
+  HookCallEvent,
+  ApiErrorEvent,
 } from './types.js';
 import { FileOperation } from './metrics.js';
 import type {
@@ -107,10 +111,10 @@ describe('loggers', () => {
   describe('logChatCompression', () => {
     beforeEach(() => {
       vi.spyOn(metrics, 'recordChatCompressionMetrics');
-      vi.spyOn(MoliLogger.prototype, 'logChatCompressionEvent');
+      vi.spyOn(QwenLogger.prototype, 'logChatCompressionEvent');
     });
 
-    it('logs the chat compression event to MoliLogger', () => {
+    it('logs the chat compression event to QwenLogger', () => {
       const mockConfig = makeFakeConfig({ sessionId: 'test-session-id' });
 
       const event = makeChatCompressionEvent({
@@ -120,7 +124,7 @@ describe('loggers', () => {
 
       logChatCompression(mockConfig, event);
 
-      expect(MoliLogger.prototype.logChatCompressionEvent).toHaveBeenCalledWith(
+      expect(QwenLogger.prototype.logChatCompressionEvent).toHaveBeenCalledWith(
         event,
       );
     });
@@ -357,6 +361,101 @@ describe('loggers', () => {
     });
   });
 
+  describe('logApiResponse skips chatRecordingService for internal prompt IDs', () => {
+    it.each(['prompt_suggestion', 'forked_query', 'speculation'])(
+      'should not record to chatRecordingService when prompt_id is %s',
+      (promptId) => {
+        const mockRecordUiTelemetryEvent = vi.fn();
+        const configWithRecording = {
+          getSessionId: () => 'test-session-id',
+          getUsageStatisticsEnabled: () => false,
+          getChatRecordingService: () => ({
+            recordUiTelemetryEvent: mockRecordUiTelemetryEvent,
+          }),
+        } as unknown as Config;
+
+        const event = new ApiResponseEvent(
+          'resp-id',
+          'test-model',
+          50,
+          promptId,
+        );
+        logApiResponse(configWithRecording, event);
+
+        expect(mockRecordUiTelemetryEvent).not.toHaveBeenCalled();
+        expect(mockUiEvent.addEvent).toHaveBeenCalled();
+      },
+    );
+
+    it('should record to chatRecordingService for normal prompt IDs', () => {
+      const mockRecordUiTelemetryEvent = vi.fn();
+      const configWithRecording = {
+        getSessionId: () => 'test-session-id',
+        getUsageStatisticsEnabled: () => false,
+        getChatRecordingService: () => ({
+          recordUiTelemetryEvent: mockRecordUiTelemetryEvent,
+        }),
+      } as unknown as Config;
+
+      const event = new ApiResponseEvent(
+        'resp-id',
+        'test-model',
+        50,
+        'user_query',
+      );
+      logApiResponse(configWithRecording, event);
+
+      expect(mockRecordUiTelemetryEvent).toHaveBeenCalled();
+    });
+  });
+
+  describe('logApiError skips chatRecordingService for internal prompt IDs', () => {
+    it.each(['prompt_suggestion', 'forked_query', 'speculation'])(
+      'should not record to chatRecordingService when prompt_id is %s',
+      (promptId) => {
+        const mockRecordUiTelemetryEvent = vi.fn();
+        const configWithRecording = {
+          getSessionId: () => 'test-session-id',
+          getUsageStatisticsEnabled: () => false,
+          getChatRecordingService: () => ({
+            recordUiTelemetryEvent: mockRecordUiTelemetryEvent,
+          }),
+        } as unknown as Config;
+
+        const event = new ApiErrorEvent({
+          model: 'test-model',
+          durationMs: 100,
+          promptId,
+          errorMessage: 'test error',
+        });
+        logApiError(configWithRecording, event);
+
+        expect(mockRecordUiTelemetryEvent).not.toHaveBeenCalled();
+      },
+    );
+
+    it('should record to chatRecordingService for normal prompt IDs', () => {
+      const mockRecordUiTelemetryEvent = vi.fn();
+      const configWithRecording = {
+        getSessionId: () => 'test-session-id',
+        getUsageStatisticsEnabled: () => false,
+        getChatRecordingService: () => ({
+          recordUiTelemetryEvent: mockRecordUiTelemetryEvent,
+        }),
+      } as unknown as Config;
+
+      const event = new ApiErrorEvent({
+        model: 'test-model',
+        durationMs: 100,
+        promptId: 'user_query',
+        errorMessage: 'test error',
+      });
+      logApiError(configWithRecording, event);
+
+      expect(mockRecordUiTelemetryEvent).toHaveBeenCalled();
+    });
+  });
+
   describe('logApiRequest', () => {
     const mockConfig = {
       getSessionId: () => 'test-session-id',
@@ -436,7 +535,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logRipgrepFallbackEvent');
+      vi.spyOn(QwenLogger.prototype, 'logRipgrepFallbackEvent');
     });
 
     it('should log ripgrep fallback event', () => {
@@ -448,7 +547,7 @@ describe('loggers', () => {
 
       logRipgrepFallback(mockConfig, event);
 
-      expect(MoliLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
+      expect(QwenLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -466,7 +565,7 @@ describe('loggers', () => {
 
       logRipgrepFallback(mockConfig, event);
 
-      expect(MoliLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
+      expect(QwenLogger.prototype.logRipgrepFallbackEvent).toHaveBeenCalled();
 
       const emittedEvent = mockLogger.emit.mock.calls[0][0];
       expect(emittedEvent.body).toBe('Switching to grep as fallback.');
@@ -1008,11 +1107,51 @@ describe('loggers', () => {
         },
       });
     });
+
+    it.each(['prompt_suggestion', 'forked_query', 'speculation'])(
+      'should not record to chatRecordingService when prompt_id is %s',
+      (promptId) => {
+        const mockRecordUiTelemetryEvent = vi.fn();
+        const configWithRecording = {
+          ...mockConfig,
+          getChatRecordingService: () => ({
+            recordUiTelemetryEvent: mockRecordUiTelemetryEvent,
+          }),
+        } as unknown as Config;
+
+        const call: CompletedToolCall = {
+          status: 'success',
+          request: {
+            name: 'test-function',
+            args: {},
+            callId: 'test-call-id',
+            isClientInitiated: true,
+            prompt_id: promptId,
+          },
+          response: {
+            callId: 'test-call-id',
+            responseParts: [{ text: 'ok' }],
+            resultDisplay: undefined,
+            error: undefined,
+            errorType: undefined,
+          },
+          tool: new EditTool(mockConfig),
+          invocation: {} as AnyToolInvocation,
+          durationMs: 50,
+          outcome: ToolConfirmationOutcome.ProceedOnce,
+        };
+        const event = new ToolCallEvent(call);
+        logToolCall(configWithRecording, event);
+
+        expect(mockRecordUiTelemetryEvent).not.toHaveBeenCalled();
+        expect(mockUiEvent.addEvent).toHaveBeenCalled();
+      },
+    );
   });
 
   describe('logMalformedJsonResponse', () => {
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logMalformedJsonResponseEvent');
+      vi.spyOn(QwenLogger.prototype, 'logMalformedJsonResponseEvent');
     });
 
     it('logs the event to Clearcut and OTEL', () => {
@@ -1022,7 +1161,7 @@ describe('loggers', () => {
       logMalformedJsonResponse(mockConfig, event);
 
       expect(
-        MoliLogger.prototype.logMalformedJsonResponseEvent,
+        QwenLogger.prototype.logMalformedJsonResponseEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1138,7 +1277,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logExtensionInstallEvent');
+      vi.spyOn(QwenLogger.prototype, 'logExtensionInstallEvent');
     });
 
     afterEach(() => {
@@ -1156,7 +1295,7 @@ describe('loggers', () => {
       logExtensionInstallEvent(mockConfig, event);
 
       expect(
-        MoliLogger.prototype.logExtensionInstallEvent,
+        QwenLogger.prototype.logExtensionInstallEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1181,7 +1320,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logExtensionUninstallEvent');
+      vi.spyOn(QwenLogger.prototype, 'logExtensionUninstallEvent');
     });
 
     afterEach(() => {
@@ -1194,7 +1333,7 @@ describe('loggers', () => {
       logExtensionUninstall(mockConfig, event);
 
       expect(
-        MoliLogger.prototype.logExtensionUninstallEvent,
+        QwenLogger.prototype.logExtensionUninstallEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1217,7 +1356,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logExtensionEnableEvent');
+      vi.spyOn(QwenLogger.prototype, 'logExtensionEnableEvent');
     });
 
     afterEach(() => {
@@ -1229,7 +1368,7 @@ describe('loggers', () => {
 
       logExtensionEnable(mockConfig, event);
 
-      expect(MoliLogger.prototype.logExtensionEnableEvent).toHaveBeenCalledWith(
+      expect(QwenLogger.prototype.logExtensionEnableEvent).toHaveBeenCalledWith(
         event,
       );
 
@@ -1253,7 +1392,7 @@ describe('loggers', () => {
     } as unknown as Config;
 
     beforeEach(() => {
-      vi.spyOn(MoliLogger.prototype, 'logExtensionDisableEvent');
+      vi.spyOn(QwenLogger.prototype, 'logExtensionDisableEvent');
     });
 
     afterEach(() => {
@@ -1266,7 +1405,7 @@ describe('loggers', () => {
       logExtensionDisable(mockConfig, event);
 
       expect(
-        MoliLogger.prototype.logExtensionDisableEvent,
+        QwenLogger.prototype.logExtensionDisableEvent,
       ).toHaveBeenCalledWith(event);
 
       expect(mockLogger.emit).toHaveBeenCalledWith({
@@ -1279,6 +1418,232 @@ describe('loggers', () => {
           setting_scope: 'user',
         },
       });
+    });
+  });
+
+  describe('logHookCall', () => {
+    const mockConfig = {
+      getSessionId: () => 'test-session-id',
+      getTargetDir: () => 'target-dir',
+      getUsageStatisticsEnabled: () => true,
+      getTelemetryEnabled: () => true,
+      getTelemetryLogPromptsEnabled: () => true,
+    } as unknown as Config;
+
+    const mockQwenLogger = {
+      logHookCallEvent: vi.fn(),
+    };
+
+    beforeEach(() => {
+      vi.spyOn(QwenLogger, 'getInstance').mockReturnValue(
+        mockQwenLogger as unknown as QwenLogger,
+      );
+      mockQwenLogger.logHookCallEvent.mockClear();
+    });
+
+    it('should log a successful hook call to QwenLogger', () => {
+      const event = new HookCallEvent(
+        'UserPromptSubmit',
+        'command',
+        'check-secrets.sh',
+        { prompt: 'test prompt' },
+        150,
+        true,
+        { output: 'success' },
+        0,
+        'stdout message',
+        'stderr message',
+        undefined,
+      );
+
+      logHookCall(mockConfig, event);
+
+      // Should call QwenLogger
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log a failed hook call with error', () => {
+      const event = new HookCallEvent(
+        'Stop',
+        'command',
+        'cleanup.sh',
+        { last_assistant_message: 'final message' },
+        200,
+        false,
+        undefined,
+        1,
+        'stdout message',
+        'stderr message',
+        'Error occurred',
+      );
+
+      logHookCall(mockConfig, event);
+
+      // Should call QwenLogger
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should handle when QwenLogger is not available', () => {
+      vi.spyOn(QwenLogger, 'getInstance').mockReturnValue(undefined);
+
+      const event = new HookCallEvent(
+        'UserPromptSubmit',
+        'command',
+        'test-hook.sh',
+        { prompt: 'test' },
+        100,
+        true,
+      );
+
+      // Should not throw when QwenLogger is not available
+      expect(() => logHookCall(mockConfig, event)).not.toThrow();
+    });
+
+    it('should log hook call with all optional fields', () => {
+      const event = new HookCallEvent(
+        'PreToolUse',
+        'command',
+        'validator.sh',
+        { tool_name: 'read_file', path: '/test/file.txt' },
+        250,
+        true,
+        { decision: 'allow', reason: 'validated' },
+        0,
+        'validation passed',
+        '',
+        undefined,
+      );
+
+      logHookCall(mockConfig, event);
+
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log hook call with minimal fields', () => {
+      const event = new HookCallEvent(
+        'SessionStart',
+        'command',
+        'init.sh',
+        {},
+        10,
+        true,
+      );
+
+      logHookCall(mockConfig, event);
+
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log hook call with exit code', () => {
+      const event = new HookCallEvent(
+        'PostToolUseFailure',
+        'command',
+        'error-handler.sh',
+        { tool_name: 'shell' },
+        50,
+        false,
+        undefined,
+        1,
+        '',
+        'error output',
+        'Command failed with exit code 1',
+      );
+
+      logHookCall(mockConfig, event);
+
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log hook call with zero exit code on success', () => {
+      const event = new HookCallEvent(
+        'PostToolUse',
+        'command',
+        'success-handler.sh',
+        { tool_name: 'write_file' },
+        100,
+        true,
+        { result: 'ok' },
+        0,
+        'done',
+        '',
+        undefined,
+      );
+
+      logHookCall(mockConfig, event);
+
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log hook call with non-zero exit code on failure', () => {
+      const event = new HookCallEvent(
+        'PostToolUseFailure',
+        'command',
+        'failure-handler.sh',
+        { tool_name: 'shell' },
+        75,
+        false,
+        undefined,
+        127,
+        '',
+        'command not found',
+        'Hook command not found',
+      );
+
+      logHookCall(mockConfig, event);
+
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+    });
+
+    it('should log all hook event types', () => {
+      const eventTypes = [
+        'PreToolUse',
+        'PostToolUse',
+        'PostToolUseFailure',
+        'Notification',
+        'UserPromptSubmit',
+        'SessionStart',
+        'SessionEnd',
+        'Stop',
+        'SubagentStart',
+        'SubagentStop',
+        'PreCompact',
+        'PermissionRequest',
+      ];
+
+      for (const eventType of eventTypes) {
+        mockQwenLogger.logHookCallEvent.mockClear();
+
+        const event = new HookCallEvent(
+          eventType,
+          'command',
+          'test-hook.sh',
+          {},
+          100,
+          true,
+        );
+
+        logHookCall(mockConfig, event);
+
+        expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledWith(event);
+      }
+    });
+
+    it('should pass the exact event object to QwenLogger', () => {
+      const event = new HookCallEvent(
+        'PreToolUse',
+        'command',
+        'test-hook.sh',
+        { tool_name: 'read_file' },
+        100,
+        true,
+      );
+
+      logHookCall(mockConfig, event);
+
+      // Verify the exact event object is passed
+      expect(mockQwenLogger.logHookCallEvent).toHaveBeenCalledTimes(1);
+      const passedEvent = mockQwenLogger.logHookCallEvent.mock.calls[0][0];
+      expect(passedEvent).toBe(event);
     });
   });
 });

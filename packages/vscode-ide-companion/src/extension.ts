@@ -21,9 +21,9 @@ import { registerNewCommands } from './commands/index.js';
 import { ReadonlyFileSystemProvider } from './services/readonlyFileSystemProvider.js';
 import { isWindows } from './utils/platform.js';
 
-const CLI_IDE_COMPANION_IDENTIFIER = 'dobby.moli-code-vscode-ide-companion';
-const INFO_MESSAGE_SHOWN_KEY = 'moliCodeInfoMessageShown';
-export const DIFF_SCHEME = 'moli-diff';
+const CLI_IDE_COMPANION_IDENTIFIER = 'qwenlm.moli-code-vscode-ide-companion';
+const INFO_MESSAGE_SHOWN_KEY = 'qwenCodeInfoMessageShown';
+export const DIFF_SCHEME = 'qwen-diff';
 
 /**
  * IDE environments where the installation greeting is hidden.  In these
@@ -167,7 +167,7 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Register WebView panel serializer for persistence across reloads
   context.subscriptions.push(
-    vscode.window.registerWebviewPanelSerializer('moliCode.chat', {
+    vscode.window.registerWebviewPanelSerializer('qwenCode.chat', {
       async deserializeWebviewPanel(
         webviewPanel: vscode.WebviewPanel,
         state: unknown,
@@ -223,7 +223,7 @@ export async function activate(context: vscode.ExtensionContext) {
       DIFF_SCHEME,
       diffContentProvider,
     ),
-    (vscode.commands.registerCommand('moli.diff.accept', (uri?: vscode.Uri) => {
+    (vscode.commands.registerCommand('qwen.diff.accept', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.acceptDiff(docUri);
@@ -241,7 +241,7 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       console.log('[Extension] Diff accepted');
     }),
-    vscode.commands.registerCommand('moli.diff.cancel', (uri?: vscode.Uri) => {
+    vscode.commands.registerCommand('qwen.diff.cancel', (uri?: vscode.Uri) => {
       const docUri = uri ?? vscode.window.activeTextEditor?.document.uri;
       if (docUri && docUri.scheme === DIFF_SCHEME) {
         diffManager.cancelDiff(docUri);
@@ -259,18 +259,18 @@ export async function activate(context: vscode.ExtensionContext) {
       }
       console.log('[Extension] Diff cancelled');
     })),
-    vscode.commands.registerCommand('moli.diff.closeAll', async () => {
+    vscode.commands.registerCommand('qwen.diff.closeAll', async () => {
       try {
         await diffManager.closeAll();
       } catch (err) {
-        console.warn('[Extension] moli.diff.closeAll failed:', err);
+        console.warn('[Extension] qwen.diff.closeAll failed:', err);
       }
     }),
-    vscode.commands.registerCommand('moli.diff.suppressBriefly', async () => {
+    vscode.commands.registerCommand('qwen.diff.suppressBriefly', async () => {
       try {
         diffManager.suppressFor(1200);
       } catch (err) {
-        console.warn('[Extension] moli.diff.suppressBriefly failed:', err);
+        console.warn('[Extension] qwen.diff.suppressBriefly failed:', err);
       }
     }),
   );
@@ -329,7 +329,7 @@ export async function activate(context: vscode.ExtensionContext) {
           const cliEntry = vscode.Uri.joinPath(
             context.extensionUri,
             'dist',
-            'moli-cli',
+            'qwen-cli',
             'cli.js',
           ).fsPath;
           const execPath = process.execPath;
@@ -340,7 +340,7 @@ export async function activate(context: vscode.ExtensionContext) {
             location,
           };
 
-          let moliCmd: string;
+          let qwenCmd: string;
 
           if (isWindows) {
             // On Windows, try multiple strategies to find a Node.js runtime:
@@ -350,7 +350,7 @@ export async function activate(context: vscode.ExtensionContext) {
             const quoteCmd = (s: string) => `"${s.replace(/"/g, '""')}"`;
             const cliQuoted = quoteCmd(cliEntry);
             // TODO: @yiliang114, temporarily run through node, and later hope to decouple from the local node
-            moliCmd = `node ${cliQuoted}`;
+            qwenCmd = `node ${cliQuoted}`;
             terminalOptions.shellPath = process.env.ComSpec;
           } else {
             // macOS/Linux: All VSCode-like IDEs (VSCode, Cursor, Windsurf, etc.)
@@ -358,12 +358,12 @@ export async function activate(context: vscode.ExtensionContext) {
             // to run Node.js scripts using the IDE's bundled runtime.
             const quotePosix = (s: string) => `"${s.replace(/"/g, '\\"')}"`;
             const baseCmd = `${quotePosix(execPath)} ${quotePosix(cliEntry)}`;
-            moliCmd = `ELECTRON_RUN_AS_NODE=1 ${baseCmd}`;
+            qwenCmd = `ELECTRON_RUN_AS_NODE=1 ${baseCmd}`;
           }
 
           const terminal = vscode.window.createTerminal(terminalOptions);
           terminal.show();
-          terminal.sendText(moliCmd);
+          terminal.sendText(qwenCmd);
         }
       },
     ),

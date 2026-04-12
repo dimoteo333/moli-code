@@ -39,7 +39,7 @@ export interface InsightMemorableMoment {
 }
 
 export interface InsightImprovements {
-  Moli_md_additions: Array<{
+  Qwen_md_additions: Array<{
     addition: string;
     why: string;
     prompt_scaffold: string;

@@ -1,10 +1,13 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { MCPServerConfig, MCPServerStatus } from '@dobby/moli-code-core';
+import type {
+  MCPServerConfig,
+  MCPServerStatus,
+} from '@dobby/moli-code-core';
 
 /**
  * MCP管理步骤定义

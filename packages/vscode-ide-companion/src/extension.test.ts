@@ -296,7 +296,7 @@ describe('activate', () => {
 
       expect(executeCommandMock).toHaveBeenCalledWith(
         'workbench.extensions.installExtension',
-        'dobby.moli-code-vscode-ide-companion',
+        'qwenlm.moli-code-vscode-ide-companion',
       );
     });
 

@@ -213,9 +213,9 @@ describe('terminal-bench integration', () => {
     it(
       `should complete ${taskId} task with moli-code agent`,
       async () => {
-        rig.setup(`terminal-bench-moli-${taskId}`);
+        rig.setup(`terminal-bench-qwen-${taskId}`);
 
-        const outputPath = join(outputBase, `moli-${taskId}`);
+        const outputPath = join(outputBase, `qwen-${taskId}`);
 
         // Check if API key is available
         const apiKey = process.env['OPENAI_API_KEY'];
@@ -229,11 +229,11 @@ describe('terminal-bench integration', () => {
         const args = [
           'run',
           '--agent-import-path',
-          'integration-tests.terminal-bench.moli_code:MoliCodeAgent',
+          'integration-tests.terminal-bench.qwen_code:MoliCodeAgent',
           '--agent-kwarg',
           `api_key=${apiKey}`,
           '--agent-kwarg',
-          `version=${process.env['MOLI_CODE_VERSION'] || 'latest'}`,
+          `version=${process.env['QWEN_CODE_VERSION'] || 'latest'}`,
           '--dataset-path',
           ciTasksPath,
           '--task-id',
@@ -247,7 +247,7 @@ describe('terminal-bench integration', () => {
         const env = {
           ...process.env,
           OPENAI_API_KEY: apiKey,
-          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'moli-coder-plus',
+          OPENAI_MODEL: process.env['OPENAI_MODEL'] || 'qwen3-coder-plus',
           OPENAI_BASE_URL:
             process.env['OPENAI_BASE_URL'] ||
             'https://dashscope.aliyuncs.com/compatible-mode/v1',

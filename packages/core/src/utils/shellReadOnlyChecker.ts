@@ -1,7 +1,13 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * @deprecated Use `isShellCommandReadOnlyAST` from `./shellAstParser.js` instead.
+ * This module uses regex + shell-quote for command parsing and has known edge-case
+ * limitations. The AST-based replacement provides accurate parsing via tree-sitter-bash.
  */
 
 import { parse } from 'shell-quote';
@@ -336,6 +342,11 @@ function evaluateShellSegment(segment: string): boolean {
   return true;
 }
 
+/**
+ * @deprecated Use `isShellCommandReadOnlyAST` from `./shellAstParser.js` instead.
+ * This function uses regex + shell-quote for command parsing with known edge-case
+ * limitations. The AST-based replacement provides accurate parsing via tree-sitter-bash.
+ */
 export function isShellCommandReadOnly(command: string): boolean {
   if (typeof command !== 'string' || !command.trim()) {
     return false;

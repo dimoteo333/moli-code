@@ -19,7 +19,7 @@ cd /path/to/project
 **2. Start Moli Code**
 
 ```bash
-moli
+qwen
 ```
 
 **3. Ask for a high-level overview**
@@ -186,7 +186,7 @@ Then select "create" and follow the prompts to define:
 
 > [!tip]
 >
-> - Create project-specific subagents in `.moli/agents/` for team sharing
+> - Create project-specific subagents in `.qwen/agents/` for team sharing
 > - Use descriptive `description` fields to enable automatic delegation
 > - Limit tool access to what each subagent actually needs
 > - Know more about [Sub Agents](./features/sub-agents)
@@ -323,7 +323,7 @@ This fetches data from connected MCP servers using the format @server: resource.
 > [!tip]
 >
 > - File paths can be relative or absolute
-> - @ file references add `MOLI.md` in the file's directory and parent directories to context
+> - @ file references add `QWEN.md` in the file's directory and parent directories to context
 > - Directory references show file listings, not contents
 > - You can reference multiple files in a single message (for example, "`@file 1.js` and `@file 2.js`")
 
@@ -339,7 +339,7 @@ Moli Code provides two options for resuming previous conversations:
 **1. Continue the most recent conversation**
 
 ```bash
-moli --continue
+qwen --continue
 ```
 
 This immediately resumes your most recent conversation without any prompts.
@@ -347,7 +347,7 @@ This immediately resumes your most recent conversation without any prompts.
 **2. Continue in non-interactive mode**
 
 ```bash
-moli --continue --p "Continue with my task"
+qwen --continue --p "Continue with my task"
 ```
 
 Use `--print` with `--continue` to resume the most recent conversation in non-interactive mode, perfect for scripts or automation.
@@ -355,7 +355,7 @@ Use `--print` with `--continue` to resume the most recent conversation in non-in
 **3. Show conversation picker**
 
 ```bash
-moli --resume
+qwen --resume
 ```
 
 This displays an interactive conversation selector with a clean list view showing:
@@ -384,16 +384,16 @@ Use arrow keys to navigate and press Enter to select a conversation. Press Esc t
 >
 > ```bash
 > # Continue most recent conversation
-> moli --continue
+> qwen --continue
 >
 > # Continue most recent conversation with a specific prompt
-> moli --continue --p "Show me our progress"
+> qwen --continue --p "Show me our progress"
 >
 > # Show conversation picker
-> moli --resume
+> qwen --resume
 >
 > # Continue most recent conversation in non-interactive mode
-> moli --continue --p "Run the tests again"
+> qwen --continue --p "Run the tests again"
 > ```
 
 ## Run parallel Moli Code sessions with Git worktrees
@@ -423,14 +423,14 @@ This creates a new directory with a separate working copy of your repository.
 cd ../project-feature-a
 
 # Run Moli Code in this isolated environment
-moli
+qwen
 ```
 
 **4. Run Moli Code in another worktree**
 
 ```bash
 cd ../project-bugfix
-moli
+qwen
 ```
 
 **5. Manage your worktrees**
@@ -469,7 +469,7 @@ Suppose you want to use Moli Code as a linter or code reviewer.
     ...
     "scripts": {
         ...
-        "lint:Moli Code": "moli -p 'you are a linter. please look at the changes vs. main and report any issues related to typos. report the filename and line number on one line, and a description of the issue on the second line. do not return any other text.'"
+        "lint:Moli Code": "qwen -p 'you are a linter. please look at the changes vs. main and report any issues related to typos. report the filename and line number on one line, and a description of the issue on the second line. do not return any other text.'"
     }
 }
 ```
@@ -487,12 +487,12 @@ Suppose you want to pipe data into Moli Code, and get back data in a structured 
 **Pipe data through Moli Code:**
 
 ```bash
-cat build-error.txt | moli -p 'concisely explain the root cause of this build error' > output.txt
+cat build-error.txt | qwen -p 'concisely explain the root cause of this build error' > output.txt
 ```
 
 > [!tip]
 >
-> - Use pipes to integrate Moli-Code into existing shell scripts
+> - Use pipes to integrate Qwen-Code into existing shell scripts
 > - Combine with other Unix tools for powerful workflows
 > - Consider using --output-format for structured output
 
@@ -503,7 +503,7 @@ Suppose you need Moli Code's output in a specific format, especially when integr
 **1. Use text format (default)**
 
 ```bash
-cat data.txt | moli -p 'summarize this data' --output-format text > summary.txt
+cat data.txt | qwen -p 'summarize this data' --output-format text > summary.txt
 ```
 
 This outputs just Moli Code's plain text response (default behavior).
@@ -511,7 +511,7 @@ This outputs just Moli Code's plain text response (default behavior).
 **2. Use JSON format**
 
 ```bash
-cat code.py | moli -p 'analyze this code for bugs' --output-format json > analysis.json
+cat code.py | qwen -p 'analyze this code for bugs' --output-format json > analysis.json
 ```
 
 This outputs a JSON array of messages with metadata including cost and duration.
@@ -519,7 +519,7 @@ This outputs a JSON array of messages with metadata including cost and duration.
 **3. Use streaming JSON format**
 
 ```bash
-cat log.txt | moli -p 'parse this log file for errors' --output-format stream-json
+cat log.txt | qwen -p 'parse this log file for errors' --output-format stream-json
 ```
 
 This outputs a series of JSON objects in real-time as Moli Code processes the request. Each message is a valid JSON object, but the entire output is not valid JSON if concatenated.

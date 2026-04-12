@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,7 @@ import {
   type SubagentConfig,
   type ContentBlock,
   type ToolUseBlock,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   SDKTestHelper,
   extractText,
@@ -131,16 +131,13 @@ describe('Subagents (E2E)', () => {
       }
     });
 
-    it('should handle subagent with custom model config', async () => {
+    it('should handle subagent with custom model selector', async () => {
       const customModelAgent: SubagentConfig = {
         name: 'custom-model-agent',
         description: 'Agent with custom model configuration',
         systemPrompt: 'You are a helpful assistant.',
         level: 'session',
-        modelConfig: {
-          temp: 0.7,
-          top_p: 0.9,
-        },
+        model: 'inherit',
       };
 
       const q = query({
@@ -305,7 +302,7 @@ OTHER AGENTS CANNOT:
 
           if (isSDKAssistantMessage(message)) {
             // Check for task tool use in content blocks (main agent calling subagent)
-            const taskToolBlocks = findToolUseBlocks(message, 'task');
+            const taskToolBlocks = findToolUseBlocks(message, 'agent');
             if (taskToolBlocks.length > 0) {
               foundTaskTool = true;
               taskToolUseId = taskToolBlocks[0].id;
@@ -399,7 +396,7 @@ OTHER AGENTS CANNOT:
             // Check for task tool use (main agent delegating to subagent)
             const toolUseBlock = message.message.content.find(
               (block: ContentBlock): block is ToolUseBlock =>
-                block.type === 'tool_use' && block.name === 'task',
+                block.type === 'tool_use' && block.name === 'agent',
             );
             if (toolUseBlock) {
               foundTaskTool = true;

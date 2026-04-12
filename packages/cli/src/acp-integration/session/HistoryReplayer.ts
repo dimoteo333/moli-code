@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ChatRecord, TaskResultDisplay } from '@dobby/moli-code-core';
+import type { ChatRecord, AgentResultDisplay } from '@dobby/moli-code-core';
 import type {
   Content,
   GenerateContentResponseUsageMetadata,
@@ -165,16 +165,16 @@ export class HistoryReplayer {
       (resultDisplay as { type?: unknown }).type === 'task_execution'
     ) {
       await this.emitTaskUsageFromResultDisplay(
-        resultDisplay as TaskResultDisplay,
+        resultDisplay as AgentResultDisplay,
       );
     }
   }
 
   /**
-   * Emits token usage from a TaskResultDisplay execution summary, if present.
+   * Emits token usage from a AgentResultDisplay execution summary, if present.
    */
   private async emitTaskUsageFromResultDisplay(
-    resultDisplay: TaskResultDisplay,
+    resultDisplay: AgentResultDisplay,
   ): Promise<void> {
     const summary = resultDisplay.executionSummary;
     if (!summary) {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -132,17 +132,6 @@ export class OpenAIContentConverter {
    */
   resetStreamingToolCalls(): void {
     this.streamingToolCallParser.reset();
-  }
-
-  /**
-   * Strip chat-template special tokens that some models leak into response content.
-   * e.g. Solar Pro3 outputs `<|content|>` at the beginning of responses.
-   */
-  private stripSpecialTokens(text: string): string {
-    return text.replace(
-      /<\|(?:content|endoftext|im_start|im_end|pad|eos|bos)\|>/g,
-      '',
-    );
   }
 
   /**
@@ -848,10 +837,7 @@ export class OpenAIContentConverter {
 
       // Handle text content
       if (choice.message.content) {
-        const cleaned = this.stripSpecialTokens(choice.message.content);
-        if (cleaned) {
-          parts.push({ text: cleaned });
-        }
+        parts.push({ text: choice.message.content });
       }
 
       // Handle tool calls
@@ -961,10 +947,7 @@ export class OpenAIContentConverter {
       // Handle text content
       if (choice.delta?.content) {
         if (typeof choice.delta.content === 'string') {
-          const cleaned = this.stripSpecialTokens(choice.delta.content);
-          if (cleaned) {
-            parts.push({ text: cleaned });
-          }
+          parts.push({ text: choice.delta.content });
         }
       }
 
@@ -997,7 +980,7 @@ export class OpenAIContentConverter {
       let toolCallsTruncated = false;
       if (choice.finish_reason) {
         // Detect truncation the provider may not report correctly.
-        // Some providers (e.g. DashScope/Moli) send "stop" or "tool_calls"
+        // Some providers (e.g. DashScope/Qwen) send "stop" or "tool_calls"
         // even when output was cut off mid-JSON due to max_tokens.
         toolCallsTruncated =
           this.streamingToolCallParser.hasIncompleteToolCalls();

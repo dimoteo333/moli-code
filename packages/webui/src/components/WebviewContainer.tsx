@@ -12,6 +12,6 @@ interface WebviewContainerProps extends PropsWithChildren {
 const WebviewContainer: React.FC<WebviewContainerProps> = ({
   children,
   className = '',
-}) => <div className={`moli-webui-container ${className}`}>{children}</div>;
+}) => <div className={`qwen-webui-container ${className}`}>{children}</div>;
 
 export default WebviewContainer;

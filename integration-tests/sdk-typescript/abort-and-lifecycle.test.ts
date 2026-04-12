@@ -11,10 +11,11 @@ import {
   AbortError,
   isAbortError,
   isSDKAssistantMessage,
+  isSDKPartialAssistantMessage,
   isSDKResultMessage,
   type TextBlock,
   type SDKUserMessage,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   SDKTestHelper,
   createSharedTestOptions,
@@ -38,11 +39,8 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
   describe('Basic AbortController Usage', () => {
     it('should support AbortController cancellation', async () => {
       const controller = new AbortController();
-
-      // Abort after 5 seconds
-      setTimeout(() => {
-        controller.abort();
-      }, 5000);
+      const TARGET_CHARS = 50;
+      let accumulatedText = '';
 
       const q = query({
         prompt: 'Write a very long story about TypeScript programming',
@@ -50,23 +48,38 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
           abortController: controller,
+          includePartialMessages: true,
           debug: false,
         },
       });
 
       try {
         for await (const message of q) {
-          if (isSDKAssistantMessage(message)) {
+          if (isSDKPartialAssistantMessage(message)) {
+            // Handle partial messages from streaming
+            if (
+              message.event.type === 'content_block_delta' &&
+              message.event.delta.type === 'text_delta'
+            ) {
+              accumulatedText += message.event.delta.text;
+
+              // Abort when we have enough content to verify
+              if (accumulatedText.length >= TARGET_CHARS) {
+                controller.abort();
+              }
+            }
+          } else if (isSDKAssistantMessage(message)) {
+            // Handle complete assistant messages
             const textBlocks = message.message.content.filter(
               (block): block is TextBlock => block.type === 'text',
             );
-            const text = textBlocks
-              .map((b) => b.text)
-              .join('')
-              .slice(0, 100);
+            const chunkText = textBlocks.map((b) => b.text).join('');
+            accumulatedText += chunkText;
 
-            // Should receive some content before abort
-            expect(text.length).toBeGreaterThan(0);
+            // Abort when we have enough content to verify
+            if (accumulatedText.length >= TARGET_CHARS) {
+              controller.abort();
+            }
           }
         }
 
@@ -74,6 +87,8 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
         expect(false).toBe(true);
       } catch (error) {
         expect(isAbortError(error)).toBe(true);
+        // Should have accumulated at least TARGET_CHARS before abort
+        expect(accumulatedText.length).toBeGreaterThanOrEqual(TARGET_CHARS);
       } finally {
         await q.close();
       }
@@ -347,7 +362,8 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
           session_id: sessionId,
           message: {
             role: 'user',
-            content: 'Write "updated" to test.txt.',
+            content:
+              'Write "updated" to test.txt. Stop if any exception occurs.',
           },
           parent_tool_use_id: null,
         };
@@ -414,7 +430,7 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
         const q = query({
           prompt: 'Hello world',
           options: {
-            pathToMoliExecutable: '/nonexistent/path/to/cli',
+            pathToQwenExecutable: '/nonexistent/path/to/cli',
             debug: false,
           },
         });
@@ -430,7 +446,7 @@ describe('AbortController and Process Lifecycle (E2E)', () => {
         expect(error instanceof Error).toBe(true);
         expect((error as Error).message).toBeDefined();
         expect((error as Error).message).toContain(
-          'Invalid pathToMoliExecutable',
+          'Invalid pathToQwenExecutable',
         );
       }
     });

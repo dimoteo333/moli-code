@@ -17,7 +17,7 @@ import { settingsCommand } from './extensions/settings.js';
 
 export const extensionsCommand: CommandModule = {
   command: 'extensions <command>',
-  describe: 'Manage Moli Code extensions.',
+  describe: 'Manage Qwen Code extensions.',
   builder: (yargs) =>
     yargs
       .command(installCommand)

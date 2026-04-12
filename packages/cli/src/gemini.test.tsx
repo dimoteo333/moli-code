@@ -113,9 +113,9 @@ describe('gemini.tsx main function', () => {
 
   beforeEach(() => {
     // Store and clear sandbox-related env variables to ensure a consistent test environment
-    originalEnvGeminiSandbox = process.env['MOLI_SANDBOX'];
+    originalEnvGeminiSandbox = process.env['QWEN_SANDBOX'];
     originalEnvSandbox = process.env['SANDBOX'];
-    delete process.env['MOLI_SANDBOX'];
+    delete process.env['QWEN_SANDBOX'];
     delete process.env['SANDBOX'];
 
     initialUnhandledRejectionListeners =
@@ -125,9 +125,9 @@ describe('gemini.tsx main function', () => {
   afterEach(() => {
     // Restore original env variables
     if (originalEnvGeminiSandbox !== undefined) {
-      process.env['MOLI_SANDBOX'] = originalEnvGeminiSandbox;
+      process.env['QWEN_SANDBOX'] = originalEnvGeminiSandbox;
     } else {
-      delete process.env['MOLI_SANDBOX'];
+      delete process.env['QWEN_SANDBOX'];
     }
     if (originalEnvSandbox !== undefined) {
       process.env['SANDBOX'] = originalEnvSandbox;
@@ -397,8 +397,8 @@ describe('gemini.tsx main function kitty protocol', () => {
 
   beforeEach(() => {
     // Set no relaunch in tests since process spawning causing issues in tests
-    originalEnvNoRelaunch = process.env['MOLI_CODE_NO_RELAUNCH'];
-    process.env['MOLI_CODE_NO_RELAUNCH'] = 'true';
+    originalEnvNoRelaunch = process.env['QWEN_CODE_NO_RELAUNCH'];
+    process.env['QWEN_CODE_NO_RELAUNCH'] = 'true';
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (!(process.stdin as any).setRawMode) {
@@ -420,9 +420,9 @@ describe('gemini.tsx main function kitty protocol', () => {
   afterEach(() => {
     // Restore original env variables
     if (originalEnvNoRelaunch !== undefined) {
-      process.env['MOLI_CODE_NO_RELAUNCH'] = originalEnvNoRelaunch;
+      process.env['QWEN_CODE_NO_RELAUNCH'] = originalEnvNoRelaunch;
     } else {
-      delete process.env['MOLI_CODE_NO_RELAUNCH'];
+      delete process.env['QWEN_CODE_NO_RELAUNCH'];
     }
   });
 
@@ -467,6 +467,8 @@ describe('gemini.tsx main function kitty protocol', () => {
       debug: undefined,
       prompt: undefined,
       promptInteractive: undefined,
+      systemPrompt: undefined,
+      appendSystemPrompt: undefined,
       query: undefined,
       yolo: undefined,
       approvalMode: undefined,
@@ -504,7 +506,6 @@ describe('gemini.tsx main function kitty protocol', () => {
       authType: undefined,
       maxSessionTurns: undefined,
       experimentalLsp: undefined,
-      experimentalHooks: undefined,
       channel: undefined,
       chatRecording: undefined,
       sessionId: undefined,

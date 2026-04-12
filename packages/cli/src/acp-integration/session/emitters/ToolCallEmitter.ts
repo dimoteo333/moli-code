@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,7 +19,11 @@ import type {
   ToolKind,
 } from '@agentclientprotocol/sdk';
 import type { Part } from '@google/genai';
-import { TodoWriteTool, Kind, ExitPlanModeTool } from '@dobby/moli-code-core';
+import {
+  TodoWriteTool,
+  Kind,
+  ExitPlanModeTool,
+} from '@dobby/moli-code-core';
 
 /**
  * Unified tool call event emitter.
@@ -221,7 +225,13 @@ export class ToolCallEmitter extends BaseEmitter {
         // Pass tool name to handle special cases like exit_plan_mode -> switch_mode
         kind = this.mapToolKind(tool.kind, toolName);
       } catch {
-        // Use defaults on build failure
+        // Fallback: use the description arg directly if available
+        if (typeof args['description'] === 'string') {
+          title = `${title}: ${args['description']}`;
+        }
+        if (tool.kind) {
+          kind = this.mapToolKind(tool.kind, toolName);
+        }
       }
     }
 

@@ -38,10 +38,10 @@ Skills are stored as directories containing a `SKILL.md` file.
 
 ### Personal Skills
 
-Personal Skills are available across all your projects. Store them in `~/.moli/skills/`:
+Personal Skills are available across all your projects. Store them in `~/.qwen/skills/`:
 
 ```bash
-mkdir -p ~/.moli/skills/my-skill-name
+mkdir -p ~/.qwen/skills/my-skill-name
 ```
 
 Use personal Skills for:
@@ -52,10 +52,10 @@ Use personal Skills for:
 
 ### Project Skills
 
-Project Skills are shared with your team. Store them in `.moli/skills/` within your project:
+Project Skills are shared with your team. Store them in `.qwen/skills/` within your project:
 
 ```bash
-mkdir -p .moli/skills/my-skill-name
+mkdir -p .qwen/skills/my-skill-name
 ```
 
 Use project Skills for:
@@ -128,8 +128,8 @@ python scripts/helper.py input.txt
 
 Moli Code discovers Skills from:
 
-- Personal Skills: `~/.moli/skills/`
-- Project Skills: `.moli/skills/`
+- Personal Skills: `~/.qwen/skills/`
+- Project Skills: `.qwen/skills/`
 - Extension Skills: Skills provided by installed extensions
 
 ### Extension Skills
@@ -138,7 +138,7 @@ Extensions can provide custom skills that become available when the extension is
 
 Extension skills are automatically discovered and loaded when the extension is installed and enabled.
 
-To see which extensions provide skills, check the extension's `moli-extension.json` file for a `skills` field.
+To see which extensions provide skills, check the extension's `qwen-extension.json` file for a `skills` field.
 
 To view available Skills, ask Moli Code directly:
 
@@ -150,13 +150,13 @@ Or inspect the filesystem:
 
 ```bash
 # List personal Skills
-ls ~/.moli/skills/
+ls ~/.qwen/skills/
 
 # List project Skills (if in a project directory)
-ls .moli/skills/
+ls .qwen/skills/
 
 # View a specific Skill's content
-cat ~/.moli/skills/my-skill/SKILL.md
+cat ~/.qwen/skills/my-skill/SKILL.md
 ```
 
 ## Test a Skill
@@ -191,15 +191,15 @@ description: Extract text and tables from PDF files, fill forms, merge documents
 
 ### Verify file path
 
-- Personal Skills: `~/.moli/skills/<skill-name>/SKILL.md`
-- Project Skills: `.moli/skills/<skill-name>/SKILL.md`
+- Personal Skills: `~/.qwen/skills/<skill-name>/SKILL.md`
+- Project Skills: `.qwen/skills/<skill-name>/SKILL.md`
 
 ```bash
 # Personal
-ls ~/.moli/skills/my-skill/SKILL.md
+ls ~/.qwen/skills/my-skill/SKILL.md
 
 # Project
-ls .moli/skills/my-skill/SKILL.md
+ls .qwen/skills/my-skill/SKILL.md
 ```
 
 ### Check YAML syntax
@@ -221,19 +221,19 @@ Ensure:
 Run Moli Code with debug mode to see Skill loading errors:
 
 ```bash
-moli --debug
+qwen --debug
 ```
 
 ## Share Skills with your team
 
 You can share Skills through project repositories:
 
-1. Add the Skill under `.moli/skills/`
+1. Add the Skill under `.qwen/skills/`
 2. Commit and push
 3. Teammates pull the changes
 
 ```bash
-git add .moli/skills/
+git add .qwen/skills/
 git commit -m "Add team Skill for PDF processing"
 git push
 ```
@@ -244,10 +244,10 @@ Edit `SKILL.md` directly:
 
 ```bash
 # Personal Skill
-code ~/.moli/skills/my-skill/SKILL.md
+code ~/.qwen/skills/my-skill/SKILL.md
 
 # Project Skill
-code .moli/skills/my-skill/SKILL.md
+code .qwen/skills/my-skill/SKILL.md
 ```
 
 Changes take effect the next time you start Moli Code. If Moli Code is already running, restart it to load the updates.
@@ -258,10 +258,10 @@ Delete the Skill directory:
 
 ```bash
 # Personal
-rm -rf ~/.moli/skills/my-skill
+rm -rf ~/.qwen/skills/my-skill
 
 # Project
-rm -rf .moli/skills/my-skill
+rm -rf .qwen/skills/my-skill
 git commit -m "Remove unused Skill"
 ```
 

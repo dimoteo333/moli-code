@@ -22,7 +22,7 @@ Add the following dependency to your Maven `pom.xml`:
 ```xml
 <dependency>
     <groupId>com.alibaba</groupId>
-    <artifactId>molicode-sdk</artifactId>
+    <artifactId>qwencode-sdk</artifactId>
     <version>{$version}</version>
 </dependency>
 ```
@@ -30,7 +30,7 @@ Add the following dependency to your Maven `pom.xml`:
 Or if using Gradle, add to your `build.gradle`:
 
 ```gradle
-implementation 'com.alibaba:molicode-sdk:{$version}'
+implementation 'com.alibaba:qwencode-sdk:{$version}'
 ```
 
 ## Building and Running
@@ -67,7 +67,7 @@ For more advanced usage with custom transport options:
 ```java
 public static void runTransportOptionsExample() {
     TransportOptions options = new TransportOptions()
-            .setModel("moli3-coder-flash")
+            .setModel("qwen3-coder-flash")
             .setPermissionMode(PermissionMode.AUTO_EDIT)
             .setCwd("./")
             .setEnv(new HashMap<String, String>() {{put("CUSTOM_VAR", "value");}})
@@ -124,7 +124,7 @@ public static void runStreamingExample() {
 }
 ```
 
-other examples see src/test/java/com/alibaba/moli/code/cli/example
+other examples see src/test/java/com/alibaba/qwen/code/cli/example
 
 ## Architecture
 
@@ -234,7 +234,7 @@ For proper operation, the following timeout relationships should be maintained:
 
 The `TransportOptions` class allows configuration of how the SDK communicates with the Moli Code CLI:
 
-- `pathToMoliExecutable`: Path to the Moli Code CLI executable
+- `pathToQwenExecutable`: Path to the Moli Code CLI executable
 - `cwd`: Working directory for the CLI process
 - `model`: AI model to use for the session
 - `permissionMode`: Permission mode that controls tool execution
@@ -268,7 +268,7 @@ The SDK uses a thread pool for managing concurrent operations with the following
 - **Maximum Pool Size**: 100 threads
 - **Keep-Alive Time**: 60 seconds
 - **Queue Capacity**: 300 tasks (using LinkedBlockingQueue)
-- **Thread Naming**: "moli_code_cli-pool-{number}"
+- **Thread Naming**: "qwen_code_cli-pool-{number}"
 - **Daemon Threads**: false
 - **Rejected Execution Handler**: CallerRunsPolicy
 
@@ -282,9 +282,9 @@ The SDK provides specific exception types for different error scenarios:
 
 ## FAQ / Troubleshooting
 
-### Q: Do I need to install the Moli CLI separately?
+### Q: Do I need to install the Qwen CLI separately?
 
-A: yes, requires Moli CLI 0.5.5 or higher.
+A: yes, requires Qwen CLI 0.5.5 or higher.
 
 ### Q: What Java versions are supported?
 

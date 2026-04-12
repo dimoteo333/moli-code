@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,8 +10,8 @@ import {
   AuthType,
   clearCachedCredentialFile,
   createDebugLogger,
-  MoliOAuth2Event,
-  moliOAuth2Events,
+  QwenOAuth2Event,
+  qwenOAuth2Events,
   MCPServerConfig,
   SessionService,
   tokenLimit,
@@ -57,13 +57,15 @@ import { buildAuthMethods } from './authMethods.js';
 import { AcpFileSystemService } from './service/filesystem.js';
 import { Readable, Writable } from 'node:stream';
 import type { LoadedSettings } from '../config/settings.js';
-import { SettingScope } from '../config/settings.js';
+import { loadSettings, SettingScope } from '../config/settings.js';
+import type { ApprovalModeValue } from './session/types.js';
 import { z } from 'zod';
 import type { CliArgs } from '../config/config.js';
 import { loadCliConfig } from '../config/config.js';
 import { Session } from './session/Session.js';
-import type { ApprovalModeValue } from './session/types.js';
 import { formatAcpModelId } from '../utils/acpModelUtils.js';
+import { runWithAcpRuntimeOutputDir } from './runtimeOutputDirContext.js';
+import { runExitCleanup } from '../utils/cleanup.js';
 
 const debugLogger = createDebugLogger('ACP_AGENT');
 
@@ -83,11 +85,47 @@ export async function runAcpAgent(
 
   const stream = ndJsonStream(stdout, stdin);
   const connection = new AgentSideConnection(
-    (conn) => new MoliAgent(config, settings, argv, conn),
+    (conn) => new QwenAgent(config, settings, argv, conn),
     stream,
   );
 
+  // Handle SIGTERM/SIGINT for graceful shutdown.
+  // Without this, signal handlers registered elsewhere in the CLI
+  // (e.g., stdin raw mode restoration) override the default exit behavior,
+  // causing the ACP process to ignore termination signals.
+  let shuttingDown = false;
+  const shutdownHandler = () => {
+    if (shuttingDown) return;
+    shuttingDown = true;
+    debugLogger.debug('[ACP] Shutdown signal received, closing streams');
+    try {
+      process.stdin.destroy();
+    } catch {
+      // stdin may already be closed
+    }
+    try {
+      process.stdout.destroy();
+    } catch {
+      // stdout may already be closed
+    }
+    // Clean up child processes (MCP servers, etc.) and force exit.
+    // Without this, orphan subprocesses keep the Node.js event loop alive
+    // and the CLI process never terminates after the IDE disconnects.
+    runExitCleanup()
+      .catch((err) => {
+        debugLogger.error('[ACP] Cleanup error:', err);
+      })
+      .finally(() => {
+        process.exit(0);
+      });
+  };
+  process.on('SIGTERM', shutdownHandler);
+  process.on('SIGINT', shutdownHandler);
+
   await connection.closed;
+
+  process.off('SIGTERM', shutdownHandler);
+  process.off('SIGINT', shutdownHandler);
 }
 
 function toStdioServer(server: McpServer): McpServerStdio | undefined {
@@ -97,7 +135,7 @@ function toStdioServer(server: McpServer): McpServerStdio | undefined {
   return undefined;
 }
 
-class MoliAgent implements Agent {
+class QwenAgent implements Agent {
   private sessions: Map<string, Session> = new Map();
   private clientCapabilities: ClientCapabilities | undefined;
 
@@ -148,7 +186,7 @@ class MoliAgent implements Agent {
     };
 
     if (method === AuthType.MOLI_OAUTH) {
-      moliOAuth2Events.once(MoliOAuth2Event.AuthUri, authUriHandler);
+      qwenOAuth2Events.once(QwenOAuth2Event.AuthUri, authUriHandler);
     }
 
     await clearCachedCredentialFile();
@@ -161,7 +199,7 @@ class MoliAgent implements Agent {
       );
     } finally {
       if (method === AuthType.MOLI_OAUTH) {
-        moliOAuth2Events.off(MoliOAuth2Event.AuthUri, authUriHandler);
+        qwenOAuth2Events.off(QwenOAuth2Event.AuthUri, authUriHandler);
       }
     }
   }
@@ -188,32 +226,26 @@ class MoliAgent implements Agent {
   }
 
   async loadSession(params: LoadSessionRequest): Promise<LoadSessionResponse> {
-    const sessionService = new SessionService(params.cwd);
-    const exists = await sessionService.sessionExists(params.sessionId);
-    if (!exists) {
-      throw RequestError.invalidParams(
-        undefined,
-        `Session not found for id: ${params.sessionId}`,
-      );
-    }
+    const exists = await runWithAcpRuntimeOutputDir(
+      this.settings,
+      params.cwd,
+      async () => {
+        const sessionService = new SessionService(params.cwd);
+        return sessionService.sessionExists(params.sessionId);
+      },
+    );
 
     const config = await this.newSessionConfig(
       params.cwd,
       params.mcpServers,
       params.sessionId,
+      exists,
     );
     await this.ensureAuthenticated(config);
     this.setupFileSystem(config);
 
     const sessionData = config.getResumedSessionData();
-    if (!sessionData) {
-      throw RequestError.internalError(
-        undefined,
-        `Failed to load session data for id: ${params.sessionId}`,
-      );
-    }
-
-    await this.createAndStoreSession(config, sessionData.conversation);
+    await this.createAndStoreSession(config, sessionData?.conversation);
 
     const modesData = this.buildModesData(config);
     const availableModels = this.buildAvailableModels(config);
@@ -230,10 +262,12 @@ class MoliAgent implements Agent {
     params: ListSessionsRequest,
   ): Promise<ListSessionsResponse> {
     const cwd = params.cwd || process.cwd();
-    const sessionService = new SessionService(cwd);
     const numericCursor = params.cursor ? Number(params.cursor) : undefined;
-    const result = await sessionService.listSessions({
-      cursor: Number.isNaN(numericCursor) ? undefined : numericCursor,
+    const result = await runWithAcpRuntimeOutputDir(this.settings, cwd, () => {
+      const sessionService = new SessionService(cwd);
+      return sessionService.listSessions({
+        cursor: Number.isNaN(numericCursor) ? undefined : numericCursor,
+      });
     });
 
     const sessions: SessionInfo[] = result.items.map((item) => ({
@@ -345,7 +379,9 @@ class MoliAgent implements Agent {
     cwd: string,
     mcpServers: McpServer[],
     sessionId?: string,
+    resume?: boolean,
   ): Promise<Config> {
+    this.settings = loadSettings(cwd);
     const mergedMcpServers = { ...this.settings.merged.mcpServers };
 
     for (const server of mcpServers) {
@@ -367,11 +403,11 @@ class MoliAgent implements Agent {
     const settings = { ...this.settings.merged, mcpServers: mergedMcpServers };
     const argvForSession = {
       ...this.argv,
-      resume: sessionId,
+      ...(resume ? { resume: sessionId } : { sessionId }),
       continue: false,
     };
 
-    const config = await loadCliConfig(settings, argvForSession, cwd);
+    const config = await loadCliConfig(settings, argvForSession, cwd, []);
     await config.initialize();
     return config;
   }
@@ -406,12 +442,12 @@ class MoliAgent implements Agent {
     const errorMessage = this.extractErrorMessage(error);
     if (
       errorMessage?.includes('moli-oauth') ||
-      errorMessage?.includes('Moli OAuth')
+      errorMessage?.includes('Qwen OAuth')
     ) {
-      const moliOAuthMethods = authMethods.filter(
+      const qwenOAuthMethods = authMethods.filter(
         (m) => m.id === AuthType.MOLI_OAUTH,
       );
-      return moliOAuthMethods.length ? moliOAuthMethods : authMethods;
+      return qwenOAuthMethods.length ? qwenOAuthMethods : authMethods;
     }
 
     if (selectedType) {

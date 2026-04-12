@@ -1,12 +1,12 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * VSCode IDE Companion - Tailwind CSS
  * 
  * Only Tailwind directives and minimal VSCode-specific utilities.
- * Component styles are in @dobby/webui package.
+ * Component styles are in @qwen-code/webui package.
  */
 
 @tailwind base;

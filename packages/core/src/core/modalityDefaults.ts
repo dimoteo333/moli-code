@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -38,19 +38,20 @@ const MODALITY_PATTERNS: Array<[RegExp, InputModalities]> = [
   [/^claude-/, { image: true, pdf: true }],
 
   // -------------------
-  // Alibaba / Moli
+  // Alibaba / Qwen
   // -------------------
-  // Moli3.5-Plus: image support
-  [/^moli3\.5-plus/, { image: true, video: true }],
+  // Qwen3.5-Plus, Qwen3.6-Plus: image + video support
+  [/^qwen3\.5-plus/, { image: true, video: true }],
+  [/^qwen3\.6-plus/, { image: true, video: true }],
   [/^coder-model$/, { image: true, video: true }],
 
-  // Moli VL (vision-language) models: image + video
-  [/^moli-vl-/, { image: true, video: true }],
-  [/^moli3-vl-/, { image: true, video: true }],
+  // Qwen VL (vision-language) models: image + video
+  [/^qwen-vl-/, { image: true, video: true }],
+  [/^qwen3-vl-/, { image: true, video: true }],
 
-  // Moli coder / text models: text-only
-  [/^moli3-coder-/, {}],
-  [/^moli/, {}],
+  // Qwen coder / text models: text-only
+  [/^qwen3-coder-/, {}],
+  [/^qwen/, {}],
 
   // -------------------
   // DeepSeek — text-only

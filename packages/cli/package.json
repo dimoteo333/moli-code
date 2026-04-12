@@ -1,17 +1,16 @@
 {
   "name": "@dobby/moli-code",
-  "version": "0.1.0",
-  "description": "Moli Code - AI-powered code generation assistant",
+  "version": "0.14.3",
+  "description": "Moli Code",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/MoliLM/moli-code.git"
+    "url": "git+https://github.com/QwenLM/moli-code.git"
   },
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
-    "moli": "./dist/index.js",
-    "moli-code": "./dist/index.js"
+    "qwen": "dist/index.js"
   },
   "exports": {
     ".": {
@@ -34,15 +33,19 @@
     "dist"
   ],
   "config": {
-    "sandboxImageUri": "ghcr.io/dimoteo333/moli-code:0.1.0"
+    "sandboxImageUri": "ghcr.io/qwenlm/moli-code:0.14.3"
   },
   "dependencies": {
     "@agentclientprotocol/sdk": "^0.14.1",
-    "@dobby/moli-code-core": "file:../core",
-    "@dobby/web-templates": "file:../web-templates",
     "@google/genai": "1.30.0",
     "@iarna/toml": "^2.2.5",
     "@modelcontextprotocol/sdk": "^1.25.1",
+    "@dobby/moli-code-channel-base": "file:../channels/base",
+    "@dobby/moli-code-channel-telegram": "file:../channels/telegram",
+    "@dobby/moli-code-channel-weixin": "file:../channels/weixin",
+    "@dobby/moli-code-channel-dingtalk": "file:../channels/dingtalk",
+    "@dobby/moli-code-core": "file:../core",
+    "@dobby/moli-code-web-templates": "file:../web-templates",
     "@types/update-notifier": "^6.0.8",
     "ansi-regex": "^6.2.2",
     "command-exists": "^1.2.9",
@@ -60,7 +63,6 @@
     "open": "^10.1.2",
     "p-limit": "^7.3.0",
     "prompts": "^2.4.2",
-    "qrcode-terminal": "^0.12.0",
     "react": "^19.1.0",
     "read-package-up": "^11.0.0",
     "shell-quote": "^1.8.3",
@@ -76,8 +78,8 @@
   },
   "devDependencies": {
     "@babel/runtime": "^7.27.6",
-    "@dobby/moli-code-test-utils": "file:../test-utils",
     "@google/gemini-cli-test-utils": "file:../test-utils",
+    "@dobby/moli-code-test-utils": "file:../test-utils",
     "@testing-library/react": "^16.3.0",
     "@types/archiver": "^6.0.3",
     "@types/command-exists": "^1.2.3",

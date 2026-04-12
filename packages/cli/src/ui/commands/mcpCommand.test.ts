@@ -15,7 +15,8 @@ import {
 } from '@dobby/moli-code-core';
 
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual =
+    await importOriginal<typeof import('@dobby/moli-code-core')>();
   const mockAuthenticate = vi.fn();
   return {
     ...actual,

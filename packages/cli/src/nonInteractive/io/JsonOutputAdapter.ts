@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -52,12 +52,10 @@ export class JsonOutputAdapter
   }
 
   finalizeAssistantMessage(): CLIAssistantMessage {
-    const message = this.finalizeAssistantMessageInternal(
+    return this.finalizeAssistantMessageInternal(
       this.mainAgentMessageState,
       null,
     );
-    this.updateLastAssistantMessage(message);
-    return message;
   }
 
   emitResult(options: ResultOptions): void {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -10,6 +10,10 @@ export interface TextMessage {
   role: 'user' | 'assistant' | 'thinking';
   content: string;
   timestamp: number;
+  kind?: 'image';
+  imagePath?: string;
+  imageSrc?: string;
+  imageMissing?: boolean;
   fileContext?: {
     fileName: string;
     filePath: string;

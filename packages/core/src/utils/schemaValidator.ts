@@ -9,7 +9,6 @@ import AjvPkg, { type AnySchema, type Ajv } from 'ajv';
 // eslint-disable-next-line import/no-internal-modules
 import Ajv2020Pkg from 'ajv/dist/2020.js';
 import * as addFormats from 'ajv-formats';
-import levenshtein from 'fast-levenshtein';
 import { createDebugLogger } from './debugLogger.js';
 
 // Ajv's ESM/CJS interop: use 'any' for compatibility as recommended by Ajv docs
@@ -101,13 +100,15 @@ export class SchemaValidator {
 
     let valid = validate(data);
     if (!valid && validate.errors) {
-      // Coerce mistyped values from LLMs (string booleans, string numbers,
-      // stringified arrays/objects) before retrying validation.
-      const dataRecord = data as Record<string, unknown>;
-      fixMisnamedProperties(dataRecord, anySchema);
-      fixBooleanValues(dataRecord);
-      fixNumberValues(dataRecord, anySchema);
-      fixStringifiedJsonValues(dataRecord, anySchema);
+      // Coerce string boolean values ("true"/"false") to actual booleans
+      fixBooleanValues(data as Record<string, unknown>);
+      // Coerce stringified JSON values (arrays/objects) back to their proper types.
+      // Some LLMs serialize complex values as strings when the schema uses
+      // anyOf/oneOf (e.g., '["url"]' instead of ["url"] for anyOf: [array, null]).
+      fixStringifiedJsonValues(
+        data as Record<string, unknown>,
+        anySchema as Record<string, unknown>,
+      );
 
       valid = validate(data);
       if (!valid && validate.errors) {
@@ -127,6 +128,92 @@ export class SchemaValidator {
  * - "true", "True", "TRUE" -> true
  * - "false", "False", "FALSE" -> false
  */
+/**
+ * Returns the set of JSON Schema types that a property accepts,
+ * considering `type`, `anyOf`, and `oneOf` keywords.
+ */
+function getAcceptedTypes(
+  propSchema: Record<string, unknown>,
+): Set<string> | null {
+  const types = new Set<string>();
+
+  if (typeof propSchema['type'] === 'string') {
+    types.add(propSchema['type'] as string);
+  } else if (Array.isArray(propSchema['type'])) {
+    for (const t of propSchema['type'] as string[]) {
+      types.add(t);
+    }
+  }
+
+  for (const keyword of ['anyOf', 'oneOf']) {
+    const variants = propSchema[keyword];
+    if (Array.isArray(variants)) {
+      for (const variant of variants as Array<Record<string, unknown>>) {
+        if (typeof variant['type'] === 'string') {
+          types.add(variant['type'] as string);
+        } else if (Array.isArray(variant['type'])) {
+          for (const t of variant['type'] as string[]) {
+            types.add(t);
+          }
+        }
+      }
+    }
+  }
+
+  return types.size > 0 ? types : null;
+}
+
+/**
+ * Coerces stringified JSON values back to their proper types.
+ * Some LLMs serialize arrays/objects as JSON strings when the schema uses
+ * anyOf/oneOf with mixed types (e.g., `list[str] | None` in Python becomes
+ * `anyOf: [{type: "array"}, {type: "null"}]`). The model may return
+ * '["url"]' (a string) instead of ["url"] (an actual array).
+ *
+ * This function parses such strings back to their intended type when:
+ * 1. The value is a string starting with `[` or `{`
+ * 2. The schema accepts array or object but not string
+ * 3. The parsed result matches one of the accepted types
+ */
+function fixStringifiedJsonValues(
+  data: Record<string, unknown>,
+  schema: Record<string, unknown>,
+) {
+  const properties = schema['properties'] as
+    | Record<string, Record<string, unknown>>
+    | undefined;
+  if (!properties) return;
+
+  for (const key of Object.keys(data)) {
+    const value = data[key];
+    const propSchema = properties[key];
+    if (!propSchema || typeof value !== 'string') continue;
+
+    const trimmed = value.trim();
+    if (
+      (trimmed.startsWith('[') && trimmed.endsWith(']')) ||
+      (trimmed.startsWith('{') && trimmed.endsWith('}'))
+    ) {
+      const accepted = getAcceptedTypes(propSchema);
+      if (!accepted) continue;
+      // Only coerce if the schema does NOT accept string — otherwise the
+      // string value may be intentional.
+      if (accepted.has('string')) continue;
+      if (!accepted.has('array') && !accepted.has('object')) continue;
+
+      try {
+        const parsed = JSON.parse(trimmed);
+        const parsedType = Array.isArray(parsed) ? 'array' : typeof parsed;
+        if (accepted.has(parsedType)) {
+          data[key] = parsed;
+        }
+      } catch {
+        // Not valid JSON — leave the value unchanged
+      }
+    }
+  }
+}
+
 function fixBooleanValues(data: Record<string, unknown>) {
   for (const key of Object.keys(data)) {
     if (!(key in data)) continue;
@@ -140,146 +227,6 @@ function fixBooleanValues(data: Record<string, unknown>) {
         data[key] = true;
       } else if (lower === 'false') {
         data[key] = false;
-      }
-    }
-  }
-}
-
-/**
- * Known parameter name aliases that LLMs commonly use instead of the correct names.
- * Maps alias → canonical name. Only applied when the canonical name is a valid
- * schema property and not already present in the data.
- */
-const PARAM_ALIASES: Record<string, string> = {
-  abs_path: 'absolute_path',
-  file_path: 'absolute_path',
-  path: 'absolute_path',
-  file: 'absolute_path',
-  agent_type: 'subagent_type',
-  type: 'subagent_type',
-};
-
-/**
- * Remaps misnamed parameter keys to their correct schema property names.
- * Uses a hardcoded alias map for known LLM mistakes, then falls back to
- * Levenshtein distance matching for typos (e.g., "absolut_path" → "absolute_path").
- */
-function fixMisnamedProperties(
-  data: Record<string, unknown>,
-  schema: AnySchema,
-): void {
-  if (typeof schema !== 'object' || schema === null) return;
-  const schemaObj = schema as Record<string, unknown>;
-  const properties = schemaObj['properties'] as
-    | Record<string, unknown>
-    | undefined;
-  if (!properties) return;
-
-  const validKeys = Object.keys(properties);
-
-  for (const dataKey of Object.keys(data)) {
-    if (dataKey in properties) continue;
-
-    // Check explicit aliases first
-    const aliasTarget = PARAM_ALIASES[dataKey];
-    if (aliasTarget && aliasTarget in properties && !(aliasTarget in data)) {
-      data[aliasTarget] = data[dataKey];
-      delete data[dataKey];
-      continue;
-    }
-
-    // Fall back to Levenshtein distance matching
-    let bestMatch: string | null = null;
-    let bestDistance = Infinity;
-    for (const validKey of validKeys) {
-      if (validKey in data) continue;
-      const distance = levenshtein.get(dataKey, validKey);
-      const threshold = Math.max(2, Math.floor(validKey.length * 0.4));
-      if (distance < bestDistance && distance <= threshold) {
-        bestDistance = distance;
-        bestMatch = validKey;
-      }
-    }
-
-    if (bestMatch) {
-      data[bestMatch] = data[dataKey];
-      delete data[dataKey];
-    }
-  }
-}
-
-/**
- * Coerces string numeric values to actual numbers when the schema expects a number.
- * This handles cases where LLMs return "0", "42", "3.14" strings instead of number values.
- */
-function fixNumberValues(
-  data: Record<string, unknown>,
-  schema: AnySchema,
-): void {
-  if (typeof schema !== 'object' || schema === null) return;
-  const schemaObj = schema as Record<string, unknown>;
-  const properties = schemaObj['properties'] as
-    | Record<string, Record<string, unknown>>
-    | undefined;
-  if (!properties) return;
-
-  for (const key of Object.keys(data)) {
-    if (!(key in data) || !(key in properties)) continue;
-    const propSchema = properties[key];
-    const value = data[key];
-
-    if (
-      propSchema &&
-      (propSchema['type'] === 'number' || propSchema['type'] === 'integer') &&
-      typeof value === 'string'
-    ) {
-      const num = Number(value);
-      if (!isNaN(num) && value.trim() !== '') {
-        data[key] = num;
-      }
-    }
-  }
-}
-
-/**
- * Coerces stringified JSON arrays/objects back to their proper types when the
- * schema expects an array or object. This handles cases where LLMs return
- * '[{"id":"1",...}]' as a string instead of an actual array value.
- */
-function fixStringifiedJsonValues(
-  data: Record<string, unknown>,
-  schema: AnySchema,
-): void {
-  if (typeof schema !== 'object' || schema === null) return;
-  const schemaObj = schema as Record<string, unknown>;
-  const properties = schemaObj['properties'] as
-    | Record<string, Record<string, unknown>>
-    | undefined;
-  if (!properties) return;
-
-  for (const key of Object.keys(data)) {
-    if (!(key in data) || !(key in properties)) continue;
-    const propSchema = properties[key];
-    const value = data[key];
-
-    if (
-      propSchema &&
-      (propSchema['type'] === 'array' || propSchema['type'] === 'object') &&
-      typeof value === 'string'
-    ) {
-      try {
-        const parsed = JSON.parse(value);
-        if (
-          (propSchema['type'] === 'array' && Array.isArray(parsed)) ||
-          (propSchema['type'] === 'object' &&
-            typeof parsed === 'object' &&
-            parsed !== null &&
-            !Array.isArray(parsed))
-        ) {
-          data[key] = parsed;
-        }
-      } catch {
-        // Not valid JSON, leave as-is
       }
     }
   }

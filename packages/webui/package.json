@@ -1,6 +1,6 @@
 {
   "name": "@dobby/moli-code-webui",
-  "version": "0.12.5",
+  "version": "0.14.3",
   "description": "Shared UI components for Moli Code packages",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -70,11 +70,11 @@
     "@vitest/coverage-v8": "^3.2.4"
   },
   "keywords": [
-    "moli",
+    "qwen",
     "ui",
     "components",
     "shared"
   ],
-  "author": "Moli Team",
+  "author": "Qwen Team",
   "license": "MIT"
 }

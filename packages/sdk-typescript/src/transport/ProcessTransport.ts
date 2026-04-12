@@ -47,7 +47,7 @@ export class ProcessTransport implements Transport {
 
       const spawnInfo =
         this.options.spawnInfo ??
-        prepareSpawnInfo(this.options.pathToMoliExecutable);
+        prepareSpawnInfo(this.options.pathToQwenExecutable);
 
       const stderrMode =
         this.options.debug || this.options.stderr ? 'pipe' : 'ignore';
@@ -230,6 +230,14 @@ export class ProcessTransport implements Transport {
 
     if (this.options.model) {
       args.push('--model', this.options.model);
+    }
+
+    if (this.options.systemPrompt) {
+      args.push('--system-prompt', this.options.systemPrompt);
+    }
+
+    if (this.options.appendSystemPrompt) {
+      args.push('--append-system-prompt', this.options.appendSystemPrompt);
     }
 
     if (this.options.permissionMode) {

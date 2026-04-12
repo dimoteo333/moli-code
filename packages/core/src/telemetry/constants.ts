@@ -39,6 +39,15 @@ export const EVENT_SKILL_LAUNCH = 'moli-code.skill_launch';
 export const EVENT_AUTH = 'moli-code.auth';
 export const EVENT_USER_FEEDBACK = 'moli-code.user_feedback';
 
+// Prompt Suggestion Events
+export const EVENT_PROMPT_SUGGESTION = 'moli-code.prompt_suggestion';
+export const EVENT_SPECULATION = 'moli-code.speculation';
+
+// Arena Events
+export const EVENT_ARENA_SESSION_STARTED = 'moli-code.arena_session_started';
+export const EVENT_ARENA_AGENT_COMPLETED = 'moli-code.arena_agent_completed';
+export const EVENT_ARENA_SESSION_ENDED = 'moli-code.arena_session_ended';
+
 // Performance Events
 export const EVENT_STARTUP_PERFORMANCE = 'moli-code.startup.performance';
 export const EVENT_MEMORY_USAGE = 'moli-code.memory.usage';

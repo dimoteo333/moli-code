@@ -26,11 +26,11 @@ import { createDebugLogger } from '@dobby/moli-code-core';
 const debugLogger = createDebugLogger('SETUP_GITHUB');
 
 export const GITHUB_WORKFLOW_PATHS = [
-  'moli-dispatch/moli-dispatch.yml',
-  'moli-assistant/moli-invoke.yml',
-  'issue-triage/moli-triage.yml',
-  'issue-triage/moli-scheduled-triage.yml',
-  'pr-review/moli-review.yml',
+  'qwen-dispatch/qwen-dispatch.yml',
+  'qwen-assistant/qwen-invoke.yml',
+  'issue-triage/qwen-triage.yml',
+  'issue-triage/qwen-scheduled-triage.yml',
+  'pr-review/qwen-review.yml',
 ];
 
 // Generate OS-specific commands to open the GitHub pages needed for setup.
@@ -133,7 +133,7 @@ export const setupGithubCommand: SlashCommand = {
     // Get the latest release tag from GitHub
     const proxy = context?.services?.config?.getProxy();
     const releaseTag = await getLatestGitHubRelease(proxy);
-    const readmeUrl = `https://github.com/MoliLM/moli-code-action/blob/${releaseTag}/README.md#quick-start`;
+    const readmeUrl = `https://github.com/QwenLM/moli-code-action/blob/${releaseTag}/README.md#quick-start`;
 
     // Create the .github/workflows directory to download the files into
     const githubWorkflowsDir = path.join(gitRepoRoot, '.github', 'workflows');
@@ -155,7 +155,7 @@ export const setupGithubCommand: SlashCommand = {
     for (const workflow of GITHUB_WORKFLOW_PATHS) {
       downloads.push(
         (async () => {
-          const endpoint = `https://raw.githubusercontent.com/MoliLM/moli-code-action/refs/tags/${releaseTag}/examples/workflows/${workflow}`;
+          const endpoint = `https://raw.githubusercontent.com/QwenLM/moli-code-action/refs/tags/${releaseTag}/examples/workflows/${workflow}`;
           const response = await fetch(endpoint, {
             method: 'GET',
             dispatcher: proxy ? new ProxyAgent(proxy) : undefined,
@@ -216,7 +216,7 @@ export const setupGithubCommand: SlashCommand = {
       toolName: 'run_shell_command',
       toolArgs: {
         description:
-          'Setting up GitHub Actions to triage issues and review PRs with Moli.',
+          'Setting up GitHub Actions to triage issues and review PRs with Qwen.',
         command,
         is_background: false,
       },

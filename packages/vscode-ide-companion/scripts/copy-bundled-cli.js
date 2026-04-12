@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * Copy the already-built root dist/ folder into the extension dist/moli-cli/.
+ * Copy the already-built root dist/ folder into the extension dist/qwen-cli/.
  *
  * Assumes repoRoot/dist already exists (e.g. produced by `npm run bundle` and
  * optionally `npm run prepare:package`).
@@ -23,7 +23,7 @@ const extensionRoot = path.resolve(__dirname, '..');
 const repoRoot = path.resolve(extensionRoot, '..', '..');
 const rootDistDir = path.join(repoRoot, 'dist');
 const extensionDistDir = path.join(extensionRoot, 'dist');
-const bundledCliDir = path.join(extensionDistDir, 'moli-cli');
+const bundledCliDir = path.join(extensionDistDir, 'qwen-cli');
 
 async function main() {
   const cliJs = path.join(rootDistDir, 'cli.js');
@@ -39,7 +39,7 @@ async function main() {
   const existingNodeModules = path.join(bundledCliDir, 'node_modules');
   const tmpNodeModules = path.join(
     extensionDistDir,
-    'moli-cli.node_modules.tmp',
+    'qwen-cli.node_modules.tmp',
   );
   const keepNodeModules = existsSync(existingNodeModules);
 

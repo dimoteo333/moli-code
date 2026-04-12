@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -123,10 +123,12 @@ export const useFileContext = (vscode: VSCodeAPI) => {
   );
 
   /**
-   * Add file reference
+   * Add file reference (called when user selects a file from completion)
+   * Also resets the last query so that backspacing and re-typing will trigger a fresh search
    */
   const addFileReference = useCallback((fileName: string, filePath: string) => {
     fileReferenceMap.current.set(fileName, filePath);
+    lastQueryRef.current = undefined;
   }, []);
 
   /**

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Onboarding component - Pure UI welcome screen
@@ -14,11 +14,11 @@ export interface OnboardingProps {
   iconUrl?: string;
   /** Callback when user clicks the get started button */
   onGetStarted: () => void;
-  /** Application name (defaults to "Moli Code") */
+  /** Application name (defaults to "Qwen Code") */
   appName?: string;
   /** Welcome message subtitle */
   subtitle?: string;
-  /** Button text (defaults to "Get Started with Moli Code") */
+  /** Button text (defaults to "Get Started with Qwen Code") */
   buttonText?: string;
 }
 
@@ -29,9 +29,9 @@ export interface OnboardingProps {
 export const Onboarding: FC<OnboardingProps> = ({
   iconUrl,
   onGetStarted,
-  appName = 'Moli Code',
+  appName = 'Qwen Code',
   subtitle = 'Unlock the power of AI to understand, navigate, and transform your codebase faster than ever before.',
-  buttonText = 'Get Started with Moli Code',
+  buttonText = 'Get Started with Qwen Code',
 }) => (
   <div className="flex flex-col items-center justify-center h-full p-5 md:p-10">
     <div className="flex flex-col items-center gap-8 w-full max-w-md mx-auto">

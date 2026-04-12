@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type * as vscode from 'vscode';
-import type { ChatMessage } from './moliAgentManager.js';
+import type { ChatMessage } from './qwenAgentManager.js';
 
 export interface Conversation {
   id: string;

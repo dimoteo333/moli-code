@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -38,6 +38,7 @@ describe('getAboutSystemInfoFields', () => {
       'OS',
       'Auth',
       'Model',
+      'Fast Model',
       'Session ID',
       'Sandbox',
       'Proxy',

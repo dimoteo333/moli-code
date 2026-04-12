@@ -164,7 +164,7 @@ export async function handleAtCommand({
   const contentLabelsForDisplay: string[] = [];
   const ignoredByReason: Record<string, string[]> = {
     git: [],
-    moli: [],
+    qwen: [],
     both: [],
   };
 
@@ -203,25 +203,25 @@ export async function handleAtCommand({
       respectFileIgnore.respectGitIgnore &&
       fileDiscovery.shouldIgnoreFile(pathName, {
         respectGitIgnore: true,
-        respectMoliIgnore: false,
+        respectQwenIgnore: false,
       });
-    const moliIgnored =
-      respectFileIgnore.respectMoliIgnore &&
+    const qwenIgnored =
+      respectFileIgnore.respectQwenIgnore &&
       fileDiscovery.shouldIgnoreFile(pathName, {
         respectGitIgnore: false,
-        respectMoliIgnore: true,
+        respectQwenIgnore: true,
       });
 
-    if (gitIgnored || moliIgnored) {
+    if (gitIgnored || qwenIgnored) {
       const reason =
-        gitIgnored && moliIgnored ? 'both' : gitIgnored ? 'git' : 'moli';
+        gitIgnored && qwenIgnored ? 'both' : gitIgnored ? 'git' : 'qwen';
       ignoredByReason[reason].push(pathName);
       const reasonText =
         reason === 'both'
-          ? 'ignored by both git and moli'
+          ? 'ignored by both git and qwen'
           : reason === 'git'
             ? 'git-ignored'
-            : 'moli-ignored';
+            : 'qwen-ignored';
       onDebugMessage(`Path ${pathName} is ${reasonText} and will be skipped.`);
       continue;
     }
@@ -310,7 +310,7 @@ export async function handleAtCommand({
   // Inform user about ignored paths
   const totalIgnored =
     ignoredByReason['git'].length +
-    ignoredByReason['moli'].length +
+    ignoredByReason['qwen'].length +
     ignoredByReason['both'].length;
 
   if (totalIgnored > 0) {
@@ -318,8 +318,8 @@ export async function handleAtCommand({
     if (ignoredByReason['git'].length) {
       messages.push(`Git-ignored: ${ignoredByReason['git'].join(', ')}`);
     }
-    if (ignoredByReason['moli'].length) {
-      messages.push(`Moli-ignored: ${ignoredByReason['moli'].join(', ')}`);
+    if (ignoredByReason['qwen'].length) {
+      messages.push(`Qwen-ignored: ${ignoredByReason['qwen'].join(', ')}`);
     }
     if (ignoredByReason['both'].length) {
       messages.push(`Ignored by both: ${ignoredByReason['both'].join(', ')}`);

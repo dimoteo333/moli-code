@@ -25,12 +25,13 @@ export interface DebugLogger {
 }
 
 let ensureDebugDirPromise: Promise<void> | null = null;
+let ensuredDebugDirPath: string | null = null;
 let hasWriteFailure = false;
 let globalSession: DebugLogSession | null = null;
 const sessionContext = new AsyncLocalStorage<DebugLogSession>();
 
 function isDebugLogFileEnabled(): boolean {
-  const value = process.env['MOLI_DEBUG_LOG_FILE'];
+  const value = process.env['QWEN_DEBUG_LOG_FILE'];
   if (!value) return true;
   const normalized = value.trim().toLowerCase();
   return !['0', 'false', 'off', 'no'].includes(normalized);
@@ -41,13 +42,16 @@ function getActiveSession(): DebugLogSession | null {
 }
 
 function ensureDebugDirExists(): Promise<void> {
-  if (!ensureDebugDirPromise) {
+  const debugDirPath = Storage.getGlobalDebugDir();
+  if (!ensureDebugDirPromise || ensuredDebugDirPath !== debugDirPath) {
+    ensuredDebugDirPath = debugDirPath;
     ensureDebugDirPromise = fs
-      .mkdir(Storage.getGlobalDebugDir(), { recursive: true })
+      .mkdir(debugDirPath, { recursive: true })
       .then(() => undefined)
       .catch(() => {
         hasWriteFailure = true;
         ensureDebugDirPromise = null;
+        ensuredDebugDirPath = null;
       });
   }
   return ensureDebugDirPromise ?? Promise.resolve();
@@ -115,6 +119,7 @@ export function isDebugLoggingDegraded(): boolean {
 export function resetDebugLoggingState(): void {
   hasWriteFailure = false;
   ensureDebugDirPromise = null;
+  ensuredDebugDirPath = null;
 }
 
 const DEBUG_LATEST_ALIAS = 'latest';

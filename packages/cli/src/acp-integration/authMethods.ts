@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,9 +20,9 @@ export function buildAuthMethods(): AuthMethod[] {
     },
     {
       id: AuthType.MOLI_OAUTH,
-      name: 'Moli OAuth',
+      name: 'Qwen OAuth',
       description:
-        'OAuth authentication for Moli models with free daily requests',
+        'OAuth authentication for Qwen models with free daily requests',
       _meta: {
         type: 'terminal',
         args: ['--auth-type=moli-oauth'],
@@ -43,7 +43,7 @@ export function pickAuthMethodsForDetails(details?: string): AuthMethod[] {
   if (!details) {
     return authMethods;
   }
-  if (details.includes('moli-oauth') || details.includes('Moli OAuth')) {
+  if (details.includes('moli-oauth') || details.includes('Qwen OAuth')) {
     const narrowed = filterAuthMethodsById(authMethods, AuthType.MOLI_OAUTH);
     return narrowed.length ? narrowed : authMethods;
   }

@@ -15,11 +15,16 @@ import { SettingInputPrompt } from './SettingInputPrompt.js';
 import { PluginChoicePrompt } from './PluginChoicePrompt.js';
 import { ThemeDialog } from './ThemeDialog.js';
 import { SettingsDialog } from './SettingsDialog.js';
-import { MoliOAuthProgress } from './MoliOAuthProgress.js';
+import { QwenOAuthProgress } from './QwenOAuthProgress.js';
 import { AuthDialog } from '../auth/AuthDialog.js';
 import { EditorSettingsDialog } from './EditorSettingsDialog.js';
-import { PermissionsModifyTrustDialog } from './PermissionsModifyTrustDialog.js';
+import { TrustDialog } from './TrustDialog.js';
+import { PermissionsDialog } from './PermissionsDialog.js';
 import { ModelDialog } from './ModelDialog.js';
+import { ArenaStartDialog } from './arena/ArenaStartDialog.js';
+import { ArenaSelectDialog } from './arena/ArenaSelectDialog.js';
+import { ArenaStopDialog } from './arena/ArenaStopDialog.js';
+import { ArenaStatusDialog } from './arena/ArenaStatusDialog.js';
 import { ApprovalModeDialog } from './ApprovalModeDialog.js';
 import { theme } from '../semantic-colors.js';
 import { useUIState } from '../contexts/UIStateContext.js';
@@ -36,6 +41,7 @@ import { AgentCreationWizard } from './subagents/create/AgentCreationWizard.js';
 import { AgentsManagerDialog } from './subagents/manage/AgentsManagerDialog.js';
 import { ExtensionsManagerDialog } from './extensions/ExtensionsManagerDialog.js';
 import { MCPManagementDialog } from './mcp/MCPManagementDialog.js';
+import { HooksManagementDialog } from './hooks/HooksManagementDialog.js';
 import { SessionPicker } from './SessionPicker.js';
 
 interface DialogManagerProps {
@@ -235,8 +241,56 @@ export const DialogManager = ({
     );
   }
   if (uiState.isModelDialogOpen) {
-    return <ModelDialog onClose={uiActions.closeModelDialog} />;
+    return (
+      <ModelDialog
+        onClose={uiActions.closeModelDialog}
+        isFastModelMode={uiState.isFastModelMode}
+      />
+    );
   }
+  if (uiState.activeArenaDialog === 'start') {
+    return (
+      <ArenaStartDialog
+        onClose={() => uiActions.closeArenaDialog()}
+        onConfirm={(models) => uiActions.handleArenaModelsSelected?.(models)}
+      />
+    );
+  }
+  if (uiState.activeArenaDialog === 'status') {
+    const arenaManager = config.getArenaManager();
+    if (arenaManager) {
+      return (
+        <ArenaStatusDialog
+          manager={arenaManager}
+          closeArenaDialog={uiActions.closeArenaDialog}
+          width={mainAreaWidth}
+        />
+      );
+    }
+  }
+  if (uiState.activeArenaDialog === 'stop') {
+    return (
+      <ArenaStopDialog
+        config={config}
+        addItem={addItem}
+        closeArenaDialog={uiActions.closeArenaDialog}
+      />
+    );
+  }
+  if (uiState.activeArenaDialog === 'select') {
+    const arenaManager = config.getArenaManager();
+    if (arenaManager) {
+      return (
+        <ArenaSelectDialog
+          manager={arenaManager}
+          config={config}
+          addItem={addItem}
+          closeArenaDialog={uiActions.closeArenaDialog}
+        />
+      );
+    }
+  }
+
   if (uiState.isAuthDialogOpen || uiState.authError) {
     return (
       <Box flexDirection="column">
@@ -247,15 +301,15 @@ export const DialogManager = ({
 
   if (uiState.isAuthenticating) {
     // OpenAI authentication now handled through AuthDialog with coding-plan/custom sub-modes
-    // Moli OAuth remains as a separate flow
+    // Qwen OAuth remains as a separate flow
     if (uiState.pendingAuthType === AuthType.MOLI_OAUTH) {
       return (
-        <MoliOAuthProgress
-          deviceAuth={uiState.moliAuthState.deviceAuth || undefined}
-          authStatus={uiState.moliAuthState.authStatus}
-          authMessage={uiState.moliAuthState.authMessage}
+        <QwenOAuthProgress
+          deviceAuth={uiState.qwenAuthState.deviceAuth || undefined}
+          authStatus={uiState.qwenAuthState.authStatus}
+          authMessage={uiState.qwenAuthState.authMessage}
           onTimeout={() => {
-            uiActions.onAuthError('Moli OAuth authentication timed out.');
+            uiActions.onAuthError('Qwen OAuth authentication timed out.');
             uiActions.cancelAuthentication();
             uiActions.setAuthState(AuthState.Updating);
           }}
@@ -267,13 +321,14 @@ export const DialogManager = ({
       );
     }
   }
-  if (uiState.isPermissionsDialogOpen) {
+  if (uiState.isTrustDialogOpen) {
     return (
-      <PermissionsModifyTrustDialog
-        onExit={uiActions.closePermissionsDialog}
-        addItem={addItem}
-      />
+      <TrustDialog onExit={uiActions.closeTrustDialog} addItem={addItem} />
     );
+  }
+
+  if (uiState.isPermissionsDialogOpen) {
+    return <PermissionsDialog onExit={uiActions.closePermissionsDialog} />;
   }
 
   if (uiState.isSubagentCreateDialogOpen) {
@@ -301,6 +356,9 @@ export const DialogManager = ({
         config={config}
       />
     );
+  }
+  if (uiState.isHooksDialogOpen) {
+    return <HooksManagementDialog onClose={uiActions.closeHooksDialog} />;
   }
   if (uiState.isMcpDialogOpen) {
     return <MCPManagementDialog onClose={uiActions.closeMcpDialog} />;

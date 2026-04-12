@@ -7,7 +7,11 @@
 import { useState, useEffect, useCallback } from 'react';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { createDebugLogger, isNodeError, Storage } from '@dobby/moli-code-core';
+import {
+  createDebugLogger,
+  isNodeError,
+  Storage,
+} from '@dobby/moli-code-core';
 
 const MAX_HISTORY_LENGTH = 100;
 const debugLogger = createDebugLogger('SHELL_HISTORY');

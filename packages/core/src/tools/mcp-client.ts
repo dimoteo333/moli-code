@@ -111,7 +111,7 @@ export class McpClient {
     private readonly sendSdkMcpMessage?: SendSdkMcpMessage,
   ) {
     this.client = new Client({
-      name: `moli-cli-mcp-client-${this.serverName}`,
+      name: `qwen-cli-mcp-client-${this.serverName}`,
       version: '0.0.1',
     });
   }
@@ -884,10 +884,14 @@ export async function connectToMcpServer(
       });
       return mcpClient;
     } catch (error) {
+      unlistenDirectories?.();
+      unlistenDirectories = undefined;
       await transport.close();
       throw error;
     }
   } catch (error) {
+    unlistenDirectories?.();
+    unlistenDirectories = undefined;
     // Check if this is a 401 error that might indicate OAuth is required
     const errorString = String(error);
     if (errorString.includes('401') && hasNetworkTransport(mcpServerConfig)) {

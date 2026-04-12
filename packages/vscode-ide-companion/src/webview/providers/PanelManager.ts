@@ -1,10 +1,28 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as vscode from 'vscode';
+import { Storage } from '@dobby/moli-code-core';
+
+export function getLocalResourceRoots(
+  extensionUri: vscode.Uri,
+  workspaceFolders: readonly vscode.WorkspaceFolder[] | undefined,
+): vscode.Uri[] {
+  const roots = [
+    vscode.Uri.joinPath(extensionUri, 'dist'),
+    vscode.Uri.joinPath(extensionUri, 'assets'),
+    vscode.Uri.file(Storage.getGlobalTempDir()),
+  ];
+
+  if (workspaceFolders && workspaceFolders.length > 0) {
+    roots.push(...workspaceFolders.map((folder) => folder.uri));
+  }
+
+  return roots;
+}
 
 /**
  * Panel and Tab Manager
@@ -14,7 +32,7 @@ export class PanelManager {
   private panel: vscode.WebviewPanel | null = null;
   private panelTab: vscode.Tab | null = null;
   // Best-effort tracking of the group (by view column) that currently hosts
-  // the Moli webview. We update this when creating/revealing the panel and
+  // the Qwen webview. We update this when creating/revealing the panel and
   // whenever we can capture the Tab from the tab model.
   private panelGroupViewColumn: vscode.ViewColumn | null = null;
 
@@ -56,16 +74,16 @@ export class PanelManager {
         '[PanelManager] Found existing Moli Code group, creating panel in same group',
       );
       this.panel = vscode.window.createWebviewPanel(
-        'moliCode.chat',
+        'qwenCode.chat',
         'Moli Code',
         { viewColumn: existingGroup.viewColumn, preserveFocus: false },
         {
           enableScripts: true,
           retainContextWhenHidden: true,
-          localResourceRoots: [
-            vscode.Uri.joinPath(this.extensionUri, 'dist'),
-            vscode.Uri.joinPath(this.extensionUri, 'assets'),
-          ],
+          localResourceRoots: getLocalResourceRoots(
+            this.extensionUri,
+            vscode.workspace.workspaceFolders,
+          ),
         },
       );
       // Track the group column hosting this panel
@@ -84,16 +102,16 @@ export class PanelManager {
         const activeColumn =
           vscode.window.activeTextEditor?.viewColumn || vscode.ViewColumn.One;
         this.panel = vscode.window.createWebviewPanel(
-          'moliCode.chat',
+          'qwenCode.chat',
           'Moli Code',
           { viewColumn: activeColumn, preserveFocus: false },
           {
             enableScripts: true,
             retainContextWhenHidden: true,
-            localResourceRoots: [
-              vscode.Uri.joinPath(this.extensionUri, 'dist'),
-              vscode.Uri.joinPath(this.extensionUri, 'assets'),
-            ],
+            localResourceRoots: getLocalResourceRoots(
+              this.extensionUri,
+              vscode.workspace.workspaceFolders,
+            ),
           },
         );
         // Lock the group after creation
@@ -105,16 +123,16 @@ export class PanelManager {
       const newGroupColumn = vscode.window.tabGroups.activeTabGroup.viewColumn;
 
       this.panel = vscode.window.createWebviewPanel(
-        'moliCode.chat',
+        'qwenCode.chat',
         'Moli Code',
         { viewColumn: newGroupColumn, preserveFocus: false },
         {
           enableScripts: true,
           retainContextWhenHidden: true,
-          localResourceRoots: [
-            vscode.Uri.joinPath(this.extensionUri, 'dist'),
-            vscode.Uri.joinPath(this.extensionUri, 'assets'),
-          ],
+          localResourceRoots: getLocalResourceRoots(
+            this.extensionUri,
+            vscode.workspace.workspaceFolders,
+          ),
         },
       );
 
@@ -125,7 +143,7 @@ export class PanelManager {
       this.panelGroupViewColumn = newGroupColumn;
     }
 
-    // Set panel icon to Moli logo
+    // Set panel icon to Qwen logo
     this.panel.iconPath = vscode.Uri.joinPath(
       this.extensionUri,
       'assets',
@@ -154,7 +172,7 @@ export class PanelManager {
 
         if (
           isWebviewInput(input) &&
-          input.viewType === 'mainThreadWebview-moliCode.chat'
+          input.viewType === 'mainThreadWebview-qwenCode.chat'
         ) {
           // Found an existing Moli Code tab
           console.log('[PanelManager] Found existing Moli Code group:', {
@@ -243,7 +261,7 @@ export class PanelManager {
         const isWebviewInput = (inp: unknown): inp is { viewType: string } =>
           !!inp && typeof inp === 'object' && 'viewType' in inp;
         const isWebview = isWebviewInput(input);
-        const sameViewType = isWebview && input.viewType === 'moliCode.chat';
+        const sameViewType = isWebview && input.viewType === 'qwenCode.chat';
         const sameLabel = t.label === panelTitle;
         return !!(sameViewType || sameLabel);
       });
@@ -292,15 +310,15 @@ export class PanelManager {
         this.onPanelDispose();
 
         // After VS Code updates its tab model, check if that group is now
-        // empty (and typically locked for Moli). If so, close the group to
-        // avoid leaving an empty locked column when the user closes Moli.
+        // empty (and typically locked for Qwen). If so, close the group to
+        // avoid leaving an empty locked column when the user closes Qwen.
         if (targetColumn !== null) {
           const column: vscode.ViewColumn = targetColumn;
           setTimeout(async () => {
             try {
               const groups = vscode.window.tabGroups.all;
               const group = groups.find((g) => g.viewColumn === column);
-              // If the group that hosted Moli is now empty, close it to avoid
+              // If the group that hosted Qwen is now empty, close it to avoid
               // leaving an empty locked column around. VS Code's stable API
               // does not expose the lock state on TabGroup, so we only check
               // for emptiness here.
@@ -319,7 +337,7 @@ export class PanelManager {
                     );
                   } catch (err) {
                     console.warn(
-                      '[PanelManager] Failed to close empty group after Moli panel disposed:',
+                      '[PanelManager] Failed to close empty group after Qwen panel disposed:',
                       err,
                     );
                   }
@@ -327,7 +345,7 @@ export class PanelManager {
               }
             } catch (err) {
               console.warn(
-                '[PanelManager] Error while trying to close empty Moli group:',
+                '[PanelManager] Error while trying to close empty Qwen group:',
                 err,
               );
             }

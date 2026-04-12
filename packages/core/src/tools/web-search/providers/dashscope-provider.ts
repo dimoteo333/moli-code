@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,7 +13,7 @@ import type {
   WebSearchResultItem,
   DashScopeProviderConfig,
 } from '../types.js';
-import type { MoliCredentials } from '../../../moli/moliOAuth2.js';
+import type { QwenCredentials } from '../../../moli/qwenOAuth2.js';
 
 interface DashScopeSearchItem {
   _id: string;
@@ -60,23 +60,23 @@ interface DashScopeSearchResponse {
 
 // File System Configuration
 const MOLI_DIR = '.moli';
-const MOLI_CREDENTIAL_FILENAME = 'oauth_creds.json';
+const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
 
 /**
  * Get the path to the cached OAuth credentials file.
  */
-function getMoliCachedCredentialPath(): string {
-  return path.join(os.homedir(), MOLI_DIR, MOLI_CREDENTIAL_FILENAME);
+function getQwenCachedCredentialPath(): string {
+  return path.join(os.homedir(), MOLI_DIR, QWEN_CREDENTIAL_FILENAME);
 }
 
 /**
- * Load cached Moli OAuth credentials from disk.
+ * Load cached Qwen OAuth credentials from disk.
  */
-async function loadMoliCredentials(): Promise<MoliCredentials | null> {
+async function loadQwenCredentials(): Promise<QwenCredentials | null> {
   try {
-    const keyFile = getMoliCachedCredentialPath();
+    const keyFile = getQwenCachedCredentialPath();
     const creds = await fs.readFile(keyFile, 'utf-8');
-    return JSON.parse(creds) as MoliCredentials;
+    return JSON.parse(creds) as QwenCredentials;
   } catch {
     return null;
   }
@@ -108,7 +108,7 @@ export class DashScopeProvider extends BaseWebSearchProvider {
     apiEndpoint: string;
   }> {
     // Load credentials once
-    const credentials = await loadMoliCredentials();
+    const credentials = await loadQwenCredentials();
 
     // Get access token: try OAuth credentials first, fallback to apiKey
     let accessToken: string | null = null;

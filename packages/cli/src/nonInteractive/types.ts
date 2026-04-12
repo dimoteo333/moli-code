@@ -143,7 +143,7 @@ export interface CLISystemMessage {
   model?: string;
   permission_mode?: string;
   slash_commands?: string[];
-  moli_code_version?: string;
+  qwen_code_version?: string;
   output_style?: string;
   agents?: string[];
   skills?: string[];
@@ -201,6 +201,7 @@ export interface MessageStartStreamEvent {
     id: string;
     role: 'assistant';
     model: string;
+    content: [];
   };
 }
 

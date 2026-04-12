@@ -1,9 +1,9 @@
 # Moli Code overview
 
-[![@moli-code/moli-code downloads](https://img.shields.io/npm/dw/@moli-code/moli-code.svg)](https://npm-compare.com/@moli-code/moli-code)
-[![@moli-code/moli-code version](https://img.shields.io/npm/v/@moli-code/moli-code.svg)](https://www.npmjs.com/package/@moli-code/moli-code)
+[![@dobby/moli-code downloads](https://img.shields.io/npm/dw/@dobby/moli-code.svg)](https://npm-compare.com/@dobby/moli-code)
+[![@dobby/moli-code version](https://img.shields.io/npm/v/@dobby/moli-code.svg)](https://www.npmjs.com/package/@dobby/moli-code)
 
-> Learn about Moli Code, Moli's agentic coding tool that lives in your terminal and helps you turn ideas into code faster than ever before.
+> Learn about Moli Code, Qwen's agentic coding tool that lives in your terminal and helps you turn ideas into code faster than ever before.
 
 ## Get started in 30 seconds
 
@@ -12,13 +12,13 @@
 **Linux / macOS**
 
 ```sh
-curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.sh | bash
+curl -fsSL https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.sh | bash
 ```
 
 **Windows (Run as Administrator CMD)**
 
 ```sh
-curl -fsSL -o %TEMP%\install-moli.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-moli.bat && %TEMP%\install-moli.bat
+curl -fsSL -o %TEMP%\install-qwen.bat https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install-qwen.bat && %TEMP%\install-qwen.bat
 ```
 
 > [!note]
@@ -29,10 +29,10 @@ curl -fsSL -o %TEMP%\install-moli.bat https://moli-code-assets.oss-cn-hangzhou.a
 
 ```bash
 cd your-project
-moli
+qwen
 ```
 
-Select **Moli OAuth (Free)** authentication and follow the prompts to log in. Then let's start with understanding your codebase. Try one of these commands:
+Select **Qwen OAuth (Free)** authentication and follow the prompts to log in. Then let's start with understanding your codebase. Try one of these commands:
 
 ```
 what does this project do?
@@ -48,7 +48,7 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 
 > [!note]
 >
-> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=molilm.moli-code-vscode-ide-companion) now.
+> **New VS Code Extension (Beta)**: Prefer a graphical interface? Our new **VS Code extension** provides an easy-to-use native IDE experience without requiring terminal familiarity. Simply install from the marketplace and start coding with Moli Code directly in your sidebar. Download and install the [Moli Code Companion](https://marketplace.visualstudio.com/items?itemName=qwenlm.moli-code-vscode-ide-companion) now.
 
 ## What Moli Code does for you
 
@@ -56,9 +56,10 @@ You'll be prompted to log in on first use. That's it! [Continue with Quickstart 
 - **Debug and fix issues**: Describe a bug or paste an error message. Moli Code will analyze your codebase, identify the problem, and implement a fix.
 - **Navigate any codebase**: Ask anything about your team's codebase, and get a thoughtful answer back. Moli Code maintains awareness of your entire project structure, can find up-to-date information from the web, and with [MCP](./features/mcp) can pull from external datasources like Google Drive, Figma, and Slack.
 - **Automate tedious tasks**: Fix fiddly lint issues, resolve merge conflicts, and write release notes. Do all this in a single command from your developer machines, or automatically in CI.
+- **[Followup suggestions](./features/followup-suggestions)**: Moli Code predicts what you want to type next and shows it as ghost text. Press Tab to accept, or just keep typing to dismiss.
 
 ## Why developers love Moli Code
 
 - **Works in your terminal**: Not another chat window. Not another IDE. Moli Code meets you where you already work, with the tools you already love.
 - **Takes action**: Moli Code can directly edit files, run commands, and create commits. Need more? [MCP](./features/mcp) lets Moli Code read your design docs in Google Drive, update your tickets in Jira, or use _your_ custom developer tooling.
-- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | moli -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `moli -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.
+- **Unix philosophy**: Moli Code is composable and scriptable. `tail -f app.log | qwen -p "Slack me if you see any anomalies appear in this log stream"` _works_. Your CI can run `qwen -p "If there are new text strings, translate them into French and raise a PR for @lang-fr-team to review"`.

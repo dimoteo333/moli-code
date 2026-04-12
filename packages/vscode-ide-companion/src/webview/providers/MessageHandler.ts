@@ -1,10 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { MoliAgentManager } from '../../services/moliAgentManager.js';
+import type * as vscode from 'vscode';
+import type { QwenAgentManager } from '../../services/qwenAgentManager.js';
 import type { ConversationStore } from '../../services/conversationStore.js';
 import type {
   PermissionResponseMessage,
@@ -21,7 +22,7 @@ export class MessageHandler {
   private router: MessageRouter;
 
   constructor(
-    agentManager: MoliAgentManager,
+    agentManager: QwenAgentManager,
     conversationStore: ConversationStore,
     currentConversationId: string | null,
     sendToWebView: (message: unknown) => void,
@@ -85,5 +86,9 @@ export class MessageHandler {
    */
   appendStreamContent(chunk: string): void {
     this.router.appendStreamContent(chunk);
+  }
+
+  setupFileWatchers(): vscode.Disposable {
+    return this.router.setupFileWatchers();
   }
 }

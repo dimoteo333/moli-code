@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,7 +11,7 @@
  */
 
 import { mkdir, writeFile, readFile, rm, chmod } from 'node:fs/promises';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type {
   SDKMessage,
@@ -21,12 +21,12 @@ import type {
   ContentBlock,
   TextBlock,
   ToolUseBlock,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   isSDKAssistantMessage,
   isSDKSystemMessage,
   isSDKResultMessage,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 
 // ============================================================================
 // Core Test Helper Class
@@ -34,13 +34,13 @@ import {
 
 export interface SDKTestHelperOptions {
   /**
-   * Optional settings for .moli/settings.json
+   * Optional settings for .qwen/settings.json
    */
   settings?: Record<string, unknown>;
   /**
-   * Whether to create .moli/settings.json
+   * Whether to create .qwen/settings.json
    */
-  createMoliConfig?: boolean;
+  createQwenConfig?: boolean;
   /**
    * Whether to enable chat recording for this test.
    * - Set to `true` to enable recording (needed for session-id duplicate detection tests)
@@ -79,10 +79,10 @@ export class SDKTestHelper {
 
     await mkdir(this.testDir, { recursive: true });
 
-    // Optionally create .moli/settings.json for CLI configuration
-    if (options.createMoliConfig !== false) {
-      const moliDir = join(this.testDir, '.moli');
-      await mkdir(moliDir, { recursive: true });
+    // Optionally create .qwen/settings.json for CLI configuration
+    if (options.createQwenConfig !== false) {
+      const qwenDir = join(this.testDir, '.qwen');
+      await mkdir(qwenDir, { recursive: true });
 
       const optionsSettings = options.settings ?? {};
       const generalSettings =
@@ -104,7 +104,7 @@ export class SDKTestHelper {
       };
 
       await writeFile(
-        join(moliDir, 'settings.json'),
+        join(qwenDir, 'settings.json'),
         JSON.stringify(settings, null, 2),
         'utf-8',
       );
@@ -121,6 +121,9 @@ export class SDKTestHelper {
       throw new Error('Test directory not initialized. Call setup() first.');
     }
     const filePath = join(this.testDir, fileName);
+    // Ensure parent directories exist before writing the file
+    const parentDir = dirname(filePath);
+    await mkdir(parentDir, { recursive: true });
     await writeFile(filePath, content, 'utf-8');
     return filePath;
   }
@@ -216,7 +219,7 @@ export interface MCPServerResult {
 const MCP_MATH_SERVER_SCRIPT = `#!/usr/bin/env node
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -1006,7 +1009,7 @@ export function createSharedTestOptions(
   }
 
   return {
-    pathToMoliExecutable: TEST_CLI_PATH,
+    pathToQwenExecutable: TEST_CLI_PATH,
     ...overrides,
   };
 }

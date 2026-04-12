@@ -1,21 +1,21 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * @moli-code/webui Tailwind CSS Preset
+ * @qwen-code/webui Tailwind CSS Preset
  *
- * This preset provides shared theme configuration for all Moli Code products.
+ * This preset provides shared theme configuration for all Qwen Code products.
  * Consumers should include this preset in their tailwind.config.js:
  *
  * @example
  * module.exports = {
- *   presets: [require('@moli-code/webui/tailwind.preset')],
+ *   presets: [require('@qwen-code/webui/tailwind.preset')],
  *   content: [
  *     './src/**\/*.{ts,tsx}',
- *     './node_modules/@moli-code/webui/dist/**\/*.js'
+ *     './node_modules/@qwen-code/webui/dist/**\/*.js'
  *   ]
  * }
  */

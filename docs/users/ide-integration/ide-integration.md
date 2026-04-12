@@ -11,7 +11,7 @@ Currently, the only supported IDE is [Visual Studio Code](https://code.visualstu
   - Your active cursor position.
   - Any text you have selected (up to a 16KB limit; longer selections will be truncated).
 
-- **Native Diffing:** When Moli suggests code modifications, you can view the changes directly within your IDE's native diff viewer. This allows you to review, edit, and accept or reject the suggested changes seamlessly.
+- **Native Diffing:** When Qwen suggests code modifications, you can view the changes directly within your IDE's native diff viewer. This allows you to review, edit, and accept or reject the suggested changes seamlessly.
 
 - **VS Code Commands:** You can access Moli Code features directly from the VS Code Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`):
   - `Moli Code: Run`: Starts a new Moli Code session in the integrated terminal.
@@ -41,8 +41,8 @@ This will find the correct extension for your IDE and install it.
 
 You can also install the extension directly from a marketplace.
 
-- **For Visual Studio Code:** Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=molilm.moli-code-vscode-ide-companion).
-- **For VS Code Forks:** To support forks of VS Code, the extension is also published on the [Open VSX Registry](https://open-vsx.org/extension/molilm/moli-code-vscode-ide-companion). Follow your editor's instructions for installing extensions from this registry.
+- **For Visual Studio Code:** Install from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=qwenlm.moli-code-vscode-ide-companion).
+- **For VS Code Forks:** To support forks of VS Code, the extension is also published on the [Open VSX Registry](https://open-vsx.org/extension/qwenlm/moli-code-vscode-ide-companion). Follow your editor's instructions for installing extensions from this registry.
 
 > NOTE:
 > The "Moli Code Companion" extension may appear towards the bottom of search results. If you don't see it immediately, try scrolling down or sorting by "Newly Published".
@@ -80,7 +80,7 @@ If connected, this command will show the IDE it's connected to and a list of rec
 
 ### Working with Diffs
 
-When you ask Moli model to modify a file, it can open a diff view directly in your editor.
+When you ask Qwen model to modify a file, it can open a diff view directly in your editor.
 
 **To accept a diff**, you can perform any of the following actions:
 
@@ -114,7 +114,7 @@ If you encounter issues with IDE integration, here are some common error message
 ### Connection Errors
 
 - **Message:** `🔴 Disconnected: Failed to connect to IDE companion extension for [IDE Name]. Please ensure the extension is running and try restarting your terminal. To install the extension, run /ide install.`
-  - **Cause:** Moli Code could not find the necessary environment variables (`MOLI_CODE_IDE_WORKSPACE_PATH` or `MOLI_CODE_IDE_SERVER_PORT`) to connect to the IDE. This usually means the IDE companion extension is not running or did not initialize correctly.
+  - **Cause:** Moli Code could not find the necessary environment variables (`QWEN_CODE_IDE_WORKSPACE_PATH` or `QWEN_CODE_IDE_SERVER_PORT`) to connect to the IDE. This usually means the IDE companion extension is not running or did not initialize correctly.
   - **Solution:**
     1.  Make sure you have installed the **Moli Code Companion** extension in your IDE and that it is enabled.
     2.  Open a new terminal window in your IDE to ensure it picks up the correct environment.

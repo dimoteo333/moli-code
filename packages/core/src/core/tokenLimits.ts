@@ -9,7 +9,14 @@ type TokenCount = number;
 export type TokenLimitType = 'input' | 'output';
 
 export const DEFAULT_TOKEN_LIMIT: TokenCount = 131_072; // 128K (power-of-two)
-export const DEFAULT_OUTPUT_TOKEN_LIMIT: TokenCount = 16_384; // 16K tokens
+export const DEFAULT_OUTPUT_TOKEN_LIMIT: TokenCount = 32_000; // 32K tokens
+
+// Capped default for slot-reservation optimization. 99% of outputs are under 5K
+// tokens, so 32K defaults over-reserve 4-6× slot capacity. With the cap
+// enabled, <1% of requests hit the limit; those get one clean retry at 64K
+// (see geminiChat.ts max_output_tokens escalation).
+export const CAPPED_DEFAULT_MAX_TOKENS: TokenCount = 8_000;
+export const ESCALATED_MAX_TOKENS: TokenCount = 64_000;
 
 /**
  * Accurate numeric limits:
@@ -21,6 +28,7 @@ const LIMITS = {
   '32k': 32_768,
   '64k': 65_536,
   '128k': 131_072,
+  '192k': 196_608, // MiniMax-M2.5 context window
   '200k': 200_000, // vendor-declared decimal, used by OpenAI, Anthropic, etc.
   '256k': 262_144,
   '272k': 272_000, // vendor-declared decimal, GPT-5.x input (400K total - 128K output)
@@ -49,7 +57,7 @@ export function normalize(model: string): string {
   // - dates (e.g., -20250219), -v1, version numbers, 'latest', 'preview' etc.
   s = s.replace(/-preview/g, '');
   // Special handling for model names that include date/version as part of the model identifier
-  // - qwen models: qwen-plus-latest, qwen-flash-latest, qwen-vl-max-latest
+  // - Qwen models: qwen-plus-latest, qwen-flash-latest, qwen-vl-max-latest
   // - Kimi models: kimi-k2-0905, kimi-k2-0711, etc. (keep date for version distinction)
   if (
     !s.match(/^qwen-(?:plus|flash|vl-max)-latest$/) &&
@@ -98,21 +106,20 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-/, LIMITS['200k']], // All Claude models: 200K
 
   // -------------------
-  // Alibaba / qwen
+  // Alibaba / Qwen
   // -------------------
   // Commercial API models (1,000,000 context)
   [/^qwen3-coder-plus/, LIMITS['1m']],
   [/^qwen3-coder-flash/, LIMITS['1m']],
-  [/^qwen3\.5-plus/, LIMITS['1m']],
+  [/^qwen3\.\d/, LIMITS['1m']],
   [/^qwen-plus-latest$/, LIMITS['1m']],
   [/^qwen-flash-latest$/, LIMITS['1m']],
   [/^coder-model$/, LIMITS['1m']],
   // Commercial API models (256K context)
   [/^qwen3-max/, LIMITS['256k']],
-  [/^qwen-max/, LIMITS['256k']],
-  // Open-source qwen3 variants: 256K native
+  // Open-source Qwen3 variants: 256K native
   [/^qwen3-coder-/, LIMITS['256k']],
-  // qwen fallback (VL, turbo, plus, 2.5, etc.): 128K
+  // Qwen fallback (VL, turbo, plus, 2.5, etc.): 128K
   [/^qwen/, LIMITS['256k']],
 
   // -------------------
@@ -135,7 +142,7 @@ const PATTERNS: Array<[RegExp, TokenCount]> = [
   // -------------------
   // MiniMax
   // -------------------
-  [/^minimax-m2\.5/i, LIMITS['1m']], // MiniMax-M2.5: 1,000,000
+  [/^minimax-m2\.5/i, LIMITS['192k']], // MiniMax-M2.5: 196,608
   [/^minimax-/i, LIMITS['200k']], // MiniMax fallback: 200K
 
   // -------------------
@@ -169,12 +176,10 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^claude-sonnet-4-6/, LIMITS['64k']], // Sonnet 4.6: 64K
   [/^claude-/, LIMITS['64k']], // Claude fallback: 64K
 
-  // Alibaba / qwen
-  [/^qwen3\.5/, LIMITS['64k']],
+  // Alibaba / Qwen
+  [/^qwen3\.\d/, LIMITS['64k']],
   [/^coder-model$/, LIMITS['64k']],
-  [/^qwen3-max/, LIMITS['64k']],
-  [/^qwen-max/, LIMITS['64k']],
-  [/^qwen/, LIMITS['8k']], // qwen fallback (VL, turbo, plus, etc.): 8K
+  [/^qwen/, LIMITS['32k']], // Qwen fallback
 
   // Upstage Solar (128K total context shared between input+output)
   [/^solar-pro3/, LIMITS['64k']],
@@ -186,8 +191,8 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   [/^deepseek-chat/, LIMITS['8k']],
 
   // Zhipu GLM
-  [/^glm-5/, LIMITS['128k']],
-  [/^glm-4\.7/, LIMITS['128k']],
+  [/^glm-5/, LIMITS['16k']],
+  [/^glm-4\.7/, LIMITS['16k']],
 
   // MiniMax
   [/^minimax-m2\.5/i, LIMITS['64k']],
@@ -195,6 +200,19 @@ const OUTPUT_PATTERNS: Array<[RegExp, TokenCount]> = [
   // Kimi
   [/^kimi-k2\.5/, LIMITS['32k']],
 ];
+
+/**
+ * Check if a model has an explicitly defined output token limit.
+ * This distinguishes between models with known limits in OUTPUT_PATTERNS
+ * and unknown models that would fallback to DEFAULT_OUTPUT_TOKEN_LIMIT.
+ *
+ * @param model - The model name to check
+ * @returns true if the model has an explicit output limit definition, false if it uses the default fallback
+ */
+export function hasExplicitOutputLimit(model: Model): boolean {
+  const norm = normalize(model);
+  return OUTPUT_PATTERNS.some(([regex]) => regex.test(norm));
+}
 
 /**
  * Return the token limit for a model string based on the specified type.

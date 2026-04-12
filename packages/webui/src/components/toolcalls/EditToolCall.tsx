@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Edit tool call component - specialized for file editing operations
@@ -31,7 +31,7 @@ const EditToolCallContainer: React.FC<ToolCallContainerProps> = ({
   isLast = false,
 }) => (
   <div
-    className={`moli-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
+    className={`qwen-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
     data-first={isFirst}
     data-last={isLast}
   >
@@ -92,7 +92,7 @@ export const EditToolCall: React.FC<BaseToolCallProps> = ({
     const containerStatus = mapToolStatusToContainerStatus(toolCall.status);
     return (
       <div
-        className={`moli-message message-item relative py-2 select-text toolcall-container toolcall-status-${containerStatus}`}
+        className={`qwen-message message-item relative py-2 select-text toolcall-container toolcall-status-${containerStatus}`}
         data-first={isFirst}
         data-last={isLast}
       >
@@ -153,7 +153,7 @@ export const EditToolCall: React.FC<BaseToolCallProps> = ({
     const containerStatus = mapToolStatusToContainerStatus(toolCall.status);
     return (
       <div
-        className={`moli-message message-item relative py-2 select-text toolcall-container toolcall-status-${containerStatus}`}
+        className={`qwen-message message-item relative py-2 select-text toolcall-container toolcall-status-${containerStatus}`}
         data-first={isFirst}
         data-last={isLast}
       >

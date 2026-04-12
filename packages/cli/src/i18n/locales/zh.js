@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
-// Chinese translations for Moli Code CLI
+// Chinese translations for Qwen Code CLI
 
 export default {
   // ============================================================================
@@ -80,22 +80,23 @@ export default {
   'For a full list of shortcuts, see {{docPath}}':
     '完整快捷键列表，请参阅 {{docPath}}',
   'docs/keyboard-shortcuts.md': 'docs/keyboard-shortcuts.md',
-  'for help on Moli Code': '获取 Moli Code 帮助',
+  'for help on Qwen Code': '获取 Qwen Code 帮助',
   'show version info': '显示版本信息',
   'submit a bug report': '提交错误报告',
-  'About Moli Code': '关于 Moli Code',
+  'About Qwen Code': '关于 Qwen Code',
   Status: '状态',
 
   // ============================================================================
   // System Information Fields
   // ============================================================================
-  'Moli Code': 'Moli Code',
+  'Qwen Code': 'Qwen Code',
   Runtime: '运行环境',
   OS: '操作系统',
   Auth: '认证',
   'CLI Version': 'CLI 版本',
   'Git Commit': 'Git 提交',
   Model: '模型',
+  'Fast Model': '快速模型',
   Sandbox: '沙箱',
   'OS Platform': '操作系统平台',
   'OS Arch': '操作系统架构',
@@ -112,12 +113,12 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored MOLI.md file.':
-    '分析项目并创建定制的 MOLI.md 文件',
-  'List available Moli Code tools. Usage: /tools [desc]':
-    '列出可用的 Moli Code 工具。用法：/tools [desc]',
+  'Analyzes the project and creates a tailored QWEN.md file.':
+    '分析项目并创建定制的 QWEN.md 文件',
+  'List available Qwen Code tools. Usage: /tools [desc]':
+    '列出可用的 Qwen Code 工具。用法：/tools [desc]',
   'List available skills.': '列出可用技能。',
-  'Available Moli Code CLI tools:': '可用的 Moli Code CLI 工具：',
+  'Available Qwen Code CLI tools:': '可用的 Qwen Code CLI 工具：',
   'No tools available': '没有可用工具',
   'View or change the approval mode for tool usage':
     '查看或更改工具使用的审批模式',
@@ -140,8 +141,8 @@ export default {
   'Clear conversation history and free up context': '清除对话历史并释放上下文',
   'Compresses the context by replacing it with a summary.':
     '通过摘要替换来压缩上下文',
-  'open full Moli Code documentation in your browser':
-    '在浏览器中打开完整的 Moli Code 文档',
+  'open full Qwen Code documentation in your browser':
+    '在浏览器中打开完整的 Qwen Code 文档',
   'Configuration not available.': '配置不可用',
   'change the auth method': '更改认证方法',
   'Configure authentication information for login': '配置登录认证信息',
@@ -205,8 +206,8 @@ export default {
   // ============================================================================
   // Agents - Creation Wizard
   // ============================================================================
-  'Project Level (.moli/agents/)': '项目级 (.moli/agents/)',
-  'User Level (~/.moli/agents/)': '用户级 (~/.moli/agents/)',
+  'Project Level (.qwen/agents/)': '项目级 (.qwen/agents/)',
+  'User Level (~/.qwen/agents/)': '用户级 (~/.qwen/agents/)',
   '✅ Subagent Created Successfully!': '✅ 子智能体创建成功！',
   'Subagent "{{name}}" has been saved to {{level}} level.':
     '子智能体 "{{name}}" 已保存到 {{level}} 级别。',
@@ -226,7 +227,7 @@ export default {
   // Agents - Creation Wizard Steps
   'Step {{n}}: Choose Location': '步骤 {{n}}: 选择位置',
   'Step {{n}}: Choose Generation Method': '步骤 {{n}}: 选择生成方式',
-  'Generate with Moli Code (Recommended)': '使用 Moli Code 生成（推荐）',
+  'Generate with Qwen Code (Recommended)': '使用 Qwen Code 生成（推荐）',
   'Manual Creation': '手动创建',
   'Describe what this subagent should do and when it should be used. (Be comprehensive for best results)':
     '描述此子智能体应该做什么以及何时使用它。（为了获得最佳效果，请全面描述）',
@@ -343,10 +344,10 @@ export default {
   // ============================================================================
   // Commands - General (continued)
   // ============================================================================
-  'View and edit Moli Code settings': '查看和编辑 Moli Code 设置',
+  'View and edit Qwen Code settings': '查看和编辑 Qwen Code 设置',
   Settings: '设置',
-  'To see changes, Moli Code must be restarted. Press r to exit and apply changes now.':
-    '要查看更改，必须重启 Moli Code。按 r 退出并立即应用更改。',
+  'To see changes, Qwen Code must be restarted. Press r to exit and apply changes now.':
+    '要查看更改，必须重启 Qwen Code。按 r 退出并立即应用更改。',
   'The command "/{{command}}" is not supported in non-interactive mode.':
     '不支持在非交互模式下使用命令 "/{{command}}"。',
   // ============================================================================
@@ -373,7 +374,7 @@ export default {
   'Custom Witty Phrases': '自定义诙谐短语',
   'Show Welcome Back Dialog': '显示欢迎回来对话框',
   'Enable User Feedback': '启用用户反馈',
-  'How is Moli doing this session? (optional)': 'Moli 这次表现如何？（可选）',
+  'How is Qwen doing this session? (optional)': 'Qwen 这次表现如何？（可选）',
   Bad: '不满意',
   Fine: '还行',
   Good: '满意',
@@ -395,7 +396,7 @@ export default {
   'Memory Discovery Max Dirs': '内存发现最大目录数',
   'Load Memory From Include Directories': '从包含目录加载内存',
   'Respect .gitignore': '遵守 .gitignore',
-  'Respect .moliignore': '遵守 .moliignore',
+  'Respect .qwenignore': '遵守 .qwenignore',
   'Enable Recursive File Search': '启用递归文件搜索',
   'Disable Fuzzy Search': '禁用模糊搜索',
   'Interactive Shell (PTY)': '交互式 Shell (PTY)',
@@ -484,16 +485,16 @@ export default {
   remote: '远程',
   'This extension will add the following commands: {{commands}}.':
     '此扩展将添加以下命令：{{commands}}。',
-  'This extension will append info to your MOLI.md context using {{fileName}}':
-    '此扩展将使用 {{fileName}} 向您的 MOLI.md 上下文追加信息',
+  'This extension will append info to your QWEN.md context using {{fileName}}':
+    '此扩展将使用 {{fileName}} 向您的 QWEN.md 上下文追加信息',
   'This extension will exclude the following core tools: {{tools}}':
     '此扩展将排除以下核心工具：{{tools}}',
   'This extension will install the following skills:': '此扩展将安装以下技能：',
   'This extension will install the following subagents:':
     '此扩展将安装以下子智能体：',
   'Installation cancelled for "{{name}}".': '已取消安装 "{{name}}"。',
-  'You are installing an extension from {{originSource}}. Some features may not work perfectly with Moli Code.':
-    '您正在安装来自 {{originSource}} 的扩展。某些功能可能无法完美兼容 Moli Code。',
+  'You are installing an extension from {{originSource}}. Some features may not work perfectly with Qwen Code.':
+    '您正在安装来自 {{originSource}} 的扩展。某些功能可能无法完美兼容 Qwen Code。',
   '--ref and --auto-update are not applicable for marketplace extensions.':
     '--ref 和 --auto-update 不适用于市场扩展。',
   'Extension "{{name}}" installed successfully and enabled.':
@@ -595,8 +596,8 @@ export default {
     '安装 {{ideName}} 所需的 IDE 配套工具',
   'enable IDE integration': '启用 IDE 集成',
   'disable IDE integration': '禁用 IDE 集成',
-  'IDE integration is not supported in your current environment. To use this feature, run Moli Code in one of these supported IDEs: VS Code or VS Code forks.':
-    '您当前环境不支持 IDE 集成。要使用此功能，请在以下支持的 IDE 之一中运行 Moli Code：VS Code 或 VS Code 分支版本。',
+  'IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.':
+    '您当前环境不支持 IDE 集成。要使用此功能，请在以下支持的 IDE 之一中运行 Qwen Code：VS Code 或 VS Code 分支版本。',
   'Set up GitHub Actions': '设置 GitHub Actions',
   'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf, Trae)':
     '配置终端按键绑定以支持多行输入（VS Code、Cursor、Windsurf、Trae）',
@@ -628,10 +629,134 @@ export default {
   // ============================================================================
   // Commands - Hooks
   // ============================================================================
-  'Manage Moli Code hooks': '管理 Moli Code Hook',
+  'Manage Qwen Code hooks': '管理 Qwen Code Hook',
   'List all configured hooks': '列出所有已配置的 Hook',
   'Enable a disabled hook': '启用已禁用的 Hook',
   'Disable an active hook': '禁用已启用的 Hook',
+  // Hooks - Dialog
+  Hooks: 'Hook',
+  'Loading hooks...': '正在加载 Hook...',
+  'Error loading hooks:': '加载 Hook 出错：',
+  'Press Escape to close': '按 Escape 关闭',
+  'Press Escape, Ctrl+C, or Ctrl+D to cancel':
+    '按 Escape、Ctrl+C 或 Ctrl+D 取消',
+  'Press Space, Enter, or Escape to dismiss': '按空格、回车或 Escape 关闭',
+  'No hook selected': '未选择 Hook',
+  // Hooks - List Step
+  'No hook events found.': '未找到 Hook 事件。',
+  '{{count}} hook configured': '{{count}} 个 Hook 已配置',
+  '{{count}} hooks configured': '{{count}} 个 Hook 已配置',
+  'This menu is read-only. To add or modify hooks, edit settings.json directly or ask Qwen Code.':
+    '此菜单为只读。要添加或修改 Hook，请直接编辑 settings.json 或询问 Qwen Code。',
+  'Enter to select · Esc to cancel': 'Enter 选择 · Esc 取消',
+  // Hooks - Detail Step
+  'Exit codes:': '退出码：',
+  'Configured hooks:': '已配置的 Hook：',
+  'No hooks configured for this event.': '此事件未配置 Hook。',
+  'To add hooks, edit settings.json directly or ask Qwen.':
+    '要添加 Hook，请直接编辑 settings.json 或询问 Qwen。',
+  'Enter to select · Esc to go back': 'Enter 选择 · Esc 返回',
+  // Hooks - Config Detail Step
+  'Hook details': 'Hook 详情',
+  'Event:': '事件：',
+  'Extension:': '扩展：',
+  'Desc:': '描述：',
+  'No hook config selected': '未选择 Hook 配置',
+  'To modify or remove this hook, edit settings.json directly or ask Qwen to help.':
+    '要修改或删除此 Hook，请直接编辑 settings.json 或询问 Qwen。',
+  // Hooks - Disabled Step
+  'Hook Configuration - Disabled': 'Hook 配置 - 已禁用',
+  'All hooks are currently disabled. You have {{count}} that are not running.':
+    '所有 Hook 当前已禁用。您有 {{count}} 未运行。',
+  '{{count}} configured hook': '{{count}} 个已配置的 Hook',
+  '{{count}} configured hooks': '{{count}} 个已配置的 Hook',
+  'When hooks are disabled:': '当 Hook 被禁用时：',
+  'No hook commands will execute': '不会执行任何 Hook 命令',
+  'StatusLine will not be displayed': '不会显示状态栏',
+  'Tool operations will proceed without hook validation':
+    '工具操作将在没有 Hook 验证的情况下继续',
+  'To re-enable hooks, remove "disableAllHooks" from settings.json or ask Qwen Code.':
+    '要重新启用 Hook，请从 settings.json 中删除 "disableAllHooks" 或询问 Qwen Code。',
+  // Hooks - Source
+  Project: '项目',
+  User: '用户',
+  System: '系统',
+  Extension: '扩展',
+  'Local Settings': '本地设置',
+  'User Settings': '用户设置',
+  'System Settings': '系统设置',
+  Extensions: '扩展',
+  // Hooks - Status
+  '✓ Enabled': '✓ 已启用',
+  '✗ Disabled': '✗ 已禁用',
+  // Hooks - Event Descriptions (short)
+  'Before tool execution': '工具执行前',
+  'After tool execution': '工具执行后',
+  'After tool execution fails': '工具执行失败后',
+  'When notifications are sent': '发送通知时',
+  'When the user submits a prompt': '用户提交提示时',
+  'When a new session is started': '新会话开始时',
+  'Right before Qwen Code concludes its response': 'Qwen Code 结束响应之前',
+  'When a subagent (Agent tool call) is started':
+    '子智能体（Agent 工具调用）启动时',
+  'Right before a subagent concludes its response': '子智能体结束响应之前',
+  'Before conversation compaction': '对话压缩前',
+  'When a session is ending': '会话结束时',
+  'When a permission dialog is displayed': '显示权限对话框时',
+  // Hooks - Event Descriptions (detailed)
+  'Input to command is JSON of tool call arguments.':
+    '命令输入为工具调用参数的 JSON。',
+  'Input to command is JSON with fields "inputs" (tool call arguments) and "response" (tool call response).':
+    '命令输入为包含 "inputs"（工具调用参数）和 "response"（工具调用响应）字段的 JSON。',
+  'Input to command is JSON with tool_name, tool_input, tool_use_id, error, error_type, is_interrupt, and is_timeout.':
+    '命令输入为包含 tool_name、tool_input、tool_use_id、error、error_type、is_interrupt 和 is_timeout 的 JSON。',
+  'Input to command is JSON with notification message and type.':
+    '命令输入为包含通知消息和类型的 JSON。',
+  'Input to command is JSON with original user prompt text.':
+    '命令输入为包含原始用户提示文本的 JSON。',
+  'Input to command is JSON with session start source.':
+    '命令输入为包含会话启动来源的 JSON。',
+  'Input to command is JSON with session end reason.':
+    '命令输入为包含会话结束原因的 JSON。',
+  'Input to command is JSON with agent_id and agent_type.':
+    '命令输入为包含 agent_id 和 agent_type 的 JSON。',
+  'Input to command is JSON with agent_id, agent_type, and agent_transcript_path.':
+    '命令输入为包含 agent_id、agent_type 和 agent_transcript_path 的 JSON。',
+  'Input to command is JSON with compaction details.':
+    '命令输入为包含压缩详情的 JSON。',
+  'Input to command is JSON with tool_name, tool_input, and tool_use_id. Output JSON with hookSpecificOutput containing decision to allow or deny.':
+    '命令输入为包含 tool_name、tool_input 和 tool_use_id 的 JSON。输出包含 hookSpecificOutput 的 JSON，其中包含允许或拒绝的决定。',
+  // Hooks - Exit Code Descriptions
+  'stdout/stderr not shown': 'stdout/stderr 不显示',
+  'show stderr to model and continue conversation':
+    '向模型显示 stderr 并继续对话',
+  'show stderr to user only': '仅向用户显示 stderr',
+  'stdout shown in transcript mode (ctrl+o)': 'stdout 以转录模式显示 (ctrl+o)',
+  'show stderr to model immediately': '立即向模型显示 stderr',
+  'show stderr to user only but continue with tool call':
+    '仅向用户显示 stderr 但继续工具调用',
+  'block processing, erase original prompt, and show stderr to user only':
+    '阻止处理，擦除原始提示，仅向用户显示 stderr',
+  'stdout shown to Qwen': '向 Qwen 显示 stdout',
+  'show stderr to user only (blocking errors ignored)':
+    '仅向用户显示 stderr（忽略阻塞错误）',
+  'command completes successfully': '命令成功完成',
+  'stdout shown to subagent': '向子智能体显示 stdout',
+  'show stderr to subagent and continue having it run':
+    '向子智能体显示 stderr 并继续运行',
+  'stdout appended as custom compact instructions':
+    'stdout 作为自定义压缩指令追加',
+  'block compaction': '阻止压缩',
+  'show stderr to user only but continue with compaction':
+    '仅向用户显示 stderr 但继续压缩',
+  'use hook decision if provided': '如果提供则使用 Hook 决定',
+  // Hooks - Messages
+  'Config not loaded.': '配置未加载。',
+  'Hooks are not enabled. Enable hooks in settings to use this feature.':
+    'Hook 未启用。请在设置中启用 Hook 以使用此功能。',
+  'No hooks configured. Add hooks in your settings.json file.':
+    '未配置 Hook。请在 settings.json 文件中添加 Hook。',
+  'Configured Hooks ({{count}} total)': '已配置的 Hook（共 {{count}} 个）',
 
   // ============================================================================
   // Commands - Session Export
@@ -732,7 +857,6 @@ export default {
   'Workspace approval mode exists and takes priority. User-level change will have no effect.':
     '工作区审批模式已存在并具有优先级。用户级别的更改将无效。',
   'Apply To': '应用于',
-  'User Settings': '用户设置',
   'Workspace Settings': '工作区设置',
 
   // ============================================================================
@@ -782,7 +906,6 @@ export default {
   'List configured MCP servers and tools': '列出已配置的 MCP 服务器和工具',
   'Restarts MCP servers.': '重启 MCP 服务器',
   'Open MCP management dialog': '打开 MCP 管理对话框',
-  'Config not loaded.': '配置未加载',
   'Could not retrieve tool registry.': '无法检索工具注册表',
   'No MCP servers configured with OAuth authentication.':
     '未配置支持 OAuth 认证的 MCP 服务器',
@@ -841,7 +964,6 @@ export default {
   'Server:': '服务器：',
   '(disabled)': '(已禁用)',
   'Error:': '错误：',
-  Extension: '扩展',
   tool: '工具',
   tools: '个工具',
   connected: '已连接',
@@ -856,7 +978,7 @@ export default {
   servers: '个服务器',
   'Add MCP servers to your settings to get started.':
     '请在设置中添加 MCP 服务器以开始使用。',
-  'Run moli --debug to see error logs': '运行 moli --debug 查看错误日志',
+  'Run qwen --debug to see error logs': '运行 qwen --debug 查看错误日志',
 
   // MCP OAuth Authentication
   'OAuth Authentication': 'OAuth 认证',
@@ -951,8 +1073,8 @@ export default {
   // ============================================================================
   // Commands - Summary
   // ============================================================================
-  'Generate a project summary and save it to .moli/PROJECT_SUMMARY.md':
-    '生成项目摘要并保存到 .moli/PROJECT_SUMMARY.md',
+  'Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md':
+    '生成项目摘要并保存到 .qwen/PROJECT_SUMMARY.md',
   'No chat client available to generate summary.':
     '没有可用的聊天客户端来生成摘要',
   'Already generating summary, wait for previous request to complete':
@@ -970,7 +1092,10 @@ export default {
   // ============================================================================
   // Commands - Model
   // ============================================================================
-  'Switch the model for this session': '切换此会话的模型',
+  'Switch the model for this session (--fast for suggestion model)':
+    '切换此会话的模型（--fast 可设置建议模型）',
+  'Set a lighter model for prompt suggestions and speculative execution':
+    '设置用于输入建议和推测执行的轻量模型',
   'Content generator configuration not available.': '内容生成器配置不可用',
   'Authentication type not available.': '认证类型不可用',
   'No models available for the current authentication type ({{authType}}).':
@@ -1009,8 +1134,8 @@ export default {
   'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.':
     '/directory add 命令在限制性沙箱配置文件中不受支持。请改为在启动会话时使用 --include-directories。',
   "Error adding '{{path}}': {{error}}": "添加 '{{path}}' 时出错：{{error}}",
-  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
-    '如果存在，已成功从以下目录添加 MOLI.md 文件：\n- {{directories}}',
+  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
+    '如果存在，已成功从以下目录添加 QWEN.md 文件：\n- {{directories}}',
   'Error refreshing memory: {{error}}': '刷新内存时出错：{{error}}',
   'Successfully added directories:\n- {{directories}}':
     '成功添加目录：\n- {{directories}}',
@@ -1043,6 +1168,11 @@ export default {
   'No, suggest changes (esc)': '否，建议更改 (esc)',
   "Allow execution of: '{{command}}'?": "允许执行：'{{command}}'？",
   'Yes, allow always ...': '是，总是允许 ...',
+  'Always allow in this project': '在本项目中总是允许',
+  'Always allow {{action}} in this project': '在本项目中总是允许{{action}}',
+  'Always allow for this user': '对该用户总是允许',
+  'Always allow {{action}} for this user': '对该用户总是允许{{action}}',
+  'Yes, restore previous mode ({{mode}})': '是，恢复之前的模式 ({{mode}})',
   'Yes, and auto-accept edits': '是，并自动接受编辑',
   'Yes, and manually approve edits': '是，并手动批准编辑',
   'No, keep planning (esc)': '否，继续规划 (esc)',
@@ -1096,11 +1226,11 @@ export default {
   'You must select an auth method to proceed. Press Ctrl+C again to exit.':
     '您必须选择认证方法才能继续。再次按 Ctrl+C 退出',
   'Terms of Services and Privacy Notice': '服务条款和隐私声明',
-  'Moli OAuth': 'Moli OAuth (免费)',
-  'Free \u00B7 Up to 1,000 requests/day \u00B7 Moli latest models':
-    '免费 \u00B7 每天最多 1,000 次请求 \u00B7 Moli 最新模型',
-  'Login with MoliChat account to use daily free quota.':
-    '使用 MoliChat 账号登录，享受每日免费额度。',
+  'Qwen OAuth': 'Qwen OAuth (免费)',
+  'Free \u00B7 Up to 1,000 requests/day \u00B7 Qwen latest models':
+    '免费 \u00B7 每天最多 1,000 次请求 \u00B7 Qwen 最新模型',
+  'Login with QwenChat account to use daily free quota.':
+    '使用 QwenChat 账号登录，享受每日免费额度。',
   'Paid \u00B7 Up to 6,000 requests/5 hrs \u00B7 All Alibaba Cloud Coding Plan Models':
     '付费 \u00B7 每 5 小时最多 6,000 次请求 \u00B7 支持阿里云百炼 Coding Plan 全部模型',
   'Alibaba Cloud Coding Plan': '阿里云百炼 Coding Plan',
@@ -1111,25 +1241,25 @@ export default {
   'Failed to login. Message: {{message}}': '登录失败。消息：{{message}}',
   'Authentication is enforced to be {{enforcedType}}, but you are currently using {{currentType}}.':
     '认证方式被强制设置为 {{enforcedType}}，但您当前使用的是 {{currentType}}',
-  'Moli OAuth authentication timed out. Please try again.':
-    'Moli OAuth 认证超时。请重试',
-  'Moli OAuth authentication cancelled.': 'Moli OAuth 认证已取消',
-  'Moli OAuth Authentication': 'Moli OAuth 认证',
+  'Qwen OAuth authentication timed out. Please try again.':
+    'Qwen OAuth 认证超时。请重试',
+  'Qwen OAuth authentication cancelled.': 'Qwen OAuth 认证已取消',
+  'Qwen OAuth Authentication': 'Qwen OAuth 认证',
   'Please visit this URL to authorize:': '请访问此 URL 进行授权：',
   'Or scan the QR code below:': '或扫描下方的二维码：',
   'Waiting for authorization': '等待授权中',
   'Time remaining:': '剩余时间：',
   '(Press ESC or CTRL+C to cancel)': '（按 ESC 或 CTRL+C 取消）',
-  'Moli OAuth Authentication Timeout': 'Moli OAuth 认证超时',
+  'Qwen OAuth Authentication Timeout': 'Qwen OAuth 认证超时',
   'OAuth token expired (over {{seconds}} seconds). Please select authentication method again.':
     'OAuth 令牌已过期（超过 {{seconds}} 秒）。请重新选择认证方法',
   'Press any key to return to authentication type selection.':
     '按任意键返回认证类型选择',
-  'Waiting for Moli OAuth authentication...': '正在等待 Moli OAuth 认证...',
-  'Note: Your existing API key in settings.json will not be cleared when using Moli OAuth. You can switch back to OpenAI authentication later if needed.':
-    '注意：使用 Moli OAuth 时，settings.json 中现有的 API 密钥不会被清除。如果需要，您可以稍后切换回 OpenAI 认证。',
-  'Note: Your existing API key will not be cleared when using Moli OAuth.':
-    '注意：使用 Moli OAuth 时，现有的 API 密钥不会被清除。',
+  'Waiting for Qwen OAuth authentication...': '正在等待 Qwen OAuth 认证...',
+  'Note: Your existing API key in settings.json will not be cleared when using Qwen OAuth. You can switch back to OpenAI authentication later if needed.':
+    '注意：使用 Qwen OAuth 时，settings.json 中现有的 API 密钥不会被清除。如果需要，您可以稍后切换回 OpenAI 认证。',
+  'Note: Your existing API key will not be cleared when using Qwen OAuth.':
+    '注意：使用 Qwen OAuth 时，现有的 API 密钥不会被清除。',
   'Authentication timed out. Please try again.': '认证超时。请重试。',
   'Waiting for auth... (Press ESC or CTRL+C to cancel)':
     '正在等待认证...（按 ESC 或 CTRL+C 取消）',
@@ -1151,8 +1281,8 @@ export default {
   'Failed to authenticate. Message: {{message}}': '认证失败。消息：{{message}}',
   'Authenticated successfully with {{authType}} credentials.':
     '使用 {{authType}} 凭据成功认证。',
-  'Invalid MOLI_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
-    '无效的 MOLI_DEFAULT_AUTH_TYPE 值："{{value}}"。有效值为：{{validValues}}',
+  'Invalid QWEN_DEFAULT_AUTH_TYPE value: "{{value}}". Valid values are: {{validValues}}':
+    '无效的 QWEN_DEFAULT_AUTH_TYPE 值："{{value}}"。有效值为：{{validValues}}',
   'OpenAI Configuration Required': '需要配置 OpenAI',
   'Please enter your OpenAI configuration. You can get an API key from':
     '请输入您的 OpenAI 配置。您可以从以下地址获取 API 密钥：',
@@ -1187,15 +1317,80 @@ export default {
   unknown: '未知',
   "Failed to switch model to '{{modelId}}'.\n\n{{error}}":
     "无法切换到模型 '{{modelId}}'.\n\n{{error}}",
-  'Moli 3.5 Plus — efficient hybrid model with leading coding performance':
-    'Moli 3.5 Plus — 高效混合架构，编程性能业界领先',
-  'The latest Moli Vision model from Alibaba Cloud ModelStudio (version: moli3-vl-plus-2025-09-23)':
-    '来自阿里云 ModelStudio 的最新 Moli Vision 模型（版本：moli3-vl-plus-2025-09-23）',
+  'Qwen 3.6 Plus — efficient hybrid model with leading coding performance':
+    'Qwen 3.6 Plus — 高效混合架构，编程性能业界领先',
+  'The latest Qwen Vision model from Alibaba Cloud ModelStudio (version: qwen3-vl-plus-2025-09-23)':
+    '来自阿里云 ModelStudio 的最新 Qwen Vision 模型（版本：qwen3-vl-plus-2025-09-23）',
 
   // ============================================================================
   // Dialogs - Permissions
   // ============================================================================
   'Manage folder trust settings': '管理文件夹信任设置',
+  'Manage permission rules': '管理权限规则',
+  Allow: '允许',
+  Ask: '询问',
+  Deny: '拒绝',
+  Workspace: '工作区',
+  "Qwen Code won't ask before using allowed tools.":
+    'Qwen Code 使用已允许的工具前不会询问。',
+  'Qwen Code will ask before using these tools.':
+    'Qwen Code 使用这些工具前会先询问。',
+  'Qwen Code is not allowed to use denied tools.':
+    'Qwen Code 不允许使用被拒绝的工具。',
+  'Manage trusted directories for this workspace.':
+    '管理此工作区的受信任目录。',
+  'Any use of the {{tool}} tool': '{{tool}} 工具的任何使用',
+  "{{tool}} commands matching '{{pattern}}'":
+    "匹配 '{{pattern}}' 的 {{tool}} 命令",
+  'From user settings': '来自用户设置',
+  'From project settings': '来自项目设置',
+  'From session': '来自会话',
+  'Project settings (local)': '项目设置（本地）',
+  'Saved in .qwen/settings.local.json': '保存在 .qwen/settings.local.json',
+  'Project settings': '项目设置',
+  'Checked in at .qwen/settings.json': '保存在 .qwen/settings.json',
+  'User settings': '用户设置',
+  'Saved in at ~/.qwen/settings.json': '保存在 ~/.qwen/settings.json',
+  'Add a new rule…': '添加新规则…',
+  'Add {{type}} permission rule': '添加{{type}}权限规则',
+  'Permission rules are a tool name, optionally followed by a specifier in parentheses.':
+    '权限规则是一个工具名称，可选地后跟括号中的限定符。',
+  'e.g.,': '例如',
+  or: '或',
+  'Enter permission rule…': '输入权限规则…',
+  'Enter to submit · Esc to cancel': '回车提交 · Esc 取消',
+  'Where should this rule be saved?': '此规则应保存在哪里？',
+  'Enter to confirm · Esc to cancel': '回车确认 · Esc 取消',
+  'Delete {{type}} rule?': '删除{{type}}规则？',
+  'Are you sure you want to delete this permission rule?':
+    '确定要删除此权限规则吗？',
+  'Permissions:': '权限：',
+  '(←/→ or tab to cycle)': '（←/→ 或 tab 切换）',
+  'Press ↑↓ to navigate · Enter to select · Type to search · Esc to cancel':
+    '按 ↑↓ 导航 · 回车选择 · 输入搜索 · Esc 取消',
+  'Search…': '搜索…',
+  'Use /trust to manage folder trust settings for this workspace.':
+    '使用 /trust 管理此工作区的文件夹信任设置。',
+  // Workspace directory management
+  'Add directory…': '添加目录…',
+  'Add directory to workspace': '添加工作区目录',
+  'Qwen Code can read files in the workspace, and make edits when auto-accept edits is on.':
+    'Qwen Code 可以读取工作区中的文件，并在自动接受编辑模式开启时进行编辑。',
+  'Qwen Code will be able to read files in this directory and make edits when auto-accept edits is on.':
+    'Qwen Code 将能够读取此目录中的文件，并在自动接受编辑模式开启时进行编辑。',
+  'Enter the path to the directory:': '输入目录路径：',
+  'Enter directory path…': '输入目录路径…',
+  'Tab to complete · Enter to add · Esc to cancel':
+    'Tab 补全 · 回车添加 · Esc 取消',
+  'Remove directory?': '删除目录？',
+  'Are you sure you want to remove this directory from the workspace?':
+    '确定要将此目录从工作区中移除吗？',
+  '  (Original working directory)': '  （原始工作目录）',
+  '  (from settings)': '  （来自设置）',
+  'Directory does not exist.': '目录不存在。',
+  'Path is not a directory.': '路径不是目录。',
+  'This directory is already in the workspace.': '此目录已在工作区中。',
+  'Already covered by existing directory: {{dir}}': '已被现有目录覆盖：{{dir}}',
 
   // ============================================================================
   // Status Bar
@@ -1266,12 +1461,12 @@ export default {
   'Use /bug to submit issues to the maintainers when something goes off.':
     '遇到问题时，用 /bug 将问题提交给维护者。',
   'Switch auth type quickly with /auth.': '用 /auth 快速切换认证方式。',
-  'You can run any shell commands from Moli Code using ! (e.g. !ls).':
-    '在 Moli Code 中使用 ! 可运行任意 shell 命令（例如 !ls）。',
+  'You can run any shell commands from Qwen Code using ! (e.g. !ls).':
+    '在 Qwen Code 中使用 ! 可运行任意 shell 命令（例如 !ls）。',
   'Type / to open the command popup; Tab autocompletes slash commands and saved prompts.':
     '输入 / 打开命令弹窗；按 Tab 自动补全斜杠命令和保存的提示词。',
-  'You can resume a previous conversation by running moli --continue or moli --resume.':
-    '运行 moli --continue 或 moli --resume 可继续之前的会话。',
+  'You can resume a previous conversation by running qwen --continue or qwen --resume.':
+    '运行 qwen --continue 或 qwen --resume 可继续之前的会话。',
   'You can switch permission mode quickly with Shift+Tab or /approval-mode.':
     '按 Shift+Tab 或输入 /approval-mode 可快速切换权限模式。',
   'You can switch permission mode quickly with Tab or /approval-mode.':
@@ -1282,7 +1477,7 @@ export default {
   // ============================================================================
   // Exit Screen / Stats
   // ============================================================================
-  'Agent powering down. Goodbye!': 'Moli Code 正在关闭，再见！',
+  'Agent powering down. Goodbye!': 'Qwen Code 正在关闭，再见！',
   'To continue this session, run': '要继续此会话，请运行',
   'Interaction Summary': '交互摘要',
   'Session ID:': '会话 ID：',
@@ -1476,7 +1671,7 @@ export default {
   // ============================================================================
   'API-KEY': 'API-KEY',
   'Coding Plan': 'Coding Plan',
-  "Paste your api key of Bailian Coding Plan and you're all set!":
+  "Paste your api key of ModelStudio Coding Plan and you're all set!":
     '粘贴您的百炼 Coding Plan API Key，即可完成设置！',
   Custom: '自定义',
   'More instructions about configuring `modelProviders` manually.':
@@ -1496,6 +1691,35 @@ export default {
     '{{region}} 有新的模型配置可用。是否立即更新？',
   '{{region}} configuration updated successfully. Model switched to "{{model}}".':
     '{{region}} 配置更新成功。模型已切换至 "{{model}}"。',
+  'Authenticated successfully with {{region}}. API key and model configs saved to settings.json (backed up).':
+    '成功通过 {{region}} 认证。API Key 和模型配置已保存至 settings.json（已备份）。',
+
+  // ============================================================================
+  // Context Usage
+  // ============================================================================
+  'Context Usage': '上下文使用情况',
+  'Context window': '上下文窗口',
+  Used: '已用',
+  Free: '空闲',
+  'Autocompact buffer': '自动压缩缓冲区',
+  'Usage by category': '分类用量',
+  'System prompt': '系统提示',
+  'Built-in tools': '内置工具',
+  'MCP tools': 'MCP 工具',
+  'Memory files': '记忆文件',
+  Skills: '技能',
+  Messages: '消息',
+  tokens: 'tokens',
+  'Estimated pre-conversation overhead': '预估对话前开销',
+  'No API response yet. Send a message to see actual usage.':
+    '暂无 API 响应。发送消息以查看实际使用情况。',
+  'Show context window usage breakdown.': '显示上下文窗口使用情况分解。',
+  'Run /context detail for per-item breakdown.':
+    '运行 /context detail 查看详细分解。',
+  'Show context window usage breakdown. Use "/context detail" for per-item breakdown.':
+    '显示上下文窗口使用情况分解。输入 "/context detail" 查看详细分解。',
+  'body loaded': '内容已加载',
+  memory: '记忆',
   '{{region}} configuration updated successfully.': '{{region}} 配置更新成功。',
   'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.':
     '成功通过 {{region}} 认证。API Key 和模型配置已保存至 settings.json。',
@@ -1526,4 +1750,88 @@ export default {
     '↑/↓: 导航 | Space/Enter: 切换 | Esc: 取消',
   '↑/↓: Navigate | Enter: Select | Esc: Cancel':
     '↑/↓: 导航 | Enter: 选择 | Esc: 取消',
+
+  // ============================================================================
+  // Commands - Auth
+  // ============================================================================
+  'Configure Qwen authentication information with Qwen-OAuth or Alibaba Cloud Coding Plan':
+    '使用 Qwen OAuth 或阿里云百炼 Coding Plan 配置 Qwen 认证信息',
+  'Authenticate using Qwen OAuth': '使用 Qwen OAuth 进行认证',
+  'Authenticate using Alibaba Cloud Coding Plan':
+    '使用阿里云百炼 Coding Plan 进行认证',
+  'Region for Coding Plan (china/global)': 'Coding Plan 区域 (china/global)',
+  'API key for Coding Plan': 'Coding Plan 的 API 密钥',
+  'Show current authentication status': '显示当前认证状态',
+  'Authentication completed successfully.': '认证完成。',
+  'Starting Qwen OAuth authentication...': '正在启动 Qwen OAuth 认证...',
+  'Successfully authenticated with Qwen OAuth.': '已成功通过 Qwen OAuth 认证。',
+  'Failed to authenticate with Qwen OAuth: {{error}}':
+    'Qwen OAuth 认证失败：{{error}}',
+  'Processing Alibaba Cloud Coding Plan authentication...':
+    '正在处理阿里云百炼 Coding Plan 认证...',
+  'Successfully authenticated with Alibaba Cloud Coding Plan.':
+    '已成功通过阿里云百炼 Coding Plan 认证。',
+  'Failed to authenticate with Coding Plan: {{error}}':
+    'Coding Plan 认证失败：{{error}}',
+  '中国 (China)': '中国 (China)',
+  '阿里云百炼 (aliyun.com)': '阿里云百炼 (aliyun.com)',
+  Global: '全球',
+  'Alibaba Cloud (alibabacloud.com)': 'Alibaba Cloud (alibabacloud.com)',
+  'Select region for Coding Plan:': '选择 Coding Plan 区域：',
+  'Enter your Coding Plan API key: ': '请输入您的 Coding Plan API 密钥：',
+  'Select authentication method:': '选择认证方式：',
+  '\n=== Authentication Status ===\n': '\n=== 认证状态 ===\n',
+  '⚠️  No authentication method configured.\n': '⚠️  未配置认证方式。\n',
+  'Run one of the following commands to get started:\n':
+    '运行以下命令之一开始配置：\n',
+  '  qwen auth qwen-oauth     - Authenticate with Qwen OAuth (free tier)':
+    '  qwen auth qwen-oauth     - 使用 Qwen OAuth 认证（免费）',
+  '  qwen auth coding-plan      - Authenticate with Alibaba Cloud Coding Plan\n':
+    '  qwen auth coding-plan      - 使用阿里云百炼 Coding Plan 认证\n',
+  'Or simply run:': '或者直接运行：',
+  '  qwen auth                - Interactive authentication setup\n':
+    '  qwen auth                - 交互式认证配置\n',
+  '✓ Authentication Method: Qwen OAuth': '✓ 认证方式：Qwen OAuth',
+  '  Type: Free tier': '  类型：免费版',
+  '  Limit: Up to 1,000 requests/day': '  限额：每天最多 1,000 次请求',
+  '  Models: Qwen latest models\n': '  模型：Qwen 最新模型\n',
+  '✓ Authentication Method: Alibaba Cloud Coding Plan':
+    '✓ 认证方式：阿里云百炼 Coding Plan',
+  '中国 (China) - 阿里云百炼': '中国 (China) - 阿里云百炼',
+  'Global - Alibaba Cloud': '全球 - Alibaba Cloud',
+  '  Region: {{region}}': '  区域：{{region}}',
+  '  Current Model: {{model}}': '  当前模型：{{model}}',
+  '  Config Version: {{version}}': '  配置版本：{{version}}',
+  '  Status: API key configured\n': '  状态：API 密钥已配置\n',
+  '⚠️  Authentication Method: Alibaba Cloud Coding Plan (Incomplete)':
+    '⚠️  认证方式：阿里云百炼 Coding Plan（不完整）',
+  '  Issue: API key not found in environment or settings\n':
+    '  问题：在环境变量或设置中未找到 API 密钥\n',
+  '  Run `qwen auth coding-plan` to re-configure.\n':
+    '  运行 `qwen auth coding-plan` 重新配置。\n',
+  '✓ Authentication Method: {{type}}': '✓ 认证方式：{{type}}',
+  '  Status: Configured\n': '  状态：已配置\n',
+  'Failed to check authentication status: {{error}}':
+    '检查认证状态失败：{{error}}',
+  'Select an option:': '请选择：',
+  'Raw mode not available. Please run in an interactive terminal.':
+    '原始模式不可用。请在交互式终端中运行。',
+  '(Use ↑ ↓ arrows to navigate, Enter to select, Ctrl+C to exit)\n':
+    '(使用 ↑ ↓ 箭头导航，Enter 选择，Ctrl+C 退出)\n',
+  compact: '紧凑',
+  'Hide tool output and thinking for a cleaner view (toggle with Ctrl+O).':
+    '紧凑模式下隐藏工具输出和思考过程，界面更简洁（Ctrl+O 切换）。',
+  'Press Ctrl+O to show full tool output': '按 Ctrl+O 查看详细工具调用结果',
+
+  'Switch to plan mode or exit plan mode': '切换到计划模式或退出计划模式',
+  'Exited plan mode. Previous approval mode restored.':
+    '已退出计划模式，已恢复之前的审批模式。',
+  'Enabled plan mode. The agent will analyze and plan without executing tools.':
+    '启用计划模式。智能体将只分析和规划，而不执行工具。',
+  'Already in plan mode. Use "/plan exit" to exit plan mode.':
+    '已处于计划模式。使用 "/plan exit" 退出计划模式。',
+  'Not in plan mode. Use "/plan" to enter plan mode first.':
+    '未处于计划模式。请先使用 "/plan" 进入计划模式。',
+
+  "Set up Qwen Code's status line UI": '配置 Qwen Code 的状态栏',
 };

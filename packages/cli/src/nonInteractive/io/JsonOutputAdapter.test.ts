@@ -1,11 +1,14 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import type { Config, ServerGeminiStreamEvent } from '@dobby/moli-code-core';
+import type {
+  Config,
+  ServerGeminiStreamEvent,
+} from '@dobby/moli-code-core';
 import { GeminiEventType, OutputFormat } from '@dobby/moli-code-core';
 import type { Part } from '@google/genai';
 import { JsonOutputAdapter } from './JsonOutputAdapter.js';

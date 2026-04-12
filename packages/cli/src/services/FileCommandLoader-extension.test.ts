@@ -38,7 +38,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'moli-extension.json': JSON.stringify(extensionConfig),
+        'qwen-extension.json': JSON.stringify(extensionConfig),
         'custom-cmds': {
           'test.md':
             '---\ndescription: Test command from extension\n---\nDo something',
@@ -93,7 +93,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'moli-extension.json': JSON.stringify(extensionConfig),
+        'qwen-extension.json': JSON.stringify(extensionConfig),
         commands1: {
           'cmd1.md': '---\n---\nCommand 1',
         },
@@ -147,7 +147,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'moli-extension.json': JSON.stringify(extensionConfig),
+        'qwen-extension.json': JSON.stringify(extensionConfig),
         commands: {
           'default.md': '---\n---\nDefault command',
         },
@@ -197,7 +197,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'moli-extension.json': JSON.stringify(extensionConfig),
+        'qwen-extension.json': JSON.stringify(extensionConfig),
         // No commands directory
       },
     });
@@ -244,7 +244,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [extensionDir]: {
-        'moli-extension.json': JSON.stringify(extensionConfig),
+        'qwen-extension.json': JSON.stringify(extensionConfig),
         commands: {
           'mycommand.md': '---\n---\nMy command',
         },
@@ -286,7 +286,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
       [userCommandsDir]: {},
       [projectCommandsDir]: {},
       [ext1Dir]: {
-        'moli-extension.json': JSON.stringify({
+        'qwen-extension.json': JSON.stringify({
           name: 'ext-b',
           version: '1.0.0',
         }),
@@ -295,7 +295,7 @@ describe('FileCommandLoader - Extension Commands Support', () => {
         },
       },
       [ext2Dir]: {
-        'moli-extension.json': JSON.stringify({
+        'qwen-extension.json': JSON.stringify({
           name: 'ext-a',
           version: '1.0.0',
         }),

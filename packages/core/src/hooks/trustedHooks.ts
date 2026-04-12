@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2026 Moli Team
+ * Copyright 2026 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -26,7 +26,7 @@ export class TrustedHooksManager {
 
   constructor() {
     this.configPath = path.join(
-      Storage.getGlobalMoliDir(),
+      Storage.getGlobalQwenDir(),
       'trusted_hooks.json',
     );
     this.load();

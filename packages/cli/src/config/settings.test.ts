@@ -48,6 +48,7 @@ import {
   USER_SETTINGS_PATH, // This IS the mocked path.
   getSystemSettingsPath,
   getSystemDefaultsPath,
+  SettingScope,
   SETTINGS_DIRECTORY_NAME, // This is from the original module, but used by the mock.
   type Settings,
   loadEnvironment,
@@ -2082,16 +2083,16 @@ describe('Settings Loading and Merging', () => {
       delete process.env['TEST_PORT'];
     });
 
-    describe('when MOLI_CODE_SYSTEM_SETTINGS_PATH is set', () => {
+    describe('when QWEN_CODE_SYSTEM_SETTINGS_PATH is set', () => {
       const MOCK_ENV_SYSTEM_SETTINGS_PATH = '/mock/env/system/settings.json';
 
       beforeEach(() => {
-        process.env['MOLI_CODE_SYSTEM_SETTINGS_PATH'] =
+        process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH'] =
           MOCK_ENV_SYSTEM_SETTINGS_PATH;
       });
 
       afterEach(() => {
-        delete process.env['MOLI_CODE_SYSTEM_SETTINGS_PATH'];
+        delete process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH'];
       });
 
       it('should load system settings from the path specified in the environment variable', () => {
@@ -2331,6 +2332,85 @@ describe('Settings Loading and Merging', () => {
       expect(settings.merged.tools?.sandbox).toBe(false); // User setting
       expect(settings.merged.context?.fileName).toBe('USER.md'); // User setting
       expect(settings.merged.ui?.theme).toBe('dark'); // User setting
+    });
+  });
+
+  describe('setValue persistence', () => {
+    it('preserves models added to settings.json after startup when updating model.name', () => {
+      (mockFsExistsSync as Mock).mockReturnValue(true);
+
+      const initialUserSettingsContent = {
+        [SETTINGS_VERSION_KEY]: SETTINGS_VERSION,
+        modelProviders: {
+          openai: [
+            {
+              id: 'existing-model',
+              name: 'Existing Model',
+              baseUrl: 'https://example.com/v1',
+              envKey: 'OPENAI_API_KEY',
+            },
+          ],
+        },
+        model: {
+          name: 'existing-model',
+        },
+      };
+
+      const externallyModifiedUserSettingsContent = {
+        [SETTINGS_VERSION_KEY]: SETTINGS_VERSION,
+        modelProviders: {
+          openai: [
+            {
+              id: 'existing-model',
+              name: 'Existing Model',
+              baseUrl: 'https://example.com/v1',
+              envKey: 'OPENAI_API_KEY',
+            },
+            {
+              id: 'manually-added-model',
+              name: 'Manually Added Model',
+              baseUrl: 'https://example.com/v1',
+              envKey: 'OPENAI_API_KEY',
+            },
+          ],
+        },
+        model: {
+          name: 'existing-model',
+        },
+      };
+
+      let currentUserSettingsContent = JSON.stringify(
+        initialUserSettingsContent,
+      );
+
+      (fs.readFileSync as Mock).mockImplementation(
+        (p: fs.PathOrFileDescriptor) => {
+          if (p === USER_SETTINGS_PATH) {
+            return currentUserSettingsContent;
+          }
+          return '{}';
+        },
+      );
+
+      const settings = loadSettings(MOCK_WORKSPACE_DIR);
+      currentUserSettingsContent = JSON.stringify(
+        externallyModifiedUserSettingsContent,
+      );
+
+      settings.setValue(
+        SettingScope.User,
+        'model.name',
+        'manually-added-model',
+      );
+
+      const writeCall = (fs.writeFileSync as Mock).mock.calls.at(-1);
+      expect(writeCall).toBeDefined();
+
+      const writtenContent = JSON.parse(String(writeCall?.[1]));
+      expect(writtenContent.model.name).toBe('manually-added-model');
+      expect(writtenContent.modelProviders.openai).toEqual(
+        externallyModifiedUserSettingsContent.modelProviders.openai,
+      );
     });
   });
 

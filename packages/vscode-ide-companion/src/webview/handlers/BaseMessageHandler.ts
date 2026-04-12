@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { MoliAgentManager } from '../../services/moliAgentManager.js';
+import type { QwenAgentManager } from '../../services/qwenAgentManager.js';
 import type { ConversationStore } from '../../services/conversationStore.js';
 
 /**
@@ -33,7 +33,7 @@ export interface IMessageHandler {
  */
 export abstract class BaseMessageHandler implements IMessageHandler {
   constructor(
-    protected agentManager: MoliAgentManager,
+    protected agentManager: QwenAgentManager,
     protected conversationStore: ConversationStore,
     protected currentConversationId: string | null,
     protected sendToWebView: (message: unknown) => void,

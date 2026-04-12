@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -37,7 +37,7 @@ export type McpSdkServerConfigWithInstance = {
  * @example
  * ```typescript
  * import { z } from 'zod';
- * import { tool, createSdkMcpServer } from '@dobby/moli-code-sdk';
+ * import { tool, createSdkMcpServer } from '@moli-code/sdk';
  *
  * const calculatorTool = tool(
  *   'calculate_sum',

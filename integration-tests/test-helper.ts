@@ -154,7 +154,7 @@ export class TestRig {
   // Get timeout based on environment
   getDefaultTimeout() {
     if (env['CI']) return 60000; // 1 minute in CI
-    if (env['MOLI_SANDBOX']) return 30000; // 30s in containers
+    if (env['QWEN_SANDBOX']) return 30000; // 30s in containers
     return 15000; // 15s locally
   }
 
@@ -168,8 +168,8 @@ export class TestRig {
     mkdirSync(this.testDir, { recursive: true });
 
     // Create a settings file to point the CLI to the local collector
-    const moliDir = join(this.testDir, '.moli');
-    mkdirSync(moliDir, { recursive: true });
+    const qwenDir = join(this.testDir, '.qwen');
+    mkdirSync(qwenDir, { recursive: true });
     // In sandbox mode, use an absolute path for telemetry inside the container
     // The container mounts the test directory at the same path as the host
     const telemetryPath = join(this.testDir, 'telemetry.log'); // Always use test directory for telemetry
@@ -181,11 +181,11 @@ export class TestRig {
         otlpEndpoint: '',
         outfile: telemetryPath,
       },
-      sandbox: env['MOLI_SANDBOX'] !== 'false' ? env['MOLI_SANDBOX'] : false,
+      sandbox: env.QWEN_SANDBOX !== 'false' ? env.QWEN_SANDBOX : false,
       ...options.settings, // Allow tests to override/add settings
     };
     writeFileSync(
-      join(moliDir, 'settings.json'),
+      join(qwenDir, 'settings.json'),
       JSON.stringify(settings, null, 2),
     );
   }
@@ -202,47 +202,25 @@ export class TestRig {
 
   sync() {
     // ensure file system is done before spawning
-    // Note: 'sync' command is not available on Windows
-    if (process.platform !== 'win32') {
-      execSync('sync', { cwd: this.testDir! });
-    }
+    execSync('sync', { cwd: this.testDir! });
   }
 
   /**
    * The command and args to use to invoke Moli Code CLI. Allows us to switch
-   * between using the bundled cli.js (the default), using the installed
-   * 'moli-code' (used to verify npm bundles), or using a SEA executable
-   * (used to verify single executable applications).
+   * between using the bundled gemini.js (the default) and using the installed
+   * 'qwen' (used to verify npm bundles).
    */
   private _getCommandAndArgs(extraInitialArgs: string[] = []): {
     command: string;
     initialArgs: string[];
   } {
-    const seaPath = process.env.INTEGRATION_TEST_SEA_PATH;
     const isNpmReleaseTest =
-      process.env.INTEGRATION_TEST_USE_INSTALLED_MOLI === 'true';
-
-    if (seaPath) {
-      // Use SEA executable
-      return {
-        command: seaPath,
-        initialArgs: ['--no-chat-recording', ...extraInitialArgs],
-      };
-    } else if (isNpmReleaseTest) {
-      return {
-        command: 'moli-code',
-        initialArgs: ['--no-chat-recording', ...extraInitialArgs],
-      };
-    } else {
-      return {
-        command: 'node',
-        initialArgs: [
-          this.bundlePath,
-          '--no-chat-recording',
-          ...extraInitialArgs,
-        ],
-      };
-    }
+      process.env.INTEGRATION_TEST_USE_INSTALLED_GEMINI === 'true';
+    const command = isNpmReleaseTest ? 'qwen' : 'node';
+    const initialArgs = isNpmReleaseTest
+      ? ['--no-chat-recording', ...extraInitialArgs]
+      : [this.bundlePath, '--no-chat-recording', ...extraInitialArgs];
+    return { command, initialArgs };
   }
 
   run(
@@ -323,7 +301,7 @@ export class TestRig {
           // Filter out telemetry output when running with Podman
           // Podman seems to output telemetry to stdout even when writing to file
           let result = stdout;
-          if (env['MOLI_SANDBOX'] === 'podman') {
+          if (env['QWEN_SANDBOX'] === 'podman') {
             // Remove telemetry JSON objects from output
             // They are multi-line JSON objects that start with { and contain telemetry fields
             const lines = result.split(EOL);
@@ -749,7 +727,7 @@ export class TestRig {
   readToolLogs() {
     // For Podman, first check if telemetry file exists and has content
     // If not, fall back to parsing from stdout
-    if (env['MOLI_SANDBOX'] === 'podman') {
+    if (env['QWEN_SANDBOX'] === 'podman') {
       // Try reading from file first
       const logFilePath = join(this.testDir!, 'telemetry.log');
 

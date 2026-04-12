@@ -1,10 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { ToolPlanConfirmationDetails, ToolResult } from './tools.js';
+import type { PermissionDecision } from '../permissions/types.js';
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
@@ -76,15 +77,28 @@ class ExitPlanModeToolInvocation extends BaseToolInvocation<
     return 'Plan:';
   }
 
-  override async shouldConfirmExecute(
+  /**
+   * Plan mode exit always requires user confirmation.
+   */
+  override async getDefaultPermission(): Promise<PermissionDecision> {
+    return 'ask';
+  }
+
+  override async getConfirmationDetails(
     _abortSignal: AbortSignal,
   ): Promise<ToolPlanConfirmationDetails> {
+    const prePlanMode = this.config.getPrePlanMode();
     const details: ToolPlanConfirmationDetails = {
       type: 'plan',
       title: 'Would you like to proceed?',
       plan: this.params.plan,
+      prePlanMode,
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
         switch (outcome) {
+          case ToolConfirmationOutcome.RestorePrevious:
+            this.wasApproved = true;
+            this.setApprovalModeSafely(prePlanMode);
+            break;
           case ToolConfirmationOutcome.ProceedAlways:
             this.wasApproved = true;
             this.setApprovalModeSafely(ApprovalMode.AUTO_EDIT);
@@ -125,13 +139,27 @@ class ExitPlanModeToolInvocation extends BaseToolInvocation<
     const { plan } = this.params;
 
     try {
-      if (!this.wasApproved) {
+      // In YOLO mode the scheduler auto-approves without calling onConfirm(),
+      // so wasApproved stays false. Treat YOLO as implicit approval.
+      const isYolo = this.config.getApprovalMode() === ApprovalMode.YOLO;
+      const effectivelyApproved = this.wasApproved || isYolo;
+
+      if (!effectivelyApproved) {
         const rejectionMessage =
           'Plan execution was not approved. Remaining in plan mode.';
         return {
           llmContent: rejectionMessage,
           returnDisplay: rejectionMessage,
         };
+      }
+
+      // Persist the approved plan to disk
+      try {
+        this.config.savePlan(plan);
+      } catch (error) {
+        debugLogger.warn(
+          `[ExitPlanModeTool] Failed to save plan to disk: ${error instanceof Error ? error.message : String(error)}`,
+        );
       }
 
       const llmMessage = `User has approved your plan. You can now start coding. Start with updating your todo list if applicable.`;

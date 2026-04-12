@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -18,7 +18,11 @@ export default defineConfig({
     globalSetup: './globalSetup.ts',
     reporters: ['default'],
     include: ['**/*.test.ts'],
-    exclude: ['**/terminal-bench/*.test.ts', '**/node_modules/**'],
+    exclude: [
+      '**/terminal-bench/*.test.ts',
+      '**/hook-integration/**',
+      '**/node_modules/**',
+    ],
     retry: 2,
     fileParallelism: true,
     poolOptions: {
@@ -31,7 +35,7 @@ export default defineConfig({
   resolve: {
     alias: {
       // Use built SDK bundle for e2e tests
-      '@dobby/moli-code-sdk': resolve(
+      '@moli-code/sdk': resolve(
         __dirname,
         '../packages/sdk-typescript/dist/index.mjs',
       ),

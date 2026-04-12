@@ -1,6 +1,6 @@
 # Typescript SDK
 
-## @dobby/moli-code-sdk
+## @moli-code/sdk
 
 A minimum experimental TypeScript SDK for programmatic access to Moli Code.
 
@@ -9,20 +9,20 @@ Feel free to submit a feature request/issue/PR.
 ## Installation
 
 ```bash
-npm install @dobby/moli-code-sdk
+npm install @moli-code/sdk
 ```
 
 ## Requirements
 
 - Node.js >= 20.0.0
-- [Moli Code](https://github.com/MoliLM/moli-code) >= 0.4.0 (stable) installed and accessible in PATH
+- [Moli Code](https://github.com/QwenLM/moli-code) >= 0.4.0 (stable) installed and accessible in PATH
 
-> **Note for nvm users**: If you use nvm to manage Node.js versions, the SDK may not be able to auto-detect the Moli Code executable. You should explicitly set the `pathToMoliExecutable` option to the full path of the `moli-code` binary.
+> **Note for nvm users**: If you use nvm to manage Node.js versions, the SDK may not be able to auto-detect the Moli Code executable. You should explicitly set the `pathToQwenExecutable` option to the full path of the `qwen` binary.
 
 ## Quick Start
 
 ```typescript
-import { query } from '@dobby/moli-code-sdk';
+import { query } from '@moli-code/sdk';
 
 // Single-turn query
 const result = query({
@@ -55,24 +55,25 @@ Creates a new query session with the Moli Code.
 
 #### QueryOptions
 
-| Option                   | Type                                           | Default          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ------------------------ | ---------------------------------------------- | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `cwd`                    | `string`                                       | `process.cwd()`  | The working directory for the query session. Determines the context in which file operations and commands are executed.                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `model`                  | `string`                                       | -                | The AI model to use (e.g., `'moli-max'`, `'moli-plus'`, `'moli-turbo'`). Takes precedence over `OPENAI_MODEL` and `MOLI_MODEL` environment variables.                                                                                                                                                                                                                                                                                                                                                                         |
-| `pathToMoliExecutable`   | `string`                                       | Auto-detected    | Path to the Moli Code executable. Supports multiple formats: `'moli-code'` (native binary from PATH), `'/path/to/moli-code'` (explicit path), `'/path/to/cli.js'` (Node.js bundle), `'node:/path/to/cli.js'` (force Node.js runtime), `'bun:/path/to/cli.js'` (force Bun runtime). If not provided, auto-detects from: `MOLI_CODE_CLI_PATH` env var, `~/.volta/bin/moli-code`, `~/.npm-global/bin/moli-code`, `/usr/local/bin/moli-code`, `~/.local/bin/moli-code`, `~/node_modules/.bin/moli-code`, `~/.yarn/bin/moli-code`. |
-| `permissionMode`         | `'default' \| 'plan' \| 'auto-edit' \| 'yolo'` | `'default'`      | Permission mode controlling tool execution approval. See [Permission Modes](#permission-modes) for details.                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `canUseTool`             | `CanUseTool`                                   | -                | Custom permission handler for tool execution approval. Invoked when a tool requires confirmation. Must respond within 60 seconds or the request will be auto-denied. See [Custom Permission Handler](#custom-permission-handler).                                                                                                                                                                                                                                                                                             |
-| `env`                    | `Record<string, string>`                       | -                | Environment variables to pass to the Moli Code process. Merged with the current process environment.                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `mcpServers`             | `Record<string, McpServerConfig>`              | -                | MCP (Model Context Protocol) servers to connect. Supports external servers (stdio/SSE/HTTP) and SDK-embedded servers. External servers are configured with transport options like `command`, `args`, `url`, `httpUrl`, etc. SDK servers use `{ type: 'sdk', name: string, instance: Server }`.                                                                                                                                                                                                                                |
-| `abortController`        | `AbortController`                              | -                | Controller to cancel the query session. Call `abortController.abort()` to terminate the session and cleanup resources.                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `debug`                  | `boolean`                                      | `false`          | Enable debug mode for verbose logging from the CLI process.                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `maxSessionTurns`        | `number`                                       | `-1` (unlimited) | Maximum number of conversation turns before the session automatically terminates. A turn consists of a user message and an assistant response.                                                                                                                                                                                                                                                                                                                                                                                |
-| `coreTools`              | `string[]`                                     | -                | Equivalent to `tool.core` in settings.json. If specified, only these tools will be available to the AI. Example: `['read_file', 'write_file', 'run_terminal_cmd']`.                                                                                                                                                                                                                                                                                                                                                           |
-| `excludeTools`           | `string[]`                                     | -                | Equivalent to `tool.exclude` in settings.json. Excluded tools return a permission error immediately. Takes highest priority over all other permission settings. Supports pattern matching: tool name (`'write_file'`), tool class (`'ShellTool'`), or shell command prefix (`'ShellTool(rm )'`).                                                                                                                                                                                                                              |
-| `allowedTools`           | `string[]`                                     | -                | Equivalent to `tool.allowed` in settings.json. Matching tools bypass `canUseTool` callback and execute automatically. Only applies when tool requires confirmation. Supports same pattern matching as `excludeTools`.                                                                                                                                                                                                                                                                                                         |
-| `authType`               | `'openai' \| 'moli-oauth'`                     | `'openai'`       | Authentication type for the AI service. Using `'moli-oauth'` in SDK is not recommended as credentials are stored in `~/.moli` and may need periodic refresh.                                                                                                                                                                                                                                                                                                                                                                  |
-| `agents`                 | `SubagentConfig[]`                             | -                | Configuration for subagents that can be invoked during the session. Subagents are specialized AI agents for specific tasks or domains.                                                                                                                                                                                                                                                                                                                                                                                        |
-| `includePartialMessages` | `boolean`                                      | `false`          | When `true`, the SDK emits incomplete messages as they are being generated, allowing real-time streaming of the AI's response.                                                                                                                                                                                                                                                                                                                                                                                                |
+| Option                   | Type                                           | Default          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------ | ---------------------------------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `cwd`                    | `string`                                       | `process.cwd()`  | The working directory for the query session. Determines the context in which file operations and commands are executed.                                                                                                                                                                                                                                                                                                                                                               |
+| `model`                  | `string`                                       | -                | The AI model to use (e.g., `'qwen-max'`, `'qwen-plus'`, `'qwen-turbo'`). Takes precedence over `OPENAI_MODEL` and `QWEN_MODEL` environment variables.                                                                                                                                                                                                                                                                                                                                 |
+| `pathToQwenExecutable`   | `string`                                       | Auto-detected    | Path to the Moli Code executable. Supports multiple formats: `'qwen'` (native binary from PATH), `'/path/to/qwen'` (explicit path), `'/path/to/cli.js'` (Node.js bundle), `'node:/path/to/cli.js'` (force Node.js runtime), `'bun:/path/to/cli.js'` (force Bun runtime). If not provided, auto-detects from: `QWEN_CODE_CLI_PATH` env var, `~/.volta/bin/qwen`, `~/.npm-global/bin/qwen`, `/usr/local/bin/qwen`, `~/.local/bin/qwen`, `~/node_modules/.bin/qwen`, `~/.yarn/bin/qwen`. |
+| `permissionMode`         | `'default' \| 'plan' \| 'auto-edit' \| 'yolo'` | `'default'`      | Permission mode controlling tool execution approval. See [Permission Modes](#permission-modes) for details.                                                                                                                                                                                                                                                                                                                                                                           |
+| `canUseTool`             | `CanUseTool`                                   | -                | Custom permission handler for tool execution approval. Invoked when a tool requires confirmation. Must respond within 60 seconds or the request will be auto-denied. See [Custom Permission Handler](#custom-permission-handler).                                                                                                                                                                                                                                                     |
+| `env`                    | `Record<string, string>`                       | -                | Environment variables to pass to the Moli Code process. Merged with the current process environment.                                                                                                                                                                                                                                                                                                                                                                                  |
+| `systemPrompt`           | `string \| QuerySystemPromptPreset`            | -                | System prompt configuration for the main session. Use a string to fully override the built-in Moli Code system prompt, or a preset object to keep the built-in prompt and append extra instructions.                                                                                                                                                                                                                                                                                  |
+| `mcpServers`             | `Record<string, McpServerConfig>`              | -                | MCP (Model Context Protocol) servers to connect. Supports external servers (stdio/SSE/HTTP) and SDK-embedded servers. External servers are configured with transport options like `command`, `args`, `url`, `httpUrl`, etc. SDK servers use `{ type: 'sdk', name: string, instance: Server }`.                                                                                                                                                                                        |
+| `abortController`        | `AbortController`                              | -                | Controller to cancel the query session. Call `abortController.abort()` to terminate the session and cleanup resources.                                                                                                                                                                                                                                                                                                                                                                |
+| `debug`                  | `boolean`                                      | `false`          | Enable debug mode for verbose logging from the CLI process.                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `maxSessionTurns`        | `number`                                       | `-1` (unlimited) | Maximum number of conversation turns before the session automatically terminates. A turn consists of a user message and an assistant response.                                                                                                                                                                                                                                                                                                                                        |
+| `coreTools`              | `string[]`                                     | -                | Equivalent to `tool.core` in settings.json. If specified, only these tools will be available to the AI. Example: `['read_file', 'write_file', 'run_terminal_cmd']`.                                                                                                                                                                                                                                                                                                                   |
+| `excludeTools`           | `string[]`                                     | -                | Equivalent to `tool.exclude` in settings.json. Excluded tools return a permission error immediately. Takes highest priority over all other permission settings. Supports pattern matching: tool name (`'write_file'`), tool class (`'ShellTool'`), or shell command prefix (`'ShellTool(rm )'`).                                                                                                                                                                                      |
+| `allowedTools`           | `string[]`                                     | -                | Equivalent to `tool.allowed` in settings.json. Matching tools bypass `canUseTool` callback and execute automatically. Only applies when tool requires confirmation. Supports same pattern matching as `excludeTools`.                                                                                                                                                                                                                                                                 |
+| `authType`               | `'openai' \| 'qwen-oauth'`                     | `'openai'`       | Authentication type for the AI service. Using `'qwen-oauth'` in SDK is not recommended as credentials are stored in `~/.qwen` and may need periodic refresh.                                                                                                                                                                                                                                                                                                                          |
+| `agents`                 | `SubagentConfig[]`                             | -                | Configuration for subagents that can be invoked during the session. Subagents are specialized AI agents for specific tasks or domains.                                                                                                                                                                                                                                                                                                                                                |
+| `includePartialMessages` | `boolean`                                      | `false`          | When `true`, the SDK emits incomplete messages as they are being generated, allowing real-time streaming of the AI's response.                                                                                                                                                                                                                                                                                                                                                        |
 
 ### Timeouts
 
@@ -88,7 +89,7 @@ The SDK enforces the following default timeouts:
 You can customize these timeouts via the `timeout` option:
 
 ```typescript
-const query = moli.query('Your prompt', {
+const query = qwen.query('Your prompt', {
   timeout: {
     canUseTool: 60000, // 60 seconds for permission callback
     mcpRequest: 600000, // 10 minutes for MCP tool calls
@@ -109,7 +110,7 @@ import {
   isSDKSystemMessage,
   isSDKResultMessage,
   isSDKPartialAssistantMessage,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 
 for await (const message of result) {
   if (isSDKAssistantMessage(message)) {
@@ -140,7 +141,7 @@ await q.interrupt();
 await q.setPermissionMode('yolo');
 
 // Change model mid-session
-await q.setModel('moli-max');
+await q.setModel('qwen-max');
 
 // Close the session
 await q.close();
@@ -169,7 +170,7 @@ The SDK supports different permission modes for controlling tool execution:
 ### Multi-turn Conversation
 
 ```typescript
-import { query, type SDKUserMessage } from '@dobby/moli-code-sdk';
+import { query, type SDKUserMessage } from '@moli-code/sdk';
 
 async function* generateMessages(): AsyncIterable<SDKUserMessage> {
   yield {
@@ -203,7 +204,7 @@ for await (const message of result) {
 ### Custom Permission Handler
 
 ```typescript
-import { query, type CanUseTool } from '@dobby/moli-code-sdk';
+import { query, type CanUseTool } from '@moli-code/sdk';
 
 const canUseTool: CanUseTool = async (toolName, input, { signal }) => {
   // Allow all read operations
@@ -232,7 +233,7 @@ const result = query({
 ### With External MCP Servers
 
 ```typescript
-import { query } from '@dobby/moli-code-sdk';
+import { query } from '@moli-code/sdk';
 
 const result = query({
   prompt: 'Use the custom tool from my MCP server',
@@ -243,6 +244,36 @@ const result = query({
         args: ['path/to/mcp-server.js'],
         env: { PORT: '3000' },
       },
+    },
+  },
+});
+```
+
+### Override the System Prompt
+
+```typescript
+import { query } from '@moli-code/sdk';
+
+const result = query({
+  prompt: 'Say hello in one sentence.',
+  options: {
+    systemPrompt: 'You are a terse assistant. Answer in exactly one sentence.',
+  },
+});
+```
+
+### Append to the Built-in System Prompt
+
+```typescript
+import { query } from '@moli-code/sdk';
+
+const result = query({
+  prompt: 'Review the current directory.',
+  options: {
+    systemPrompt: {
+      type: 'preset',
+      preset: 'qwen_code',
+      append: 'Be terse and focus on concrete findings.',
     },
   },
 });
@@ -292,7 +323,7 @@ Returns a `McpSdkServerConfigWithInstance` object that can be passed directly to
 
 ```typescript
 import { z } from 'zod';
-import { query, tool, createSdkMcpServer } from '@dobby/moli-code-sdk';
+import { query, tool, createSdkMcpServer } from '@moli-code/sdk';
 
 // Define a tool with Zod schema
 const calculatorTool = tool(
@@ -329,7 +360,7 @@ for await (const message of result) {
 ### Abort a Query
 
 ```typescript
-import { query, isAbortError } from '@dobby/moli-code-sdk';
+import { query, isAbortError } from '@moli-code/sdk';
 
 const abortController = new AbortController();
 
@@ -361,7 +392,7 @@ try {
 The SDK provides an `AbortError` class for handling aborted queries:
 
 ```typescript
-import { AbortError, isAbortError } from '@dobby/moli-code-sdk';
+import { AbortError, isAbortError } from '@moli-code/sdk';
 
 try {
   // ... query operations

@@ -27,16 +27,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const root = join(__dirname, '..');
 const distDir = join(root, 'dist');
 const coreVendorDir = join(root, 'packages', 'core', 'vendor');
-const cliLocalesDir = join(
-  root,
-  'packages',
-  'cli',
-  'dist',
-  'src',
-  'i18n',
-  'locales',
-);
-const distLocalesDir = join(distDir, 'locales');
 
 // Create the dist directory if it doesn't exist
 if (!existsSync(distDir)) {
@@ -61,15 +51,6 @@ if (existsSync(coreVendorDir)) {
   console.warn(`Warning: Vendor directory not found at ${coreVendorDir}`);
 }
 
-// Copy locale files
-console.log('Copying locale files...');
-if (existsSync(cliLocalesDir)) {
-  copyRecursiveSync(cliLocalesDir, distLocalesDir);
-  console.log('Copied locale files to dist/');
-} else {
-  console.warn(`Warning: Locale directory not found at ${cliLocalesDir}`);
-}
-
 // Copy bundled skills (e.g. /review) so they are available at runtime.
 // In the esbuild bundle, import.meta.url resolves to dist/cli.js, so
 // SkillManager looks for bundled skills at dist/bundled/.
@@ -91,16 +72,16 @@ if (existsSync(bundledSkillsDir)) {
   );
 }
 
-// Copy molimate.config.json so it's available next to the bundled cli.js
-const molimateConfigSrc = join(root, 'packages', 'cli', 'molimate.config.json');
-if (existsSync(molimateConfigSrc)) {
-  copyFileSync(molimateConfigSrc, join(distDir, 'molimate.config.json'));
-  console.log('Copied molimate.config.json to dist/');
+// Copy user docs into qc-helper bundled skill so it can reference them at runtime.
+// The qc-helper skill reads docs from a `docs/` subdirectory relative to its own
+// directory. In the esbuild bundle this becomes dist/bundled/qc-helper/docs/.
+const userDocsDir = join(root, 'docs', 'users');
+if (existsSync(userDocsDir)) {
+  const destDocsDir = join(distDir, 'bundled', 'qc-helper', 'docs');
+  copyRecursiveSync(userDocsDir, destDocsDir);
+  console.log('Copied docs/users/ to dist/bundled/qc-helper/docs/');
 } else {
-  console.warn(
-    `Warning: molimate.config.json not found at ${molimateConfigSrc}. ` +
-      'Copy molimate.config.example.json to molimate.config.json and fill in your values.',
-  );
+  console.warn(`Warning: User docs directory not found at ${userDocsDir}`);
 }
 
 console.log('\n✅ All bundle assets copied to dist/');

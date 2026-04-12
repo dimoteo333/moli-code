@@ -1,21 +1,19 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * InputForm adapter for VSCode - wraps webui InputForm with local type handling
  * This allows local ApprovalModeValue to work with webui's EditModeInfo
  */
 
-import type { FC } from 'react';
-import {
-  InputForm as BaseInputForm,
-  getEditModeIcon,
-} from '@dobby/moli-code-webui';
+import type { ClipboardEvent, FC, ReactNode } from 'react';
+import { InputForm as BaseInputForm, getEditModeIcon } from '@dobby/moli-code-webui';
 import type {
   InputFormProps as BaseInputFormProps,
   EditModeInfo,
 } from '@dobby/moli-code-webui';
+import type { CompletionItem } from '../../../types/completionItemTypes.js';
 import { getApprovalModeInfoFromString } from '../../../types/acpTypes.js';
 import type { ApprovalModeValue } from '../../../types/approvalModeValueTypes.js';
 import type { ModelInfo } from '@agentclientprotocol/sdk';
@@ -25,9 +23,15 @@ import { ModelSelector } from './ModelSelector.js';
  * Extended props that accept ApprovalModeValue and ModelSelector
  */
 export interface InputFormProps
-  extends Omit<BaseInputFormProps, 'editModeInfo'> {
+  extends Omit<BaseInputFormProps, 'editModeInfo' | 'onCompletionFill'> {
   /** Edit mode value (local type) */
   editMode: ApprovalModeValue;
+  /** Optional paste handler forwarded to the base input */
+  onPaste?: (e: ClipboardEvent) => void;
+  /** Optional content rendered between the input and actions */
+  extraContent?: ReactNode;
+  /** Completion fill callback (Tab or equivalent) */
+  onCompletionFill?: (item: CompletionItem) => void;
   /** Whether to show model selector */
   showModelSelector?: boolean;
   /** Available models for selection */

@@ -21,7 +21,7 @@ import {
   type SDKMessage,
   type ControlMessage,
   type ToolUseBlock,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   SDKTestHelper,
   createSharedTestOptions,

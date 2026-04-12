@@ -2,23 +2,29 @@
 
 Moli Code supports three authentication methods. Pick the one that matches how you want to run the CLI:
 
-- **Moli OAuth**: sign in with your `moli.ai` account in a browser. Free with a daily quota.
+- **Qwen OAuth**: sign in with your `qwen.ai` account in a browser. Free with a daily quota.
 - **Alibaba Cloud Coding Plan**: use an API key from Alibaba Cloud. Paid subscription with diverse model options and higher quotas.
 - **API Key**: bring your own API key. Flexible to your own needs — supports OpenAI, Anthropic, Gemini, and other compatible endpoints.
 
-## Option 1: Moli OAuth (Free)
+## Option 1: Qwen OAuth (Free)
 
-Use this if you want the simplest setup and you're using Moli models.
+Use this if you want the simplest setup and you're using Qwen models.
 
 - **How it works**: on first start, Moli Code opens a browser login page. After you finish, credentials are cached locally so you usually won't need to log in again.
-- **Requirements**: a `moli.ai` account + internet access (at least for the first login).
+- **Requirements**: a `qwen.ai` account + internet access (at least for the first login).
 - **Benefits**: no API key management, automatic credential refresh.
 - **Cost & quota**: free, with a quota of **60 requests/minute** and **1,000 requests/day**.
 
 Start the CLI and follow the browser flow:
 
 ```bash
-moli
+qwen
+```
+
+Or authenticate directly without starting a session:
+
+```bash
+qwen auth qwen-oauth
 ```
 
 > [!note]
@@ -31,36 +37,50 @@ moli
 Use this if you want predictable costs with diverse model options and higher usage quotas.
 
 - **How it works**: Subscribe to the Coding Plan with a fixed monthly fee, then configure Moli Code to use the dedicated endpoint and your subscription API key.
-- **Requirements**: Obtain an active Coding Plan subscription from [Aliyun Bailian](https://bailian.console.aliyun.com/?tab=model#/efm/coding_plan) or [Alibaba Cloud](https://bailian.console.alibabacloud.com/?tab=model#/efm/coding_plan), depending on the region of your account.
-- **Benefits**: Diverse model options, higher usage quotas, predictable monthly costs, access to a wide range of models (Moli, GLM, Kimi, Minimax and more).
-- **Cost & quota**: View [Aliyun Bailian Coding Plan documentation](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3005961).
+- **Requirements**: Obtain an active Coding Plan subscription from [Alibaba Cloud ModelStudio(Beijing)](https://bailian.console.aliyun.com/cn-beijing?tab=coding-plan#/efm/coding-plan-index) or [Alibaba Cloud ModelStudio(intl)](https://modelstudio.console.alibabacloud.com/?tab=coding-plan#/efm/coding-plan-index), depending on the region of your account.
+- **Benefits**: Diverse model options, higher usage quotas, predictable monthly costs, access to a wide range of models (Qwen, GLM, Kimi, Minimax and more).
+- **Cost & quota**: View Aliyun ModelStudio Coding Plan documentation[Beijing](https://bailian.console.aliyun.com/cn-beijing/?tab=doc#/doc/?type=model&url=3005961)[intl](https://modelstudio.console.alibabacloud.com/?tab=doc#/doc/?type=model&url=2840914).
 
 Alibaba Cloud Coding Plan is available in two regions:
 
-| Region                           | Console URL                                                                  |
-| -------------------------------- | ---------------------------------------------------------------------------- |
-| Aliyun Bailian (aliyun.com)      | [bailian.console.aliyun.com](https://bailian.console.aliyun.com)             |
-| Alibaba Cloud (alibabacloud.com) | [bailian.console.alibabacloud.com](https://bailian.console.alibabacloud.com) |
+| Region                       | Console URL                                                                  |
+| ---------------------------- | ---------------------------------------------------------------------------- |
+| Aliyun ModelStudio (Beijing) | [bailian.console.aliyun.com](https://bailian.console.aliyun.com)             |
+| Alibaba Cloud (intl)         | [bailian.console.alibabacloud.com](https://bailian.console.alibabacloud.com) |
 
 ### Interactive setup
 
-Enter `moli` in the terminal to launch Moli Code, then run the `/auth` command and select **Alibaba Cloud Coding Plan**. Choose your region, then enter your `sk-sp-xxxxxxxxx` key.
+You can set up Coding Plan authentication in two ways:
 
-After authentication, use the `/model` command to switch between all Alibaba Cloud Coding Plan supported models (including moli3.5-plus, moli3-coder-plus, moli3-coder-next, moli3-max, glm-4.7, and kimi-k2.5).
+**Option A: From the terminal (recommended for first-time setup)**
+
+```bash
+# Interactive — prompts for region and API key
+qwen auth coding-plan
+
+# Or non-interactive — pass region and key directly
+qwen auth coding-plan --region china --key sk-sp-xxxxxxxxx
+```
+
+**Option B: Inside a Moli Code session**
+
+Enter `qwen` in the terminal to launch Moli Code, then run the `/auth` command and select **Alibaba Cloud Coding Plan**. Choose your region, then enter your `sk-sp-xxxxxxxxx` key.
+
+After authentication, use the `/model` command to switch between all Alibaba Cloud Coding Plan supported models (including qwen3.5-plus, qwen3-coder-plus, qwen3-coder-next, qwen3-max, glm-4.7, and kimi-k2.5).
 
 ### Alternative: configure via `settings.json`
 
-If you prefer to skip the interactive `/auth` flow, add the following to `~/.moli/settings.json`:
+If you prefer to skip the interactive `/auth` flow, add the following to `~/.qwen/settings.json`:
 
 ```json
 {
   "modelProviders": {
     "openai": [
       {
-        "id": "moli3-coder-plus",
-        "name": "moli3-coder-plus (Coding Plan)",
+        "id": "qwen3-coder-plus",
+        "name": "qwen3-coder-plus (Coding Plan)",
         "baseUrl": "https://coding.dashscope.aliyuncs.com/v1",
-        "description": "moli3-coder-plus from Alibaba Cloud Coding Plan",
+        "description": "qwen3-coder-plus from Alibaba Cloud Coding Plan",
         "envKey": "BAILIAN_CODING_PLAN_API_KEY"
       }
     ]
@@ -74,7 +94,7 @@ If you prefer to skip the interactive `/auth` flow, add the following to `~/.mol
     }
   },
   "model": {
-    "name": "moli3-coder-plus"
+    "name": "qwen3-coder-plus"
   }
 }
 ```
@@ -89,17 +109,17 @@ Use this if you want to connect to third-party providers such as OpenAI, Anthrop
 
 ### Recommended: One-file setup via `settings.json`
 
-The simplest way to get started with API Key authentication is to put everything in a single `~/.moli/settings.json` file. Here's a complete, ready-to-use example:
+The simplest way to get started with API Key authentication is to put everything in a single `~/.qwen/settings.json` file. Here's a complete, ready-to-use example:
 
 ```json
 {
   "modelProviders": {
     "openai": [
       {
-        "id": "moli3-coder-plus",
-        "name": "moli3-coder-plus",
+        "id": "qwen3-coder-plus",
+        "name": "qwen3-coder-plus",
         "baseUrl": "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        "description": "Moli3-Coder via Dashscope",
+        "description": "Qwen3-Coder via Dashscope",
         "envKey": "DASHSCOPE_API_KEY"
       }
     ]
@@ -113,7 +133,7 @@ The simplest way to get started with API Key authentication is to put everything
     }
   },
   "model": {
-    "name": "moli3-coder-plus"
+    "name": "qwen3-coder-plus"
   }
 }
 ```
@@ -127,13 +147,13 @@ What each field does:
 | `security.auth.selectedType` | Tells Moli Code which protocol to use on startup (e.g. `openai`, `anthropic`, `gemini`). Without this, you'd need to run `/auth` interactively. |
 | `model.name`                 | The default model to activate when Moli Code starts. Must match one of the `id` values in your `modelProviders`.                                |
 
-After saving the file, just run `moli` — no interactive `/auth` setup needed.
+After saving the file, just run `qwen` — no interactive `/auth` setup needed.
 
 > [!tip]
 >
 > The sections below explain each part in more detail. If the quick example above works for you, feel free to skip ahead to [Security notes](#security-notes).
 
-The key concept is **Model Providers** (`modelProviders`): Moli Code supports multiple API protocols, not just OpenAI. You configure which providers and models are available by editing `~/.moli/settings.json`, then switch between them at runtime with the `/model` command.
+The key concept is **Model Providers** (`modelProviders`): Moli Code supports multiple API protocols, not just OpenAI. You configure which providers and models are available by editing `~/.qwen/settings.json`, then switch between them at runtime with the `/model` command.
 
 #### Supported protocols
 
@@ -143,15 +163,15 @@ The key concept is **Model Providers** (`modelProviders`): Moli Code supports mu
 | Anthropic         | `anthropic`          | `ANTHROPIC_API_KEY`, `ANTHROPIC_BASE_URL`, `ANTHROPIC_MODEL` | Anthropic Claude                                                                            |
 | Google GenAI      | `gemini`             | `GEMINI_API_KEY`, `GEMINI_MODEL`                             | Google Gemini                                                                               |
 
-#### Step 1: Configure models and providers in `~/.moli/settings.json`
+#### Step 1: Configure models and providers in `~/.qwen/settings.json`
 
 Define which models are available for each protocol. Each model entry requires at minimum an `id` and an `envKey` (the environment variable name that holds your API key).
 
 > [!important]
 >
-> It is recommended to define `modelProviders` in the user-scope `~/.moli/settings.json` to avoid merge conflicts between project and user settings.
+> It is recommended to define `modelProviders` in the user-scope `~/.qwen/settings.json` to avoid merge conflicts between project and user settings.
 
-Edit `~/.moli/settings.json` (create it if it doesn't exist). You can mix multiple protocols in a single file — here is a multi-provider example showing just the `modelProviders` section:
+Edit `~/.qwen/settings.json` (create it if it doesn't exist). You can mix multiple protocols in a single file — here is a multi-provider example showing just the `modelProviders` section:
 
 ```json
 {
@@ -231,21 +251,21 @@ Moli Code auto-loads the **first** `.env` file it finds (variables are **not mer
 
 Search order (from the current directory, walking upward toward `/`):
 
-1. `.moli/.env` (preferred — keeps Moli Code variables isolated from other tools)
+1. `.qwen/.env` (preferred — keeps Moli Code variables isolated from other tools)
 2. `.env`
 
 If nothing is found, it falls back to your **home directory**:
 
-3. `~/.moli/.env`
+3. `~/.qwen/.env`
 4. `~/.env`
 
 > [!tip]
 >
-> `.moli/.env` is recommended over `.env` to avoid conflicts with other tools. Some variables (like `DEBUG` and `DEBUG_MODE`) are excluded from project-level `.env` files to avoid interfering with Moli Code behavior.
+> `.qwen/.env` is recommended over `.env` to avoid conflicts with other tools. Some variables (like `DEBUG` and `DEBUG_MODE`) are excluded from project-level `.env` files to avoid interfering with Moli Code behavior.
 
 **3. `settings.json` → `env` field (lowest priority)**
 
-You can also define API keys directly in `~/.moli/settings.json` under the `env` key. These are loaded as the **lowest-priority fallback** — only applied when a variable is not already set by the system environment or `.env` files.
+You can also define API keys directly in `~/.qwen/settings.json` under the `env` key. These are loaded as the **lowest-priority fallback** — only applied when a variable is not already set by the system environment or `.env` files.
 
 ```json
 {
@@ -283,15 +303,64 @@ You can also switch models directly with a command-line argument, which is conve
 ```bash
 # In one terminal
 
-moli --model "moli3-coder-plus"
+qwen --model "qwen3-coder-plus"
 
 # In another terminal
 
-moli --model "moli3.5-plus"
+qwen --model "qwen3.5-plus"
+```
+
+## `qwen auth` CLI command
+
+In addition to the in-session `/auth` slash command, Moli Code provides a standalone `qwen auth` CLI command for managing authentication directly from the terminal — without starting an interactive session first.
+
+### Interactive mode
+
+Run `qwen auth` without arguments to get an interactive menu:
+
+```bash
+qwen auth
+```
+
+You'll see a selector with arrow-key navigation:
+
+```
+Select authentication method:
+
+> Qwen OAuth - Free · Up to 1,000 requests/day · Qwen latest models
+  Alibaba Cloud Coding Plan - Paid · Up to 6,000 requests/5 hrs · All Alibaba Cloud Coding Plan Models
+
+(Use ↑ ↓ arrows to navigate, Enter to select, Ctrl+C to exit)
+```
+
+### Subcommands
+
+| Command                                              | Description                                       |
+| ---------------------------------------------------- | ------------------------------------------------- |
+| `qwen auth`                                          | Interactive authentication setup                  |
+| `qwen auth qwen-oauth`                               | Authenticate with Qwen OAuth                      |
+| `qwen auth coding-plan`                              | Authenticate with Alibaba Cloud Coding Plan       |
+| `qwen auth coding-plan --region china --key sk-sp-…` | Non-interactive Coding Plan setup (for scripting) |
+| `qwen auth status`                                   | Show current authentication status                |
+
+**Examples:**
+
+```bash
+# Authenticate with Qwen OAuth directly
+qwen auth qwen-oauth
+
+# Set up Coding Plan interactively (prompts for region and key)
+qwen auth coding-plan
+
+# Set up Coding Plan non-interactively (useful for CI/scripting)
+qwen auth coding-plan --region china --key sk-sp-xxxxxxxxx
+
+# Check your current auth configuration
+qwen auth status
 ```
 
 ## Security notes
 
 - Don't commit API keys to version control.
-- Prefer `.moli/.env` for project-local secrets (and keep it out of git).
+- Prefer `.qwen/.env` for project-local secrets (and keep it out of git).
 - Treat your terminal output as sensitive if it prints credentials for verification.

@@ -1,10 +1,10 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { DEFAULT_MOLI_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
+import { DEFAULT_QWEN_MODEL, MAINLINE_CODER_MODEL } from '../config/models.js';
 
 import type { ModelConfig } from './types.js';
 
@@ -65,7 +65,7 @@ export const AUTH_ENV_MAPPINGS = {
   openai: {
     apiKey: ['OPENAI_API_KEY'],
     baseUrl: ['OPENAI_BASE_URL'],
-    model: ['OPENAI_MODEL', 'MOLI_MODEL'],
+    model: ['OPENAI_MODEL', 'QWEN_MODEL'],
   },
   anthropic: {
     apiKey: ['ANTHROPIC_API_KEY'],
@@ -91,11 +91,11 @@ export const AUTH_ENV_MAPPINGS = {
 
 export const DEFAULT_MODELS = {
   openai: MAINLINE_CODER_MODEL,
-  'moli-oauth': DEFAULT_MOLI_MODEL,
+  'moli-oauth': DEFAULT_QWEN_MODEL,
 } as Partial<Record<AuthType, string>>;
 
 /**
- * Hard-coded Moli OAuth models that are always available.
+ * Hard-coded Qwen OAuth models that are always available.
  * These cannot be overridden by user configuration.
  */
 export const MOLI_OAUTH_MODELS: ModelConfig[] = [
@@ -103,7 +103,7 @@ export const MOLI_OAUTH_MODELS: ModelConfig[] = [
     id: 'coder-model',
     name: 'coder-model',
     description:
-      'Moli 3.5 Plus — efficient hybrid model with leading coding performance',
+      'Qwen 3.6 Plus — efficient hybrid model with leading coding performance',
     capabilities: { vision: true },
   },
 ];

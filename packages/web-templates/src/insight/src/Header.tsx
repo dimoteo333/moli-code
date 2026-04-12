@@ -15,7 +15,7 @@ export function Header({
   return (
     <header className="mb-8 space-y-3 text-center">
       <h1 className="text-3xl font-semibold text-slate-900 md:text-4xl">
-        Moli Code Insights
+        Qwen Code Insights
       </h1>
       <p className="text-sm text-slate-600">
         {totalMessages

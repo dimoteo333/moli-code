@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -30,7 +30,7 @@ export type SdkMcpToolDefinition<Schema extends ZodRawShape = ZodRawShape> = {
  * @example
  * ```typescript
  * import { z } from 'zod';
- * import { tool } from '@dobby/moli-code-sdk';
+ * import { tool } from '@moli-code/sdk';
  *
  * const calculatorTool = tool(
  *   'calculate_sum',

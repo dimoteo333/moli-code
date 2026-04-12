@@ -18,11 +18,9 @@ export function useTerminalSize(): { columns: number; rows: number } {
 
   useEffect(() => {
     function updateSize() {
-      const newColumns = process.stdout.columns || 80;
-      const newRows = process.stdout.rows || 24;
-      setSize((prev) => {
-        if (prev.columns === newColumns && prev.rows === newRows) return prev;
-        return { columns: newColumns, rows: newRows };
+      setSize({
+        columns: process.stdout.columns || 80,
+        rows: process.stdout.rows || 24,
       });
     }
 

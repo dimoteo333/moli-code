@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
 
 const projectRoot = join(import.meta.dirname, '..');
 
-const SETTINGS_DIRECTORY_NAME = '.moli';
+const SETTINGS_DIRECTORY_NAME = '.qwen';
 const USER_SETTINGS_DIR = join(
   process.env.HOME || process.env.USERPROFILE || process.env.HOMEPATH || '',
   SETTINGS_DIRECTORY_NAME,

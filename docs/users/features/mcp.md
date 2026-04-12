@@ -20,20 +20,20 @@ With MCP servers connected, you can ask Moli Code to:
 Moli Code loads MCP servers from `mcpServers` in your `settings.json`. You can configure servers either:
 
 - By editing `settings.json` directly
-- By using `moli mcp` commands (see [CLI reference](#moli-mcp-cli))
+- By using `qwen mcp` commands (see [CLI reference](#qwen-mcp-cli))
 
 ### Add your first server
 
 1. Add a server (example: remote HTTP MCP server):
 
 ```bash
-moli mcp add --transport http my-server http://localhost:3000/mcp
+qwen mcp add --transport http my-server http://localhost:3000/mcp
 ```
 
 2. Open MCP management dialog to view and manage servers:
 
 ```bash
-moli mcp
+qwen mcp
 ```
 
 3. Restart Moli Code in the same project (or start it if it wasn’t running yet), then ask the model to use tools from that server.
@@ -42,13 +42,13 @@ moli mcp
 
 Most users only need these two scopes:
 
-- **Project scope (default)**: `.moli/settings.json` in your project root
-- **User scope**: `~/.moli/settings.json` across all projects on your machine
+- **Project scope (default)**: `.qwen/settings.json` in your project root
+- **User scope**: `~/.qwen/settings.json` across all projects on your machine
 
 Write to user scope:
 
 ```bash
-moli mcp add --scope user --transport http my-server http://localhost:3000/mcp
+qwen mcp add --scope user --transport http my-server http://localhost:3000/mcp
 ```
 
 > [!tip]
@@ -69,13 +69,13 @@ moli mcp add --scope user --transport http my-server http://localhost:3000/mcp
 >
 > If a server supports both, prefer **HTTP** over **SSE**.
 
-### Configure via `settings.json` vs `moli mcp add`
+### Configure via `settings.json` vs `qwen mcp add`
 
 Both approaches produce the same `mcpServers` entries in your `settings.json`—use whichever you prefer.
 
 #### Stdio server (local process)
 
-JSON (`.moli/settings.json`):
+JSON (`.qwen/settings.json`):
 
 ```json
 {
@@ -97,7 +97,7 @@ JSON (`.moli/settings.json`):
 CLI (writes to project scope by default):
 
 ```bash
-moli mcp add pythonTools -e DATABASE_URL=$DB_CONNECTION_STRING -e API_KEY=$EXTERNAL_API_KEY \
+qwen mcp add pythonTools -e DATABASE_URL=$DB_CONNECTION_STRING -e API_KEY=$EXTERNAL_API_KEY \
   --timeout 15000 python -m my_mcp_server --port 8080
 ```
 
@@ -122,7 +122,7 @@ JSON:
 CLI:
 
 ```bash
-moli mcp add --transport http httpServerWithAuth http://localhost:3000/mcp \
+qwen mcp add --transport http httpServerWithAuth http://localhost:3000/mcp \
   --header "Authorization: Bearer your-api-token" --timeout 5000
 ```
 
@@ -144,7 +144,7 @@ JSON:
 CLI:
 
 ```bash
-moli mcp add --transport sse sseServer http://localhost:8080/sse --timeout 30000
+qwen mcp add --transport sse sseServer http://localhost:8080/sse --timeout 30000
 ```
 
 ## Safety and control
@@ -192,7 +192,7 @@ Example:
 
 ## Troubleshooting
 
-- **Server shows “Disconnected” in `moli mcp list`**: verify the URL/command is correct, then increase `timeout`.
+- **Server shows “Disconnected” in `qwen mcp list`**: verify the URL/command is correct, then increase `timeout`.
 - **Stdio server fails to start**: use an absolute `command` path, and double-check `cwd`/`env`.
 - **Environment variables in JSON don’t resolve**: ensure they exist in the environment where Moli Code runs (shell vs GUI app environments can differ).
 
@@ -247,16 +247,16 @@ Optional:
 | `targetAudience`       | string                       | The OAuth Client ID allowlisted on the IAP-protected application you are trying to access. Used with `authProviderType: 'service_account_impersonation'`.                                                                                                         |
 | `targetServiceAccount` | string                       | The email address of the Google Cloud Service Account to impersonate. Used with `authProviderType: 'service_account_impersonation'`.                                                                                                                              |
 
-<a id="moli-mcp-cli"></a>
+<a id="qwen-mcp-cli"></a>
 
-### Manage MCP servers with `moli mcp`
+### Manage MCP servers with `qwen mcp`
 
 You can always configure MCP servers by manually editing `settings.json`, but the CLI is usually faster.
 
-#### Adding a server (`moli mcp add`)
+#### Adding a server (`qwen mcp add`)
 
 ```bash
-moli mcp add [options] <name> <commandOrUrl> [args...]
+qwen mcp add [options] <name> <commandOrUrl> [args...]
 ```
 
 | Argument/Option     | Description                                                         | Default            | Example                                   |
@@ -274,8 +274,8 @@ moli mcp add [options] <name> <commandOrUrl> [args...]
 | `--include-tools`   | A comma-separated list of tools to include.                         | all tools included | `--include-tools mytool,othertool`        |
 | `--exclude-tools`   | A comma-separated list of tools to exclude.                         | none               | `--exclude-tools mytool`                  |
 
-#### Removing a server (`moli mcp remove`)
+#### Removing a server (`qwen mcp remove`)
 
 ```bash
-moli mcp remove <name>
+qwen mcp remove <name>
 ```

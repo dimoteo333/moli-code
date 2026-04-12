@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
-import html2canvas from 'html2canvas';
 import { StatsRow } from './Header';
 import {
   AtAGlance,
@@ -26,7 +25,7 @@ function InsightApp({ data }: { data: InsightData }) {
 
   const performExport = async () => {
     const card = document.getElementById('share-card');
-    if (!card) {
+    if (!card || !window.html2canvas) {
       alert('Export functionality is not available.');
       return;
     }
@@ -39,7 +38,7 @@ function InsightApp({ data }: { data: InsightData }) {
       clone.style.pointerEvents = 'none';
       document.body.appendChild(clone);
 
-      const canvas = await html2canvas(clone, {
+      const canvas = await window.html2canvas(clone, {
         scale: 2,
         useCORS: true,
         logging: false,
@@ -52,7 +51,7 @@ function InsightApp({ data }: { data: InsightData }) {
       const imgData = canvas.toDataURL('image/png');
       const link = document.createElement('a');
       link.href = imgData;
-      link.download = `moli-insights-card-${new Date().toISOString().slice(0, 10)}.png`;
+      link.download = `qwen-insights-card-${new Date().toISOString().slice(0, 10)}.png`;
       link.click();
     } catch (error) {
       console.error('Export card error:', error);
@@ -103,7 +102,7 @@ function InsightApp({ data }: { data: InsightData }) {
       <header className="insights-header">
         <div className="header-content">
           <div className="header-title-section">
-            <h1 className="header-title">Moli Code Insights</h1>
+            <h1 className="header-title">Qwen Code Insights</h1>
             <p className="header-subtitle">
               {data.totalMessages
                 ? `${data.totalMessages.toLocaleString()} messages across ${data.totalSessions?.toLocaleString()} sessions`

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -33,7 +33,7 @@ describe('useCodingPlanUpdates', () => {
   const mockConfig = {
     reloadModelProvidersConfig: vi.fn(),
     refreshAuth: vi.fn(),
-    getModel: vi.fn().mockReturnValue('moli-max'),
+    getModel: vi.fn().mockReturnValue('qwen-max'),
   };
 
   const mockAddItem = vi.fn();
@@ -391,9 +391,9 @@ describe('useCodingPlanUpdates', () => {
       >;
 
       // Should have new China configs + custom config only (global config removed since regions are mutually exclusive)
-      // The China template has 8 models, so we expect 8 (from template) + 1 (custom) = 9
+      // The China template has 9 models, so we expect 9 (from template) + 1 (custom) = 10
       // Note: description field has been removed, only name field contains the branding
-      expect(updatedConfigs.length).toBe(9);
+      expect(updatedConfigs.length).toBe(10);
 
       // Should NOT contain the Global config (mutually exclusive)
       expect(
@@ -489,14 +489,14 @@ describe('useCodingPlanUpdates', () => {
       mockSettings.merged.modelProviders = {
         [AuthType.USE_OPENAI]: [
           {
-            id: 'moli3.5-plus',
+            id: 'qwen3.5-plus',
             baseUrl: chinaConfig.baseUrl,
             envKey: CODING_PLAN_ENV_KEY,
           },
         ],
       };
       // Simulate the user's current model being one that exists in the new template
-      mockConfig.getModel.mockReturnValue('moli3.5-plus');
+      mockConfig.getModel.mockReturnValue('qwen3.5-plus');
       mockConfig.refreshAuth.mockResolvedValue(undefined);
 
       const { result } = renderHook(() =>
@@ -534,7 +534,7 @@ describe('useCodingPlanUpdates', () => {
       );
 
       // Reset mock
-      mockConfig.getModel.mockReturnValue('moli-max');
+      mockConfig.getModel.mockReturnValue('qwen-max');
     });
 
     it('should show "model switched" message when current model is not in new template', async () => {
@@ -583,7 +583,7 @@ describe('useCodingPlanUpdates', () => {
       );
 
       // Reset mock
-      mockConfig.getModel.mockReturnValue('moli-max');
+      mockConfig.getModel.mockReturnValue('qwen-max');
     });
 
     it('should handle update errors gracefully', async () => {

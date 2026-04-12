@@ -6,7 +6,11 @@
 
 import type React from 'react';
 import { Text } from 'ink';
-import type { AnsiLine, AnsiOutput, AnsiToken } from '@dobby/moli-code-core';
+import type {
+  AnsiLine,
+  AnsiOutput,
+  AnsiToken,
+} from '@dobby/moli-code-core';
 
 const DEFAULT_HEIGHT = 24;
 

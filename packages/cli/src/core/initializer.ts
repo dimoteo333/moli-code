@@ -11,7 +11,7 @@ import {
   logIdeConnection,
   type Config,
 } from '@dobby/moli-code-core';
-import { type LoadedSettings, SettingScope } from '../config/settings.js';
+import { type LoadedSettings } from '../config/settings.js';
 import { performInitialAuth } from './auth.js';
 import { validateTheme } from './theme.js';
 import { initializeI18n, type SupportedLanguage } from '../i18n/index.js';
@@ -35,13 +35,10 @@ export async function initializeApp(
   settings: LoadedSettings,
 ): Promise<InitializationResult> {
   // Initialize i18n system
-  // Language priority: env var > user settings > schema default ('ko')
-  // Note: schema default 'ko' is not auto-applied to settings.merged,
-  // so we must explicitly fall back to 'ko' here to match the schema.
   const languageSetting =
-    process.env['MOLI_CODE_LANG'] ||
+    process.env['QWEN_CODE_LANG'] ||
     (settings.merged.general?.language as string) ||
-    'ko';
+    'auto';
   await initializeI18n(languageSetting as SupportedLanguage | 'auto');
 
   // Use authType from modelsConfig which respects CLI --auth-type argument
@@ -49,14 +46,6 @@ export async function initializeApp(
   const authType = config.getModelsConfig().getCurrentAuthType();
   const authError = await performInitialAuth(config, authType);
 
-  // Fallback to user select when initial authentication fails
-  if (authError) {
-    settings.setValue(
-      SettingScope.User,
-      'security.auth.selectedType',
-      undefined,
-    );
-  }
   const themeError = validateTheme(settings);
 
   const shouldOpenAuthDialog =

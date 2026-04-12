@@ -1,6 +1,6 @@
 # Moli Code Agent Server Extension for Zed
 
-A [Zed](https://zed.dev) extension that integrates [Moli Code](https://github.com/MoliLM/moli-code) as an AI agent server using the [Agent Client Protocol (ACP)](https://agentclientprotocol.com).
+A [Zed](https://zed.dev) extension that integrates [Moli Code](https://github.com/QwenLM/moli-code) as an AI agent server using the [Agent Client Protocol (ACP)](https://agentclientprotocol.com).
 
 ## Features
 
@@ -50,8 +50,8 @@ zed --install-extension moli-code
 When running as an agent server, Moli Code will:
 
 - Inherit environment variables from Zed
-- Read/create `~/.moli` directory for runtime settings
-- Use existing model and authentication settings in `~/.moli/settings.json` (except for initial login)
+- Read/create `~/.qwen` directory for runtime settings
+- Use existing model and authentication settings in `~/.qwen/settings.json` (except for initial login)
 
 For additional environment variables, configure them in your Zed settings:
 
@@ -60,7 +60,7 @@ For additional environment variables, configure them in your Zed settings:
   "agent_servers": {
     "moli-code": {
       "env": {
-        "MOLI_LOG_LEVEL": "info",
+        "QWEN_LOG_LEVEL": "info",
         "YOUR_CUSTOM_VAR": "value"
       }
     }
@@ -92,19 +92,19 @@ If the agent server starts successfully but you experience problems during use:
 
 You can report issues at either:
 
-- [Moli Code Issues](https://github.com/dimoteo333/moli-code/issues)
-- [Moli Code Zed Extension Issues](https://github.com/MoliLM/moli-code-zed-extension/issues)
+- [Moli Code Issues](https://github.com/QwenLM/moli-code/issues)
+- [Moli Code Zed Extension Issues](https://github.com/QwenLM/moli-code-zed-extension/issues)
 
 ## Documentation
 
-- [Moli Code Documentation](https://molilm.github.io/moli-code-docs/)
+- [Moli Code Documentation](https://qwenlm.github.io/moli-code-docs/)
 - [Zed Agent Panel Guide](https://zed.dev/docs/ai/agent-panel)
 - [Agent Client Protocol](https://agentclientprotocol.com)
 
 ## Support
 
-- [Report Issues](https://github.com/dimoteo333/moli-code/issues)
-- [Moli Code Discussions](https://github.com/MoliLM/moli-code/discussions)
+- [Report Issues](https://github.com/QwenLM/moli-code/issues)
+- [Moli Code Discussions](https://github.com/QwenLM/moli-code/discussions)
 - [Zed Community](https://zed.dev/community)
 
 ## License
@@ -119,7 +119,7 @@ Contributions are welcome! Please feel free to submit issues or pull requests.
 
 Moli Code is an AI-powered coding assistant that helps developers write better code faster. It provides intelligent code completion, refactoring suggestions, bug detection, and natural language code generation.
 
-Learn more at [molilm.github.io/moli-code-docs](https://molilm.github.io/moli-code-docs/)
+Learn more at [qwenlm.github.io/moli-code-docs](https://qwenlm.github.io/moli-code-docs/)
 
 ## Stay Tuned
 

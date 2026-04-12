@@ -73,7 +73,7 @@ Moli Code provides a comprehensive suite of tools for interacting with the local
 - **Behavior:**
   - Searches for files matching the glob pattern within the specified directory.
   - Returns a list of absolute paths, sorted with the most recently modified files first.
-  - Respects .gitignore and .moliignore patterns by default.
+  - Respects .gitignore and .qwenignore patterns by default.
   - Limits results to 100 files to prevent context overflow.
 - **Output (`llmContent`):** A message like: `Found 5 file(s) matching "*.ts" within /path/to/search/dir, sorted by modification time (newest first):\n---\n/path/to/file1.ts\n/path/to/subdir/file2.ts\n---\n[95 files truncated] ...`
 - **Confirmation:** No.
@@ -94,7 +94,7 @@ Moli Code provides a comprehensive suite of tools for interacting with the local
   - Uses ripgrep for fast search when available; otherwise falls back to a JavaScript-based search implementation.
   - Returns matching lines with file paths and line numbers.
   - Case-insensitive by default.
-  - Respects .gitignore and .moliignore patterns.
+  - Respects .gitignore and .qwenignore patterns.
   - Limits output to prevent context overflow.
 - **Output (`llmContent`):** A formatted string of matches, e.g.:
 
@@ -152,7 +152,7 @@ grep_search(pattern="function", glob="*.js", limit=10)
   - If `old_string` is provided, it reads the `file_path` and attempts to find exactly one occurrence unless `replace_all` is true.
   - If the match is unique (or `replace_all` is true), it replaces the text with `new_string`.
   - **Enhanced Reliability (Multi-Stage Edit Correction):** To significantly improve the success rate of edits, especially when the model-provided `old_string` might not be perfectly precise, the tool incorporates a multi-stage edit correction mechanism.
-    - If the initial `old_string` isn't found or matches multiple locations, the tool can leverage the Moli model to iteratively refine `old_string` (and potentially `new_string`).
+    - If the initial `old_string` isn't found or matches multiple locations, the tool can leverage the Qwen model to iteratively refine `old_string` (and potentially `new_string`).
     - This self-correction process attempts to identify the unique segment the model intended to modify, making the `edit` operation more robust even with slightly imperfect initial context.
 - **Failure conditions:** Despite the correction mechanism, the tool will fail if:
   - `file_path` is not absolute or is outside the root directory.
@@ -187,7 +187,7 @@ The `defaultFileEncoding` setting controls encoding for **newly created** files 
 | `utf-8`     | UTF-8 without BOM, no automatic adjustments                                 |
 | `utf-8-bom` | UTF-8 with BOM for all new files                                            |
 
-Set it in `.moli/settings.json` or `~/.moli/settings.json`:
+Set it in `.qwen/settings.json` or `~/.qwen/settings.json`:
 
 ```json
 {

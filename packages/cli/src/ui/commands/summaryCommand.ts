@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -134,15 +134,15 @@ export const summaryCommand: SlashCommand = {
     }> => {
       // Ensure .moli directory exists
       const projectRoot = config.getProjectRoot();
-      const moliDir = path.join(projectRoot, '.moli');
+      const qwenDir = path.join(projectRoot, '.moli');
       try {
-        await fsPromises.mkdir(moliDir, { recursive: true });
+        await fsPromises.mkdir(qwenDir, { recursive: true });
       } catch (_err) {
         // Directory might already exist, ignore error
       }
 
       // Save the summary to PROJECT_SUMMARY.md
-      const summaryPath = path.join(moliDir, 'PROJECT_SUMMARY.md');
+      const summaryPath = path.join(qwenDir, 'PROJECT_SUMMARY.md');
       const summaryContent = `${markdownSummary}
 
 ---

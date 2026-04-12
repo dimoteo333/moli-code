@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * Bundles/copies the Moli Code CLI into the SDK package dist/ so consumers
+ * Bundles/copies the Qwen Code CLI into the SDK package dist/ so consumers
  * don't need a separate CLI install.
  *
  * This is intentionally NOT part of the SDK "build" step; it is a packaging

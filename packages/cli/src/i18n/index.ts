@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli team
+ * Copyright 2025 Qwen team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -19,7 +19,7 @@ export type { SupportedLanguage };
 export { getLanguageNameFromLocale };
 
 // State
-let currentLanguage: SupportedLanguage = 'ko';
+let currentLanguage: SupportedLanguage = 'en';
 let translations: Record<string, string | string[]> = {};
 
 // Cache
@@ -55,7 +55,7 @@ const getLocalePath = (
 
 // Language detection
 export function detectSystemLanguage(): SupportedLanguage {
-  const envLang = process.env['MOLI_CODE_LANG'] || process.env['LANG'];
+  const envLang = process.env['QWEN_CODE_LANG'] || process.env['LANG'];
   if (envLang) {
     for (const lang of SUPPORTED_LANGUAGES) {
       if (envLang.startsWith(lang.code)) return lang.code;
@@ -71,7 +71,7 @@ export function detectSystemLanguage(): SupportedLanguage {
     // Fallback to default
   }
 
-  return 'ko';
+  return 'en';
 }
 
 // Translation loading

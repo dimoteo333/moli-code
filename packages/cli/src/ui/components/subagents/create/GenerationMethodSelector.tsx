@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -11,15 +11,15 @@ import { t } from '../../../../i18n/index.js';
 
 interface GenerationOption {
   label: string;
-  value: 'moli' | 'manual';
+  value: 'qwen' | 'manual';
 }
 
 const generationOptions: GenerationOption[] = [
   {
     get label() {
-      return t('Generate with Moli Code (Recommended)');
+      return t('Generate with Qwen Code (Recommended)');
     },
-    value: 'moli',
+    value: 'qwen',
   },
   {
     get label() {
@@ -39,7 +39,7 @@ export function GenerationMethodSelector({
   onPrevious: _onPrevious,
 }: WizardStepProps) {
   const handleSelect = (selectedValue: string) => {
-    const method = selectedValue as 'moli' | 'manual';
+    const method = selectedValue as 'qwen' | 'manual';
     dispatch({ type: 'SET_GENERATION_METHOD', method });
     onNext();
   };

@@ -1,11 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { ExportSessionData } from '../types.js';
-import { EXPORT_HTML_TEMPLATE as HTML_TEMPLATE } from '@dobby/web-templates';
+import { EXPORT_HTML_TEMPLATE as HTML_TEMPLATE } from '@dobby/moli-code-web-templates';
 
 /**
  * Escapes JSON for safe embedding in HTML.
@@ -36,6 +36,7 @@ export function injectDataIntoHtmlTemplate(
     sessionId: string;
     startTime: string;
     messages: unknown[];
+    metadata?: unknown;
   },
 ): string {
   const jsonData = JSON.stringify(data, null, 2);

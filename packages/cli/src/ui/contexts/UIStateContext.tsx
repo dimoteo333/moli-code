@@ -7,6 +7,7 @@
 import { createContext, useContext } from 'react';
 import type {
   HistoryItem,
+  HistoryItemBtw,
   ThoughtSummary,
   ShellConfirmationRequest,
   ConfirmationRequest,
@@ -16,7 +17,7 @@ import type {
   SettingInputRequest,
   PluginChoiceRequest,
 } from '../types.js';
-import type { MoliAuthState } from '../hooks/useMoliAuth.js';
+import type { QwenAuthState } from '../hooks/useQwenAuth.js';
 import type { CommandContext, SlashCommand } from '../commands/types.js';
 import type { TextBuffer } from '../components/shared/text-buffer.js';
 import type {
@@ -33,6 +34,7 @@ import type { UpdateObject } from '../utils/updateCheck.js';
 import { type UseHistoryManagerReturn } from '../hooks/useHistoryManager.js';
 import { type RestartReason } from '../hooks/useIdeTrustListener.js';
 import { type CodingPlanUpdateRequest } from '../hooks/useCodingPlanUpdates.js';
+import { type ArenaDialogType } from '../hooks/useArenaCommand.js';
 
 export interface UIState {
   history: HistoryItem[];
@@ -44,14 +46,17 @@ export interface UIState {
   authError: string | null;
   isAuthDialogOpen: boolean;
   pendingAuthType: AuthType | undefined;
-  // Moli OAuth state
-  moliAuthState: MoliAuthState;
+  // Qwen OAuth state
+  qwenAuthState: QwenAuthState;
   editorError: string | null;
   isEditorDialogOpen: boolean;
   debugMessage: string;
   quittingMessages: HistoryItem[] | null;
   isSettingsDialogOpen: boolean;
   isModelDialogOpen: boolean;
+  isFastModelMode: boolean;
+  isTrustDialogOpen: boolean;
+  activeArenaDialog: ArenaDialogType;
   isPermissionsDialogOpen: boolean;
   isApprovalModeDialogOpen: boolean;
   isResumeDialogOpen: boolean;
@@ -101,6 +106,9 @@ export interface UIState {
   staticExtraHeight: number;
   dialogsVisible: boolean;
   pendingHistoryItems: HistoryItemWithoutId[];
+  btwItem: HistoryItemBtw | null;
+  setBtwItem: (item: HistoryItemBtw | null) => void;
+  cancelBtw: () => void;
   nightly: boolean;
   branchName: string | undefined;
   sessionStats: SessionStatsState;
@@ -129,8 +137,16 @@ export interface UIState {
   isExtensionsManagerDialogOpen: boolean;
   // MCP dialog
   isMcpDialogOpen: boolean;
+  // Hooks dialog
+  isHooksDialogOpen: boolean;
   // Feedback dialog
   isFeedbackDialogOpen: boolean;
+  // Per-task token tracking
+  taskStartTokens: number;
+  // Prompt suggestion
+  promptSuggestion: string | null;
+  /** Dismiss prompt suggestion (clears state, aborts speculation) */
+  dismissPromptSuggestion: () => void;
 }
 
 export const UIStateContext = createContext<UIState | null>(null);

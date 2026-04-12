@@ -4,11 +4,11 @@ Moli Code allows you to configure multiple model providers through the `modelPro
 
 ## Overview
 
-Use `modelProviders` to declare curated model lists per auth type that the `/model` picker can switch between. Keys must be valid auth types (`openai`, `anthropic`, `gemini`, etc.). Each entry requires an `id` and **must include `envKey`**, with optional `name`, `description`, `baseUrl`, and `generationConfig`. Credentials are never persisted in settings; the runtime reads them from `process.env[envKey]`. Moli OAuth models remain hard-coded and cannot be overridden.
+Use `modelProviders` to declare curated model lists per auth type that the `/model` picker can switch between. Keys must be valid auth types (`openai`, `anthropic`, `gemini`, etc.). Each entry requires an `id` and **must include `envKey`**, with optional `name`, `description`, `baseUrl`, and `generationConfig`. Credentials are never persisted in settings; the runtime reads them from `process.env[envKey]`. Qwen OAuth models remain hard-coded and cannot be overridden.
 
 > [!note]
 >
-> Only the `/model` command exposes non-default auth types. Anthropic, Gemini, etc., must be defined via `modelProviders`. The `/auth` command lists Moli OAuth, Alibaba Cloud Coding Plan, and API Key as the built-in authentication options.
+> Only the `/model` command exposes non-default auth types. Anthropic, Gemini, etc., must be defined via `modelProviders`. The `/auth` command lists Qwen OAuth, Alibaba Cloud Coding Plan, and API Key as the built-in authentication options.
 
 > [!warning]
 >
@@ -27,7 +27,7 @@ The `modelProviders` object keys must be valid `authType` values. Currently supp
 | `openai`     | OpenAI-compatible APIs (OpenAI, Azure OpenAI, local inference servers like vLLM/Ollama) |
 | `anthropic`  | Anthropic Claude API                                                                    |
 | `gemini`     | Google Gemini API                                                                       |
-| `moli-oauth` | Moli OAuth (hard-coded, cannot be overridden in `modelProviders`)                       |
+| `qwen-oauth` | Qwen OAuth (hard-coded, cannot be overridden in `modelProviders`)                       |
 
 > [!warning]
 > If an invalid auth type key is used (e.g., a typo like `"openai-custom"`), the configuration will be **silently skipped** and the models will not appear in the `/model` picker. Always use one of the supported auth type values listed above.
@@ -41,7 +41,7 @@ Moli Code uses the following official SDKs to send requests to each provider:
 | `openai`     | [`openai`](https://www.npmjs.com/package/openai) - Official OpenAI Node.js SDK                  |
 | `anthropic`  | [`@anthropic-ai/sdk`](https://www.npmjs.com/package/@anthropic-ai/sdk) - Official Anthropic SDK |
 | `gemini`     | [`@google/genai`](https://www.npmjs.com/package/@google/genai) - Official Google GenAI SDK      |
-| `moli-oauth` | [`openai`](https://www.npmjs.com/package/openai) with custom provider (DashScope-compatible)    |
+| `qwen-oauth` | [`openai`](https://www.npmjs.com/package/openai) with custom provider (DashScope-compatible)    |
 
 This means the `baseUrl` you configure should be compatible with the corresponding SDK's expected API format. For example, when using `openai` auth type, the endpoint must accept OpenAI API format requests.
 
@@ -51,6 +51,10 @@ This auth type supports not only OpenAI's official API but also any OpenAI-compa
 
 ```json
 {
+  "env": {
+    "OPENAI_API_KEY": "sk-your-actual-openai-key-here",
+    "OPENROUTER_API_KEY": "sk-or-your-actual-openrouter-key-here"
+  },
   "modelProviders": {
     "openai": [
       {
@@ -117,6 +121,9 @@ This auth type supports not only OpenAI's official API but also any OpenAI-compa
 
 ```json
 {
+  "env": {
+    "ANTHROPIC_API_KEY": "sk-ant-your-actual-anthropic-key-here"
+  },
   "modelProviders": {
     "anthropic": [
       {
@@ -157,6 +164,9 @@ This auth type supports not only OpenAI's official API but also any OpenAI-compa
 
 ```json
 {
+  "env": {
+    "GEMINI_API_KEY": "AIza-your-actual-gemini-key-here"
+  },
   "modelProviders": {
     "gemini": [
       {
@@ -191,11 +201,16 @@ Most local inference servers (vLLM, Ollama, LM Studio, etc.) provide an OpenAI-c
 
 ```json
 {
+  "env": {
+    "OLLAMA_API_KEY": "ollama",
+    "VLLM_API_KEY": "not-needed",
+    "LMSTUDIO_API_KEY": "lm-studio"
+  },
   "modelProviders": {
     "openai": [
       {
-        "id": "moli2.5-7b",
-        "name": "Moli2.5 7B (Ollama)",
+        "id": "qwen2.5-7b",
+        "name": "Qwen2.5 7B (Ollama)",
         "envKey": "OLLAMA_API_KEY",
         "baseUrl": "http://localhost:11434/v1",
         "generationConfig": {
@@ -253,11 +268,32 @@ export VLLM_API_KEY="not-needed"
 
 > [!note]
 >
-> The `extra_body` parameter is **only supported for OpenAI-compatible providers** (`openai`, `moli-oauth`). It is ignored for Anthropic, and Gemini providers.
+> The `extra_body` parameter is **only supported for OpenAI-compatible providers** (`openai`, `qwen-oauth`). It is ignored for Anthropic, and Gemini providers.
+
+> [!note]
+>
+> **About `envKey`**: The `envKey` field specifies the **name of an environment variable**, not the actual API key value. For the configuration to work, you need to ensure the corresponding environment variable is set with your real API key. There are two ways to do this:
+>
+> - **Option 1: Using a `.env` file** (recommended for security):
+>   ```bash
+>   # ~/.qwen/.env (or project root)
+>   OPENAI_API_KEY=sk-your-actual-key-here
+>   ```
+>   Be sure to add `.env` to your `.gitignore` to prevent accidentally committing secrets.
+> - **Option 2: Using the `env` field in `settings.json`** (as shown in the examples above):
+>   ```json
+>   {
+>     "env": {
+>       "OPENAI_API_KEY": "sk-your-actual-key-here"
+>     }
+>   }
+>   ```
+>
+> Each provider example includes an `env` field to illustrate how the API key should be configured.
 
 ## Alibaba Cloud Coding Plan
 
-Alibaba Cloud Coding Plan provides a pre-configured set of Moli models optimized for coding tasks. This feature is available for users with Alibaba Cloud Coding Plan API access and offers a simplified setup experience with automatic model configuration updates.
+Alibaba Cloud Coding Plan provides a pre-configured set of Qwen models optimized for coding tasks. This feature is available for users with Alibaba Cloud Coding Plan API access and offers a simplified setup experience with automatic model configuration updates.
 
 ### Overview
 
@@ -265,9 +301,9 @@ When you authenticate with an Alibaba Cloud Coding Plan API key using the `/auth
 
 | Model ID               | Name                 | Description                            |
 | ---------------------- | -------------------- | -------------------------------------- |
-| `moli3.5-plus`         | moli3.5-plus         | Advanced model with thinking enabled   |
-| `moli3-coder-plus`     | moli3-coder-plus     | Optimized for coding tasks             |
-| `moli3-max-2026-01-23` | moli3-max-2026-01-23 | Latest max model with thinking enabled |
+| `qwen3.5-plus`         | qwen3.5-plus         | Advanced model with thinking enabled   |
+| `qwen3-coder-plus`     | qwen3-coder-plus     | Optimized for coding tasks             |
+| `qwen3-max-2026-01-23` | qwen3-max-2026-01-23 | Latest max model with thinking enabled |
 
 ### Setup
 
@@ -301,7 +337,7 @@ When you configure Coding Plan through the `/auth` command, the API key is store
 > **Security Recommendation**: For better security, it is recommended to move the API key from `settings.json` to a separate `.env` file and load it as an environment variable. For example:
 >
 > ```bash
-> # ~/.moli/.env
+> # ~/.qwen/.env
 > BAILIAN_CODING_PLAN_API_KEY=your-api-key-here
 > ```
 >
@@ -326,9 +362,9 @@ If you prefer to manually configure Coding Plan models, you can add them to your
   "modelProviders": {
     "openai": [
       {
-        "id": "moli3-coder-plus",
-        "name": "moli3-coder-plus",
-        "description": "Moli3-Coder via Alibaba Cloud Coding Plan",
+        "id": "qwen3-coder-plus",
+        "name": "qwen3-coder-plus",
+        "description": "Qwen3-Coder via Alibaba Cloud Coding Plan",
         "envKey": "YOUR_CUSTOM_ENV_KEY",
         "baseUrl": "https://coding.dashscope.aliyuncs.com/v1"
       }
@@ -360,9 +396,9 @@ The effective auth/model/credential values are chosen per field using the follow
 | CLI arguments              | `--auth-type`                       | `--model`                                       | `--openaiApiKey` (or provider-specific equivalents) | `--openaiBaseUrl` (or provider-specific equivalents) | —                      | —                                 |
 | Environment variables      | —                                   | Provider-specific mapping (e.g. `OPENAI_MODEL`) | Provider-specific mapping (e.g. `OPENAI_API_KEY`)   | Provider-specific mapping (e.g. `OPENAI_BASE_URL`)   | —                      | —                                 |
 | Settings (`settings.json`) | `security.auth.selectedType`        | `model.name`                                    | `security.auth.apiKey`                              | `security.auth.baseUrl`                              | —                      | —                                 |
-| Default / computed         | Falls back to `AuthType.MOLI_OAUTH` | Built-in default (OpenAI ⇒ `moli3-coder-plus`)  | —                                                   | —                                                    | —                      | `Config.getProxy()` if configured |
+| Default / computed         | Falls back to `AuthType.QWEN_OAUTH` | Built-in default (OpenAI ⇒ `qwen3-coder-plus`)  | —                                                   | —                                                    | —                      | `Config.getProxy()` if configured |
 
-\*When present, CLI auth flags override settings. Otherwise, `security.auth.selectedType` or the implicit default determine the auth type. Moli OAuth and OpenAI are the only auth types surfaced without extra configuration.
+\*When present, CLI auth flags override settings. Otherwise, `security.auth.selectedType` or the implicit default determine the auth type. Qwen OAuth and OpenAI are the only auth types surfaced without extra configuration.
 
 > [!warning]
 >
@@ -406,7 +442,7 @@ The following fields are treated as atomic objects - provider values completely 
 ### Example
 
 ```json
-// User settings (~/.moli/settings.json)
+// User settings (~/.qwen/settings.json)
 {
   "model": {
     "generationConfig": {
@@ -471,7 +507,7 @@ When you configure a model without using `modelProviders`, Moli Code automatical
 
 ```bash
 # This creates a RuntimeModelSnapshot with ID: $runtime|openai|my-custom-model
-moli --auth-type openai --model my-custom-model --openaiApiKey $KEY --openaiBaseUrl https://api.example.com/v1
+qwen --auth-type openai --model my-custom-model --openaiApiKey $KEY --openaiBaseUrl https://api.example.com/v1
 ```
 
 The snapshot:
@@ -500,7 +536,7 @@ The snapshot:
 
 > [!important]
 >
-> Define `modelProviders` in the user-scope `~/.moli/settings.json` whenever possible and avoid persisting credential overrides in any scope. Keeping the provider catalog in user settings prevents merge/override conflicts between project and user scopes and ensures `/auth` and `/model` updates always write back to a consistent scope.
+> Define `modelProviders` in the user-scope `~/.qwen/settings.json` whenever possible and avoid persisting credential overrides in any scope. Keeping the provider catalog in user settings prevents merge/override conflicts between project and user scopes and ensures `/auth` and `/model` updates always write back to a consistent scope.
 
 - `/model` and `/auth` persist `model.name` (where applicable) and `security.auth.selectedType` to the closest writable scope that already defines `modelProviders`; otherwise they fall back to the user scope. This keeps workspace/user files in sync with the active provider catalog.
 - Without `modelProviders`, the resolver mixes CLI/env/settings layers, creating Runtime Models. This is fine for single-provider setups but cumbersome when frequently switching. Define provider catalogs whenever multi-model workflows are common so that switches stay atomic, source-attributed, and debuggable.

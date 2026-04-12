@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -28,16 +28,16 @@ const CACHED_MOLI_OAUTH_MODELS: AvailableModel[] = MOLI_OAUTH_MODELS.map(
   }),
 );
 
-function getMoliOAuthModels(): readonly AvailableModel[] {
+function getQwenOAuthModels(): readonly AvailableModel[] {
   return CACHED_MOLI_OAUTH_MODELS;
 }
 
 /**
- * Get available Moli models
+ * Get available Qwen models
  * coder-model now has vision capabilities by default.
  */
-export function getFilteredMoliModels(): AvailableModel[] {
-  return [...getMoliOAuthModels()];
+export function getFilteredQwenModels(): AvailableModel[] {
+  return [...getQwenOAuthModels()];
 }
 
 /**
@@ -113,7 +113,7 @@ export function getAvailableModelsForAuthType(
   // Fall back to environment variables for specific auth types (no config provided)
   switch (authType) {
     case AuthType.MOLI_OAUTH: {
-      return [...getMoliOAuthModels()];
+      return [...getQwenOAuthModels()];
     }
     case AuthType.USE_OPENAI: {
       const openAIModel = getOpenAIAvailableModelFromEnv();

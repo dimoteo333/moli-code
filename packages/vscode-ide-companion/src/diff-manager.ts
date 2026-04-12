@@ -191,18 +191,18 @@ export class DiffManager {
       this.recentlyShown.set(key, now);
       return;
     }
-    // Left side: old content using moli-diff scheme
-    const leftDocUri = vscode.Uri.from({
+    // Left side: old content using qwen-diff scheme
+    // Use Uri.file() to properly handle Windows paths (e.g., C:\Users\...)
+    // then change the scheme to our custom diff scheme
+    const leftDocUri = vscode.Uri.file(normalizedPath).with({
       scheme: DIFF_SCHEME,
-      path: normalizedPath,
       query: `old&rand=${Math.random()}`,
     });
     this.diffContentProvider.setContent(leftDocUri, oldContent);
 
-    // Right side: new content using moli-diff scheme
-    const rightDocUri = vscode.Uri.from({
+    // Right side: new content using qwen-diff scheme
+    const rightDocUri = vscode.Uri.file(normalizedPath).with({
       scheme: DIFF_SCHEME,
-      path: normalizedPath,
       query: `new&rand=${Math.random()}`,
     });
     this.diffContentProvider.setContent(rightDocUri, newContent);
@@ -218,7 +218,7 @@ export class DiffManager {
     const diffTitle = `${path.basename(normalizedPath)} (Before ↔ After)`;
     await vscode.commands.executeCommand(
       'setContext',
-      'moli.diff.isVisible',
+      'qwen.diff.isVisible',
       true,
     );
 
@@ -358,7 +358,7 @@ export class DiffManager {
     }
     await vscode.commands.executeCommand(
       'setContext',
-      'moli.diff.isVisible',
+      'qwen.diff.isVisible',
       isVisible,
     );
   }
@@ -371,7 +371,7 @@ export class DiffManager {
     const diffInfo = this.diffDocuments.get(rightDocUri.toString());
     await vscode.commands.executeCommand(
       'setContext',
-      'moli.diff.isVisible',
+      'qwen.diff.isVisible',
       false,
     );
 
@@ -395,7 +395,7 @@ export class DiffManager {
     }
   }
 
-  /** Close all open moli-diff editors */
+  /** Close all open qwen-diff editors */
   async closeAll(): Promise<void> {
     // Collect keys first to avoid iterator invalidation while closing
     const uris = Array.from(this.diffDocuments.keys()).map((k) =>

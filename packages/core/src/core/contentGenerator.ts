@@ -54,7 +54,7 @@ export interface ContentGenerator {
 
 export enum AuthType {
   USE_OPENAI = 'openai',
-  MOLI_OAUTH = 'moli-oauth', // MOLI: Enterprise OAuth2 (renamed from MOLI_OAUTH)
+  MOLI_OAUTH = 'moli-oauth',
   USE_GEMINI = 'gemini',
   USE_VERTEX_AI = 'vertex-ai',
   USE_ANTHROPIC = 'anthropic',
@@ -221,7 +221,7 @@ export function validateModelConfig(
 ): ModelConfigValidationResult {
   const errors: Error[] = [];
 
-  // Moli OAuth doesn't need validation - it uses dynamic tokens
+  // Qwen OAuth doesn't need validation - it uses dynamic tokens
   if (config.authType === AuthType.MOLI_OAUTH) {
     return { valid: true, errors: [] };
   }
@@ -312,21 +312,20 @@ export async function createContentGenerator(
     );
     baseGenerator = createOpenAIContentGenerator(generatorConfig, config);
   } else if (authType === AuthType.MOLI_OAUTH) {
-    // MOLI: Use MoliContentGenerator for enterprise OAuth2
-    const { getMoliOAuthClient: getMoliOauthClient } = await import(
-      '../moli/moliOAuth2.js'
+    const { getQwenOAuthClient: getQwenOauthClient } = await import(
+      '../moli/qwenOAuth2.js'
     );
-    const { MoliContentGenerator } = await import(
-      '../moli/moliContentGenerator.js'
+    const { QwenContentGenerator } = await import(
+      '../moli/qwenContentGenerator.js'
     );
 
     try {
-      const moliClient = await getMoliOauthClient(
+      const qwenClient = await getQwenOauthClient(
         config,
         isInitialAuth ? { requireCachedCredentials: true } : undefined,
       );
-      baseGenerator = new MoliContentGenerator(
-        moliClient,
+      baseGenerator = new QwenContentGenerator(
+        qwenClient,
         generatorConfig,
         config,
       );

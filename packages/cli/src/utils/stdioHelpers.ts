@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,7 +8,7 @@
  * Utility functions for writing to stdout/stderr in CLI commands.
  *
  * These helpers are used instead of console.log/console.error in standalone
- * CLI commands (like `moli extensions list`) where the output IS the user-facing
+ * CLI commands (like `qwen extensions list`) where the output IS the user-facing
  * result, not debug logging.
  *
  * For debug/diagnostic logging, use `createDebugLogger()` from @dobby/moli-code-core.

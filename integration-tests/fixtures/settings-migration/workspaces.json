@@ -76,7 +76,7 @@
   "v1VersionStringSettings": {
     "$version": "2",
     "theme": "light",
-    "model": "moli-plus",
+    "model": "qwen-plus",
     "disableAutoUpdate": "false",
     "disableLoadingPhrases": "TRUE",
     "ui": {

@@ -27,28 +27,13 @@ import os from 'node:os';
 import { GeminiClient } from '../core/client.js';
 import { createMockWorkspaceContext } from '../test-utils/mockWorkspaceContext.js';
 import { StandardFileSystemService } from '../services/fileSystemService.js';
-import type { DiffUpdateResult } from '../ide/ide-client.js';
-import { IdeClient } from '../ide/ide-client.js';
 
 const rootDir = path.resolve(os.tmpdir(), 'moli-code-test-root');
 
 // --- MOCKS ---
 vi.mock('../core/client.js');
-vi.mock('../ide/ide-client.js', () => ({
-  IdeClient: {
-    getInstance: vi.fn(),
-  },
-}));
 
 let mockGeminiClientInstance: Mocked<GeminiClient>;
-const mockIdeClient = {
-  openDiff: vi.fn(),
-  isDiffingEnabled: vi.fn(),
-};
-
-vi.mocked(IdeClient.getInstance).mockResolvedValue(
-  mockIdeClient as unknown as IdeClient,
-);
 
 // Mock Config
 const fsService = new StandardFileSystemService();
@@ -59,7 +44,6 @@ const mockConfigInternal = {
   getGeminiClient: vi.fn(), // Initialize as a plain mock function
   getBaseLlmClient: vi.fn(), // Initialize as a plain mock function
   getFileSystemService: () => fsService,
-  getIdeMode: vi.fn(() => false),
   getWorkspaceContext: () => createMockWorkspaceContext(rootDir),
   getApiKey: () => 'test-key',
   getModel: () => 'test-model',
@@ -151,15 +135,14 @@ describe('WriteFileTool', () => {
       expect(() => tool.build(params)).toThrow(/File path must be absolute/);
     });
 
-    it('should throw an error for a path outside root', () => {
+    it('should allow a path outside root (external path support)', () => {
       const outsidePath = path.resolve(tempDir, 'outside-root.txt');
       const params = {
         file_path: outsidePath,
         content: 'hello',
       };
-      expect(() => tool.build(params)).toThrow(
-        /File path must be within one of the workspace directories/,
-      );
+      const invocation = tool.build(params);
+      expect(invocation).toBeDefined();
     });
 
     it('should throw an error if path is a directory', () => {
@@ -196,7 +179,15 @@ describe('WriteFileTool', () => {
   describe('shouldConfirmExecute', () => {
     const abortSignal = new AbortController().signal;
 
-    it('should return false if _getCorrectedFileContent returns an error', async () => {
+    it('should always return ask from getDefaultPermission', async () => {
+      const filePath = path.join(rootDir, 'confirm_permission_file.txt');
+      const params = { file_path: filePath, content: 'test content' };
+      const invocation = tool.build(params);
+      const permission = await invocation.getDefaultPermission();
+      expect(permission).toBe('ask');
+    });
+
+    it('should throw if _getCorrectedFileContent returns an error', async () => {
       const filePath = path.join(rootDir, 'confirm_error_file.txt');
       const params = { file_path: filePath, content: 'test content' };
       fs.writeFileSync(filePath, 'original', { mode: 0o000 });
@@ -207,30 +198,11 @@ describe('WriteFileTool', () => {
       );
 
       const invocation = tool.build(params);
-      const confirmation = await invocation.shouldConfirmExecute(abortSignal);
-      expect(confirmation).toBe(false);
+      await expect(
+        invocation.getConfirmationDetails(abortSignal),
+      ).rejects.toThrow('Error reading existing file for confirmation');
 
       fs.chmodSync(filePath, 0o600);
-    });
-
-    it('should return false and skip confirmation when approval mode is AUTO_EDIT', async () => {
-      mockConfigInternal.getApprovalMode.mockReturnValue(
-        ApprovalMode.AUTO_EDIT,
-      );
-      const filePath = path.join(rootDir, 'auto_edit_skip_confirm.txt');
-      const params = { file_path: filePath, content: 'content' };
-      const invocation = tool.build(params);
-      const confirmation = await invocation.shouldConfirmExecute(abortSignal);
-      expect(confirmation).toBe(false);
-    });
-
-    it('should return false and skip confirmation when approval mode is YOLO', async () => {
-      mockConfigInternal.getApprovalMode.mockReturnValue(ApprovalMode.YOLO);
-      const filePath = path.join(rootDir, 'yolo_skip_confirm.txt');
-      const params = { file_path: filePath, content: 'content' };
-      const invocation = tool.build(params);
-      const confirmation = await invocation.shouldConfirmExecute(abortSignal);
-      expect(confirmation).toBe(false);
     });
 
     it('should request confirmation with diff for a new file', async () => {
@@ -239,7 +211,7 @@ describe('WriteFileTool', () => {
 
       const params = { file_path: filePath, content: proposedContent };
       const invocation = tool.build(params);
-      const confirmation = (await invocation.shouldConfirmExecute(
+      const confirmation = (await invocation.getConfirmationDetails(
         abortSignal,
       )) as ToolEditConfirmationDetails;
 
@@ -266,7 +238,7 @@ describe('WriteFileTool', () => {
 
       const params = { file_path: filePath, content: proposedContent };
       const invocation = tool.build(params);
-      const confirmation = (await invocation.shouldConfirmExecute(
+      const confirmation = (await invocation.getConfirmationDetails(
         abortSignal,
       )) as ToolEditConfirmationDetails;
 
@@ -281,117 +253,10 @@ describe('WriteFileTool', () => {
         originalContent.replace(/[.*+?^${}()|[\\]\\]/g, '\\$&'),
       );
     });
-
-    describe('with IDE integration', () => {
-      beforeEach(() => {
-        // Enable IDE mode and set connection status for these tests
-        mockConfigInternal.getIdeMode.mockReturnValue(true);
-        mockIdeClient.isDiffingEnabled.mockReturnValue(true);
-        mockIdeClient.openDiff.mockResolvedValue({
-          status: 'accepted',
-          content: 'ide-modified-content',
-        });
-      });
-
-      it('should call openDiff and await it when in IDE mode and connected', async () => {
-        const filePath = path.join(rootDir, 'ide_confirm_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        expect(mockIdeClient.openDiff).toHaveBeenCalledWith(
-          filePath,
-          'test', // The corrected content
-        );
-        // Ensure the promise is awaited by checking the result
-        expect(confirmation.ideConfirmation).toBeDefined();
-        await confirmation.ideConfirmation; // Should resolve
-      });
-
-      it('should not call openDiff if not in IDE mode', async () => {
-        mockConfigInternal.getIdeMode.mockReturnValue(false);
-        const filePath = path.join(rootDir, 'ide_disabled_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        await invocation.shouldConfirmExecute(abortSignal);
-
-        expect(mockIdeClient.openDiff).not.toHaveBeenCalled();
-      });
-
-      it('should not call openDiff if IDE is not connected', async () => {
-        mockIdeClient.isDiffingEnabled.mockReturnValue(false);
-        const filePath = path.join(rootDir, 'ide_disconnected_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        await invocation.shouldConfirmExecute(abortSignal);
-
-        expect(mockIdeClient.openDiff).not.toHaveBeenCalled();
-      });
-
-      it('should update params.content with IDE content when onConfirm is called', async () => {
-        const filePath = path.join(rootDir, 'ide_onconfirm_file.txt');
-        const params = { file_path: filePath, content: 'original-content' };
-        const invocation = tool.build(params);
-
-        // This is the key part: get the confirmation details
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        // The `onConfirm` function should exist on the details object
-        expect(confirmation.onConfirm).toBeDefined();
-
-        // Call `onConfirm` to trigger the logic that updates the content
-        await confirmation.onConfirm!(ToolConfirmationOutcome.ProceedOnce);
-
-        // Now, check if the original `params` object (captured by the invocation) was modified
-        expect(invocation.params.content).toBe('ide-modified-content');
-      });
-
-      it('should not await ideConfirmation promise', async () => {
-        const filePath = path.join(rootDir, 'ide_no_await_file.txt');
-        const params = { file_path: filePath, content: 'test' };
-        const invocation = tool.build(params);
-
-        let diffPromiseResolved = false;
-        const diffPromise = new Promise<DiffUpdateResult>((resolve) => {
-          setTimeout(() => {
-            diffPromiseResolved = true;
-            resolve({ status: 'accepted', content: 'ide-modified-content' });
-          }, 50); // A small delay to ensure the check happens before resolution
-        });
-        mockIdeClient.openDiff.mockReturnValue(diffPromise);
-
-        const confirmation = (await invocation.shouldConfirmExecute(
-          abortSignal,
-        )) as ToolEditConfirmationDetails;
-
-        // This is the key check: the confirmation details should be returned
-        // *before* the diffPromise is resolved.
-        expect(diffPromiseResolved).toBe(false);
-        expect(confirmation).toBeDefined();
-        expect(confirmation.ideConfirmation).toBe(diffPromise);
-
-        // Now, we can await the promise to let the test finish cleanly.
-        await diffPromise;
-        expect(diffPromiseResolved).toBe(true);
-      });
-    });
   });
 
   describe('execute', () => {
     const abortSignal = new AbortController().signal;
-
-    beforeEach(() => {
-      // Ensure IDE mode is disabled for these tests
-      mockConfigInternal.getIdeMode.mockReturnValue(false);
-      mockIdeClient.isDiffingEnabled.mockReturnValue(false);
-    });
 
     it('should return error if _getCorrectedFileContent returns an error during execute', async () => {
       const filePath = path.join(rootDir, 'execute_error_file.txt');
@@ -425,7 +290,8 @@ describe('WriteFileTool', () => {
       const params = { file_path: filePath, content: proposedContent };
       const invocation = tool.build(params);
 
-      const confirmDetails = await invocation.shouldConfirmExecute(abortSignal);
+      const confirmDetails =
+        await invocation.getConfirmationDetails(abortSignal);
       if (
         typeof confirmDetails === 'object' &&
         'onConfirm' in confirmDetails &&
@@ -462,7 +328,8 @@ describe('WriteFileTool', () => {
       const params = { file_path: filePath, content: proposedContent };
       const invocation = tool.build(params);
 
-      const confirmDetails = await invocation.shouldConfirmExecute(abortSignal);
+      const confirmDetails =
+        await invocation.getConfirmationDetails(abortSignal);
       if (
         typeof confirmDetails === 'object' &&
         'onConfirm' in confirmDetails &&
@@ -526,7 +393,8 @@ describe('WriteFileTool', () => {
       const params = { file_path: filePath, content };
       const invocation = tool.build(params);
       // Simulate confirmation if your logic requires it before execute, or remove if not needed for this path
-      const confirmDetails = await invocation.shouldConfirmExecute(abortSignal);
+      const confirmDetails =
+        await invocation.getConfirmationDetails(abortSignal);
       if (
         typeof confirmDetails === 'object' &&
         'onConfirm' in confirmDetails &&
@@ -597,14 +465,13 @@ describe('WriteFileTool', () => {
       expect(() => tool.build(params)).not.toThrow();
     });
 
-    it('should reject paths outside workspace root', () => {
+    it('should allow paths outside workspace root (external path support)', () => {
       const params = {
         file_path: '/etc/passwd',
-        content: 'malicious',
+        content: 'test',
       };
-      expect(() => tool.build(params)).toThrow(
-        /File path must be within one of the workspace directories/,
-      );
+      const invocation = tool.build(params);
+      expect(invocation).toBeDefined();
     });
   });
 
@@ -750,7 +617,7 @@ describe('WriteFileTool', () => {
       expect(writeSpy).toHaveBeenCalledWith({
         path: filePath,
         content: newContent,
-        _meta: { bom: true, encoding: 'utf-8' },
+        _meta: { bom: true, encoding: 'utf-8', lineEnding: 'lf' },
       });
 
       // Cleanup
@@ -778,7 +645,7 @@ describe('WriteFileTool', () => {
       expect(writeSpy).toHaveBeenCalledWith({
         path: filePath,
         content: newContent,
-        _meta: { bom: false, encoding: 'utf-8' },
+        _meta: { bom: false, encoding: 'utf-8', lineEnding: 'lf' },
       });
 
       // Cleanup

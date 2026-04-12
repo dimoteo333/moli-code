@@ -1,13 +1,18 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import * as vscode from 'vscode';
 import { BaseMessageHandler } from './BaseMessageHandler.js';
-import type { ChatMessage } from '../../services/moliAgentManager.js';
+import type { ChatMessage } from '../../services/qwenAgentManager.js';
+import type { ImageAttachment } from '../../utils/imageSupport.js';
 import type { ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
+import {
+  processImageAttachments,
+  buildPromptBlocks,
+} from '../utils/imageHandler.js';
 import { isAuthenticationRequiredError } from '../../utils/authErrors.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
 
@@ -23,9 +28,9 @@ export class SessionMessageHandler extends BaseMessageHandler {
   canHandle(messageType: string): boolean {
     return [
       'sendMessage',
-      'newMoliSession',
-      'switchMoliSession',
-      'getMoliSessions',
+      'newQwenSession',
+      'switchQwenSession',
+      'getQwenSessions',
       'resumeSession',
       'cancelStreaming',
       // UI action: open a new chat tab (new WebviewPanel)
@@ -67,19 +72,20 @@ export class SessionMessageHandler extends BaseMessageHandler {
                 endLine?: number;
               }
             | undefined,
+          data?.attachments as ImageAttachment[] | undefined,
         );
         break;
 
-      case 'newMoliSession':
-        await this.handleNewMoliSession();
+      case 'newQwenSession':
+        await this.handleNewQwenSession();
         break;
 
-      case 'switchMoliSession':
-        await this.handleSwitchMoliSession((data?.sessionId as string) || '');
+      case 'switchQwenSession':
+        await this.handleSwitchQwenSession((data?.sessionId as string) || '');
         break;
 
-      case 'getMoliSessions':
-        await this.handleGetMoliSessions(
+      case 'getQwenSessions':
+        await this.handleGetQwenSessions(
           (data?.cursor as number | undefined) ?? undefined,
           (data?.size as number | undefined) ?? undefined,
         );
@@ -94,7 +100,13 @@ export class SessionMessageHandler extends BaseMessageHandler {
         // This does not alter the current conversation in this tab; the new tab
         // will initialize its own state and (optionally) create a new session.
         try {
-          await vscode.commands.executeCommand('moliCode.openNewChatTab');
+          const modelId =
+            typeof data?.modelId === 'string' && data.modelId.trim().length > 0
+              ? data.modelId.trim()
+              : undefined;
+          await vscode.commands.executeCommand('qwenCode.openNewChatTab', {
+            initialModelId: modelId,
+          });
         } catch (error) {
           console.error(
             '[SessionMessageHandler] Failed to open new chat tab:',
@@ -280,20 +292,21 @@ export class SessionMessageHandler extends BaseMessageHandler {
       startLine?: number;
       endLine?: number;
     },
+    attachments?: ImageAttachment[],
   ): Promise<void> {
     console.log('[SessionMessageHandler] handleSendMessage called with:', text);
-
     // Guard: do not process empty or whitespace-only messages.
     // This prevents ghost user-message bubbles when slash-command completions
     // or model-selector interactions clear the input but still trigger a submit.
     const trimmedText = text.replace(/\u200B/g, '').trim();
-    if (!trimmedText) {
+    const hasAttachments = (attachments?.length ?? 0) > 0;
+    if (!trimmedText && !hasAttachments) {
       console.warn('[SessionMessageHandler] Ignoring empty message');
       return;
     }
 
-    // Format message with file context if present
-    let formattedText = text;
+    let displayText = trimmedText ? text : '';
+    let promptText = text;
     if (context && context.length > 0) {
       const contextParts = context
         .map((ctx) => {
@@ -304,7 +317,28 @@ export class SessionMessageHandler extends BaseMessageHandler {
         })
         .join('\n');
 
-      formattedText = `${contextParts}\n\n${text}`;
+      promptText = `${contextParts}\n\n${text}`;
+    }
+
+    const {
+      formattedText,
+      displayText: updatedDisplayText,
+      savedImageCount,
+      promptImages,
+    } = await processImageAttachments(promptText, attachments);
+    promptText = formattedText;
+    displayText = updatedDisplayText;
+
+    if (hasAttachments && !trimmedText && savedImageCount === 0) {
+      const errorMsg =
+        'Failed to attach the pasted image. Nothing was sent. Please paste the image again.';
+      console.warn('[SessionMessageHandler]', errorMsg);
+      vscode.window.showErrorMessage(errorMsg);
+      this.sendToWebView({
+        type: 'error',
+        data: { message: errorMsg },
+      });
+      return;
     }
 
     // Ensure we have an active conversation
@@ -359,7 +393,8 @@ export class SessionMessageHandler extends BaseMessageHandler {
 
     // Generate title for first message, but only if it hasn't been set yet
     if (isFirstMessage && !this.isTitleSet) {
-      const title = text.substring(0, 50) + (text.length > 50 ? '...' : '');
+      const title =
+        displayText.substring(0, 50) + (displayText.length > 50 ? '...' : '');
       this.sendToWebView({
         type: 'sessionTitleUpdated',
         data: {
@@ -373,7 +408,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
     // Save user message
     const userMessage: ChatMessage = {
       role: 'user',
-      content: text,
+      content: displayText,
       timestamp: Date.now(),
     };
 
@@ -382,7 +417,6 @@ export class SessionMessageHandler extends BaseMessageHandler {
       userMessage,
     );
 
-    // Send to WebView
     this.sendToWebView({
       type: 'message',
       data: { ...userMessage, fileContext },
@@ -445,7 +479,9 @@ export class SessionMessageHandler extends BaseMessageHandler {
         },
       });
 
-      await this.agentManager.sendMessage(formattedText);
+      await this.agentManager.sendMessage(
+        buildPromptBlocks(promptText, promptImages),
+      );
 
       // Save assistant message
       if (this.currentStreamContent && this.currentConversationId) {
@@ -538,11 +574,11 @@ export class SessionMessageHandler extends BaseMessageHandler {
   }
 
   /**
-   * Handle new Moli session request
+   * Handle new Qwen session request
    */
-  private async handleNewMoliSession(): Promise<void> {
+  private async handleNewQwenSession(): Promise<void> {
     try {
-      console.log('[SessionMessageHandler] Creating new Moli session...');
+      console.log('[SessionMessageHandler] Creating new Qwen session...');
 
       // Ensure connection (login) before creating a new session
       if (!this.agentManager.isConnected) {
@@ -596,9 +632,9 @@ export class SessionMessageHandler extends BaseMessageHandler {
   }
 
   /**
-   * Handle switch Moli session request
+   * Handle switch Qwen session request
    */
-  private async handleSwitchMoliSession(sessionId: string): Promise<void> {
+  private async handleSwitchQwenSession(sessionId: string): Promise<void> {
     try {
       console.log('[SessionMessageHandler] Switching to session:', sessionId);
 
@@ -614,7 +650,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             await this.agentManager.getSessionMessages(sessionId);
           this.currentConversationId = sessionId;
           this.sendToWebView({
-            type: 'moliSessionSwitched',
+            type: 'qwenSessionSwitched',
             data: { sessionId, messages },
           });
           vscode.window.showInformationMessage(
@@ -651,7 +687,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
         // Set current id and clear UI first so replayed updates append afterwards
         this.currentConversationId = sessionId;
         this.sendToWebView({
-          type: 'moliSessionSwitched',
+          type: 'qwenSessionSwitched',
           data: { sessionId, messages: [], session: sessionDetails },
         });
 
@@ -702,7 +738,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             this.currentConversationId = newAcpSessionId;
 
             this.sendToWebView({
-              type: 'moliSessionSwitched',
+              type: 'qwenSessionSwitched',
               data: { sessionId, messages, session: sessionDetails },
             });
 
@@ -746,7 +782,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
           // Offline view only
           this.currentConversationId = sessionId;
           this.sendToWebView({
-            type: 'moliSessionSwitched',
+            type: 'qwenSessionSwitched',
             data: { sessionId, messages, session: sessionDetails },
           });
           vscode.window.showWarningMessage(
@@ -781,9 +817,9 @@ export class SessionMessageHandler extends BaseMessageHandler {
   }
 
   /**
-   * Handle get Moli sessions request
+   * Handle get Qwen sessions request
    */
-  private async handleGetMoliSessions(
+  private async handleGetQwenSessions(
     cursor?: number,
     size?: number,
   ): Promise<void> {
@@ -795,7 +831,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       });
       const append = typeof cursor === 'number';
       this.sendToWebView({
-        type: 'moliSessionList',
+        type: 'qwenSessionList',
         data: {
           sessions: page.sessions,
           nextCursor: page.nextCursor,
@@ -867,7 +903,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             await this.agentManager.getSessionMessages(sessionId);
           this.currentConversationId = sessionId;
           this.sendToWebView({
-            type: 'moliSessionSwitched',
+            type: 'qwenSessionSwitched',
             data: { sessionId, messages },
           });
           vscode.window.showInformationMessage(
@@ -884,7 +920,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
         // Pre-clear UI so replayed updates append afterwards
         this.currentConversationId = sessionId;
         this.sendToWebView({
-          type: 'moliSessionSwitched',
+          type: 'qwenSessionSwitched',
           data: { sessionId, messages: [] },
         });
 
@@ -894,7 +930,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
         this.isTitleSet = false;
 
         // Successfully loaded session, return early to avoid fallback logic
-        await this.handleGetMoliSessions();
+        await this.handleGetQwenSessions();
         return;
       } catch (acpError) {
         // Check for authentication/session expiration errors
@@ -913,7 +949,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
         }
       }
 
-      await this.handleGetMoliSessions();
+      await this.handleGetQwenSessions();
     } catch (error) {
       console.error('[SessionMessageHandler] Failed to resume session:', error);
 

@@ -165,8 +165,8 @@ function entrypoint(workdir: string, cliArgs: string[]): string[] {
         ? 'npm run debug --'
         : 'npm rebuild && npm run start --'
       : process.env['DEBUG']
-        ? `node --inspect-brk=0.0.0.0:${process.env['DEBUG_PORT'] || '9229'} $(which moli)`
-        : 'moli';
+        ? `node --inspect-brk=0.0.0.0:${process.env['DEBUG_PORT'] || '9229'} $(which qwen)`
+        : 'qwen';
 
   const args = [...shellCmds, cliCmd, ...quotedCliArgs];
   return ['bash', '-c', args.join(' ')];
@@ -263,8 +263,8 @@ export async function start_sandbox(
         ...finalArgv.map((arg) => quote([arg])),
       ].join(' '),
     );
-    // start and set up proxy if MOLI_SANDBOX_PROXY_COMMAND is set
-    const proxyCommand = process.env['MOLI_SANDBOX_PROXY_COMMAND'];
+    // start and set up proxy if QWEN_SANDBOX_PROXY_COMMAND is set
+    const proxyCommand = process.env['QWEN_SANDBOX_PROXY_COMMAND'];
     let proxyProcess: ChildProcess | undefined = undefined;
     let sandboxProcess: ChildProcess | undefined = undefined;
     const sandboxEnv = { ...process.env };
@@ -378,7 +378,7 @@ export async function start_sandbox(
           stdio: 'inherit',
           env: {
             ...process.env,
-            MOLI_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
+            QWEN_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
           },
         },
       );
@@ -498,8 +498,8 @@ export async function start_sandbox(
 
   // copy proxy environment variables, replacing localhost with SANDBOX_PROXY_NAME
   // copy as both upper-case and lower-case as is required by some utilities
-  // MOLI_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
-  const proxyCommand = process.env['MOLI_SANDBOX_PROXY_COMMAND'];
+  // QWEN_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
+  const proxyCommand = process.env['QWEN_SANDBOX_PROXY_COMMAND'];
 
   if (proxyCommand) {
     let proxy =
@@ -541,7 +541,7 @@ export async function start_sandbox(
   // name container after image, plus random suffix to avoid conflicts
   const imageName = parseImageName(image);
   const isIntegrationTest =
-    process.env['MOLI_CODE_INTEGRATION_TEST'] === 'true';
+    process.env['QWEN_CODE_INTEGRATION_TEST'] === 'true';
   let containerName;
   if (isIntegrationTest) {
     containerName = `moli-code-integration-test-${randomBytes(4).toString(
@@ -563,11 +563,11 @@ export async function start_sandbox(
   }
   args.push('--name', containerName, '--hostname', containerName);
 
-  // copy MOLI_CODE_TEST_VAR for integration tests
-  if (process.env['MOLI_CODE_TEST_VAR']) {
+  // copy QWEN_CODE_TEST_VAR for integration tests
+  if (process.env['QWEN_CODE_TEST_VAR']) {
     args.push(
       '--env',
-      `MOLI_CODE_TEST_VAR=${process.env['MOLI_CODE_TEST_VAR']}`,
+      `QWEN_CODE_TEST_VAR=${process.env['QWEN_CODE_TEST_VAR']}`,
     );
   }
 
@@ -579,7 +579,7 @@ export async function start_sandbox(
     args.push('--env', `GOOGLE_API_KEY=${process.env['GOOGLE_API_KEY']}`);
   }
 
-  // copy OPENAI_API_KEY and related env vars for Moli
+  // copy OPENAI_API_KEY and related env vars for Qwen
   if (process.env['OPENAI_API_KEY']) {
     args.push('--env', `OPENAI_API_KEY=${process.env['OPENAI_API_KEY']}`);
   }
@@ -641,8 +641,8 @@ export async function start_sandbox(
 
   // Pass through IDE mode environment variables
   for (const envVar of [
-    'MOLI_CODE_IDE_SERVER_PORT',
-    'MOLI_CODE_IDE_WORKSPACE_PATH',
+    'QWEN_CODE_IDE_SERVER_PORT',
+    'QWEN_CODE_IDE_WORKSPACE_PATH',
     'TERM_PROGRAM',
   ]) {
     if (process.env[envVar]) {
@@ -734,10 +734,10 @@ export async function start_sandbox(
 
     // Instead of passing --user to the main sandbox container, we let it
     // start as root, then create a user with the host's UID/GID, and
-    // finally switch to that user to run the moli process. This is
+    // finally switch to that user to run the qwen process. This is
     // necessary on Linux to ensure the user exists within the
     // container's /etc/passwd file, which is required by os.userInfo().
-    const username = 'moli';
+    const username = 'qwen';
     const homeDir = getContainerPath(os.homedir());
 
     const setupUserCommands = [
@@ -773,7 +773,7 @@ export async function start_sandbox(
   // push container entrypoint (including args)
   args.push(...finalEntrypoint);
 
-  // start and set up proxy if MOLI_SANDBOX_PROXY_COMMAND is set
+  // start and set up proxy if QWEN_SANDBOX_PROXY_COMMAND is set
   let proxyProcess: ChildProcess | undefined = undefined;
   let sandboxProcess: ChildProcess | undefined = undefined;
 

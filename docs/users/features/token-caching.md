@@ -10,7 +10,7 @@ Moli Code automatically optimizes API costs through token caching when using API
 
 ## Token caching is available for
 
-- API key users (Moli API key, OpenAI-compatible providers)
+- API key users (Qwen API key, OpenAI-compatible providers)
 
 ## Monitoring Your Savings
 

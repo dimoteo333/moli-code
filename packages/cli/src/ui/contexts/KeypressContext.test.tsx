@@ -1367,6 +1367,75 @@ describe('KeypressContext - Kitty Protocol', () => {
         }),
       );
     });
+
+    it('drops unsupported Kitty CSI-u keys without blocking later input', () => {
+      const keyHandler = vi.fn();
+      const { result } = renderHook(() => useKeypressContext(), { wrapper });
+      act(() => result.current.subscribe(keyHandler));
+
+      act(() => stdin.sendKittySequence(`\x1b[57358u`)); // CAPS_LOCK
+      act(() =>
+        stdin.pressKey({
+          name: 'a',
+          ctrl: false,
+          meta: false,
+          shift: false,
+          paste: false,
+          sequence: 'a',
+        }),
+      );
+
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+      expect(keyHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'a',
+          sequence: 'a',
+        }),
+      );
+    });
+
+    it('recovers plain text that arrives in the same chunk after an unsupported CSI-u key', () => {
+      const keyHandler = vi.fn();
+      const { result } = renderHook(() => useKeypressContext(), { wrapper });
+      act(() => result.current.subscribe(keyHandler));
+
+      act(() =>
+        stdin.pressKey({
+          name: '',
+          ctrl: false,
+          meta: false,
+          shift: false,
+          paste: false,
+          sequence: '\x1b[57358ua',
+        }),
+      );
+
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+      expect(keyHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'a',
+          sequence: 'a',
+          kittyProtocol: true,
+        }),
+      );
+    });
+
+    it('drops unsupported CSI-u variants with event metadata and keeps parsing', () => {
+      const keyHandler = vi.fn();
+      const { result } = renderHook(() => useKeypressContext(), { wrapper });
+      act(() => result.current.subscribe(keyHandler));
+
+      act(() => stdin.sendKittySequence(`\x1b[57358;1:1u\x1b[100u`));
+
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+      expect(keyHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          name: 'd',
+          sequence: 'd',
+          kittyProtocol: true,
+        }),
+      );
+    });
   });
 
   describe('Kitty keypad private-use keys', () => {
@@ -1570,7 +1639,7 @@ describe('Drag and Drop Handling', () => {
   });
 
   describe('drag start by quotes', () => {
-    it('should start collecting when single quote arrives and not broadcast immediately', async () => {
+    it('should broadcast single quote immediately without lag', async () => {
       const keyHandler = vi.fn();
 
       const { result } = renderHook(() => useKeypressContext(), { wrapper });
@@ -1590,10 +1659,17 @@ describe('Drag and Drop Handling', () => {
         });
       });
 
-      expect(keyHandler).not.toHaveBeenCalled();
+      // Quote should be broadcast immediately without any delay
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+      expect(keyHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sequence: SINGLE_QUOTE,
+          paste: false,
+        }),
+      );
     });
 
-    it('should start collecting when double quote arrives and not broadcast immediately', async () => {
+    it('should broadcast double quote immediately without lag', async () => {
       const keyHandler = vi.fn();
 
       const { result } = renderHook(() => useKeypressContext(), { wrapper });
@@ -1613,12 +1689,19 @@ describe('Drag and Drop Handling', () => {
         });
       });
 
-      expect(keyHandler).not.toHaveBeenCalled();
+      // Quote should be broadcast immediately without any delay
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+      expect(keyHandler).toHaveBeenCalledWith(
+        expect.objectContaining({
+          sequence: DOUBLE_QUOTE,
+          paste: false,
+        }),
+      );
     });
   });
 
   describe('drag collection and completion', () => {
-    it('should collect single character inputs during drag mode', async () => {
+    it('should broadcast all characters immediately (no quote-based drag detection)', async () => {
       const keyHandler = vi.fn();
 
       const { result } = renderHook(() => useKeypressContext(), { wrapper });
@@ -1627,7 +1710,7 @@ describe('Drag and Drop Handling', () => {
         result.current.subscribe(keyHandler);
       });
 
-      // Start by single quote
+      // Send quote
       act(() => {
         stdin.pressKey({
           name: undefined,
@@ -1639,7 +1722,9 @@ describe('Drag and Drop Handling', () => {
         });
       });
 
-      // Send single character
+      expect(keyHandler).toHaveBeenCalledTimes(1);
+
+      // Send path characters - all should be broadcast immediately
       act(() => {
         stdin.pressKey({
           name: undefined,
@@ -1647,50 +1732,10 @@ describe('Drag and Drop Handling', () => {
           meta: false,
           shift: false,
           paste: false,
-          sequence: 'a',
+          sequence: '/',
         });
       });
 
-      // Character should not be immediately broadcast
-      expect(keyHandler).not.toHaveBeenCalled();
-
-      // Fast-forward to completion timeout
-      act(() => {
-        vi.advanceTimersByTime(DRAG_COMPLETION_TIMEOUT_MS + 10);
-      });
-
-      // Should broadcast the collected path as paste (includes starting quote)
-      expect(keyHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: '',
-          paste: true,
-          sequence: `${SINGLE_QUOTE}a`,
-        }),
-      );
-    });
-
-    it('should collect multiple characters and complete on timeout', async () => {
-      const keyHandler = vi.fn();
-
-      const { result } = renderHook(() => useKeypressContext(), { wrapper });
-
-      act(() => {
-        result.current.subscribe(keyHandler);
-      });
-
-      // Start by single quote
-      act(() => {
-        stdin.pressKey({
-          name: undefined,
-          ctrl: false,
-          meta: false,
-          shift: false,
-          paste: false,
-          sequence: SINGLE_QUOTE,
-        });
-      });
-
-      // Send multiple characters
       act(() => {
         stdin.pressKey({
           name: undefined,
@@ -1735,22 +1780,16 @@ describe('Drag and Drop Handling', () => {
         });
       });
 
-      // Characters should not be immediately broadcast
-      expect(keyHandler).not.toHaveBeenCalled();
+      // All characters should be broadcast immediately
+      expect(keyHandler).toHaveBeenCalledTimes(6);
 
-      // Fast-forward to completion timeout
+      // Fast-forward timeout - should not trigger any additional broadcasts
       act(() => {
         vi.advanceTimersByTime(DRAG_COMPLETION_TIMEOUT_MS + 10);
       });
 
-      // Should broadcast the collected path as paste (includes starting quote)
-      expect(keyHandler).toHaveBeenCalledWith(
-        expect.objectContaining({
-          name: '',
-          paste: true,
-          sequence: `${SINGLE_QUOTE}path`,
-        }),
-      );
+      // Still 6 broadcasts - no drag detection
+      expect(keyHandler).toHaveBeenCalledTimes(6);
     });
   });
 });

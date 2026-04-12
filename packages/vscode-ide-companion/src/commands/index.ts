@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -16,9 +16,9 @@ import {
 type Logger = (message: string) => void;
 
 export const runMoliCodeCommand = 'moli-code.runMoliCode';
-export const showDiffCommand = 'moliCode.showDiff';
+export const showDiffCommand = 'qwenCode.showDiff';
 export const openChatCommand = 'moli-code.openChat';
-export const openNewChatTabCommand = 'moliCode.openNewChatTab';
+export const openNewChatTabCommand = 'qwenCode.openNewChatTab';
 export const loginCommand = 'moli-code.login';
 export const focusChatCommand = 'moli-code.focusChat';
 export const newConversationCommand = 'moli-code.newConversation';
@@ -90,10 +90,14 @@ export function registerNewCommands(
 
   // Open New Chat Tab: always create a new editor tab
   disposables.push(
-    vscode.commands.registerCommand(openNewChatTabCommand, async () => {
-      const provider = createWebViewProvider();
-      await provider.show();
-    }),
+    vscode.commands.registerCommand(
+      openNewChatTabCommand,
+      async (args?: { initialModelId?: string }) => {
+        const provider = createWebViewProvider();
+        provider.setInitialModelId(args?.initialModelId);
+        await provider.show();
+      },
+    ),
   );
 
   disposables.push(

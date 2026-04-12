@@ -4,13 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ToolEditConfirmationDetails, ToolResult } from './tools.js';
-import {
-  BaseDeclarativeTool,
-  BaseToolInvocation,
-  Kind,
+import type {
+  ToolEditConfirmationDetails,
+  ToolResult,
+  ToolCallConfirmationDetails,
   ToolConfirmationOutcome,
 } from './tools.js';
+import type { PermissionDecision } from '../permissions/types.js';
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
 import type { FunctionDeclaration } from '@google/genai';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
@@ -43,7 +44,7 @@ const memoryToolSchemaData: FunctionDeclaration = {
       scope: {
         type: 'string',
         description:
-          'Where to save the memory: "global" saves to user-level ~/.moli/MOLI.md (shared across all projects), "project" saves to current project\'s MOLI.md (project-specific). If not specified, will prompt user to choose.',
+          'Where to save the memory: "global" saves to user-level ~/.moli/QWEN.md (shared across all projects), "project" saves to current project\'s QWEN.md (project-specific). If not specified, will prompt user to choose.',
         enum: ['global', 'project'],
       },
     },
@@ -69,19 +70,19 @@ Do NOT use this tool:
 
 - \`fact\` (string, required): The specific fact or piece of information to remember. This should be a clear, self-contained statement. For example, if the user says "My favorite color is blue", the fact would be "My favorite color is blue".
 - \`scope\` (string, optional): Where to save the memory:
-  - "global": Saves to user-level ~/.moli/MOLI.md (shared across all projects)
-  - "project": Saves to current project's MOLI.md (project-specific)
+  - "global": Saves to user-level ~/.moli/QWEN.md (shared across all projects)
+  - "project": Saves to current project's QWEN.md (project-specific)
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
 
-export const MOLI_CONFIG_DIR = '.moli';
-export const DEFAULT_CONTEXT_FILENAME = 'MOLI.md';
+export const QWEN_CONFIG_DIR = '.moli';
+export const DEFAULT_CONTEXT_FILENAME = 'QWEN.md';
 export const AGENT_CONTEXT_FILENAME = 'AGENTS.md';
-export const MEMORY_SECTION_HEADER = '## Moli Added Memories';
+export const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
 
 // This variable will hold the currently configured filename for context files.
-// It defaults to include both MOLI.md and AGENTS.md but can be overridden by setGeminiMdFilename.
-// MOLI.md is first to maintain backward compatibility (used by /init command and save_memory tool).
+// It defaults to include both QWEN.md and AGENTS.md but can be overridden by setGeminiMdFilename.
+// QWEN.md is first to maintain backward compatibility (used by /init command and save_memory tool).
 let currentGeminiMdFilename: string | string[] = [
   DEFAULT_CONTEXT_FILENAME,
   AGENT_CONTEXT_FILENAME,
@@ -119,7 +120,7 @@ interface SaveMemoryParams {
 }
 
 function getGlobalMemoryFilePath(): string {
-  return path.join(Storage.getGlobalMoliDir(), getCurrentGeminiMdFilename());
+  return path.join(Storage.getGlobalQwenDir(), getCurrentGeminiMdFilename());
 }
 
 function getProjectMemoryFilePath(): string {
@@ -207,8 +208,6 @@ class MemoryToolInvocation extends BaseToolInvocation<
   SaveMemoryParams,
   ToolResult
 > {
-  private static readonly allowlist: Set<string> = new Set();
-
   getDescription(): string {
     if (!this.params.scope) {
       const globalPath = tildeifyPath(getMemoryFilePath('global'));
@@ -220,12 +219,21 @@ class MemoryToolInvocation extends BaseToolInvocation<
     return `${tildeifyPath(memoryFilePath)} (${scope})`;
   }
 
-  override async shouldConfirmExecute(
+  /**
+   * Memory save always needs user confirmation.
+   */
+  override async getDefaultPermission(): Promise<PermissionDecision> {
+    return 'ask';
+  }
+
+  /**
+   * Constructs the memory save confirmation dialog.
+   */
+  override async getConfirmationDetails(
     _abortSignal: AbortSignal,
-  ): Promise<ToolEditConfirmationDetails | false> {
+  ): Promise<ToolCallConfirmationDetails> {
     // When scope is not specified, show a choice dialog defaulting to global
     if (!this.params.scope) {
-      // Show preview of what would be added to global by default
       const defaultScope = 'global';
       const currentContent = await readMemoryFileContent(defaultScope);
       const newContent = computeNewContent(currentContent, this.params.fact);
@@ -270,14 +278,9 @@ Preview of changes to be made to GLOBAL memory:
       return confirmationDetails;
     }
 
-    // Only check allowlist when scope is specified
+    // Scope is specified
     const scope = this.params.scope;
     const memoryFilePath = getMemoryFilePath(scope);
-    const allowlistKey = `${memoryFilePath}_${scope}`;
-
-    if (MemoryToolInvocation.allowlist.has(allowlistKey)) {
-      return false;
-    }
 
     // Read current content of the memory file
     const currentContent = await readMemoryFileContent(scope);
@@ -303,10 +306,8 @@ Preview of changes to be made to GLOBAL memory:
       fileDiff,
       originalContent: currentContent,
       newContent,
-      onConfirm: async (outcome: ToolConfirmationOutcome) => {
-        if (outcome === ToolConfirmationOutcome.ProceedAlways) {
-          MemoryToolInvocation.allowlist.add(allowlistKey);
-        }
+      onConfirm: async (_outcome: ToolConfirmationOutcome) => {
+        // No-op: persistence is handled by coreToolScheduler via PM rules
       },
     };
     return confirmationDetails;
@@ -518,7 +519,7 @@ export class MemoryTool
         );
         const scope = scopeMatch
           ? (scopeMatch[1].toLowerCase() as 'global' | 'project')
-          : 'global';
+          : originalParams.scope || 'global';
 
         // Strip out the scope directive and instruction lines, keep only the actual memory content
         const contentWithoutScope = modifiedProposedContent.replace(

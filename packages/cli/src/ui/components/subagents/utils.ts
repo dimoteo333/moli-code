@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -52,12 +52,12 @@ export type StepKind =
   | 'COLOR'
   | 'FINAL';
 
-export function getTotalSteps(method: 'moli' | 'manual'): number {
+export function getTotalSteps(method: 'qwen' | 'manual'): number {
   return method === 'manual' ? 8 : TOTAL_WIZARD_STEPS;
 }
 
 export function getStepKind(
-  method: 'moli' | 'manual',
+  method: 'qwen' | 'manual',
   stepNumber: number,
 ): StepKind {
   if (method === 'manual') {

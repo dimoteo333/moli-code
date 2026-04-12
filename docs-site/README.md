@@ -51,4 +51,4 @@ docs-site/
 
 ## License
 
-MIT © Moli Team
+MIT © Qwen Team

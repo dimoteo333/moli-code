@@ -17,6 +17,7 @@ import type {
   ToolLocation,
   ToolResult,
 } from './tools.js';
+import type { PermissionDecision } from '../permissions/types.js';
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
@@ -24,7 +25,12 @@ import {
   ToolConfirmationOutcome,
 } from './tools.js';
 import { ToolErrorType } from './tool-error.js';
-import { FileEncoding, needsUtf8Bom } from '../services/fileSystemService.js';
+import {
+  FileEncoding,
+  needsUtf8Bom,
+  detectLineEnding,
+} from '../services/fileSystemService.js';
+import type { LineEnding } from '../services/fileSystemService.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
 import { DEFAULT_DIFF_OPTIONS, getDiffStat } from './diffOptions.js';
@@ -33,7 +39,6 @@ import type {
   ModifiableDeclarativeTool,
   ModifyContext,
 } from './modifiable-tool.js';
-import { IdeClient } from '../ide/ide-client.js';
 import { logFileOperation } from '../telemetry/loggers.js';
 import { FileOperationEvent } from '../telemetry/types.js';
 import { FileOperation } from '../telemetry/metrics.js';
@@ -94,14 +99,19 @@ class WriteFileToolInvocation extends BaseToolInvocation<
     return `Writing to ${shortenPath(relativePath)}`;
   }
 
-  override async shouldConfirmExecute(
-    _abortSignal: AbortSignal,
-  ): Promise<ToolCallConfirmationDetails | false> {
-    const mode = this.config.getApprovalMode();
-    if (mode === ApprovalMode.AUTO_EDIT || mode === ApprovalMode.YOLO) {
-      return false;
-    }
+  /**
+   * Write operations always need user confirmation.
+   */
+  override async getDefaultPermission(): Promise<PermissionDecision> {
+    return 'ask';
+  }
 
+  /**
+   * Constructs the write-file diff confirmation details.
+   */
+  override async getConfirmationDetails(
+    _abortSignal: AbortSignal,
+  ): Promise<ToolCallConfirmationDetails> {
     let originalContent = '';
     const fileExists = await isFilefileExists(this.params.file_path);
     if (fileExists) {
@@ -111,12 +121,12 @@ class WriteFileToolInvocation extends BaseToolInvocation<
           .readTextFile({ path: this.params.file_path });
         originalContent = content;
       } catch (err) {
-        debugLogger.error(
+        throw new Error(
           `Error reading existing file for confirmation: ${getErrorMessage(err)}`,
         );
-        return false;
       }
     }
+
     const relativePath = makeRelative(
       this.params.file_path,
       this.config.getTargetDir(),
@@ -132,12 +142,6 @@ class WriteFileToolInvocation extends BaseToolInvocation<
       DEFAULT_DIFF_OPTIONS,
     );
 
-    const ideClient = await IdeClient.getInstance();
-    const ideConfirmation =
-      this.config.getIdeMode() && ideClient.isDiffingEnabled()
-        ? ideClient.openDiff(this.params.file_path, this.params.content)
-        : undefined;
-
     const confirmationDetails: ToolEditConfirmationDetails = {
       type: 'edit',
       title: `Confirm Write: ${shortenPath(relativePath)}`,
@@ -150,15 +154,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
           this.config.setApprovalMode(ApprovalMode.AUTO_EDIT);
         }
-
-        if (ideConfirmation) {
-          const result = await ideConfirmation;
-          if (result.status === 'accepted' && result.content) {
-            this.params.content = result.content;
-          }
-        }
       },
-      ideConfirmation,
     };
     return confirmationDetails;
   }
@@ -171,6 +167,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
     let originalContent = '';
     let useBOM = false;
     let detectedEncoding: string | undefined;
+    let detectedLineEnding: LineEnding | undefined;
     const dirName = path.dirname(file_path);
     if (fileExists) {
       try {
@@ -185,6 +182,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
             fileInfo.content.codePointAt(0) === 0xfeff;
         }
         detectedEncoding = fileInfo._meta?.encoding || 'utf-8';
+        detectedLineEnding = detectLineEnding(fileInfo.content);
         originalContent = fileInfo.content;
         fileExists = true; // File exists and was read
       } catch (err) {
@@ -233,6 +231,7 @@ class WriteFileToolInvocation extends BaseToolInvocation<
         _meta: {
           bom: useBOM,
           encoding: detectedEncoding,
+          lineEnding: detectedLineEnding,
         },
       });
 
@@ -393,14 +392,6 @@ export class WriteFileTool
 
     if (!path.isAbsolute(filePath)) {
       return `File path must be absolute: ${filePath}`;
-    }
-
-    const workspaceContext = this.config.getWorkspaceContext();
-    if (!workspaceContext.isPathWithinWorkspace(filePath)) {
-      const directories = workspaceContext.getDirectories();
-      return `File path must be within one of the workspace directories: ${directories.join(
-        ', ',
-      )}`;
     }
 
     try {

@@ -32,27 +32,27 @@ const argv = yargs(hideBin(process.argv)).option('q', {
   default: false,
 }).argv;
 
-let moliSandbox = process.env.MOLI_SANDBOX;
+let qwenSandbox = process.env.QWEN_SANDBOX;
 
-if (!moliSandbox) {
-  const userSettingsFile = join(os.homedir(), '.moli', 'settings.json');
+if (!qwenSandbox) {
+  const userSettingsFile = join(os.homedir(), '.qwen', 'settings.json');
   if (existsSync(userSettingsFile)) {
     const settings = JSON.parse(
       stripJsonComments(readFileSync(userSettingsFile, 'utf-8')),
     );
     if (settings.sandbox) {
-      moliSandbox = settings.sandbox;
+      qwenSandbox = settings.sandbox;
     }
   }
 }
 
-if (!moliSandbox) {
+if (!qwenSandbox) {
   let currentDir = process.cwd();
   while (true) {
-    const moliEnv = join(currentDir, '.moli', '.env');
+    const qwenEnv = join(currentDir, '.qwen', '.env');
     const regularEnv = join(currentDir, '.env');
-    if (existsSync(moliEnv)) {
-      dotenv.config({ path: moliEnv, quiet: true });
+    if (existsSync(qwenEnv)) {
+      dotenv.config({ path: qwenEnv, quiet: true });
       break;
     } else if (existsSync(regularEnv)) {
       dotenv.config({ path: regularEnv, quiet: true });
@@ -64,10 +64,10 @@ if (!moliSandbox) {
     }
     currentDir = parentDir;
   }
-  moliSandbox = process.env.MOLI_SANDBOX;
+  qwenSandbox = process.env.QWEN_SANDBOX;
 }
 
-moliSandbox = (moliSandbox || '').toLowerCase();
+qwenSandbox = (qwenSandbox || '').toLowerCase();
 
 const commandExists = (cmd) => {
   // Use 'where.exe' (not 'where') on Windows because PowerShell aliases
@@ -90,23 +90,23 @@ const commandExists = (cmd) => {
 };
 
 let command = '';
-if (['1', 'true'].includes(moliSandbox)) {
+if (['1', 'true'].includes(qwenSandbox)) {
   if (commandExists('docker')) {
     command = 'docker';
   } else if (commandExists('podman')) {
     command = 'podman';
   } else {
     console.error(
-      'ERROR: install docker or podman or specify command in MOLI_SANDBOX',
+      'ERROR: install docker or podman or specify command in QWEN_SANDBOX',
     );
     process.exit(1);
   }
-} else if (moliSandbox && !['0', 'false'].includes(moliSandbox)) {
-  if (commandExists(moliSandbox)) {
-    command = moliSandbox;
+} else if (qwenSandbox && !['0', 'false'].includes(qwenSandbox)) {
+  if (commandExists(qwenSandbox)) {
+    command = qwenSandbox;
   } else {
     console.error(
-      `ERROR: missing sandbox command '${moliSandbox}' (from MOLI_SANDBOX)`,
+      `ERROR: missing sandbox command '${qwenSandbox}' (from QWEN_SANDBOX)`,
     );
     process.exit(1);
   }

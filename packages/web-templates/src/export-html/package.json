@@ -1,5 +1,5 @@
 {
-  "name": "@dobby/cli-export-html",
+  "name": "@moli-code/cli-export-html",
   "private": true,
   "type": "module",
   "scripts": {

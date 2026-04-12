@@ -20,7 +20,10 @@ import type {
   Status as CoreStatus,
   EditorType,
 } from '@dobby/moli-code-core';
-import { CoreToolScheduler, createDebugLogger } from '@dobby/moli-code-core';
+import {
+  CoreToolScheduler,
+  createDebugLogger,
+} from '@dobby/moli-code-core';
 import { useCallback, useState, useMemo } from 'react';
 import type {
   HistoryItemToolGroup,

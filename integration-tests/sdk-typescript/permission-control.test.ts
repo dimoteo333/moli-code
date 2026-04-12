@@ -22,7 +22,7 @@ import {
   type SDKUserMessage,
   type ToolUseBlock,
   type ContentBlock,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   SDKTestHelper,
   createSharedTestOptions,

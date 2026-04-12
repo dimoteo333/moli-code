@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,7 +57,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
       timeout: 60000,
       maxRetries: 2,
-      model: 'moli-max',
+      model: 'qwen-max',
       authType: AuthType.MOLI_OAUTH,
     } as ContentGeneratorConfig;
 
@@ -288,7 +288,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
   describe('buildRequest', () => {
     const baseRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-      model: 'moli-max',
+      model: 'qwen-max',
       messages: [
         { role: 'system', content: 'You are a helpful assistant.' },
         { role: 'user', content: 'Hello!' },
@@ -505,7 +505,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(complexRequest, 'test-prompt-id');
 
-      expect(result.model).toBe('moli-max');
+      expect(result.model).toBe('qwen-max');
       expect(result.temperature).toBe(0.8);
       expect(result.max_tokens).toBe(1000);
       expect(result.top_p).toBe(0.9);
@@ -521,7 +521,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
           typeof mockCliConfig.getContentGeneratorConfig
         >
       ).mockReturnValue({
-        model: 'moli-max',
+        model: 'qwen-max',
         enableCacheControl: false,
       });
 
@@ -534,7 +534,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle messages with array content for streaming requests', () => {
       const requestWithArrayContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -566,7 +566,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle empty messages array', () => {
       const emptyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         messages: [],
       };
 
@@ -578,7 +578,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle messages without content for streaming requests', () => {
       const requestWithoutContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           { role: 'assistant', content: null },
@@ -606,7 +606,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should add cache control to last text item in mixed content for streaming requests', () => {
       const requestWithMixedContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -648,7 +648,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should add cache control to last item even if not text for streaming requests', () => {
       const requestWithNonTextLast: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -685,7 +685,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
   describe('cache control edge cases', () => {
     it('should handle request with only system message', () => {
       const systemOnlyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         messages: [{ role: 'system', content: 'System prompt' }],
       };
 
@@ -703,7 +703,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle request without system message for streaming requests', () => {
       const noSystemRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           { role: 'user', content: 'First message' },
@@ -730,7 +730,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle empty content array for streaming requests', () => {
       const emptyContentRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen-max',
         stream: true, // This will trigger cache control on last message
         messages: [
           {
@@ -755,31 +755,19 @@ describe('DashScopeOpenAICompatibleProvider', () => {
   describe('output token limits', () => {
     it('should limit max_tokens when it exceeds model limit', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Exceeds the model's output limit
       };
 
       const result = provider.buildRequest(request, 'test-prompt-id');
 
-      expect(result.max_tokens).toBe(65536); // Should be limited to model's output limit (64K)
-    });
-
-    it('should limit max_tokens when it exceeds model limit for moli-vl-max-latest', () => {
-      const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-vl-max-latest',
-        messages: [{ role: 'user', content: 'Hello' }],
-        max_tokens: 20000, // Exceeds the 8192 limit
-      };
-
-      const result = provider.buildRequest(request, 'test-prompt-id');
-
-      expect(result.max_tokens).toBe(8192); // Should be limited to model's output limit
+      expect(result.max_tokens).toBe(32768); // Should be limited to model's output limit (32K)
     });
 
     it('should not modify max_tokens when it is within model limit', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 1000, // Within the model's output limit
       };
@@ -789,45 +777,49 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result.max_tokens).toBe(1000); // Should remain unchanged
     });
 
-    it('should not add max_tokens when not present in request', () => {
+    it('should set conservative max_tokens default when not present in request', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
         // No max_tokens parameter
       };
 
       const result = provider.buildRequest(request, 'test-prompt-id');
 
-      expect(result.max_tokens).toBeUndefined(); // Should remain undefined
+      // Should set capped default (min of model limit and CAPPED_DEFAULT_MAX_TOKENS)
+      // qwen3-max has 32K output limit, so min(32K, 8K) = 8K
+      expect(result.max_tokens).toBe(8000);
     });
 
-    it('should handle null max_tokens parameter', () => {
+    it('should set conservative max_tokens when null is provided', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
-        max_tokens: null,
+        max_tokens: null as unknown as undefined,
       };
 
       const result = provider.buildRequest(request, 'test-prompt-id');
 
-      expect(result.max_tokens).toBeNull(); // Should remain null
+      // null is treated as not configured, so set capped default: min(32K, 8K) = 8K
+      expect(result.max_tokens).toBe(8000);
     });
 
-    it('should use default output limit for unknown models', () => {
+    it('should respect user max_tokens for unknown models', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
         model: 'unknown-model',
         messages: [{ role: 'user', content: 'Hello' }],
-        max_tokens: 20000, // Exceeds the default limit
+        max_tokens: 40000, // User explicitly sets 40K
       };
 
       const result = provider.buildRequest(request, 'test-prompt-id');
 
-      expect(result.max_tokens).toBe(16384); // Should be limited to default output limit (16K)
+      // Unknown models: respect user's configuration (backend may support it)
+      expect(result.max_tokens).toBe(40000);
     });
 
     it('should preserve other request parameters when limiting max_tokens', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Will be limited
         temperature: 0.8,
@@ -841,7 +833,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       const result = provider.buildRequest(request, 'test-prompt-id');
 
       // max_tokens should be limited
-      expect(result.max_tokens).toBe(65536); // Limited to model's output limit (64K)
+      expect(result.max_tokens).toBe(32768); // Limited to model's output limit (32K)
 
       // Other parameters should be preserved
       expect(result.temperature).toBe(0.8);
@@ -850,58 +842,6 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result.presence_penalty).toBe(0.2);
       expect(result.stop).toEqual(['END']);
       expect(result.user).toBe('test-user');
-    });
-
-    it('should work with vision models and output token limits', () => {
-      const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-vl-max-latest',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Look at this image:' },
-              {
-                type: 'image_url',
-                image_url: { url: 'https://example.com/image.jpg' },
-              },
-            ],
-          },
-        ],
-        max_tokens: 20000, // Exceeds the model's output limit
-      };
-
-      const result = provider.buildRequest(request, 'test-prompt-id');
-
-      expect(result.max_tokens).toBe(8192); // Should be limited to model's output limit (8K)
-      expect(
-        (result as { vl_high_resolution_images?: boolean })
-          .vl_high_resolution_images,
-      ).toBe(true); // Vision-specific parameter should be preserved
-    });
-
-    it('should set high resolution flag for moli-vl-plus', () => {
-      const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-vl-plus',
-        messages: [
-          {
-            role: 'user',
-            content: [
-              { type: 'text', text: 'Please inspect the image.' },
-              {
-                type: 'image_url',
-                image_url: { url: 'https://example.com/vl.jpg' },
-              },
-            ],
-          },
-        ],
-      };
-
-      const result = provider.buildRequest(request, 'test-prompt-id');
-
-      expect(
-        (result as { vl_high_resolution_images?: boolean })
-          .vl_high_resolution_images,
-      ).toBe(true);
     });
 
     it('should set high resolution flag for the coder-model model', () => {
@@ -933,7 +873,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should handle streaming requests with output token limits', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-max',
+        model: 'qwen3-max',
         messages: [{ role: 'user', content: 'Hello' }],
         max_tokens: 100000, // Exceeds the model's output limit
         stream: true,
@@ -941,7 +881,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(request, 'test-prompt-id');
 
-      expect(result.max_tokens).toBe(65536); // Should be limited to model's output limit (64K)
+      expect(result.max_tokens).toBe(32768); // Should be limited to model's output limit (32K)
       expect(result.stream).toBe(true); // Streaming should be preserved
     });
 
@@ -958,7 +898,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       );
 
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-coder-plus',
+        model: 'qwen3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
       };
 
@@ -985,7 +925,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       );
 
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-vl-max',
+        model: 'qwen-vl-max',
         messages: [{ role: 'user', content: 'Hello' }],
       };
 
@@ -1002,7 +942,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     it('should not include extra_body when not configured', () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'moli-coder-plus',
+        model: 'qwen3-coder-plus',
         messages: [{ role: 'user', content: 'Hello' }],
       };
 

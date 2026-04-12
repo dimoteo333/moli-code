@@ -1,4 +1,4 @@
-# @moli-code/webui
+# @dobby/moli-code-webui
 
 A shared React component library for Moli Code applications, providing cross-platform UI components with consistent styling and behavior.
 
@@ -15,7 +15,7 @@ A shared React component library for Moli Code applications, providing cross-pla
 ## Installation
 
 ```bash
-npm install @moli-code/webui
+npm install @dobby/moli-code-webui
 ```
 
 ## CDN Usage
@@ -61,12 +61,12 @@ You can also use this library directly in the browser via CDN:
     </script>
 
     <!-- Load the webui library -->
-    <script src="https://unpkg.com/@moli-code/webui@0.1.0-beta.2/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.2/dist/index.umd.js"></script>
 
     <!-- Load the CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/@moli-code/webui@0.1.0-beta.2/dist/styles.css"
+      href="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.2/dist/styles.css"
     />
   </head>
   <body>
@@ -123,12 +123,12 @@ You can also use this library directly in the browser via CDN:
     </script>
 
     <!-- Load the webui library -->
-    <script src="https://unpkg.com/@moli-code/webui@0.1.0-beta.2/dist/index.umd.js"></script>
+    <script src="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.2/dist/index.umd.js"></script>
 
     <!-- Load the CSS -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/@moli-code/webui@0.1.0-beta.2/dist/styles.css"
+      href="https://unpkg.com/@dobby/moli-code-webui@0.1.0-beta.2/dist/styles.css"
     />
   </head>
   <body>
@@ -156,8 +156,8 @@ For a complete working example, see [examples/cdn-usage-demo.html](./examples/cd
 ## Quick Start
 
 ```tsx
-import { Button, Input, Tooltip } from '@moli-code/webui';
-import { PlatformProvider } from '@moli-code/webui/context';
+import { Button, Input, Tooltip } from '@dobby/moli-code-webui';
+import { PlatformProvider } from '@dobby/moli-code-webui/context';
 
 function App() {
   return (
@@ -177,7 +177,7 @@ function App() {
 #### Button
 
 ```tsx
-import { Button } from '@moli-code/webui';
+import { Button } from '@dobby/moli-code-webui';
 
 <Button variant="primary" size="md" loading={false}>
   Submit
@@ -196,7 +196,7 @@ import { Button } from '@moli-code/webui';
 #### Input
 
 ```tsx
-import { Input } from '@moli-code/webui';
+import { Input } from '@dobby/moli-code-webui';
 
 <Input
   label="Email"
@@ -219,7 +219,7 @@ import { Input } from '@moli-code/webui';
 #### Tooltip
 
 ```tsx
-import { Tooltip } from '@moli-code/webui';
+import { Tooltip } from '@dobby/moli-code-webui';
 
 <Tooltip content="Helpful tip">
   <span>Hover me</span>
@@ -229,7 +229,7 @@ import { Tooltip } from '@moli-code/webui';
 ### Icons
 
 ```tsx
-import { FileIcon, FolderIcon, CheckIcon } from '@moli-code/webui/icons';
+import { FileIcon, FolderIcon, CheckIcon } from '@dobby/moli-code-webui/icons';
 
 <FileIcon size={16} className="text-gray-500" />;
 ```
@@ -263,7 +263,7 @@ Available icon categories:
 The Platform Context provides an abstraction layer for platform-specific capabilities:
 
 ```tsx
-import { PlatformProvider, usePlatform } from '@moli-code/webui/context';
+import { PlatformProvider, usePlatform } from '@dobby/moli-code-webui/context';
 
 const platformContext = {
   postMessage: (message) => vscode.postMessage(message),
@@ -298,7 +298,7 @@ Use the shared Tailwind preset for consistent styling:
 ```js
 // tailwind.config.js
 module.exports = {
-  presets: [require('@moli-code/webui/tailwind.preset.cjs')],
+  presets: [require('@dobby/moli-code-webui/tailwind.preset.cjs')],
   // your customizations
 };
 ```

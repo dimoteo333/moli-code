@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -57,7 +57,7 @@ describe('CLI Path Utilities', () => {
     it('should throw descriptive error when bundled CLI not found', () => {
       mockFs.existsSync.mockReturnValue(false);
 
-      expect(() => findBundledCliPath()).toThrow('Bundled moli CLI not found');
+      expect(() => findBundledCliPath()).toThrow('Bundled qwen CLI not found');
       expect(() => findBundledCliPath()).toThrow('Searched locations:');
     });
   });
@@ -84,45 +84,45 @@ describe('CLI Path Utilities', () => {
       it('should throw when bundled CLI not found', () => {
         mockFs.existsSync.mockReturnValue(false);
 
-        expect(() => prepareSpawnInfo()).toThrow('Bundled moli CLI not found');
+        expect(() => prepareSpawnInfo()).toThrow('Bundled qwen CLI not found');
       });
     });
 
     describe('command name detection', () => {
       it('should detect command names without path separators', () => {
-        const result = prepareSpawnInfo('moli');
+        const result = prepareSpawnInfo('qwen');
 
         expect(result).toEqual({
-          command: 'moli',
+          command: 'qwen',
           args: [],
           type: 'native',
-          originalInput: 'moli',
+          originalInput: 'qwen',
         });
       });
 
       it('should detect command names on Windows', () => {
-        const result = prepareSpawnInfo('moli.exe');
+        const result = prepareSpawnInfo('qwen.exe');
 
         expect(result).toEqual({
-          command: 'moli.exe',
+          command: 'qwen.exe',
           args: [],
           type: 'native',
-          originalInput: 'moli.exe',
+          originalInput: 'qwen.exe',
         });
       });
 
       it('should reject invalid command name characters', () => {
-        expect(() => prepareSpawnInfo('moli@invalid')).toThrow(
-          "Invalid command name 'moli@invalid'. Command names should only contain letters, numbers, dots, hyphens, and underscores.",
+        expect(() => prepareSpawnInfo('qwen@invalid')).toThrow(
+          "Invalid command name 'qwen@invalid'. Command names should only contain letters, numbers, dots, hyphens, and underscores.",
         );
       });
 
       it('should accept valid command names', () => {
-        expect(() => prepareSpawnInfo('moli')).not.toThrow();
+        expect(() => prepareSpawnInfo('qwen')).not.toThrow();
         expect(() => prepareSpawnInfo('moli-code')).not.toThrow();
-        expect(() => prepareSpawnInfo('moli_code')).not.toThrow();
-        expect(() => prepareSpawnInfo('moli.exe')).not.toThrow();
-        expect(() => prepareSpawnInfo('moli123')).not.toThrow();
+        expect(() => prepareSpawnInfo('qwen_code')).not.toThrow();
+        expect(() => prepareSpawnInfo('qwen.exe')).not.toThrow();
+        expect(() => prepareSpawnInfo('qwen123')).not.toThrow();
       });
     });
 
@@ -216,13 +216,13 @@ describe('CLI Path Utilities', () => {
       });
 
       it('should prepare spawn info for native binary path', () => {
-        const result = prepareSpawnInfo('/usr/local/bin/moli');
+        const result = prepareSpawnInfo('/usr/local/bin/qwen');
 
         expect(result).toEqual({
-          command: path.resolve('/usr/local/bin/moli'),
+          command: path.resolve('/usr/local/bin/qwen'),
           args: [],
           type: 'native',
-          originalInput: '/usr/local/bin/moli',
+          originalInput: '/usr/local/bin/qwen',
         });
       });
     });
@@ -231,9 +231,9 @@ describe('CLI Path Utilities', () => {
       it('should resolve absolute file paths', () => {
         mockFs.existsSync.mockReturnValue(true);
 
-        const result = prepareSpawnInfo('/absolute/path/to/moli');
+        const result = prepareSpawnInfo('/absolute/path/to/qwen');
 
-        expect(result.command).toBe(path.resolve('/absolute/path/to/moli'));
+        expect(result.command).toBe(path.resolve('/absolute/path/to/qwen'));
         expect(result.type).toBe('native');
       });
 
@@ -333,7 +333,7 @@ describe('CLI Path Utilities', () => {
     });
 
     it('should handle Windows native executables', () => {
-      const windowsPath = 'C:\\Program Files\\moli\\moli.exe';
+      const windowsPath = 'C:\\Program Files\\qwen\\qwen.exe';
       const result = prepareSpawnInfo(windowsPath);
 
       // .exe files without .js extension should be treated as native
@@ -386,13 +386,13 @@ describe('CLI Path Utilities', () => {
     });
 
     it('should handle production native binary', () => {
-      const result = prepareSpawnInfo('moli');
+      const result = prepareSpawnInfo('qwen');
 
       expect(result).toEqual({
-        command: 'moli',
+        command: 'qwen',
         args: [],
         type: 'native',
-        originalInput: 'moli',
+        originalInput: 'qwen',
       });
     });
 

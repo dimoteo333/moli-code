@@ -2,12 +2,12 @@
 
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 /**
- * Bundles/copies the Moli Code CLI from npm package into the SDK package dist/
+ * Bundles/copies the Qwen Code CLI from npm package into the SDK package dist/
  * so consumers don't need a separate CLI install.
  *
  * This script reads the CLI package path from CLI_PACKAGE_PATH environment variable

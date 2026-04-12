@@ -4,7 +4,7 @@ export default {
   memory: {
     display: 'hidden',
   },
-  'moli-ignore': 'Ignoring Files',
+  'qwen-ignore': 'Ignoring Files',
   'trusted-folders': 'Trusted Folders',
   themes: 'Themes',
 };

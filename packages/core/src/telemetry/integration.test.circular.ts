@@ -10,22 +10,22 @@
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import type { Config } from '../config/config.js';
-import type { RumEvent } from './moli-logger/event-types.js';
-import { MoliLogger } from './moli-logger/moli-logger.js';
+import type { RumEvent } from './qwen-logger/event-types.js';
+import { QwenLogger } from './qwen-logger/qwen-logger.js';
 
 describe('Circular Reference Integration Test', () => {
   beforeEach(() => {
     // Clear singleton instance before each test
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (MoliLogger as any).instance = undefined;
+    (QwenLogger as any).instance = undefined;
   });
 
   afterEach(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (MoliLogger as any).instance = undefined;
+    (QwenLogger as any).instance = undefined;
   });
 
-  it('should handle HttpsProxyAgent-like circular references in moli logging', () => {
+  it('should handle HttpsProxyAgent-like circular references in qwen logging', () => {
     // Create a mock config with proxy
     const mockConfig = {
       getTelemetryEnabled: () => true,
@@ -68,8 +68,8 @@ describe('Circular Reference Integration Test', () => {
       },
     } as RumEvent;
 
-    // Test that MoliLogger can handle this
-    const logger = MoliLogger.getInstance(mockConfig);
+    // Test that QwenLogger can handle this
+    const logger = QwenLogger.getInstance(mockConfig);
 
     expect(() => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,7 +85,7 @@ describe('Circular Reference Integration Test', () => {
       getDebugMode: () => true,
     } as unknown as Config;
 
-    const logger = MoliLogger.getInstance(mockConfig);
+    const logger = QwenLogger.getInstance(mockConfig);
 
     // Add more events than the maximum capacity
     for (let i = 0; i < 1100; i++) {

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,7 @@ import {
   isSDKAssistantMessage,
   isSDKSystemMessage,
   type SDKMessage,
-} from '@dobby/moli-code-sdk';
+} from '@moli-code/sdk';
 import {
   SDKTestHelper,
   extractText,
@@ -438,9 +438,9 @@ describe('Configuration Options (E2E)', () => {
       }
     });
 
-    // Skip - moli-oauth requires user interaction which is not possible in CI environments
-    it.skip('should accept authType: moli-oauth', async () => {
-      // Note: moli-oauth requires credentials in ~/.moli and user interaction
+    // Skip - qwen-oauth requires user interaction which is not possible in CI environments
+    it.skip('should accept authType: qwen-oauth', async () => {
+      // Note: qwen-oauth requires credentials in ~/.qwen and user interaction
       // Without credentials, the auth process will timeout waiting for user
       // This test verifies the option is accepted and passed correctly to CLI
 
@@ -451,7 +451,7 @@ describe('Configuration Options (E2E)', () => {
         options: {
           ...SHARED_TEST_OPTIONS,
           cwd: testDir,
-          authType: 'moli-oauth',
+          authType: 'qwen-oauth',
           debug: true,
           logLevel: 'debug',
           stderr: (msg: string) => {

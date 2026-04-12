@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -14,9 +14,9 @@ describe('ModelRegistry', () => {
     it('should always include hard-coded moli-oauth models', () => {
       const registry = new ModelRegistry();
 
-      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(moliModels[0].id).toBe('coder-model');
+      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(qwenModels[0].id).toBe('coder-model');
     });
 
     it('should initialize with empty config', () => {
@@ -49,8 +49,8 @@ describe('ModelRegistry', () => {
       const modelProvidersConfig: ModelProvidersConfig = {
         'moli-oauth': [
           {
-            id: 'custom-moli',
-            name: 'Custom Moli',
+            id: 'custom-qwen',
+            name: 'Custom Qwen',
           },
         ],
       };
@@ -58,9 +58,9 @@ describe('ModelRegistry', () => {
       const registry = new ModelRegistry(modelProvidersConfig);
 
       // Should still use hard-coded moli-oauth models
-      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(moliModels.find((m) => m.id === 'custom-moli')).toBeUndefined();
+      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(qwenModels.find((m) => m.id === 'custom-qwen')).toBeUndefined();
     });
   });
 
@@ -451,13 +451,13 @@ describe('ModelRegistry', () => {
       const registry = new ModelRegistry();
 
       registry.reloadModels({
-        'moli-oauth': [{ id: 'custom-moli', name: 'Custom Moli' }],
+        'moli-oauth': [{ id: 'custom-qwen', name: 'Custom Qwen' }],
       });
 
       // moli-oauth should still use hard-coded models
-      const moliModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
-      expect(moliModels.length).toBe(MOLI_OAUTH_MODELS.length);
-      expect(moliModels.find((m) => m.id === 'custom-moli')).toBeUndefined();
+      const qwenModels = registry.getModelsForAuthType(AuthType.MOLI_OAUTH);
+      expect(qwenModels.length).toBe(MOLI_OAUTH_MODELS.length);
+      expect(qwenModels.find((m) => m.id === 'custom-qwen')).toBeUndefined();
     });
 
     it('should handle reload with multiple authTypes', () => {

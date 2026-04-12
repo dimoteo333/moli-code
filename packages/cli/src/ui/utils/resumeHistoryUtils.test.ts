@@ -253,7 +253,7 @@ describe('resumeHistoryUtils', () => {
                   nodeVersion: '20.x',
                   npmVersion: '10.x',
                   sandboxEnv: 'none',
-                  modelVersion: 'moli',
+                  modelVersion: 'qwen',
                   selectedAuthType: 'none',
                   ideClient: 'none',
                   sessionId: 'abc',

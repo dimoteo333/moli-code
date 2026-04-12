@@ -6,7 +6,7 @@ Moli Code is an open-source AI coding assistant tool maintained by the Moli Code
 
 Moli Code supports three authentication methods to access AI models. Your authentication method determines which terms of service and privacy policies apply to your usage:
 
-1. **Moli OAuth** — Log in with your moli.ai account (free daily quota)
+1. **Qwen OAuth** — Log in with your qwen.ai account (free daily quota)
 2. **Alibaba Cloud Coding Plan** — Use an API key from Alibaba Cloud
 3. **API Key** — Bring your own API key
 
@@ -14,16 +14,16 @@ For each authentication method, different Terms of Service and Privacy Notices m
 
 | Authentication Method     | Provider          | Terms of Service                                                   | Privacy Notice                                                     |
 | :------------------------ | :---------------- | :----------------------------------------------------------------- | :----------------------------------------------------------------- |
-| Moli OAuth                | Moli AI           | [Moli Terms of Service](https://moli.ai/termsservice)              | [Moli Privacy Policy](https://moli.ai/privacypolicy)               |
+| Qwen OAuth                | Qwen AI           | [Qwen Terms of Service](https://qwen.ai/termsservice)              | [Qwen Privacy Policy](https://qwen.ai/privacypolicy)               |
 | Alibaba Cloud Coding Plan | Alibaba Cloud     | See [details below](#2-if-you-are-using-alibaba-cloud-coding-plan) | See [details below](#2-if-you-are-using-alibaba-cloud-coding-plan) |
 | API Key                   | Various Providers | Depends on your chosen API provider (OpenAI, Anthropic, etc.)      | Depends on your chosen API provider                                |
 
-## 1. If you are using Moli OAuth Authentication
+## 1. If you are using Qwen OAuth Authentication
 
-When you authenticate using your moli.ai account, these Terms of Service and Privacy Notice documents apply:
+When you authenticate using your qwen.ai account, these Terms of Service and Privacy Notice documents apply:
 
-- **Terms of Service:** Your use is governed by the [Moli Terms of Service](https://moli.ai/termsservice).
-- **Privacy Notice:** The collection and use of your data is described in the [Moli Privacy Policy](https://moli.ai/privacypolicy).
+- **Terms of Service:** Your use is governed by the [Qwen Terms of Service](https://qwen.ai/termsservice).
+- **Privacy Notice:** The collection and use of your data is described in the [Qwen Privacy Policy](https://qwen.ai/privacypolicy).
 
 For details about authentication setup, quotas, and supported features, see [Authentication Setup](../configuration/settings).
 
@@ -64,7 +64,7 @@ When enabled, Moli Code may collect:
 
 ### Data Collection by Authentication Method
 
-- **Moli OAuth:** Usage statistics are governed by Moli's privacy policy. You can opt-out through Moli Code's configuration settings.
+- **Qwen OAuth:** Usage statistics are governed by Qwen's privacy policy. You can opt-out through Moli Code's configuration settings.
 - **Alibaba Cloud Coding Plan:** Usage statistics are governed by Alibaba Cloud's privacy policy. You can opt-out through Moli Code's configuration settings.
 - **API Key:** No additional data is collected by Moli Code beyond what your chosen API provider collects.
 
@@ -74,7 +74,7 @@ When enabled, Moli Code may collect:
 
 Whether your code, including prompts and answers, is used to train AI models depends on your authentication method and the specific AI service provider you use:
 
-- **Moli OAuth**: Data usage is governed by [Moli's Privacy Policy](https://moli.ai/privacy). Please refer to their policy for specific details about data collection and model training practices.
+- **Qwen OAuth**: Data usage is governed by [Qwen's Privacy Policy](https://qwen.ai/privacy). Please refer to their policy for specific details about data collection and model training practices.
 
 - **Alibaba Cloud Coding Plan**: Data usage is governed by Alibaba Cloud's privacy policy. Please refer to their policy for specific details about data collection and model training practices.
 
@@ -99,11 +99,11 @@ When enabled, Moli Code may collect:
 - Responses from AI models
 - Personal information
 
-The Usage Statistics setting only controls data collection by Moli Code itself. It does not affect what data your chosen AI service provider (Moli, OpenAI, etc.) may collect according to their own privacy policies.
+The Usage Statistics setting only controls data collection by Moli Code itself. It does not affect what data your chosen AI service provider (Qwen, OpenAI, etc.) may collect according to their own privacy policies.
 
 ### 3. How do I switch between authentication methods?
 
-You can switch between Moli OAuth, Alibaba Cloud Coding Plan, and your own API key at any time:
+You can switch between Qwen OAuth, Alibaba Cloud Coding Plan, and your own API key at any time:
 
 1. **During startup**: Choose your preferred authentication method when prompted
 2. **Within the CLI**: Use the `/auth` command to reconfigure your authentication method

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -255,9 +255,23 @@ export class ContentGenerationPipeline {
         .candidates?.[0]?.finishReason;
 
     if (isFinishChunk) {
-      // This is a finish reason chunk
-      collectedGeminiResponses.push(response);
-      setPendingFinish(response);
+      if (hasPendingFinish) {
+        // Duplicate finish chunk (e.g. from OpenRouter providers that send two
+        // finish_reason chunks for tool calls). The streaming tool call parser
+        // was already reset after the first finish chunk, so the second one
+        // carries no functionCall parts. Merge only usageMetadata and keep the
+        // candidates (including functionCall parts) from the first finish chunk.
+        const lastResponse =
+          collectedGeminiResponses[collectedGeminiResponses.length - 1];
+        if (response.usageMetadata) {
+          lastResponse.usageMetadata = response.usageMetadata;
+        }
+        setPendingFinish(lastResponse);
+      } else {
+        // This is a finish reason chunk
+        collectedGeminiResponses.push(response);
+        setPendingFinish(response);
+      }
       return false; // Don't yield yet, wait for potential subsequent chunks to merge
     } else if (hasPendingFinish) {
       // We have a pending finish chunk, merge this chunk's data into it
@@ -401,7 +415,7 @@ export class ContentGenerationPipeline {
     //   - glm-4.7             — thinking is enabled by default; can be disabled via `extra_body.thinking.enabled`
     //   - kimi-k2-thinking    — thinking is enabled by default and cannot be disabled
     //   - gpt-5.x series      — thinking is enabled by default; can be disabled via `reasoning.effort`
-    //   - moli3 series        — model-dependent; can be manually disabled via `extra_body.enable_thinking`
+    //   - qwen3 series        — model-dependent; can be manually disabled via `extra_body.enable_thinking`
     //
     // Given this inconsistency, we avoid mapping values and only pass through the
     // configured reasoning object when explicitly enabled. This keeps provider- and

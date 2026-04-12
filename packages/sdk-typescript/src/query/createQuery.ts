@@ -7,7 +7,11 @@ import { serializeJsonLine } from '../utils/jsonLines.js';
 import { ProcessTransport } from '../transport/ProcessTransport.js';
 import { prepareSpawnInfo, type SpawnInfo } from '../utils/cliPath.js';
 import { Query } from './Query.js';
-import type { QueryOptions } from '../types/types.js';
+import type {
+  QueryOptions,
+  QuerySystemPrompt,
+  TransportOptions,
+} from '../types/types.js';
 import { QueryOptionsSchema } from '../types/queryOptionsSchema.js';
 import { SdkLogger } from '../utils/logger.js';
 import { randomUUID } from 'node:crypto';
@@ -38,20 +42,22 @@ export function query({
 
   const isSingleTurn = typeof prompt === 'string';
 
-  const pathToMoliExecutable = options.pathToMoliExecutable;
+  const pathToQwenExecutable = options.pathToQwenExecutable;
 
   const abortController = options.abortController ?? new AbortController();
 
   // Generate or use provided session ID for SDK-CLI alignment
   const sessionId = options.resume ?? options.sessionId ?? randomUUID();
+  const resolvedSystemPrompt = resolveSystemPromptOption(options.systemPrompt);
 
   const transport = new ProcessTransport({
-    pathToMoliExecutable,
+    pathToQwenExecutable,
     spawnInfo,
     cwd: options.cwd,
     model: options.model,
     permissionMode: options.permissionMode,
     env: options.env,
+    ...resolvedSystemPrompt,
     abortController,
     debug: options.debug,
     stderr: options.stderr,
@@ -112,6 +118,20 @@ export function query({
   return queryInstance;
 }
 
+function resolveSystemPromptOption(
+  systemPrompt: QuerySystemPrompt | undefined,
+): Pick<TransportOptions, 'systemPrompt' | 'appendSystemPrompt'> {
+  if (!systemPrompt) {
+    return {};
+  }
+
+  if (typeof systemPrompt === 'string') {
+    return { systemPrompt };
+  }
+
+  return systemPrompt.append ? { appendSystemPrompt: systemPrompt.append } : {};
+}
+
 function validateOptions(options: QueryOptions): SpawnInfo | undefined {
   const validationResult = QueryOptionsSchema.safeParse(options);
   if (!validationResult.success) {
@@ -132,9 +152,9 @@ function validateOptions(options: QueryOptions): SpawnInfo | undefined {
   }
 
   try {
-    return prepareSpawnInfo(options.pathToMoliExecutable);
+    return prepareSpawnInfo(options.pathToQwenExecutable);
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    throw new Error(`Invalid pathToMoliExecutable: ${errorMessage}`);
+    throw new Error(`Invalid pathToQwenExecutable: ${errorMessage}`);
   }
 }

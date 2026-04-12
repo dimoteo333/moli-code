@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,7 +9,7 @@ import process from 'node:process';
 import { AuthType } from '../core/contentGenerator.js';
 import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
 import type { ContentGeneratorConfigSources } from '../core/contentGenerator.js';
-import { DEFAULT_MOLI_MODEL } from '../config/models.js';
+import { DEFAULT_QWEN_MODEL } from '../config/models.js';
 import { tokenLimit } from '../core/tokenLimits.js';
 import { defaultModalities } from '../core/modalityDefaults.js';
 
@@ -83,7 +83,7 @@ export class ModelsConfig {
   private strictModelProviderSelection: boolean = false;
 
   // One-shot flag for moli-oauth credential caching
-  private requireCachedMoliCredentialsOnce: boolean = false;
+  private requireCachedQwenCredentialsOnce: boolean = false;
 
   // One-shot flag indicating credentials were manually set via updateCredentials()
   // When true, syncAfterAuthRefresh should NOT override these credentials with
@@ -172,7 +172,7 @@ export class ModelsConfig {
     generationConfig: Partial<ContentGeneratorConfig>;
     generationConfigSources: ContentGeneratorConfigSources;
     strictModelProviderSelection: boolean;
-    requireCachedMoliCredentialsOnce: boolean;
+    requireCachedQwenCredentialsOnce: boolean;
     hasManualCredentials: boolean;
     activeRuntimeModelSnapshotId: string | undefined;
   } {
@@ -183,7 +183,7 @@ export class ModelsConfig {
         this.generationConfigSources,
       ),
       strictModelProviderSelection: this.strictModelProviderSelection,
-      requireCachedMoliCredentialsOnce: this.requireCachedMoliCredentialsOnce,
+      requireCachedQwenCredentialsOnce: this.requireCachedQwenCredentialsOnce,
       hasManualCredentials: this.hasManualCredentials,
       activeRuntimeModelSnapshotId: this.activeRuntimeModelSnapshotId,
     };
@@ -202,8 +202,8 @@ export class ModelsConfig {
     this._generationConfig = snapshot.generationConfig;
     this.generationConfigSources = snapshot.generationConfigSources;
     this.strictModelProviderSelection = snapshot.strictModelProviderSelection;
-    this.requireCachedMoliCredentialsOnce =
-      snapshot.requireCachedMoliCredentialsOnce;
+    this.requireCachedQwenCredentialsOnce =
+      snapshot.requireCachedQwenCredentialsOnce;
     this.hasManualCredentials = snapshot.hasManualCredentials;
     this.activeRuntimeModelSnapshotId = snapshot.activeRuntimeModelSnapshotId;
   }
@@ -212,7 +212,7 @@ export class ModelsConfig {
    * Get current model ID
    */
   getModel(): string {
-    return this._generationConfig.model || DEFAULT_MOLI_MODEL;
+    return this._generationConfig.model || DEFAULT_QWEN_MODEL;
   }
 
   /**
@@ -302,6 +302,17 @@ export class ModelsConfig {
   }
 
   /**
+   * Get a fully resolved provider model config for the given authType/modelId.
+   * Returns undefined for raw runtime models that are not present in the registry.
+   */
+  getResolvedModel(
+    authType: AuthType,
+    modelId: string,
+  ): ResolvedModelConfig | undefined {
+    return this.modelRegistry.getModel(authType, modelId);
+  }
+
+  /**
    * Set model programmatically (e.g., VLM auto-switch, fallback).
    * Supports both registry models and raw model IDs.
    */
@@ -313,7 +324,7 @@ export class ModelsConfig {
     // coder-model supports vision capabilities and can be hot-updated
     if (
       this.currentAuthType === AuthType.MOLI_OAUTH &&
-      newModel === DEFAULT_MOLI_MODEL
+      newModel === DEFAULT_QWEN_MODEL
     ) {
       this.strictModelProviderSelection = false;
       this._generationConfig.model = newModel;
@@ -372,7 +383,7 @@ export class ModelsConfig {
 
     const rollbackSnapshot = this.createStateSnapshotForRollback();
     if (authType === AuthType.MOLI_OAUTH && options?.requireCachedCredentials) {
-      this.requireCachedMoliCredentialsOnce = true;
+      this.requireCachedQwenCredentialsOnce = true;
     }
 
     try {
@@ -673,8 +684,8 @@ export class ModelsConfig {
    * Check and consume the one-shot cached credentials flag
    */
   consumeRequireCachedCredentialsFlag(): boolean {
-    const value = this.requireCachedMoliCredentialsOnce;
-    this.requireCachedMoliCredentialsOnce = false;
+    const value = this.requireCachedQwenCredentialsOnce;
+    this.requireCachedQwenCredentialsOnce = false;
     return value;
   }
 
@@ -697,7 +708,7 @@ export class ModelsConfig {
 
     // Clear credentials to avoid reusing previous model's API key
 
-    // For Moli OAuth, apiKey must always be a placeholder. It will be dynamically
+    // For Qwen OAuth, apiKey must always be a placeholder. It will be dynamically
     // replaced when building requests. Do not preserve any previous key or read
     // from envKey.
     //
@@ -707,7 +718,7 @@ export class ModelsConfig {
       this._generationConfig.apiKey = 'MOLI_OAUTH_DYNAMIC_TOKEN';
       this.generationConfigSources['apiKey'] = {
         kind: 'computed',
-        detail: 'Moli OAuth placeholder token',
+        detail: 'Qwen OAuth placeholder token',
       };
       this._generationConfig.apiKeyEnvKey = undefined;
       delete this.generationConfigSources['apiKeyEnvKey'];
@@ -772,25 +783,6 @@ export class ModelsConfig {
       };
     }
 
-    // max_tokens fallback: auto-detect from model when not set by provider.
-    // Without this, requests to non-Moli models (Claude, GPT, etc.) may omit
-    // max_tokens entirely, causing the API to use a small default (e.g. 4096)
-    // and truncating long responses mid-tool-call.
-    if (!this._generationConfig.samplingParams?.max_tokens) {
-      const outputLimit = tokenLimit(model.id, 'output');
-      if (!this._generationConfig.samplingParams) {
-        this._generationConfig.samplingParams = {};
-      }
-      this._generationConfig.samplingParams.max_tokens = outputLimit;
-      const existingSource = this.generationConfigSources['samplingParams'];
-      this.generationConfigSources['samplingParams'] = {
-        kind: 'computed',
-        detail: existingSource
-          ? `max_tokens auto-detected from model (other params from ${existingSource.kind})`
-          : 'max_tokens auto-detected from model',
-      };
-    }
-
     // modalities fallback: auto-detect from model when not set by provider
     if (gc.modalities === undefined) {
       this._generationConfig.modalities = defaultModalities(model.id);
@@ -812,13 +804,13 @@ export class ModelsConfig {
    * - We're checking if switching between two models within the SAME authType needs refresh
    *
    * Examples:
-   * - Moli OAuth: coder-model switches (same authType, hot-update safe)
+   * - Qwen OAuth: coder-model switches (same authType, hot-update safe)
    * - OpenAI: model-a -> model-b with same envKey (same authType, hot-update safe)
    * - OpenAI: gpt-4 -> deepseek-chat with different envKey (same authType, needs refresh)
    *
    * Cross-authType scenarios:
-   * - OpenAI -> Moli OAuth: handled by switchModel(authType, modelId), always refreshes
-   * - Moli OAuth -> OpenAI: handled by switchModel(authType, modelId), always refreshes
+   * - OpenAI -> Qwen OAuth: handled by switchModel(authType, modelId), always refreshes
+   * - Qwen OAuth -> OpenAI: handled by switchModel(authType, modelId), always refreshes
    */
   private checkRequiresRefresh(previousModelId: string): boolean {
     // Defensive: this method is only called after switchModel() sets currentAuthType,
@@ -828,7 +820,7 @@ export class ModelsConfig {
       return true;
     }
 
-    // For Moli OAuth, model switches within the same authType can always be hot-updated
+    // For Qwen OAuth, model switches within the same authType can always be hot-updated
     // (coder-model supports vision capabilities and doesn't require ContentGenerator recreation)
     if (authType === AuthType.MOLI_OAUTH) {
       return false;

@@ -19,8 +19,8 @@
         </license>
     </licenses>
     <scm>
-        <url>https://github.com/MoliLM/moli-code</url>
-        <connection>scm:git:https://github.com/MoliLM/moli-code.git</connection>
+        <url>https://github.com/QwenLM/qwen-code</url>
+        <connection>scm:git:https://github.com/QwenLM/qwen-code.git</connection>
     </scm>
     <properties>
         <maven.compiler.target>1.8</maven.compiler.target>

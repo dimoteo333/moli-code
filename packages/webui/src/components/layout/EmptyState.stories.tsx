@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -65,14 +65,14 @@ type Story = StoryObj<typeof meta>;
 export const Authenticated: Story = {
   args: {
     isAuthenticated: true,
-    appName: 'Moli Code',
+    appName: 'Qwen Code',
   },
 };
 
 export const NotAuthenticated: Story = {
   args: {
     isAuthenticated: false,
-    appName: 'Moli Code',
+    appName: 'Qwen Code',
   },
 };
 
@@ -80,7 +80,7 @@ export const Loading: Story = {
   args: {
     isAuthenticated: false,
     loadingMessage: 'Initializing...',
-    appName: 'Moli Code',
+    appName: 'Qwen Code',
   },
 };
 

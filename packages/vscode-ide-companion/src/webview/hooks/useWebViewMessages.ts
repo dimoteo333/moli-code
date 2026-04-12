@@ -1,16 +1,13 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { useEffect, useRef, useCallback } from 'react';
 import { useVSCode } from './useVSCode.js';
 import type { Conversation } from '../../services/conversationStore.js';
-import type {
-  PermissionOption,
-  PermissionToolCall,
-} from '@dobby/moli-code-webui';
+import type { PermissionOption, PermissionToolCall } from '@dobby/moli-code-webui';
 import type {
   ToolCallUpdate,
   UsageStatsPayload,
@@ -19,6 +16,11 @@ import type { ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import type { PlanEntry } from '../../types/chatTypes.js';
 import type { ModelInfo, AvailableCommand } from '@agentclientprotocol/sdk';
 import type { Question } from '../../types/acpTypes.js';
+import {
+  useImageResolution,
+  type WebViewMessage,
+  type WebViewMessageBase,
+} from './useImage.js';
 
 const FORCE_CLEAR_STREAM_END_REASONS = new Set([
   'user_cancelled',
@@ -32,7 +34,7 @@ interface UseWebViewMessagesProps {
   // Session management
   sessionManagement: {
     currentSessionId: string | null;
-    setMoliSessions: (
+    setQwenSessions: (
       sessions:
         | Array<Record<string, unknown>>
         | ((
@@ -69,23 +71,11 @@ interface UseWebViewMessagesProps {
   // Message handling
   messageHandling: {
     setMessages: (
-      messages: Array<{
-        role: 'user' | 'assistant' | 'thinking';
-        content: string;
-        timestamp: number;
-        fileContext?: {
-          fileName: string;
-          filePath: string;
-          startLine?: number;
-          endLine?: number;
-        };
-      }>,
+      messages:
+        | WebViewMessage[]
+        | ((prev: WebViewMessage[]) => WebViewMessage[]),
     ) => void;
-    addMessage: (message: {
-      role: 'user' | 'assistant' | 'thinking';
-      content: string;
-      timestamp: number;
-    }) => void;
+    addMessage: (message: WebViewMessage) => void;
     clearMessages: () => void;
     startStreaming: (timestamp?: number) => void;
     appendStreamChunk: (chunk: string) => void;
@@ -127,7 +117,7 @@ interface UseWebViewMessagesProps {
   ) => void;
 
   // Input
-  inputFieldRef: React.RefObject<HTMLDivElement>;
+  inputFieldRef: React.RefObject<HTMLDivElement | null>;
   setInputText: (text: string) => void;
   // Edit mode setter (maps ACP modes to UI modes)
   setEditMode?: (mode: ApprovalModeValue) => void;
@@ -167,6 +157,17 @@ export const useWebViewMessages = ({
 }: UseWebViewMessagesProps) => {
   // VS Code API for posting messages back to the extension host
   const vscode = useVSCode();
+
+  // Image resolution handling
+  const {
+    materializeMessages,
+    materializeMessage,
+    mergeResolvedImages,
+    clearImageResolutions,
+  } = useImageResolution({
+    vscode,
+  });
+
   // Track active long-running tool calls (execute/bash/command) so we can
   // keep the bottom "waiting" message visible until all of them complete.
   const activeExecToolCallsRef = useRef<Set<string>>(new Set());
@@ -383,11 +384,11 @@ export const useWebViewMessages = ({
           handlers.messageHandling.clearWaitingForResponse();
           const errorMsg =
             (message?.data?.message as string) ||
-            'Failed to connect to Moli agent.';
+            'Failed to connect to Qwen agent.';
 
           handlers.messageHandling.addMessage({
             role: 'assistant',
-            content: `Failed to connect to Moli agent: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
+            content: `Failed to connect to Qwen agent: ${errorMsg}\nYou can still use the chat UI, but messages won't be sent to AI.`,
             timestamp: Date.now(),
           });
           // Set authentication state to false
@@ -425,7 +426,10 @@ export const useWebViewMessages = ({
 
         case 'conversationLoaded': {
           const conversation = message.data as Conversation;
-          handlers.messageHandling.setMessages(conversation.messages);
+          clearImageResolutions();
+          handlers.messageHandling.setMessages(
+            materializeMessages(conversation.messages as WebViewMessageBase[]),
+          );
           break;
         }
 
@@ -434,11 +438,15 @@ export const useWebViewMessages = ({
             role?: 'user' | 'assistant' | 'thinking';
             content?: string;
             timestamp?: number;
+            fileContext?: {
+              fileName: string;
+              filePath: string;
+              startLine?: number;
+              endLine?: number;
+            };
           };
-          handlers.messageHandling.addMessage(
-            msg as unknown as Parameters<
-              typeof handlers.messageHandling.addMessage
-            >[0],
+          materializeMessage(msg as WebViewMessageBase).forEach((entry) =>
+            handlers.messageHandling.addMessage(entry),
           );
           // Robustness: if an assistant message arrives outside the normal stream
           // pipeline (no explicit streamEnd), ensure we clear streaming/waiting states
@@ -813,14 +821,14 @@ export const useWebViewMessages = ({
           break;
         }
 
-        case 'moliSessionList': {
+        case 'qwenSessionList': {
           const sessions =
             (message.data.sessions as Array<Record<string, unknown>>) || [];
           const append = Boolean(message.data.append);
           const nextCursor = message.data.nextCursor as number | undefined;
           const hasMore = Boolean(message.data.hasMore);
 
-          handlers.sessionManagement.setMoliSessions(
+          handlers.sessionManagement.setQwenSessions(
             (prev: Array<Record<string, unknown>>) =>
               append ? [...prev, ...sessions] : sessions,
           );
@@ -849,7 +857,7 @@ export const useWebViewMessages = ({
           break;
         }
 
-        case 'moliSessionSwitched':
+        case 'qwenSessionSwitched':
           handlers.sessionManagement.setShowSessionSelector(false);
           if (message.data.sessionId) {
             handlers.sessionManagement.setCurrentSessionId(
@@ -867,7 +875,12 @@ export const useWebViewMessages = ({
             vscode.postMessage({ type: 'updatePanelTitle', data: { title } });
           }
           if (message.data.messages) {
-            handlers.messageHandling.setMessages(message.data.messages);
+            clearImageResolutions();
+            handlers.messageHandling.setMessages(
+              materializeMessages(
+                message.data.messages as WebViewMessageBase[],
+              ),
+            );
           } else {
             handlers.messageHandling.clearMessages();
           }
@@ -904,6 +917,7 @@ export const useWebViewMessages = ({
           handlers.messageHandling.clearMessages();
           handlers.clearToolCalls();
           handlers.sessionManagement.setCurrentSessionId(null);
+          clearImageResolutions();
           handlers.sessionManagement.setCurrentSessionTitle(
             'Past Conversations',
           );
@@ -989,6 +1003,18 @@ export const useWebViewMessages = ({
           break;
         }
 
+        case 'imagePathsResolved': {
+          const resolved =
+            (
+              message.data as
+                | { resolved?: Array<{ path: string; src?: string | null }> }
+                | undefined
+            )?.resolved ?? [];
+          handlers.messageHandling.setMessages((prevMessages) =>
+            mergeResolvedImages(prevMessages, resolved),
+          );
+          break;
+        }
         case 'cancelStreaming':
           // Handle cancel streaming response from extension
           // Note: The "Interrupted" message is already added by handleCancel in App.tsx
@@ -1002,7 +1028,16 @@ export const useWebViewMessages = ({
           break;
       }
     },
-    [inputFieldRef, setInputText, vscode, setEditMode],
+    [
+      inputFieldRef,
+      setInputText,
+      vscode,
+      setEditMode,
+      materializeMessages,
+      materializeMessage,
+      mergeResolvedImages,
+      clearImageResolutions,
+    ],
   );
 
   useEffect(() => {

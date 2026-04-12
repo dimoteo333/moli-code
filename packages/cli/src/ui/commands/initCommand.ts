@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,7 +20,7 @@ import { t } from '../../i18n/index.js';
 export const initCommand: SlashCommand = {
   name: 'init',
   get description() {
-    return t('Analyzes the project and creates a tailored MOLI.md file.');
+    return t('Analyzes the project and creates a tailored QWEN.md file.');
   },
   kind: CommandKind.BUILT_IN,
   action: async (

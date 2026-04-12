@@ -61,7 +61,7 @@ export const getLatestGitHubRelease = async (
   try {
     const controller = new AbortController();
 
-    const endpoint = `https://api.github.com/repos/MoliLM/moli-code-action/releases/latest`;
+    const endpoint = `https://api.github.com/repos/QwenLM/moli-code-action/releases/latest`;
 
     const response = await fetch(endpoint, {
       method: 'GET',

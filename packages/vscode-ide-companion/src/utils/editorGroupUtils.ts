@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -8,10 +8,10 @@ import * as vscode from 'vscode';
 import { openChatCommand } from '../commands/index.js';
 
 /**
- * Find the editor group immediately to the left of the Moli chat webview.
+ * Find the editor group immediately to the left of the Qwen chat webview.
  * - If the chat webview group is the leftmost group, returns undefined.
  * - If no chat webview is found in any editor group, returns undefined.
- * - Uses the webview tab viewType 'mainThreadWebview-moliCode.chat'.
+ * - Uses the webview tab viewType 'mainThreadWebview-qwenCode.chat'.
  */
 export function findLeftGroupOfChatWebview(): vscode.ViewColumn | undefined {
   try {
@@ -25,7 +25,7 @@ export function findLeftGroupOfChatWebview(): vscode.ViewColumn | undefined {
           !!inp && typeof inp === 'object' && 'viewType' in inp;
         return (
           isWebviewInput(input) &&
-          input.viewType === 'mainThreadWebview-moliCode.chat'
+          input.viewType === 'mainThreadWebview-qwenCode.chat'
         );
       }),
     );
@@ -84,7 +84,7 @@ function waitForTabGroupsCondition(
 }
 
 /**
- * Ensure there is an editor group directly to the left of the Moli chat webview.
+ * Ensure there is an editor group directly to the left of the Qwen chat webview.
  * - If one exists, return its ViewColumn.
  * - If none exists, focus the chat panel and create a new group on its left,
  *   then return the new group's ViewColumn.
@@ -108,7 +108,7 @@ export async function ensureLeftGroupOfChatWebview(): Promise<
         !!inp && typeof inp === 'object' && 'viewType' in inp;
       return (
         isWebviewInput(input) &&
-        input.viewType === 'mainThreadWebview-moliCode.chat'
+        input.viewType === 'mainThreadWebview-qwenCode.chat'
       );
     }),
   );

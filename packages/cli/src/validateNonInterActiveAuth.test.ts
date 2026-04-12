@@ -47,7 +47,7 @@ describe('validateNonInterActiveAuth', () => {
   let originalEnvVertexAi: string | undefined;
   let originalEnvGcp: string | undefined;
   let originalEnvOpenAiApiKey: string | undefined;
-  let originalEnvMoliOauth: string | undefined;
+  let originalEnvQwenOauth: string | undefined;
   let originalEnvGoogleApiKey: string | undefined;
   let originalEnvAnthropicApiKey: string | undefined;
   let processExitSpy: ReturnType<typeof vi.spyOn<[code?: number], never>>;
@@ -59,7 +59,7 @@ describe('validateNonInterActiveAuth', () => {
     originalEnvVertexAi = process.env['GOOGLE_GENAI_USE_VERTEXAI'];
     originalEnvGcp = process.env['GOOGLE_GENAI_USE_GCA'];
     originalEnvOpenAiApiKey = process.env['OPENAI_API_KEY'];
-    originalEnvMoliOauth = process.env['MOLI_OAUTH'];
+    originalEnvQwenOauth = process.env['MOLI_OAUTH'];
     originalEnvGoogleApiKey = process.env['GOOGLE_API_KEY'];
     originalEnvAnthropicApiKey = process.env['ANTHROPIC_API_KEY'];
     delete process.env['GEMINI_API_KEY'];
@@ -116,8 +116,8 @@ describe('validateNonInterActiveAuth', () => {
     } else {
       delete process.env['OPENAI_API_KEY'];
     }
-    if (originalEnvMoliOauth !== undefined) {
-      process.env['MOLI_OAUTH'] = originalEnvMoliOauth;
+    if (originalEnvQwenOauth !== undefined) {
+      process.env['MOLI_OAUTH'] = originalEnvQwenOauth;
     } else {
       delete process.env['MOLI_OAUTH'];
     }

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -146,6 +146,33 @@ describe('handleSlashCommand', () => {
     expect(result.type).toBe('message');
     if (result.type === 'message') {
       expect(result.content).toBe('Project initialized');
+    }
+  });
+
+  it('should execute /btw when using the default allowed list', async () => {
+    const mockBtwCommand = {
+      name: 'btw',
+      description: 'Ask a side question',
+      kind: CommandKind.BUILT_IN,
+      action: vi.fn().mockResolvedValue({
+        type: 'message',
+        messageType: 'info',
+        content: 'btw> question\nanswer',
+      }),
+    };
+    mockGetCommands.mockReturnValue([mockBtwCommand]);
+
+    const result = await handleSlashCommand(
+      '/btw question',
+      abortController,
+      mockConfig,
+      mockSettings,
+    );
+
+    expect(mockBtwCommand.action).toHaveBeenCalled();
+    expect(result.type).toBe('message');
+    if (result.type === 'message') {
+      expect(result.content).toBe('btw> question\nanswer');
     }
   });
 

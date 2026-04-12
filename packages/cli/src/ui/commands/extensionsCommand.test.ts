@@ -17,10 +17,14 @@ import {
   type MockedFunction,
 } from 'vitest';
 
-import { ExtensionManager, parseInstallSource } from '@dobby/moli-code-core';
+import {
+  ExtensionManager,
+  parseInstallSource,
+} from '@dobby/moli-code-core';
 
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual =
+    await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     parseInstallSource: vi.fn(),

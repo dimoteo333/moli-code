@@ -6,17 +6,17 @@
 
 export interface FileFilteringOptions {
   respectGitIgnore: boolean;
-  respectMoliIgnore: boolean;
+  respectQwenIgnore: boolean;
 }
 
 // For memory files
 export const DEFAULT_MEMORY_FILE_FILTERING_OPTIONS: FileFilteringOptions = {
   respectGitIgnore: false,
-  respectMoliIgnore: true,
+  respectQwenIgnore: true,
 };
 
 // For all other files
 export const DEFAULT_FILE_FILTERING_OPTIONS: FileFilteringOptions = {
   respectGitIgnore: true,
-  respectMoliIgnore: true,
+  respectQwenIgnore: true,
 };

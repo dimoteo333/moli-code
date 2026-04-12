@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -69,9 +69,7 @@ function getCurrentModuleDir(): string {
 function findSdkPackageRoot(): string | null {
   try {
     const require = createRequire(import.meta.url);
-    const packageJsonPath = require.resolve(
-      '@dobby/moli-code-sdk/package.json',
-    );
+    const packageJsonPath = require.resolve('@moli-code/sdk/package.json');
     const packageRoot = path.dirname(packageJsonPath);
     const cliPath = path.join(packageRoot, 'dist', 'cli', 'cli.js');
     if (fs.existsSync(cliPath)) {
@@ -95,7 +93,7 @@ function findSdkPackageRoot(): string | null {
           const packageJson = JSON.parse(
             fs.readFileSync(packageJsonPath, 'utf-8'),
           );
-          if (packageJson.name === '@dobby/moli-code-sdk') {
+          if (packageJson.name === '@moli-code/sdk') {
             return dir;
           }
           if (!bestMatch) {
@@ -213,11 +211,11 @@ export function findBundledCliPath(): string {
 
   const candidates = getBundledCliCandidatePaths();
   throw new Error(
-    'Bundled moli-code CLI not found. The CLI should be included in the SDK package.\n' +
+    'Bundled qwen CLI not found. The CLI should be included in the SDK package.\n' +
       'Searched locations:\n' +
       candidates.map((c) => `  - ${c}`).join('\n') +
       '\n\nIf you need to use a custom CLI, provide explicit path:\n' +
-      '  • query({ pathToMoliExecutable: "/path/to/cli.js" })',
+      '  • query({ pathToQwenExecutable: "/path/to/cli.js" })',
   );
 }
 

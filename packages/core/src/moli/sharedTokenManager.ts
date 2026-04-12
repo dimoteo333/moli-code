@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,22 +9,22 @@ import { promises as fs, unlinkSync } from 'node:fs';
 import * as os from 'os';
 import { randomUUID } from 'node:crypto';
 
-import type { IMoliOAuth2Client } from './moliOAuth2.js';
+import type { IQwenOAuth2Client } from './qwenOAuth2.js';
 import {
-  type MoliCredentials,
+  type QwenCredentials,
   type TokenRefreshData,
   type ErrorData,
   isErrorResponse,
   CredentialsClearRequiredError,
-} from './moliOAuth2.js';
+} from './qwenOAuth2.js';
 import { createDebugLogger } from '../utils/debugLogger.js';
 
 const debugLogger = createDebugLogger('MOLI_OAUTH');
 
 // File System Configuration
 const MOLI_DIR = '.moli';
-const MOLI_CREDENTIAL_FILENAME = 'oauth_creds.json';
-const MOLI_LOCK_FILENAME = 'oauth_creds.lock';
+const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
+const QWEN_LOCK_FILENAME = 'oauth_creds.lock';
 
 // Token and Cache Configuration
 const TOKEN_REFRESH_BUFFER_MS = 30 * 1000; // 30 seconds
@@ -74,24 +74,24 @@ export class TokenManagerError extends Error {
  * Interface for the memory cache state
  */
 interface MemoryCache {
-  credentials: MoliCredentials | null;
+  credentials: QwenCredentials | null;
   fileModTime: number;
   lastCheck: number;
 }
 
 /**
- * Validates that the given data is a valid MoliCredentials object
+ * Validates that the given data is a valid QwenCredentials object
  *
  * @param data - The data to validate
  * @returns The validated credentials object
  * @throws Error if the data is invalid
  */
-function validateCredentials(data: unknown): MoliCredentials {
+function validateCredentials(data: unknown): QwenCredentials {
   if (!data || typeof data !== 'object') {
     throw new Error('Invalid credentials format');
   }
 
-  const creds = data as Partial<MoliCredentials>;
+  const creds = data as Partial<QwenCredentials>;
   const requiredFields = [
     'access_token',
     'refresh_token',
@@ -110,7 +110,7 @@ function validateCredentials(data: unknown): MoliCredentials {
     throw new Error('Invalid credentials: missing expiry_date');
   }
 
-  return creds as MoliCredentials;
+  return creds as QwenCredentials;
 }
 
 /**
@@ -131,7 +131,7 @@ export class SharedTokenManager {
   /**
    * Promise tracking any ongoing token refresh operation
    */
-  private refreshPromise: Promise<MoliCredentials> | null = null;
+  private refreshPromise: Promise<QwenCredentials> | null = null;
 
   /**
    * Promise tracking any ongoing file check operation to prevent concurrent checks
@@ -201,18 +201,18 @@ export class SharedTokenManager {
   /**
    * Get valid OAuth credentials, refreshing them if necessary
    *
-   * @param moliClient - The OAuth2 client instance
+   * @param qwenClient - The OAuth2 client instance
    * @param forceRefresh - If true, refresh token even if current one is still valid
    * @returns Promise resolving to valid credentials
    * @throws TokenManagerError if unable to obtain valid credentials
    */
   async getValidCredentials(
-    moliClient: IMoliOAuth2Client,
+    qwenClient: IQwenOAuth2Client,
     forceRefresh = false,
-  ): Promise<MoliCredentials> {
+  ): Promise<QwenCredentials> {
     try {
       // Check if credentials file has been updated by other sessions
-      await this.checkAndReloadIfNeeded(moliClient);
+      await this.checkAndReloadIfNeeded(qwenClient);
 
       // Return valid cached credentials if available (unless force refresh is requested)
       if (
@@ -229,7 +229,7 @@ export class SharedTokenManager {
       if (!currentRefreshPromise) {
         // Start new refresh operation with distributed locking
         currentRefreshPromise = this.performTokenRefresh(
-          moliClient,
+          qwenClient,
           forceRefresh,
         );
         this.refreshPromise = currentRefreshPromise;
@@ -263,7 +263,7 @@ export class SharedTokenManager {
    * Uses promise-based locking to prevent concurrent file checks
    */
   private async checkAndReloadIfNeeded(
-    moliClient?: IMoliOAuth2Client,
+    qwenClient?: IQwenOAuth2Client,
   ): Promise<void> {
     // If there's already an ongoing check, wait for it to complete
     if (this.checkPromise) {
@@ -284,7 +284,7 @@ export class SharedTokenManager {
     }
 
     // Start the check operation and store the promise
-    this.checkPromise = this.performFileCheck(moliClient, now);
+    this.checkPromise = this.performFileCheck(qwenClient, now);
 
     try {
       await this.checkPromise;
@@ -328,7 +328,7 @@ export class SharedTokenManager {
    * This is separated to enable proper promise-based synchronization
    */
   private async performFileCheck(
-    moliClient: IMoliOAuth2Client | undefined,
+    qwenClient: IQwenOAuth2Client | undefined,
     checkTime: number,
   ): Promise<void> {
     // Update lastCheck atomically at the start to prevent other calls from proceeding
@@ -346,7 +346,7 @@ export class SharedTokenManager {
 
       // Reload credentials if file has been modified since last cache
       if (fileModTime > this.memoryCache.fileModTime) {
-        await this.reloadCredentialsFromFile(moliClient);
+        await this.reloadCredentialsFromFile(qwenClient);
         // Update fileModTime only after successful reload
         this.memoryCache.fileModTime = fileModTime;
       }
@@ -376,7 +376,7 @@ export class SharedTokenManager {
   /**
    * Force a file check without time-based throttling (used during refresh operations)
    */
-  private async forceFileCheck(moliClient?: IMoliOAuth2Client): Promise<void> {
+  private async forceFileCheck(qwenClient?: IQwenOAuth2Client): Promise<void> {
     try {
       const filePath = this.getCredentialFilePath();
       const stats = await fs.stat(filePath);
@@ -384,7 +384,7 @@ export class SharedTokenManager {
 
       // Reload credentials if file has been modified since last cache
       if (fileModTime > this.memoryCache.fileModTime) {
-        await this.reloadCredentialsFromFile(moliClient);
+        await this.reloadCredentialsFromFile(qwenClient);
         // Update cache state atomically
         this.memoryCache.fileModTime = fileModTime;
         this.memoryCache.lastCheck = Date.now();
@@ -412,10 +412,10 @@ export class SharedTokenManager {
   }
 
   /**
-   * Load credentials from the file system into memory cache and sync with moliClient
+   * Load credentials from the file system into memory cache and sync with qwenClient
    */
   private async reloadCredentialsFromFile(
-    moliClient?: IMoliOAuth2Client,
+    qwenClient?: IQwenOAuth2Client,
   ): Promise<void> {
     try {
       const filePath = this.getCredentialFilePath();
@@ -429,10 +429,10 @@ export class SharedTokenManager {
       // Update memory cache first
       this.memoryCache.credentials = credentials;
 
-      // Sync with moliClient atomically - rollback on failure
+      // Sync with qwenClient atomically - rollback on failure
       try {
-        if (moliClient) {
-          moliClient.setCredentials(credentials);
+        if (qwenClient) {
+          qwenClient.setCredentials(credentials);
         }
       } catch (clientError) {
         // Rollback memory cache on client sync failure
@@ -457,21 +457,22 @@ export class SharedTokenManager {
   /**
    * Refresh the OAuth token using file locking to prevent concurrent refreshes
    *
-   * @param moliClient - The OAuth2 client instance
+   * @param qwenClient - The OAuth2 client instance
    * @param forceRefresh - If true, skip checking if token is already valid after getting lock
    * @returns Promise resolving to refreshed credentials
    * @throws TokenManagerError if refresh fails or lock cannot be acquired
    */
   private async performTokenRefresh(
-    moliClient: IMoliOAuth2Client,
+    qwenClient: IQwenOAuth2Client,
     forceRefresh = false,
-  ): Promise<MoliCredentials> {
+  ): Promise<QwenCredentials> {
     const startTime = Date.now();
     const lockPath = this.getLockFilePath();
+    let lockAcquired = false;
 
     try {
       // Check if we have a refresh token before attempting refresh
-      const currentCredentials = moliClient.getCredentials();
+      const currentCredentials = qwenClient.getCredentials();
       if (!currentCredentials.refresh_token) {
         // console.debug('create a NO_REFRESH_TOKEN error');
         throw new TokenManagerError(
@@ -482,6 +483,7 @@ export class SharedTokenManager {
 
       // Acquire distributed file lock
       await this.acquireLock(lockPath);
+      lockAcquired = true;
 
       // Check if the operation is taking too long
       const lockAcquisitionTime = Date.now() - startTime;
@@ -494,7 +496,7 @@ export class SharedTokenManager {
 
       // Double-check if another process already refreshed the token (unless force refresh is requested)
       // Skip the time-based throttling since we're already in a locked refresh operation
-      await this.forceFileCheck(moliClient);
+      await this.forceFileCheck(qwenClient);
 
       // Use refreshed credentials if they're now valid (unless force refresh is requested)
       if (
@@ -502,12 +504,12 @@ export class SharedTokenManager {
         this.memoryCache.credentials &&
         this.isTokenValid(this.memoryCache.credentials)
       ) {
-        // No need to call moliClient.setCredentials here as checkAndReloadIfNeeded already did it
+        // No need to call qwenClient.setCredentials here as checkAndReloadIfNeeded already did it
         return this.memoryCache.credentials;
       }
 
       // Perform the actual token refresh
-      const response = await moliClient.refreshAccessToken();
+      const response = await qwenClient.refreshAccessToken();
 
       // Check if the token refresh is taking too long
       const totalOperationTime = Date.now() - startTime;
@@ -536,7 +538,7 @@ export class SharedTokenManager {
       }
 
       // Create updated credentials object
-      const credentials: MoliCredentials = {
+      const credentials: QwenCredentials = {
         access_token: tokenData.access_token,
         token_type: tokenData.token_type,
         refresh_token:
@@ -547,7 +549,7 @@ export class SharedTokenManager {
 
       // Update memory cache and client credentials atomically
       this.memoryCache.credentials = credentials;
-      moliClient.setCredentials(credentials);
+      qwenClient.setCredentials(credentials);
 
       // Persist to file and update modification time
       await this.saveCredentialsToFile(credentials);
@@ -596,8 +598,10 @@ export class SharedTokenManager {
         error,
       );
     } finally {
-      // Always release the file lock
-      await this.releaseLock(lockPath);
+      // Only release the file lock if it was successfully acquired
+      if (lockAcquired) {
+        await this.releaseLock(lockPath);
+      }
     }
   }
 
@@ -607,7 +611,7 @@ export class SharedTokenManager {
    * @param credentials - The credentials to save
    */
   private async saveCredentialsToFile(
-    credentials: MoliCredentials,
+    credentials: QwenCredentials,
   ): Promise<void> {
     const filePath = this.getCredentialFilePath();
     const dirPath = path.dirname(filePath);
@@ -674,7 +678,7 @@ export class SharedTokenManager {
    * @param credentials - The credentials to validate
    * @returns true if token is valid and not expired, false otherwise
    */
-  private isTokenValid(credentials: MoliCredentials): boolean {
+  private isTokenValid(credentials: QwenCredentials): boolean {
     if (!credentials.expiry_date || !credentials.access_token) {
       return false;
     }
@@ -687,7 +691,7 @@ export class SharedTokenManager {
    * @returns The absolute path to the credentials file
    */
   private getCredentialFilePath(): string {
-    return path.join(os.homedir(), MOLI_DIR, MOLI_CREDENTIAL_FILENAME);
+    return path.join(os.homedir(), MOLI_DIR, QWEN_CREDENTIAL_FILENAME);
   }
 
   /**
@@ -696,7 +700,7 @@ export class SharedTokenManager {
    * @returns The absolute path to the lock file
    */
   private getLockFilePath(): string {
-    return path.join(os.homedir(), MOLI_DIR, MOLI_LOCK_FILENAME);
+    return path.join(os.homedir(), MOLI_DIR, QWEN_LOCK_FILENAME);
   }
 
   /**
@@ -797,7 +801,7 @@ export class SharedTokenManager {
    * @param lastCheck - Last check timestamp (optional, defaults to current time)
    */
   private updateCacheState(
-    credentials: MoliCredentials | null,
+    credentials: QwenCredentials | null,
     fileModTime: number,
     lastCheck?: number,
   ): void {
@@ -822,7 +826,7 @@ export class SharedTokenManager {
    *
    * @returns The currently cached credentials or null
    */
-  getCurrentCredentials(): MoliCredentials | null {
+  getCurrentCredentials(): QwenCredentials | null {
     return this.memoryCache.credentials;
   }
 

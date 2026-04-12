@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -13,11 +13,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import {
-  query,
-  isSDKSystemMessage,
-  type SDKMessage,
-} from '@dobby/moli-code-sdk';
+import { query, isSDKSystemMessage, type SDKMessage } from '@moli-code/sdk';
 import {
   SDKTestHelper,
   createSharedTestOptions,

@@ -8,9 +8,9 @@ From a user point of view, Moli Code’s “internationalization” spans multip
 
 | Capability / Setting     | What it controls                                                       | Where stored                 |
 | ------------------------ | ---------------------------------------------------------------------- | ---------------------------- |
-| `/language ui`           | Terminal UI text (menus, system messages, prompts)                     | `~/.moli/settings.json`      |
-| `/language output`       | Language the AI responds in (an output preference, not UI translation) | `~/.moli/output-language.md` |
-| Custom UI language packs | Overrides/extends built-in UI translations                             | `~/.moli/locales/*.js`       |
+| `/language ui`           | Terminal UI text (menus, system messages, prompts)                     | `~/.qwen/settings.json`      |
+| `/language output`       | Language the AI responds in (an output preference, not UI translation) | `~/.qwen/output-language.md` |
+| Custom UI language packs | Overrides/extends built-in UI translations                             | `~/.qwen/locales/*.js`       |
 
 ## UI Language
 
@@ -44,7 +44,7 @@ On first startup, Moli Code detects your system locale and sets the UI language 
 
 Detection priority:
 
-1. `MOLI_CODE_LANG` environment variable
+1. `QWEN_CODE_LANG` environment variable
 2. `LANG` environment variable
 3. System locale via JavaScript Intl API
 4. Default: English
@@ -55,7 +55,7 @@ The LLM output language controls what language the AI assistant responds in, reg
 
 ### How It Works
 
-The LLM output language is controlled by a rule file at `~/.moli/output-language.md`. This file is automatically included in the LLM's context during startup, instructing it to respond in the specified language.
+The LLM output language is controlled by a rule file at `~/.qwen/output-language.md`. This file is automatically included in the LLM's context during startup, instructing it to respond in the specified language.
 
 ### Auto-detection
 
@@ -87,7 +87,7 @@ Any language name works. The LLM will be instructed to respond in that language.
 ### File Location
 
 ```
-~/.moli/output-language.md
+~/.qwen/output-language.md
 ```
 
 ## Configuration
@@ -101,29 +101,29 @@ Any language name works. The LLM will be instructed to respond in that language.
 ### Via Environment Variable
 
 ```bash
-export MOLI_CODE_LANG=zh
+export QWEN_CODE_LANG=zh
 ```
 
 This influences auto-detection on first startup (if you haven’t set a UI language and no `output-language.md` file exists yet).
 
 ## Custom Language Packs
 
-For UI translations, you can create custom language packs in `~/.moli/locales/`:
+For UI translations, you can create custom language packs in `~/.qwen/locales/`:
 
-- Example: `~/.moli/locales/es.js` for Spanish
-- Example: `~/.moli/locales/fr.js` for French
+- Example: `~/.qwen/locales/es.js` for Spanish
+- Example: `~/.qwen/locales/fr.js` for French
 
 User directory takes precedence over built-in translations.
 
 > [!tip]
 >
 > Contributions are welcome! If you’d like to improve built-in translations or add new languages.
-> For a concrete example, see [PR #1238: feat(i18n): add Russian language support](https://github.com/MoliLM/moli-code/pull/1238).
+> For a concrete example, see [PR #1238: feat(i18n): add Russian language support](https://github.com/QwenLM/moli-code/pull/1238).
 
 ### Language Pack Format
 
 ```javascript
-// ~/.moli/locales/es.js
+// ~/.qwen/locales/es.js
 export default {
   Hello: 'Hola',
   Settings: 'Configuracion',

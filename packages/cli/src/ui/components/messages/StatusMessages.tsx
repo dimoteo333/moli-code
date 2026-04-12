@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -75,7 +75,7 @@ export const SuccessMessage: React.FC<StatusTextProps> = ({ text }) => (
 export const WarningMessage: React.FC<StatusTextProps> = ({ text }) => (
   <StatusMessage
     text={text}
-    prefix="⚠"
+    prefix="△"
     prefixColor={theme.status.warning}
     textColor={theme.status.warning}
   />

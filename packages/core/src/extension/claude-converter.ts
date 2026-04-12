@@ -16,6 +16,7 @@ import type {
   ExtensionInstallMetadata,
   MCPServerConfig,
 } from '../config/config.js';
+import type { HookEventName, HookDefinition } from '../hooks/types.js';
 import { cloneFromGit, downloadFromGitHubRelease } from './github.js';
 import { createHash } from 'node:crypto';
 import { copyDirectory } from './gemini-converter.js';
@@ -25,6 +26,7 @@ import {
 } from '../utils/yaml-parser.js';
 import { createDebugLogger } from '../utils/debugLogger.js';
 import { normalizeContent } from '../utils/textUtils.js';
+import { substituteHookVariables } from './variables.js';
 
 const debugLogger = createDebugLogger('CLAUDE_CONVERTER');
 
@@ -40,7 +42,7 @@ export interface ClaudePluginConfig {
   commands?: string | string[];
   agents?: string | string[];
   skills?: string | string[];
-  hooks?: string;
+  hooks?: string | { [K in HookEventName]?: HookDefinition[] };
   mcpServers?: string | Record<string, MCPServerConfig>;
   outputStyles?: string | string[];
   lspServers?: string | Record<string, unknown>;
@@ -161,55 +163,50 @@ export function convertClaudeAgentConfig(
   claudeAgent: ClaudeAgentConfig,
 ): Record<string, unknown> {
   // Base config with required fields
-  const moliAgent: Record<string, unknown> = {
+  const qwenAgent: Record<string, unknown> = {
     name: claudeAgent.name,
     description: claudeAgent.description,
   };
 
   if (claudeAgent.color) {
-    moliAgent['color'] = claudeAgent.color;
+    qwenAgent['color'] = claudeAgent.color;
   }
 
   // Convert system prompt if present
   if (claudeAgent.systemPrompt) {
-    moliAgent['systemPrompt'] = claudeAgent.systemPrompt;
+    qwenAgent['systemPrompt'] = claudeAgent.systemPrompt;
   }
 
   // Convert tools using claudeBuildInToolsTransform
   if (claudeAgent.tools && claudeAgent.tools.length > 0) {
-    moliAgent['tools'] = claudeBuildInToolsTransform(claudeAgent.tools);
+    qwenAgent['tools'] = claudeBuildInToolsTransform(claudeAgent.tools);
   }
 
-  // Convert model to modelConfig
+  // Preserve Claude's top-level model selector.
   if (claudeAgent.model) {
-    // Map Claude model names to Moli model config
-    // Claude uses: sonnet, opus, haiku, inherit
-    // We preserve the model name for now, the actual mapping will be handled at runtime
-    moliAgent['modelConfig'] = {
-      model: claudeAgent.model === 'inherit' ? undefined : claudeAgent.model,
-    };
+    qwenAgent['model'] = claudeAgent.model;
   }
 
   // Preserve unsupported fields as-is for potential future compatibility
   // These fields are not supported by Moli Code SubagentConfig but we keep them
   if (claudeAgent.permissionMode) {
-    moliAgent['permissionMode'] = claudeAgent.permissionMode;
+    qwenAgent['permissionMode'] = claudeAgent.permissionMode;
   }
   if (claudeAgent.hooks) {
-    moliAgent['hooks'] = claudeAgent.hooks;
+    qwenAgent['hooks'] = claudeAgent.hooks;
   }
   if (claudeAgent.skills && claudeAgent.skills.length > 0) {
-    moliAgent['skills'] = claudeAgent.skills;
+    qwenAgent['skills'] = claudeAgent.skills;
   }
   if (claudeAgent.disallowedTools && claudeAgent.disallowedTools.length > 0) {
-    moliAgent['disallowedTools'] = claudeAgent.disallowedTools;
+    qwenAgent['disallowedTools'] = claudeAgent.disallowedTools;
   }
 
-  return moliAgent;
+  return qwenAgent;
 }
 
 /**
- * Converts all agent files in a directory from Claude format to Moli format.
+ * Converts all agent files in a directory from Claude format to Qwen format.
  * Parses the YAML frontmatter, converts the configuration, and writes back.
  * @param agentsDir Directory containing agent markdown files
  */
@@ -256,12 +253,12 @@ async function convertAgentFiles(agentsDir: string): Promise<void> {
         systemPrompt: body.trim(),
       };
 
-      // Convert to Moli format
-      const moliAgent = convertClaudeAgentConfig(claudeAgent);
+      // Convert to Qwen format
+      const qwenAgent = convertClaudeAgentConfig(claudeAgent);
 
       // Build new frontmatter (excluding systemPrompt as it goes in body)
       const newFrontmatter: Record<string, unknown> = {};
-      for (const [key, value] of Object.entries(moliAgent)) {
+      for (const [key, value] of Object.entries(qwenAgent)) {
         if (key !== 'systemPrompt' && value !== undefined) {
           newFrontmatter[key] = value;
         }
@@ -269,7 +266,7 @@ async function convertAgentFiles(agentsDir: string): Promise<void> {
 
       // Write converted content back
       const newYaml = stringifyYaml(newFrontmatter);
-      const systemPrompt = (moliAgent['systemPrompt'] as string) || body.trim();
+      const systemPrompt = (qwenAgent['systemPrompt'] as string) || body.trim();
       const newContent = `---
 ${newYaml}
 ---
@@ -289,9 +286,9 @@ ${systemPrompt}
 /**
  * Converts a Claude plugin config to Moli Code format.
  * @param claudeConfig Claude plugin configuration
- * @returns Moli ExtensionConfig
+ * @returns Qwen ExtensionConfig
  */
-export function convertClaudeToMoliConfig(
+export function convertClaudeToQwenConfig(
   claudeConfig: ClaudePluginConfig,
 ): ExtensionConfig {
   // Validate required fields
@@ -312,12 +309,21 @@ export function convertClaudeToMoliConfig(
     }
   }
 
-  // Warn about unsupported fields
+  // Parse hooks
+  let hooks: { [K in HookEventName]?: HookDefinition[] } | undefined;
   if (claudeConfig.hooks) {
-    debugLogger.warn(
-      `[Claude Converter] Hooks are not yet supported in ${claudeConfig.name}`,
-    );
+    if (typeof claudeConfig.hooks === 'string') {
+      // If it's a string, it's a file path, we handle it later in the conversion process
+      // hooks will be loaded from file path in the convertClaudePluginPackage function
+    } else {
+      // Assume it's already in the correct format
+      hooks = claudeConfig.hooks as { [K in HookEventName]?: HookDefinition[] };
+    }
+  } else {
+    hooks = undefined;
   }
+
+  // Warn about unsupported fields
   if (claudeConfig.outputStyles) {
     debugLogger.warn(
       `[Claude Converter] Output styles are not yet supported in ${claudeConfig.name}`,
@@ -329,13 +335,14 @@ export function convertClaudeToMoliConfig(
     version: claudeConfig.version,
     mcpServers,
     lspServers: claudeConfig.lspServers,
+    hooks, // Assign the properly typed hooks variable
   };
 }
 
 /**
  * Converts a complete Claude plugin package to Moli Code format.
  * Creates a new temporary directory with:
- * 1. Converted moli-extension.json
+ * 1. Converted qwen-extension.json
  * 2. Commands, skills, and agents collected to respective folders
  * 3. MCP servers resolved from JSON files if needed
  * 4. All other files preserved
@@ -461,23 +468,58 @@ export async function convertClaudePluginPackage(
       // Otherwise, keep the existing folder from pluginSource (default behavior)
     }
 
-    // Step 9.1: Convert collected agent files from Claude format to Moli format
+    // Step 7: Handle hooks from file paths if needed
+    if (mergedConfig.hooks && typeof mergedConfig.hooks === 'string') {
+      const hooksPath = path.isAbsolute(mergedConfig.hooks)
+        ? mergedConfig.hooks
+        : path.join(pluginSource, mergedConfig.hooks);
+
+      if (fs.existsSync(hooksPath)) {
+        try {
+          const hooksContent = fs.readFileSync(hooksPath, 'utf-8');
+          const parsedHooks = JSON.parse(hooksContent);
+
+          // Check if the file has a top-level "hooks" property (like Claude plugins use)
+          // or if the entire file content is the hooks object
+          let hooksData;
+          if (parsedHooks.hooks && typeof parsedHooks.hooks === 'object') {
+            hooksData = parsedHooks.hooks as {
+              [K in HookEventName]?: HookDefinition[];
+            };
+          } else {
+            // Assume the entire file content is the hooks object
+            hooksData = parsedHooks as {
+              [K in HookEventName]?: HookDefinition[];
+            };
+          }
+
+          // Process the hooks to substitute variables like ${CLAUDE_PLUGIN_ROOT}
+          mergedConfig.hooks = substituteHookVariables(hooksData, pluginSource);
+        } catch (error) {
+          debugLogger.warn(
+            `Failed to parse hooks file ${hooksPath}: ${error instanceof Error ? error.message : String(error)}`,
+          );
+        }
+      }
+    }
+
+    // Step 9: Convert collected agent files from Claude format to Qwen format
     const agentsDestDir = path.join(tmpDir, 'agents');
     await convertAgentFiles(agentsDestDir);
 
-    // Step 10: Convert to Moli format config
-    const moliConfig = convertClaudeToMoliConfig(mergedConfig);
+    // Step 10: Convert to Qwen format config
+    const qwenConfig = convertClaudeToQwenConfig(mergedConfig);
 
-    // Step 11: Write moli-extension.json
-    const moliConfigPath = path.join(tmpDir, 'moli-extension.json');
+    // Step 11: Write qwen-extension.json
+    const qwenConfigPath = path.join(tmpDir, 'qwen-extension.json');
     fs.writeFileSync(
-      moliConfigPath,
-      JSON.stringify(moliConfig, null, 2),
+      qwenConfigPath,
+      JSON.stringify(qwenConfig, null, 2),
       'utf-8',
     );
 
     return {
-      config: moliConfig,
+      config: qwenConfig,
       convertedDir: tmpDir,
     };
   } catch (error) {

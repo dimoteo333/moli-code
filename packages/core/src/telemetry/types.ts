@@ -20,7 +20,7 @@ export { ToolCallDecision };
 import type { OutputFormat } from '../output/types.js';
 import { ToolNames } from '../tools/tool-names.js';
 import type { SkillTool } from '../tools/skill.js';
-import type { TaskTool } from '../tools/task.js';
+import type { AgentTool } from '../tools/agent.js';
 
 export interface BaseTelemetryEvent {
   'event.name': string;
@@ -63,10 +63,11 @@ export class StartSessionEvent implements BaseTelemetryEvent {
     this.model = config.getModel();
     this.sandbox_enabled =
       typeof config.getSandbox() === 'string' || !!config.getSandbox();
-    const coreTools = (config.getCoreTools() ?? []).join(',');
-    if (coreTools) {
-      this.core_tools_enabled = coreTools;
-    }
+    this.core_tools_enabled = (
+      config.getPermissionManager?.()?.getAllowRawStrings() ??
+      config.getCoreTools() ??
+      []
+    ).join(',');
     this.approval_mode = config.getApprovalMode();
     this.debug_enabled = config.getDebugMode();
     this.truncate_tool_output_threshold =
@@ -107,10 +108,10 @@ export class StartSessionEvent implements BaseTelemetryEvent {
         this.skills = skillNames.join(',');
       }
 
-      const taskTool = toolRegistry.getTool(ToolNames.TASK) as
-        | TaskTool
+      const agentTool = toolRegistry.getTool(ToolNames.AGENT) as
+        | AgentTool
         | undefined;
-      const subagentNames = taskTool?.getAvailableSubagentNames?.();
+      const subagentNames = agentTool?.getAvailableSubagentNames?.();
       if (subagentNames && subagentNames.length > 0) {
         this.subagents = subagentNames.join(',');
       }
@@ -254,33 +255,36 @@ export class ApiErrorEvent implements BaseTelemetryEvent {
   'event.timestamp': string; // ISO 8601
   response_id?: string;
   model: string;
-  error: string;
-  error_type?: string;
-  status_code?: number | string;
   duration_ms: number;
   prompt_id: string;
   auth_type?: string;
+  // Human-readable error message (e.g. "Request failed with status 429")
+  error_message: string;
+  // Error class or category (e.g. "RateLimitError", "invalid_request_error")
+  error_type?: string;
+  // HTTP status code from the API response (e.g. 429, 500)
+  status_code?: number | string;
 
-  constructor(
-    response_id: string | undefined,
-    model: string,
-    error: string,
-    duration_ms: number,
-    prompt_id: string,
-    auth_type?: string,
-    error_type?: string,
-    status_code?: number | string,
-  ) {
+  constructor(opts: {
+    responseId?: string;
+    model: string;
+    durationMs: number;
+    promptId: string;
+    authType?: string;
+    errorMessage: string;
+    errorType?: string;
+    statusCode?: number | string;
+  }) {
     this['event.name'] = 'api_error';
     this['event.timestamp'] = new Date().toISOString();
-    this.response_id = response_id;
-    this.model = model;
-    this.error = error;
-    this.error_type = error_type;
-    this.status_code = status_code;
-    this.duration_ms = duration_ms;
-    this.prompt_id = prompt_id;
-    this.auth_type = auth_type;
+    this.response_id = opts.responseId;
+    this.model = opts.model;
+    this.duration_ms = opts.durationMs;
+    this.prompt_id = opts.promptId;
+    this.auth_type = opts.authType;
+    this.error_message = opts.errorMessage;
+    this.error_type = opts.errorType;
+    this.status_code = opts.statusCode;
   }
 }
 
@@ -779,18 +783,13 @@ export class AuthEvent implements BaseTelemetryEvent {
   'event.name': 'auth';
   'event.timestamp': string;
   auth_type: AuthType;
-  action_type: 'auto' | 'manual' | 'coding-plan' | 'molimate' | 'local-config';
+  action_type: 'auto' | 'manual' | 'coding-plan';
   status: 'success' | 'error' | 'cancelled';
   error_message?: string;
 
   constructor(
     auth_type: AuthType,
-    action_type:
-      | 'auto'
-      | 'manual'
-      | 'coding-plan'
-      | 'molimate'
-      | 'local-config',
+    action_type: 'auto' | 'manual' | 'coding-plan',
     status: 'success' | 'error' | 'cancelled',
     error_message?: string,
   ) {
@@ -800,6 +799,53 @@ export class AuthEvent implements BaseTelemetryEvent {
     this.action_type = action_type;
     this.status = status;
     this.error_message = error_message;
+  }
+}
+
+/**
+ * Hook call telemetry event
+ */
+export class HookCallEvent implements BaseTelemetryEvent {
+  'event.name': string;
+  'event.timestamp': string;
+  hook_event_name: string;
+  hook_type: 'command';
+  hook_name: string;
+  hook_input: Record<string, unknown>;
+  hook_output?: Record<string, unknown>;
+  exit_code?: number;
+  stdout?: string;
+  stderr?: string;
+  duration_ms: number;
+  success: boolean;
+  error?: string;
+
+  constructor(
+    hookEventName: string,
+    hookType: 'command',
+    hookName: string,
+    hookInput: Record<string, unknown>,
+    durationMs: number,
+    success: boolean,
+    hookOutput?: Record<string, unknown>,
+    exitCode?: number,
+    stdout?: string,
+    stderr?: string,
+    error?: string,
+  ) {
+    this['event.name'] = 'hook_call';
+    this['event.timestamp'] = new Date().toISOString();
+    this.hook_event_name = hookEventName;
+    this.hook_type = hookType;
+    this.hook_name = hookName;
+    this.hook_input = hookInput;
+    this.hook_output = hookOutput;
+    this.exit_code = exitCode;
+    this.stdout = stdout;
+    this.stderr = stderr;
+    this.duration_ms = durationMs;
+    this.success = success;
+    this.error = error;
   }
 }
 
@@ -878,8 +924,130 @@ export type TelemetryEvent =
   | ToolOutputTruncatedEvent
   | ModelSlashCommandEvent
   | AuthEvent
+  | HookCallEvent
   | SkillLaunchEvent
-  | UserFeedbackEvent;
+  | UserFeedbackEvent
+  | ArenaSessionStartedEvent
+  | ArenaAgentCompletedEvent
+  | ArenaSessionEndedEvent;
+
+// ─── Arena Telemetry Events ────────────────────────────────────
+
+export interface ArenaSessionStartedEvent extends BaseTelemetryEvent {
+  'event.name': 'arena_session_started';
+  arena_session_id: string;
+  model_ids: string[];
+  task_length: number;
+}
+
+export function makeArenaSessionStartedEvent({
+  arena_session_id,
+  model_ids,
+  task_length,
+}: Omit<ArenaSessionStartedEvent, CommonFields>): ArenaSessionStartedEvent {
+  return {
+    'event.name': 'arena_session_started',
+    'event.timestamp': new Date().toISOString(),
+    arena_session_id,
+    model_ids,
+    task_length,
+  };
+}
+
+export type ArenaAgentCompletedStatus = 'completed' | 'failed' | 'cancelled';
+
+export interface ArenaAgentCompletedEvent extends BaseTelemetryEvent {
+  'event.name': 'arena_agent_completed';
+  arena_session_id: string;
+  agent_session_id: string;
+  agent_model_id: string;
+  status: ArenaAgentCompletedStatus;
+  duration_ms: number;
+  rounds: number;
+  total_tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+  tool_calls: number;
+  successful_tool_calls: number;
+  failed_tool_calls: number;
+}
+
+export function makeArenaAgentCompletedEvent({
+  arena_session_id,
+  agent_session_id,
+  agent_model_id,
+  status,
+  duration_ms,
+  rounds,
+  total_tokens,
+  input_tokens,
+  output_tokens,
+  tool_calls,
+  successful_tool_calls,
+  failed_tool_calls,
+}: Omit<ArenaAgentCompletedEvent, CommonFields>): ArenaAgentCompletedEvent {
+  return {
+    'event.name': 'arena_agent_completed',
+    'event.timestamp': new Date().toISOString(),
+    arena_session_id,
+    agent_session_id,
+    agent_model_id,
+    status,
+    duration_ms,
+    rounds,
+    total_tokens,
+    input_tokens,
+    output_tokens,
+    tool_calls,
+    successful_tool_calls,
+    failed_tool_calls,
+  };
+}
+
+export type ArenaSessionEndedStatus =
+  | 'selected'
+  | 'discarded'
+  | 'failed'
+  | 'cancelled';
+
+export interface ArenaSessionEndedEvent extends BaseTelemetryEvent {
+  'event.name': 'arena_session_ended';
+  arena_session_id: string;
+  status: ArenaSessionEndedStatus;
+  duration_ms: number;
+  display_backend?: string;
+  agent_count: number;
+  completed_agents: number;
+  failed_agents: number;
+  cancelled_agents: number;
+  winner_model_id?: string;
+}
+
+export function makeArenaSessionEndedEvent({
+  arena_session_id,
+  status,
+  duration_ms,
+  display_backend,
+  agent_count,
+  completed_agents,
+  failed_agents,
+  cancelled_agents,
+  winner_model_id,
+}: Omit<ArenaSessionEndedEvent, CommonFields>): ArenaSessionEndedEvent {
+  return {
+    'event.name': 'arena_session_ended',
+    'event.timestamp': new Date().toISOString(),
+    arena_session_id,
+    status,
+    duration_ms,
+    display_backend,
+    agent_count,
+    completed_agents,
+    failed_agents,
+    cancelled_agents,
+    winner_model_id,
+  };
+}
 
 export class ExtensionDisableEvent implements BaseTelemetryEvent {
   'event.name': 'extension_disable';
@@ -892,5 +1060,78 @@ export class ExtensionDisableEvent implements BaseTelemetryEvent {
     this['event.timestamp'] = new Date().toISOString();
     this.extension_name = extension_name;
     this.setting_scope = settingScope;
+  }
+}
+
+export class PromptSuggestionEvent implements BaseTelemetryEvent {
+  'event.name': 'moli-code.prompt_suggestion';
+  'event.timestamp': string;
+  outcome: 'accepted' | 'ignored' | 'suppressed';
+  prompt_id?: string;
+  accept_method?: 'tab' | 'enter' | 'right';
+  time_to_accept_ms?: number;
+  time_to_ignore_ms?: number;
+  time_to_first_keystroke_ms?: number;
+  suggestion_length?: number;
+  similarity?: number;
+  was_focused_when_shown?: boolean;
+  reason?: string;
+
+  constructor(params: {
+    outcome: 'accepted' | 'ignored' | 'suppressed';
+    prompt_id?: string;
+    accept_method?: 'tab' | 'enter' | 'right';
+    time_to_accept_ms?: number;
+    time_to_ignore_ms?: number;
+    time_to_first_keystroke_ms?: number;
+    suggestion_length?: number;
+    similarity?: number;
+    was_focused_when_shown?: boolean;
+    reason?: string;
+  }) {
+    this['event.name'] = 'moli-code.prompt_suggestion';
+    this['event.timestamp'] = new Date().toISOString();
+    this.outcome = params.outcome;
+    this.prompt_id = params.prompt_id ?? 'user_intent';
+    this.accept_method = params.accept_method;
+    this.time_to_accept_ms = params.time_to_accept_ms;
+    this.time_to_ignore_ms = params.time_to_ignore_ms;
+    this.time_to_first_keystroke_ms = params.time_to_first_keystroke_ms;
+    this.suggestion_length = params.suggestion_length;
+    this.similarity = params.similarity;
+    this.was_focused_when_shown = params.was_focused_when_shown;
+    this.reason = params.reason;
+  }
+}
+
+export class SpeculationEvent implements BaseTelemetryEvent {
+  'event.name': 'moli-code.speculation';
+  'event.timestamp': string;
+  outcome: 'accepted' | 'aborted' | 'failed';
+  turns_used: number;
+  files_written: number;
+  tool_use_count: number;
+  duration_ms: number;
+  boundary_type?: string;
+  had_pipelined_suggestion: boolean;
+
+  constructor(params: {
+    outcome: 'accepted' | 'aborted' | 'failed';
+    turns_used: number;
+    files_written: number;
+    tool_use_count: number;
+    duration_ms: number;
+    boundary_type?: string;
+    had_pipelined_suggestion: boolean;
+  }) {
+    this['event.name'] = 'moli-code.speculation';
+    this['event.timestamp'] = new Date().toISOString();
+    this.outcome = params.outcome;
+    this.turns_used = params.turns_used;
+    this.files_written = params.files_written;
+    this.tool_use_count = params.tool_use_count;
+    this.duration_ms = params.duration_ms;
+    this.boundary_type = params.boundary_type;
+    this.had_pipelined_suggestion = params.had_pipelined_suggestion;
   }
 }

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Adapter for JSONL format messages (used by ChatViewer)
@@ -21,7 +21,7 @@ function extractContent(message?: {
 }): string {
   if (!message) return '';
 
-  // Moli format: parts array
+  // Qwen format: parts array
   if (message.parts?.length) {
     return message.parts.map((p) => p.text).join('');
   }

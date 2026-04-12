@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -20,7 +20,7 @@
 
 import { AuthType } from '../core/contentGenerator.js';
 import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
-import { DEFAULT_MOLI_MODEL } from '../config/models.js';
+import { DEFAULT_QWEN_MODEL } from '../config/models.js';
 import {
   resolveField,
   resolveOptionalField,
@@ -123,9 +123,9 @@ export function resolveModelConfig(
   const warnings: string[] = [];
   const sources: ConfigSources = {};
 
-  // Special handling for Moli OAuth
+  // Special handling for Qwen OAuth
   if (authType === AuthType.MOLI_OAUTH) {
-    return resolveMoliOAuthConfig(input, warnings);
+    return resolveQwenOAuthConfig(input, warnings);
   }
 
   // Get auth-specific env var mappings.
@@ -270,17 +270,17 @@ export function resolveModelConfig(
 }
 
 /**
- * Special resolver for Moli OAuth authentication.
- * Moli OAuth has fixed model options and uses dynamic tokens.
+ * Special resolver for Qwen OAuth authentication.
+ * Qwen OAuth has fixed model options and uses dynamic tokens.
  */
-function resolveMoliOAuthConfig(
+function resolveQwenOAuthConfig(
   input: ModelConfigSourcesInput,
   warnings: string[],
 ): ModelConfigResolutionResult {
   const { cli, settings, proxy, modelProvider } = input;
   const sources: ConfigSources = {};
 
-  // Moli OAuth only allows specific models
+  // Qwen OAuth only allows specific models
   const allowedModels = new Set<string>(MOLI_OAUTH_ALLOWED_MODELS);
 
   // Determine requested model
@@ -301,15 +301,15 @@ function resolveMoliOAuthConfig(
         ? ` Note: vision-model has been removed since coder-model now supports vision capabilities.`
         : '';
       warnings.push(
-        `Warning: Unsupported Moli OAuth model '${requestedModel}', falling back to '${DEFAULT_MOLI_MODEL}'.${extraMessage}`,
+        `Warning: Unsupported Qwen OAuth model '${requestedModel}', falling back to '${DEFAULT_QWEN_MODEL}'.${extraMessage}`,
       );
     }
-    resolvedModel = DEFAULT_MOLI_MODEL;
-    modelSource = defaultSource(`fallback to '${DEFAULT_MOLI_MODEL}'`);
+    resolvedModel = DEFAULT_QWEN_MODEL;
+    modelSource = defaultSource(`fallback to '${DEFAULT_QWEN_MODEL}'`);
   }
 
   sources['model'] = modelSource;
-  sources['apiKey'] = computedSource('Moli OAuth dynamic token');
+  sources['apiKey'] = computedSource('Qwen OAuth dynamic token');
   sources['authType'] = computedSource('provided by caller');
 
   if (proxy) {

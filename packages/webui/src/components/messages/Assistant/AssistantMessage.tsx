@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -66,7 +66,7 @@ export const AssistantMessage: FC<AssistantMessageProps> = ({
 
   return (
     <div
-      className={`moli-message message-item assistant-message-container ${getStatusClass()}`}
+      className={`qwen-message message-item assistant-message-container ${getStatusClass()}`}
       data-first={isFirst}
       data-last={isLast}
       style={{

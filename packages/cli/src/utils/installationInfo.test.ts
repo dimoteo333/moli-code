@@ -12,7 +12,8 @@ import * as childProcess from 'node:child_process';
 import { isGitRepository } from '@dobby/moli-code-core';
 
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual =
+    await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     isGitRepository: vi.fn(),
@@ -203,7 +204,9 @@ describe('getInstallationInfo', () => {
     const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.YARN);
     expect(info.isGlobal).toBe(true);
-    expect(info.updateCommand).toBe('yarn global add @dobby/moli-code@latest');
+    expect(info.updateCommand).toBe(
+      'yarn global add @dobby/moli-code@latest',
+    );
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
     // isAutoUpdateEnabled = false -> "Please run..."
@@ -310,7 +313,9 @@ describe('getInstallationInfo', () => {
     const info = getInstallationInfo(projectRoot, true);
     expect(info.packageManager).toBe(PackageManager.NPM);
     expect(info.isGlobal).toBe(true);
-    expect(info.updateCommand).toBe('npm install -g @dobby/moli-code@latest');
+    expect(info.updateCommand).toBe(
+      'npm install -g @dobby/moli-code@latest',
+    );
     expect(info.updateMessage).toContain('Attempting to automatically update');
 
     // isAutoUpdateEnabled = false -> "Please run..."

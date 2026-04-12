@@ -5,26 +5,26 @@
  */
 
 import type { GitIgnoreFilter } from '../utils/gitIgnoreParser.js';
-import type { MoliIgnoreFilter } from '../utils/moliIgnoreParser.js';
+import type { QwenIgnoreFilter } from '../utils/qwenIgnoreParser.js';
 import { GitIgnoreParser } from '../utils/gitIgnoreParser.js';
-import { MoliIgnoreParser } from '../utils/moliIgnoreParser.js';
+import { QwenIgnoreParser } from '../utils/qwenIgnoreParser.js';
 import { isGitRepository } from '../utils/gitUtils.js';
 import * as path from 'node:path';
 
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;
-  respectMoliIgnore?: boolean;
+  respectQwenIgnore?: boolean;
 }
 
 export interface FilterReport {
   filteredPaths: string[];
   gitIgnoredCount: number;
-  moliIgnoredCount: number;
+  qwenIgnoredCount: number;
 }
 
 export class FileDiscoveryService {
   private gitIgnoreFilter: GitIgnoreFilter | null = null;
-  private moliIgnoreFilter: MoliIgnoreFilter | null = null;
+  private moliIgnoreFilter: QwenIgnoreFilter | null = null;
   private projectRoot: string;
 
   constructor(projectRoot: string) {
@@ -32,7 +32,7 @@ export class FileDiscoveryService {
     if (isGitRepository(this.projectRoot)) {
       this.gitIgnoreFilter = new GitIgnoreParser(this.projectRoot);
     }
-    this.moliIgnoreFilter = new MoliIgnoreParser(this.projectRoot);
+    this.moliIgnoreFilter = new QwenIgnoreParser(this.projectRoot);
   }
 
   /**
@@ -42,14 +42,14 @@ export class FileDiscoveryService {
     filePaths: string[],
     options: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectMoliIgnore: true,
+      respectQwenIgnore: true,
     },
   ): string[] {
     return filePaths.filter((filePath) => {
       if (options.respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
         return false;
       }
-      if (options.respectMoliIgnore && this.shouldMoliIgnoreFile(filePath)) {
+      if (options.respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
         return false;
       }
       return true;
@@ -64,12 +64,12 @@ export class FileDiscoveryService {
     filePaths: string[],
     opts: FilterFilesOptions = {
       respectGitIgnore: true,
-      respectMoliIgnore: true,
+      respectQwenIgnore: true,
     },
   ): FilterReport {
     const filteredPaths: string[] = [];
     let gitIgnoredCount = 0;
-    let moliIgnoredCount = 0;
+    let qwenIgnoredCount = 0;
 
     for (const filePath of filePaths) {
       if (opts.respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
@@ -77,8 +77,8 @@ export class FileDiscoveryService {
         continue;
       }
 
-      if (opts.respectMoliIgnore && this.shouldMoliIgnoreFile(filePath)) {
-        moliIgnoredCount++;
+      if (opts.respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
+        qwenIgnoredCount++;
         continue;
       }
 
@@ -88,7 +88,7 @@ export class FileDiscoveryService {
     return {
       filteredPaths,
       gitIgnoredCount,
-      moliIgnoredCount,
+      qwenIgnoredCount,
     };
   }
 
@@ -103,9 +103,9 @@ export class FileDiscoveryService {
   }
 
   /**
-   * Checks if a single file should be moli-ignored
+   * Checks if a single file should be qwen-ignored
    */
-  shouldMoliIgnoreFile(filePath: string): boolean {
+  shouldQwenIgnoreFile(filePath: string): boolean {
     if (this.moliIgnoreFilter) {
       return this.moliIgnoreFilter.isIgnored(filePath);
     }
@@ -121,13 +121,13 @@ export class FileDiscoveryService {
   ): boolean {
     const {
       respectGitIgnore = true,
-      respectMoliIgnore: respectMoliIgnore = true,
+      respectQwenIgnore: respectQwenIgnore = true,
     } = options;
 
     if (respectGitIgnore && this.shouldGitIgnoreFile(filePath)) {
       return true;
     }
-    if (respectMoliIgnore && this.shouldMoliIgnoreFile(filePath)) {
+    if (respectQwenIgnore && this.shouldQwenIgnoreFile(filePath)) {
       return true;
     }
     return false;
@@ -136,7 +136,7 @@ export class FileDiscoveryService {
   /**
    * Returns loaded patterns from .moliignore
    */
-  getMoliIgnorePatterns(): string[] {
+  getQwenIgnorePatterns(): string[] {
     return this.moliIgnoreFilter?.getPatterns() ?? [];
   }
 }

@@ -14,9 +14,9 @@ Use `save_memory` to save and recall information across your Moli Code sessions.
 
 ## How to use `save_memory` with Moli Code
 
-The tool appends the provided `fact` to your context file in the user's home directory (`~/.moli/MOLI.md` by default). This filename can be configured via `contextFileName`.
+The tool appends the provided `fact` to your context file in the user's home directory (`~/.qwen/QWEN.md` by default). This filename can be configured via `contextFileName`.
 
-Once added, the facts are stored under a `## Moli Added Memories` section. This file is loaded as context in subsequent sessions, allowing the CLI to recall the saved information.
+Once added, the facts are stored under a `## Qwen Added Memories` section. This file is loaded as context in subsequent sessions, allowing the CLI to recall the saved information.
 
 Usage:
 

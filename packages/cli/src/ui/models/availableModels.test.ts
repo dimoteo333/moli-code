@@ -1,35 +1,35 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   getAvailableModelsForAuthType,
-  getFilteredMoliModels,
+  getFilteredQwenModels,
   getOpenAIAvailableModelFromEnv,
 } from './availableModels.js';
 import { AuthType, type Config } from '@dobby/moli-code-core';
 
 describe('availableModels', () => {
-  describe('Moli models', () => {
-    const moliModels = getFilteredMoliModels();
+  describe('Qwen models', () => {
+    const qwenModels = getFilteredQwenModels();
 
     it('should include only coder-model', () => {
-      expect(moliModels.length).toBe(1);
-      expect(moliModels[0].id).toBe('coder-model');
+      expect(qwenModels.length).toBe(1);
+      expect(qwenModels[0].id).toBe('coder-model');
     });
 
     it('should have coder-model with vision capability', () => {
-      const coderModel = moliModels[0];
+      const coderModel = qwenModels[0];
       expect(coderModel.isVision).toBe(true);
     });
   });
 
-  describe('getFilteredMoliModels', () => {
+  describe('getFilteredQwenModels', () => {
     it('should return coder-model with vision capability', () => {
-      const models = getFilteredMoliModels();
+      const models = getFilteredQwenModels();
       expect(models.length).toBe(1);
       expect(models[0].id).toBe('coder-model');
       expect(models[0].isVision).toBe(true);
@@ -77,7 +77,7 @@ describe('availableModels', () => {
       process.env = originalEnv;
     });
 
-    it('should return hard-coded moli models for moli-oauth', () => {
+    it('should return hard-coded qwen models for moli-oauth', () => {
       const models = getAvailableModelsForAuthType(AuthType.MOLI_OAUTH);
       expect(models.length).toBe(1);
       expect(models[0].id).toBe('coder-model');

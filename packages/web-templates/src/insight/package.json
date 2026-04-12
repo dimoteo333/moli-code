@@ -1,5 +1,5 @@
 {
-  "name": "@dobby/cli-insight",
+  "name": "@dobby/moli-code-cli-insight",
   "private": true,
   "type": "module",
   "scripts": {

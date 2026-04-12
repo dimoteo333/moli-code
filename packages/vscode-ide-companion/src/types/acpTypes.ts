@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -9,13 +9,13 @@ import type { Usage } from '@agentclientprotocol/sdk';
 import type { ApprovalModeValue } from './approvalModeValueTypes.js';
 
 // ---------------------------------------------------------------------------
-// Private / Moli-specific types (not part of ACP spec)
+// Private / Qwen-specific types (not part of ACP spec)
 // ---------------------------------------------------------------------------
 
 export const authMethod = 'moli-oauth';
 
 /**
- * Authenticate update notification (Moli extension, not ACP spec).
+ * Authenticate update notification (Qwen extension, not ACP spec).
  * Sent by agent during the OAuth flow.
  */
 export interface AuthenticateUpdateNotification {

@@ -1,6 +1,6 @@
-# Moli Concurrent Runner
+# Qwen Concurrent Runner
 
-A Python tool for executing multiple Moli CLI tasks across different models concurrently using isolated git worktrees.
+A Python tool for executing multiple Qwen CLI tasks across different models concurrently using isolated git worktrees.
 
 ## Overview
 
@@ -34,7 +34,7 @@ Create a JSON configuration file (see `config.example.json`):
   "concurrency": 3,
   "yolo": true,
   "source_repo": ".",
-  "worktree_base": "~/.moli/worktrees",
+  "worktree_base": "~/.qwen/worktrees",
   "outputs_dir": "./outputs",
   "results_file": "./results.json",
   "tasks": [
@@ -44,7 +44,7 @@ Create a JSON configuration file (see `config.example.json`):
       "prompts": ["Review the codebase for security vulnerabilities."]
     }
   ],
-  "models": ["claude-3-5-sonnet-20241022", "moli-coder-plus"]
+  "models": ["claude-3-5-sonnet-20241022", "qwen3-coder-plus"]
 }
 ```
 
@@ -56,7 +56,7 @@ Create a JSON configuration file (see `config.example.json`):
 | `yolo`          | bool   | true              | Auto-approve all actions                      |
 | `source_repo`   | string | .                 | Source git repository path                    |
 | `branch`        | string | null              | Git branch to checkout (uses default if null) |
-| `worktree_base` | string | ~/.moli/worktrees | Base directory for git worktrees              |
+| `worktree_base` | string | ~/.qwen/worktrees | Base directory for git worktrees              |
 | `outputs_dir`   | string | ./outputs         | Directory for captured output                 |
 | `results_file`  | string | ./results.json    | JSON file for run tracking                    |
 | `tasks`         | array  | []                | List of task definitions                      |
@@ -93,9 +93,9 @@ outputs/
       "run_id": "abc123",
       "task_id": "code-review",
       "task_name": "Security Code Review",
-      "model": "moli-coder-plus",
+      "model": "qwen3-coder-plus",
       "status": "succeeded",
-      "worktree_path": "~/.moli/worktrees/run-abc123",
+      "worktree_path": "~/.qwen/worktrees/run-abc123",
       "output_dir": "outputs/abc123",
       "logs_dir": "outputs/abc123/logs",
       "started_at": "2026-01-28T10:00:00",
@@ -113,7 +113,7 @@ outputs/
 1. **Generate Matrix**: Create N×M run combinations (tasks × models)
 2. **Create Worktree**: Git worktree add from source repo
 3. **Initialize**: npm install && npm run build
-4. **Execute**: Run moli CLI with captured output (logs go to run-specific folder)
+4. **Execute**: Run qwen CLI with captured output (logs go to run-specific folder)
 5. **Cleanup**: Remove git worktree (always executed)
 
 ## Status Values
@@ -121,7 +121,7 @@ outputs/
 - `queued`: Waiting to start
 - `preparing`: Creating git worktree
 - `initializing`: Running npm install + build
-- `running`: Executing moli CLI
+- `running`: Executing qwen CLI
 - `succeeded`: Completed successfully
 - `failed`: Error occurred
 
@@ -130,7 +130,7 @@ outputs/
 - Python 3.10+
 - Git repository (for worktree operations)
 - Node.js and npm (for build step)
-- `moli` CLI in PATH
+- `qwen` CLI in PATH
 
 ## Exit Codes
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -33,7 +33,8 @@ vi.mock('./version.js', () => ({
 }));
 
 vi.mock('@dobby/moli-code-core', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@dobby/moli-code-core')>();
+  const actual =
+    await importOriginal<typeof import('@dobby/moli-code-core')>();
   return {
     ...actual,
     IdeClient: {
@@ -167,8 +168,8 @@ describe('systemInfo', () => {
       expect(getSandboxEnv(false)).toBe('moli-code-test-sandbox');
     });
 
-    it('should handle moli- prefix removal', () => {
-      process.env['SANDBOX'] = 'moli-custom-sandbox';
+    it('should handle qwen- prefix removal', () => {
+      process.env['SANDBOX'] = 'qwen-custom-sandbox';
       expect(getSandboxEnv(true)).toBe('custom-sandbox');
     });
   });

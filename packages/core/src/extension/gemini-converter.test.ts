@@ -8,7 +8,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import {
-  convertGeminiToMoliConfig,
+  convertGeminiToQwenConfig,
   isGeminiExtensionConfig,
   type GeminiExtensionConfig,
 } from './gemini-converter.js';
@@ -23,7 +23,7 @@ vi.mock('node:fs', async (importOriginal) => {
   };
 });
 
-describe('convertGeminiToMoliConfig', () => {
+describe('convertGeminiToQwenConfig', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -41,7 +41,7 @@ describe('convertGeminiToMoliConfig', () => {
 
     vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(geminiConfig));
 
-    const result = convertGeminiToMoliConfig(mockDir);
+    const result = convertGeminiToQwenConfig(mockDir);
 
     expect(result.name).toBe('test-extension');
     expect(result.version).toBe('1.0.0');
@@ -65,7 +65,7 @@ describe('convertGeminiToMoliConfig', () => {
 
     vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(geminiConfig));
 
-    const result = convertGeminiToMoliConfig(mockDir);
+    const result = convertGeminiToQwenConfig(mockDir);
 
     expect(result.name).toBe('full-extension');
     expect(result.version).toBe('2.0.0');
@@ -83,7 +83,7 @@ describe('convertGeminiToMoliConfig', () => {
 
     vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(invalidConfig));
 
-    expect(() => convertGeminiToMoliConfig(mockDir)).toThrow(
+    expect(() => convertGeminiToQwenConfig(mockDir)).toThrow(
       'Gemini extension config must have name and version fields',
     );
   });
@@ -96,7 +96,7 @@ describe('convertGeminiToMoliConfig', () => {
 
     vi.mocked(fs.readFileSync).mockReturnValue(JSON.stringify(invalidConfig));
 
-    expect(() => convertGeminiToMoliConfig(mockDir)).toThrow(
+    expect(() => convertGeminiToQwenConfig(mockDir)).toThrow(
       'Gemini extension config must have name and version fields',
     );
   });

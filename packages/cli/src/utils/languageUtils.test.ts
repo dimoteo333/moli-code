@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli team
+ * Copyright 2025 Qwen team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -37,7 +37,7 @@ vi.mock('../i18n/index.js', () => ({
 // Mock @dobby/moli-code-core
 vi.mock('@dobby/moli-code-core', () => ({
   Storage: {
-    getGlobalMoliDir: vi.fn(() => '/mock/home/.moli'),
+    getGlobalQwenDir: vi.fn(() => '/mock/home/.moli'),
   },
 }));
 
@@ -309,12 +309,12 @@ describe('languageUtils', () => {
       );
     });
 
-    it('should NOT overwrite file when content matches resolved language', () => {
+    it('should NOT overwrite file when it already exists with valid content', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(i18n.detectSystemLanguage).mockReturnValue('en');
       vi.mocked(fs.readFileSync).mockReturnValue(
-        `# Output language preference: English
-<!-- moli-code:llm-output-language: English -->
+        `# Output language preference: French
+<!-- moli-code:llm-output-language: French -->
 `,
       );
 
@@ -323,21 +323,18 @@ describe('languageUtils', () => {
       expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
 
-    it('should overwrite file when language setting differs', () => {
+    it('should NOT overwrite file even when setting differs from existing content', () => {
       vi.mocked(fs.existsSync).mockReturnValue(true);
       vi.mocked(fs.readFileSync).mockReturnValue(
-        `# Output language preference: English
-<!-- moli-code:llm-output-language: English -->
+        `# Output language preference: French
+<!-- moli-code:llm-output-language: French -->
 `,
       );
 
       initializeLlmOutputLanguage('Japanese');
 
-      expect(fs.writeFileSync).toHaveBeenCalledWith(
-        expect.stringContaining('output-language.md'),
-        expect.stringContaining('Japanese'),
-        'utf-8',
-      );
+      // Should NOT overwrite - user's existing file takes precedence
+      expect(fs.writeFileSync).not.toHaveBeenCalled();
     });
 
     it('should resolve "auto" to detected system language', () => {

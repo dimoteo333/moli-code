@@ -15,9 +15,10 @@ import {
   type ApprovalMode,
 } from '@dobby/moli-code-core';
 import { type SettingScope } from '../../config/settings.js';
+import { type CodingPlanRegion } from '../../constants/codingPlan.js';
+import { type AlibabaStandardRegion } from '../../constants/alibabaStandardApiKey.js';
 import type { AuthState } from '../types.js';
-import type { MolimateModel } from '../components/MolimateModelSelector.js';
-import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
+import { type ArenaDialogType } from '../hooks/useArenaCommand.js';
 // OpenAICredentials type (previously imported from OpenAIKeyPrompt)
 export interface OpenAICredentials {
   apiKey: string;
@@ -41,6 +42,15 @@ export interface UIActions {
     authType: AuthType | undefined,
     credentials?: OpenAICredentials,
   ) => Promise<void>;
+  handleCodingPlanSubmit: (
+    apiKey: string,
+    region?: CodingPlanRegion,
+  ) => Promise<void>;
+  handleAlibabaStandardSubmit: (
+    apiKey: string,
+    region: AlibabaStandardRegion,
+    modelIdsInput: string,
+  ) => Promise<void>;
   setAuthState: (state: AuthState) => void;
   onAuthError: (error: string | null) => void;
   cancelAuthentication: () => void;
@@ -51,6 +61,11 @@ export interface UIActions {
   exitEditorDialog: () => void;
   closeSettingsDialog: () => void;
   closeModelDialog: () => void;
+  openArenaDialog: (type: Exclude<ArenaDialogType, null>) => void;
+  closeArenaDialog: () => void;
+  handleArenaModelsSelected?: (models: string[]) => void;
+  dismissCodingPlanUpdate: () => void;
+  closeTrustDialog: () => void;
   closePermissionsDialog: () => void;
   setShellModeActive: (value: boolean) => void;
   vimHandleInput: (key: Key) => boolean;
@@ -74,6 +89,10 @@ export interface UIActions {
   closeExtensionsManagerDialog: () => void;
   // MCP dialog
   closeMcpDialog: () => void;
+  // Hooks dialog
+  openHooksDialog: () => void;
+  // Hooks dialog
+  closeHooksDialog: () => void;
   // Resume session dialog
   openResumeDialog: () => void;
   closeResumeDialog: () => void;
@@ -83,17 +102,6 @@ export interface UIActions {
   closeFeedbackDialog: () => void;
   temporaryCloseFeedbackDialog: () => void;
   submitFeedback: (rating: number) => void;
-  // Molimate authentication
-  validateMolimateEmployee: (
-    employeeId: string,
-  ) => Promise<{ success: boolean; message?: string }>;
-  handleMolimateAuthSubmit: (
-    employeeId: string,
-    model: MolimateModel,
-  ) => Promise<void>;
-  handleMolimateModelSelect: (model: MolimateModel) => Promise<void>;
-  // Local configuration
-  handleLocalConfigSubmit: (values: LocalConfigValues) => Promise<void>;
 }
 
 export const UIActionsContext = createContext<UIActions | null>(null);

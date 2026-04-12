@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Shell tool call component for Execute/Bash/Command
@@ -19,6 +19,7 @@ import type {
   BaseToolCallProps,
   ToolCallContainerProps,
 } from './shared/index.js';
+import { getToolDisplayLabel } from './labelUtils.js';
 
 import './ShellToolCall.css';
 
@@ -38,7 +39,7 @@ const ExecuteToolCallContainer: FC<ToolCallContainerProps> = ({
   isLast = false,
 }) => (
   <div
-    className={`ExecuteToolCall moli-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
+    className={`ExecuteToolCall qwen-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
     data-first={isFirst}
     data-last={isLast}
   >
@@ -129,7 +130,7 @@ const ShellToolCallImpl: FC<BaseToolCallProps & { variant: ShellVariant }> = ({
 
   const Container =
     variant === 'execute' ? ExecuteToolCallContainer : ToolCallContainer;
-  const label = variant === 'execute' ? 'Execute' : 'Bash';
+  const label = getToolDisplayLabel({ kind: toolCall.kind, title });
 
   // Group content by type
   const { textOutputs, errors } = groupContent(content);

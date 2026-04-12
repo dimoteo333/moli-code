@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Code
+ * Copyright 2025 Qwen Code
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -71,7 +71,7 @@ export async function showResumeSessionPicker(
   const sessionService = new SessionService(cwd);
   const hasSession = await sessionService.loadLastSession();
   if (!hasSession) {
-    writeStdoutLine('No sessions found. Start a new session with `moli`.');
+    writeStdoutLine('No sessions found. Start a new session with `qwen`.');
     return undefined;
   }
 

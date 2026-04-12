@@ -157,7 +157,7 @@ describe('GitService', () => {
       await service.setupShadowGitRepository();
 
       const expectedConfigContent =
-        '[user]\n  name = Moli Code\n  email = moli-code@moli.ai\n[commit]\n  gpgsign = false\n';
+        '[user]\n  name = Moli Code\n  email = moli-code@qwen.ai\n[commit]\n  gpgsign = false\n';
       const actualConfigContent = await fs.readFile(gitConfigPath, 'utf-8');
       expect(actualConfigContent).toBe(expectedConfigContent);
     });
@@ -167,6 +167,15 @@ describe('GitService', () => {
       const service = new GitService(projectRoot, storage);
       await service.setupShadowGitRepository();
       expect(hoistedMockSimpleGit).toHaveBeenCalledWith(repoDir);
+      expect(hoistedMockInit).toHaveBeenCalled();
+    });
+
+    it('should initialize git repo when root repo check throws', async () => {
+      hoistedMockCheckIsRepo.mockRejectedValueOnce(
+        new Error('fatal: not a git repository'),
+      );
+      const service = new GitService(projectRoot, storage);
+      await expect(service.setupShadowGitRepository()).resolves.toBeUndefined();
       expect(hoistedMockInit).toHaveBeenCalled();
     });
 

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -320,7 +320,7 @@ export const RealConversation: Story = {
         message: {
           role: 'user',
           content: `Message received: Object from: Object
-service-worker.js:137 Attempting to connect to Native Host: com.moli.cli.bridge
+service-worker.js:137 Attempting to connect to Native Host: com.qwen.cli.bridge
 service-worker.js:202 Sending handshake...
 service-worker.js:175 Native host disconnected
 service-worker.js:177 Disconnect error: Object
@@ -329,7 +329,7 @@ service-worker.js:207 Handshake timeout - no response from Native Host
 
 Cannot receive host info. Expected output:
 service-worker.js:150 [Native Event] host_info Object
-service-worker.js:552 [Moli] host_info Object
+service-worker.js:552 [Qwen] host_info Object
 service-worker.js:617 [Host] Info Object
 service-worker.js:164 [Native Message] handshake_response Object
 service-worker.js:231 Handshake successful: Object`,
@@ -390,7 +390,7 @@ packages/chrome-extension/
 │   └── manifest.json          # Extension manifest
 └── native-host/
     ├── index.js               # Native host entry
-    └── com.moli.cli.bridge.json  # Host manifest
+    └── com.qwen.cli.bridge.json  # Host manifest
 \`\`\`
 
 The issue appears to be in the handshake timing. The native host is exiting before the handshake completes.`,
@@ -1617,7 +1617,7 @@ Paste your chat history JSON (array of messages) on the left, click "Render" to 
   "type": "user" | "assistant" | "tool_call",
   "message": {
     "role": "user" | "assistant",
-    "parts": [{ "text": "..." }],  // Moli format
+    "parts": [{ "text": "..." }],  // Qwen format
     "content": "..."               // Claude format
   },
   "toolCall": {                    // For tool_call type

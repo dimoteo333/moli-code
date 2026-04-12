@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -41,6 +41,7 @@ export interface ExtendedSystemInfo extends SystemInfo {
   apiKeyEnvKey?: string;
   gitCommit?: string;
   proxy?: string;
+  fastModel?: string;
 }
 
 /**
@@ -76,9 +77,9 @@ export async function getIdeClientName(
 /**
  * Gets the sandbox environment information.
  * Handles different sandbox types including sandbox-exec and custom sandbox environments.
- * For bug reports, removes 'moli-' or 'moli-code-' prefixes from sandbox names.
+ * For bug reports, removes 'qwen-' or 'moli-code-' prefixes from sandbox names.
  *
- * @param stripPrefix - Whether to strip 'moli-' prefix (used for bug reports)
+ * @param stripPrefix - Whether to strip 'qwen-' prefix (used for bug reports)
  */
 export function getSandboxEnv(stripPrefix = false): string {
   const sandbox = process.env['SANDBOX'];
@@ -91,9 +92,9 @@ export function getSandboxEnv(stripPrefix = false): string {
     return 'no sandbox';
   }
 
-  // For bug reports, remove moli- prefix
+  // For bug reports, remove qwen- prefix
   if (stripPrefix) {
-    return sandbox.replace(/^moli-(?:code-)?/, '');
+    return sandbox.replace(/^qwen-(?:code-)?/, '');
   }
 
   return sandbox;
@@ -170,6 +171,9 @@ export async function getExtendedSystemInfo(
       ? GIT_COMMIT_INFO
       : undefined;
 
+  // Get fast model from settings
+  const fastModel = context.services.settings?.merged?.fastModel || undefined;
+
   return {
     ...baseInfo,
     sandboxEnv,
@@ -177,5 +181,6 @@ export async function getExtendedSystemInfo(
     baseUrl,
     apiKeyEnvKey,
     gitCommit,
+    fastModel,
   };
 }

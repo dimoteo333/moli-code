@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * Tool call component factory - routes to specialized components by kind
@@ -33,6 +33,11 @@ export const getToolCallComponent = (kind: string): FC<BaseToolCallProps> => {
   // Route to specialized components
   switch (normalizedKind) {
     case 'read':
+    case 'read_file':
+    case 'read_many_files':
+    case 'readmanyfiles':
+    case 'list_directory':
+    case 'listfiles':
       return ReadToolCall;
 
     case 'write':

@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  *
  * UpdatedPlan tool call component - specialized for plan update operations
@@ -16,6 +16,7 @@ import type {
   PlanEntryStatus,
 } from './shared/index.js';
 import { CheckboxDisplay } from './CheckboxDisplay.js';
+import { getToolDisplayLabel } from './labelUtils.js';
 
 /**
  * Custom container for UpdatedPlanToolCall with specific styling
@@ -31,7 +32,7 @@ const PlanToolCallContainer: FC<ToolCallContainerProps> = ({
   isLast = false,
 }) => (
   <div
-    className={`moli-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
+    className={`qwen-message message-item ${_className || ''} relative pl-[30px] py-2 select-text toolcall-container toolcall-status-${status}`}
     data-first={isFirst}
     data-last={isLast}
   >
@@ -141,7 +142,10 @@ export const UpdatedPlanToolCall: FC<BaseToolCallProps> = ({
   }
 
   const entries = parsePlanEntries(textOutputs);
-  const label = safeTitle(toolCall.title) || 'TodoWrite';
+  const label = getToolDisplayLabel({
+    kind: toolCall.kind,
+    title: safeTitle(toolCall.title),
+  });
 
   return (
     <PlanToolCallContainer

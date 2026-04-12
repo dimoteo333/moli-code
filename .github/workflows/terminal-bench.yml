@@ -68,8 +68,8 @@ jobs:
           TB_TASK_ID: '${{ matrix.task_id }}'
           TB_TIMEOUT_MINUTES: '30'
 
-      - name: 'Run Terminal Bench Moli (task: ${{ matrix.task_id }})'
-        run: 'npm run test:terminal-bench:moli'
+      - name: 'Run Terminal Bench Qwen (task: ${{ matrix.task_id }})'
+        run: 'npm run test:terminal-bench:qwen'
         timeout-minutes: 30
         env:
           OPENAI_API_KEY: '${{ secrets.OPENAI_API_KEY }}'

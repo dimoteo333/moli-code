@@ -1,6 +1,6 @@
 /**
  * @license
- * Copyright 2025 Moli Team
+ * Copyright 2025 Qwen Team
  * SPDX-License-Identifier: Apache-2.0
  */
 
@@ -17,7 +17,7 @@ export type WebViewProviderFactory = () => WebViewProvider;
  * WebviewView host for placing the chat UI in sidebar / panel / secondary sidebar.
  *
  * Accepts a factory function instead of a pre-built WebViewProvider so the
- * heavyweight provider (MoliAgentManager, ConversationStore, etc.) is only
+ * heavyweight provider (QwenAgentManager, ConversationStore, etc.) is only
  * created when VS Code actually opens the view, not at extension startup.
  */
 export class ChatWebviewViewProvider implements vscode.WebviewViewProvider {

@@ -6,6 +6,7 @@
 
 import type React from 'react';
 import { Box, Text } from 'ink';
+import Gradient from 'ink-gradient';
 import { shortenPath, tildeifyPath } from '@dobby/moli-code-core';
 import { theme } from '../semantic-colors.js';
 import { shortAsciiLogo } from './AsciiArt.js';
@@ -17,10 +18,10 @@ import { useTerminalSize } from '../hooks/useTerminalSize.js';
  * Simplified representation of authentication method shown to users.
  */
 export enum AuthDisplayType {
-  MOLI_OAUTH = 'Moli OAuth',
+  MOLI_OAUTH = 'Qwen OAuth',
   CODING_PLAN = 'Coding Plan',
   API_KEY = 'API Key',
-  UNKNOWN = '몰리',
+  UNKNOWN = 'Unknown',
 }
 
 interface HeaderProps {
@@ -81,7 +82,7 @@ export const Header: React.FC<HeaderProps> = ({
     availableInfoPanelWidth - infoPanelChromeWidth,
   );
   const authModelText = `${formattedAuthType} | ${model}`;
-  const modelHintText = ' (/model을 입력해서 변경)';
+  const modelHintText = ' (/model to change)';
   const showModelHint =
     infoPanelContentWidth > 0 &&
     getCachedStringWidth(authModelText + modelHintText) <=
@@ -97,6 +98,13 @@ export const Header: React.FC<HeaderProps> = ({
         ? shortenedPath.slice(0, maxPathLength)
         : shortenedPath;
 
+  // Use theme gradient colors if available, otherwise use text colors (excluding primary)
+  const gradientColors = theme.ui.gradient || [
+    theme.text.secondary,
+    theme.text.link,
+    theme.text.accent,
+  ];
+
   return (
     <Box
       flexDirection="row"
@@ -108,7 +116,9 @@ export const Header: React.FC<HeaderProps> = ({
       {showLogo && (
         <>
           <Box flexShrink={0}>
-            <Text color="#B19CD9">{displayLogo}</Text>
+            <Gradient colors={gradientColors}>
+              <Text>{displayLogo}</Text>
+            </Gradient>
           </Box>
           {/* Fixed gap between logo and info panel */}
           <Box width={logoGap} />
@@ -124,10 +134,10 @@ export const Header: React.FC<HeaderProps> = ({
         flexGrow={showLogo ? 0 : 1}
         width={showLogo ? availableInfoPanelWidth : undefined}
       >
-        {/* Title line: >_ 몰리코드 (v{version}) */}
+        {/* Title line: >_ Qwen Code (v{version}) */}
         <Text>
           <Text bold color={theme.text.accent}>
-            &gt;_ 몰리코드
+            &gt;_ Qwen Code
           </Text>
           <Text color={theme.text.secondary}> (v{version})</Text>
         </Text>

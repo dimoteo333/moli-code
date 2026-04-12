@@ -21,7 +21,7 @@
 1. Install Moli Code CLI:
 
    ```bash
-   npm install -g @moli-code/moli-code
+   npm install -g @dobby/moli-code
    ```
 
 2. Open your JetBrains IDE and navigate to AI Chat tool window.
@@ -43,7 +43,7 @@
 1. Install Moli Code CLI:
 
    ```bash
-   npm install -g @moli-code/moli-code
+   npm install -g @dobby/moli-code
    ```
 
 2. Open your JetBrains IDE and navigate to AI Chat tool window.
@@ -53,8 +53,8 @@
 ```json
 {
   "agent_servers": {
-    "moli": {
-      "command": "/path/to/moli",
+    "qwen": {
+      "command": "/path/to/qwen",
       "args": ["--acp"],
       "env": {}
     }
@@ -70,12 +70,12 @@
 
 ### Agent not appearing
 
-- Run `moli --version` in terminal to verify installation
+- Run `qwen --version` in terminal to verify installation
 - Ensure your JetBrains IDE version supports ACP
 - Restart your JetBrains IDE
 
 ### Moli Code not responding
 
 - Check your internet connection
-- Verify CLI works by running `moli` in terminal
-- [File an issue on GitHub](https://github.com/dimoteo333/moli-code/issues) if the problem persists
+- Verify CLI works by running `qwen` in terminal
+- [File an issue on GitHub](https://github.com/qwenlm/moli-code/issues) if the problem persists

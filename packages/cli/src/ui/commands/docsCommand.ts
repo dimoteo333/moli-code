@@ -22,7 +22,7 @@ export const docsCommand: SlashCommand = {
   kind: CommandKind.BUILT_IN,
   action: async (context: CommandContext): Promise<void> => {
     const langPath = getCurrentLanguage()?.startsWith('zh') ? 'zh' : 'en';
-    const docsUrl = `https://molilm.github.io/moli-code-docs/${langPath}`;
+    const docsUrl = `https://qwenlm.github.io/moli-code-docs/${langPath}`;
 
     if (process.env['SANDBOX'] && process.env['SANDBOX'] !== 'sandbox-exec') {
       context.ui.addItem(

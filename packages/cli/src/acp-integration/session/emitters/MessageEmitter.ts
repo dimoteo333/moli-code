@@ -1,10 +1,11 @@
 /**
  * @license
- * Copyright 2025 Moli
+ * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 
 import type { GenerateContentResponseUsageMetadata } from '@google/genai';
+import type { SubagentMeta } from '../types.js';
 import type { Usage } from '@agentclientprotocol/sdk';
 import { BaseEmitter } from './BaseEmitter.js';
 
@@ -77,7 +78,7 @@ export class MessageEmitter extends BaseEmitter {
     usageMetadata: GenerateContentResponseUsageMetadata,
     text: string = '',
     durationMs?: number,
-    subagentMeta?: import('../types.js').SubagentMeta,
+    subagentMeta?: SubagentMeta,
   ): Promise<void> {
     const usage: Usage = {
       inputTokens: usageMetadata.promptTokenCount ?? 0,

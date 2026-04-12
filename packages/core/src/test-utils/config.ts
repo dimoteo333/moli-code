@@ -14,7 +14,7 @@ export const DEFAULT_CONFIG_PARAMETERS: ConfigParameters = {
   usageStatisticsEnabled: true,
   debugMode: false,
   proxy: undefined,
-  model: 'moli-9001-super-duper',
+  model: 'qwen-9001-super-duper',
   targetDir: '/',
   cwd: '/',
 };

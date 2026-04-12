@@ -8,7 +8,7 @@
 
 If you need extra tools inside the container (e.g., `git`, `python`, `rg`), create a custom Dockerfile, The specific operation is as follows
 
-#### 1、Clone moli code project first, https://github.com/MoliLM/moli-code.git
+#### 1、Clone qwen code project first, https://github.com/QwenLM/moli-code.git
 
 #### 2、Make sure you perform the following operation in the source code repository directory
 
@@ -27,29 +27,29 @@ cd packages/cli
 npm link
 
 # 5. Verification link (it should now point to the source code)
-which moli-code
-# Expected output: /xxx/xxx/.nvm/versions/node/v24.11.1/bin/moli-code
+which qwen
+# Expected output: /xxx/xxx/.nvm/versions/node/v24.11.1/bin/qwen
 # Or similar paths, but it should be a symbolic link
 
 # 6. For details of the symbolic link, you can see the specific source code path
-ls -la $(dirname $(which moli-code))/../lib/node_modules/@dobby/moli-code
+ls -la $(dirname $(which qwen))/../lib/node_modules/@dobby/moli-code
 # It should show that this is a symbolic link pointing to your source code directory
 
-# 7.Test the version of moli-code
-moli-code -v
-# npm link will overwrite the global moli-code. To avoid being unable to distinguish the same version number, you can uninstall the global CLI first
+# 7.Test the version of qwen
+qwen -v
+# npm link will overwrite the global qwen. To avoid being unable to distinguish the same version number, you can uninstall the global CLI first
 
 ```
 
 #### 3、Create your sandbox Dockerfile under the root directory of your own project
 
-- Path: `.moli/sandbox.Dockerfile`
+- Path: `.qwen/sandbox.Dockerfile`
 
-- Official mirror image address:https://github.com/MoliLM/moli-code/pkgs/container/moli-code
+- Official mirror image address:https://github.com/QwenLM/moli-code/pkgs/container/moli-code
 
 ```bash
-# Based on the official Moli Code sandbox image (It is recommended to explicitly specify the version)
-FROM ghcr.io/molilm/moli-code:sha-570ec43
+# Based on the official Qwen sandbox image (It is recommended to explicitly specify the version)
+FROM ghcr.io/qwenlm/moli-code:sha-570ec43
 # Add your extra tools here
 RUN apt-get update && apt-get install -y \
     git \
@@ -60,7 +60,7 @@ RUN apt-get update && apt-get install -y \
 #### 4、Create the first sandbox image under the root directory of your project
 
 ```bash
-MOLI_SANDBOX=docker BUILD_SANDBOX=1 moli-code -s
+QWEN_SANDBOX=docker BUILD_SANDBOX=1 qwen -s
 # Observe whether the sandbox version of the tool you launched is consistent with the version of your custom image. If they are consistent, the startup will be successful
 ```
 
@@ -68,7 +68,7 @@ This builds a project-specific image based on the default sandbox image.
 
 #### Remove npm link
 
-- If you want to restore the official CLI of moli-code, please remove the npm link
+- If you want to restore the official CLI of qwen, please remove the npm link
 
 ```bash
 # Method 1: Unlink globally
@@ -79,13 +79,13 @@ cd packages/cli
 npm unlink
 
 # Verification has been lifted
-which moli-code
-# It should display "moli-code not found"
+which qwen
+# It should display "qwen not found"
 
 # Reinstall the global version if necessary
 npm install -g @dobby/moli-code
 
 # Verification Recovery
-which moli-code
-moli-code --version
+which qwen
+qwen --version
 ```

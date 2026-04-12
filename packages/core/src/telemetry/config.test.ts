@@ -79,13 +79,13 @@ describe('telemetry/config helpers', () => {
         useCollector: false,
       };
       const env = {
-        MOLI_TELEMETRY_ENABLED: '1',
-        MOLI_TELEMETRY_TARGET: 'gcp',
-        MOLI_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
-        MOLI_TELEMETRY_OTLP_PROTOCOL: 'http',
-        MOLI_TELEMETRY_LOG_PROMPTS: 'true',
-        MOLI_TELEMETRY_OUTFILE: 'env.log',
-        MOLI_TELEMETRY_USE_COLLECTOR: 'true',
+        QWEN_TELEMETRY_ENABLED: '1',
+        QWEN_TELEMETRY_TARGET: 'gcp',
+        QWEN_TELEMETRY_OTLP_ENDPOINT: 'http://env:4317',
+        QWEN_TELEMETRY_OTLP_PROTOCOL: 'http',
+        QWEN_TELEMETRY_LOG_PROMPTS: 'true',
+        QWEN_TELEMETRY_OUTFILE: 'env.log',
+        QWEN_TELEMETRY_USE_COLLECTOR: 'true',
       } as Record<string, string>;
       const argv = {
         telemetry: false,
@@ -133,7 +133,7 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown protocol values', async () => {
-      const env = { MOLI_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
+      const env = { QWEN_TELEMETRY_OTLP_PROTOCOL: 'unknown' } as Record<
         string,
         string
       >;
@@ -143,7 +143,7 @@ describe('telemetry/config helpers', () => {
     });
 
     it('throws on unknown target values', async () => {
-      const env = { MOLI_TELEMETRY_TARGET: 'unknown' } as Record<
+      const env = { QWEN_TELEMETRY_TARGET: 'unknown' } as Record<
         string,
         string
       >;

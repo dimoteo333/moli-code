@@ -23,7 +23,7 @@
 1. Install Moli Code CLI:
 
 ```bash
-npm install -g @moli-code/moli-code
+npm install -g @dobby/moli-code
 ```
 
 2. Download and install [Zed Editor](https://zed.dev/)
@@ -39,7 +39,7 @@ npm install -g @moli-code/moli-code
 1. Install Moli Code CLI:
 
 ```bash
-npm install -g @moli-code/moli-code
+npm install -g @dobby/moli-code
 ```
 
 2. Download and install [Zed Editor](https://zed.dev/)
@@ -49,7 +49,7 @@ npm install -g @moli-code/moli-code
 ```json
 "Moli Code": {
   "type": "custom",
-  "command": "moli",
+  "command": "qwen",
   "args": ["--acp"],
   "env": {}
 }
@@ -61,12 +61,12 @@ npm install -g @moli-code/moli-code
 
 ### Agent not appearing
 
-- Run `moli --version` in terminal to verify installation
+- Run `qwen --version` in terminal to verify installation
 - Check that the JSON configuration is valid
 - Restart Zed Editor
 
 ### Moli Code not responding
 
 - Check your internet connection
-- Verify CLI works by running `moli` in terminal
-- [File an issue on GitHub](https://github.com/dimoteo333/moli-code/issues) if the problem persists
+- Verify CLI works by running `qwen` in terminal
+- [File an issue on GitHub](https://github.com/qwenlm/moli-code/issues) if the problem persists

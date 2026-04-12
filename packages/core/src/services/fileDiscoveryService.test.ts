@@ -57,8 +57,8 @@ describe('FileDiscoveryService', () => {
       await createTestFile('.moliignore', 'secrets.txt');
       const service = new FileDiscoveryService(projectRoot);
 
-      expect(service.shouldMoliIgnoreFile('secrets.txt')).toBe(true);
-      expect(service.shouldMoliIgnoreFile('src/index.js')).toBe(false);
+      expect(service.shouldQwenIgnoreFile('secrets.txt')).toBe(true);
+      expect(service.shouldQwenIgnoreFile('src/index.js')).toBe(false);
     });
   });
 
@@ -69,7 +69,7 @@ describe('FileDiscoveryService', () => {
       await createTestFile('.moliignore', 'logs/');
     });
 
-    it('should filter out git-ignored and moli-ignored files by default', () => {
+    it('should filter out git-ignored and qwen-ignored files by default', () => {
       const files = [
         'src/index.ts',
         'node_modules/package/index.js',
@@ -98,7 +98,7 @@ describe('FileDiscoveryService', () => {
 
       const filtered = service.filterFiles(files, {
         respectGitIgnore: false,
-        respectMoliIgnore: true, // still respect this one
+        respectQwenIgnore: true, // still respect this one
       });
 
       expect(filtered).toEqual(
@@ -108,7 +108,7 @@ describe('FileDiscoveryService', () => {
       );
     });
 
-    it('should not filter files when respectMoliIgnore is false', () => {
+    it('should not filter files when respectQwenIgnore is false', () => {
       const files = [
         'src/index.ts',
         'node_modules/package/index.js',
@@ -119,7 +119,7 @@ describe('FileDiscoveryService', () => {
 
       const filtered = service.filterFiles(files, {
         respectGitIgnore: true,
-        respectMoliIgnore: false,
+        respectQwenIgnore: false,
       });
 
       expect(filtered).toEqual(
@@ -136,7 +136,7 @@ describe('FileDiscoveryService', () => {
     });
   });
 
-  describe('shouldGitIgnoreFile & shouldMoliIgnoreFile', () => {
+  describe('shouldGitIgnoreFile & shouldQwenIgnoreFile', () => {
     beforeEach(async () => {
       await fs.mkdir(path.join(projectRoot, '.git'));
       await createTestFile('.gitignore', 'node_modules/');
@@ -161,19 +161,19 @@ describe('FileDiscoveryService', () => {
       ).toBe(false);
     });
 
-    it('should return true for moli-ignored files', () => {
+    it('should return true for qwen-ignored files', () => {
       const service = new FileDiscoveryService(projectRoot);
 
       expect(
-        service.shouldMoliIgnoreFile(path.join(projectRoot, 'debug.log')),
+        service.shouldQwenIgnoreFile(path.join(projectRoot, 'debug.log')),
       ).toBe(true);
     });
 
-    it('should return false for non-moli-ignored files', () => {
+    it('should return false for non-qwen-ignored files', () => {
       const service = new FileDiscoveryService(projectRoot);
 
       expect(
-        service.shouldMoliIgnoreFile(path.join(projectRoot, 'src/index.ts')),
+        service.shouldQwenIgnoreFile(path.join(projectRoot, 'src/index.ts')),
       ).toBe(false);
     });
   });
