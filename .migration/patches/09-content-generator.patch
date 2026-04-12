@@ -1,0 +1,88 @@
+diff --git a/packages/core/src/core/contentGenerator.test.ts b/packages/core/src/core/contentGenerator.test.ts
+index bb8e5f7..90ae8c9 100644
+--- a/packages/core/src/core/contentGenerator.test.ts
++++ b/packages/core/src/core/contentGenerator.test.ts
+@@ -88,21 +88,21 @@ describe('createContentGeneratorConfig', () => {
+     getProxy: () => undefined,
+   } as unknown as Config;
+ 
+-  it('should preserve provided fields and set authType for QWEN_OAUTH', () => {
+-    const cfg = createContentGeneratorConfig(mockConfig, AuthType.QWEN_OAUTH, {
++  it('should preserve provided fields and set authType for MOLI_OAUTH', () => {
++    const cfg = createContentGeneratorConfig(mockConfig, AuthType.MOLI_OAUTH, {
+       model: 'coder-model',
+-      apiKey: 'QWEN_OAUTH_DYNAMIC_TOKEN',
++      apiKey: 'MOLI_OAUTH_DYNAMIC_TOKEN',
+     });
+-    expect(cfg.authType).toBe(AuthType.QWEN_OAUTH);
++    expect(cfg.authType).toBe(AuthType.MOLI_OAUTH);
+     expect(cfg.model).toBe('coder-model');
+-    expect(cfg.apiKey).toBe('QWEN_OAUTH_DYNAMIC_TOKEN');
++    expect(cfg.apiKey).toBe('MOLI_OAUTH_DYNAMIC_TOKEN');
+   });
+ 
+-  it('should not warn or fallback for QWEN_OAUTH (resolution handled by ModelConfigResolver)', () => {
++  it('should not warn or fallback for MOLI_OAUTH (resolution handled by ModelConfigResolver)', () => {
+     const warnSpy = vi
+       .spyOn(console, 'warn')
+       .mockImplementation(() => undefined);
+-    const cfg = createContentGeneratorConfig(mockConfig, AuthType.QWEN_OAUTH, {
++    const cfg = createContentGeneratorConfig(mockConfig, AuthType.MOLI_OAUTH, {
+       model: 'some-random-model',
+     });
+     expect(cfg.model).toBe('some-random-model');
+diff --git a/packages/core/src/core/contentGenerator.ts b/packages/core/src/core/contentGenerator.ts
+index d809193..4647805 100644
+--- a/packages/core/src/core/contentGenerator.ts
++++ b/packages/core/src/core/contentGenerator.ts
+@@ -54,7 +54,7 @@ export interface ContentGenerator {
+ 
+ export enum AuthType {
+   USE_OPENAI = 'openai',
+-  QWEN_OAUTH = 'qwen-oauth',
++  MOLI_OAUTH = 'moli-oauth', // MOLI: Enterprise OAuth2 (renamed from MOLI_OAUTH)
+   USE_GEMINI = 'gemini',
+   USE_VERTEX_AI = 'vertex-ai',
+   USE_ANTHROPIC = 'anthropic',
+@@ -221,8 +221,8 @@ export function validateModelConfig(
+ ): ModelConfigValidationResult {
+   const errors: Error[] = [];
+ 
+-  // Qwen OAuth doesn't need validation - it uses dynamic tokens
+-  if (config.authType === AuthType.QWEN_OAUTH) {
++  // Moli OAuth doesn't need validation - it uses dynamic tokens
++  if (config.authType === AuthType.MOLI_OAUTH) {
+     return { valid: true, errors: [] };
+   }
+ 
+@@ -311,21 +311,22 @@ export async function createContentGenerator(
+       './openaiContentGenerator/index.js'
+     );
+     baseGenerator = createOpenAIContentGenerator(generatorConfig, config);
+-  } else if (authType === AuthType.QWEN_OAUTH) {
+-    const { getQwenOAuthClient: getQwenOauthClient } = await import(
+-      '../qwen/qwenOAuth2.js'
++  } else if (authType === AuthType.MOLI_OAUTH) {
++    // MOLI: Use MoliContentGenerator for enterprise OAuth2
++    const { getMoliOAuthClient: getMoliOauthClient } = await import(
++      '../moli/moliOAuth2.js'
+     );
+-    const { QwenContentGenerator } = await import(
+-      '../qwen/qwenContentGenerator.js'
++    const { MoliContentGenerator } = await import(
++      '../moli/moliContentGenerator.js'
+     );
+ 
+     try {
+-      const qwenClient = await getQwenOauthClient(
++      const moliClient = await getMoliOauthClient(
+         config,
+         isInitialAuth ? { requireCachedCredentials: true } : undefined,
+       );
+-      baseGenerator = new QwenContentGenerator(
+-        qwenClient,
++      baseGenerator = new MoliContentGenerator(
++        moliClient,
+         generatorConfig,
+         config,
+       );

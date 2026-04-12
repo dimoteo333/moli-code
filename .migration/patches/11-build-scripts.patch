@@ -1,0 +1,2039 @@
+diff --git a/scripts/build_offline.sh b/scripts/build_offline.sh
+new file mode 100755
+index 0000000..9685c79
+--- /dev/null
++++ b/scripts/build_offline.sh
+@@ -0,0 +1,32 @@
++#!/bin/bash
++# Build offline install package for moli-code
++# This creates a tarball that can be installed without network access
++
++set -e
++
++echo "Building moli-code offline package..."
++
++# Build and bundle the project
++echo "Running build and bundle..."
++npm run build
++npm run bundle
++
++# Backup original package.json
++cp package.json package.json.backup
++
++# Replace with offline package.json (no lifecycle scripts)
++cp package.offline.json package.json
++
++# Pack the tarball
++echo "Creating tarball..."
++npm pack
++
++# Restore original package.json
++mv package.json.backup package.json
++
++echo ""
++echo "✅ Offline package created successfully!"
++echo "Package: moli-code-0.2.0.tgz"
++echo ""
++echo "To install offline:"
++echo "  npm install -g moli-code-0.2.0.tgz"
+diff --git a/scripts/build_sandbox.js b/scripts/build_sandbox.js
+index 55e8a79..a2eefa6 100644
+--- a/scripts/build_sandbox.js
++++ b/scripts/build_sandbox.js
+@@ -121,7 +121,7 @@ function buildImage(imageName, dockerfile) {
+     if (isWindows) {
+       // PowerShell doesn't support <() process substitution.
+       // Create a temporary auth file that we will clean up after.
+-      tempAuthFile = join(os.tmpdir(), `qwen-auth-${Date.now()}.json`);
++      tempAuthFile = join(os.tmpdir(), `moli-auth-${Date.now()}.json`);
+       writeFileSync(tempAuthFile, '{}');
+       buildCommandArgs = `--authfile="${tempAuthFile}"`;
+     } else {
+@@ -135,7 +135,7 @@ function buildImage(imageName, dockerfile) {
+   ).version;
+ 
+   const imageTag =
+-    process.env.QWEN_SANDBOX_IMAGE_TAG || imageName.split(':')[1];
++    process.env.MOLI_SANDBOX_IMAGE_TAG || imageName.split(':')[1];
+   const finalImageName = `${imageName.split(':')[0]}:${imageTag}`;
+ 
+   try {
+diff --git a/scripts/build_sea.sh b/scripts/build_sea.sh
+new file mode 100755
+index 0000000..639b6cf
+--- /dev/null
++++ b/scripts/build_sea.sh
+@@ -0,0 +1,191 @@
++#!/bin/bash
++# Build Node.js SEA (Single Executable Application) for moli-code
++#
++# Usage:
++#   ./scripts/build_sea.sh              # Build for current platform (macOS/Linux)
++#   ./scripts/build_sea.sh --windows    # Cross-build Windows exe (downloads node.exe)
++#
++# Requirements:
++#   - Official Node.js binary (Homebrew node lacks SEA fuse)
++#   - For macOS: codesign (Xcode CLI tools)
++#
++# Output:
++#   dist-sea/moli-code        (macOS/Linux binary)
++#   dist-sea/moli-code.exe    (Windows exe)
++#
++# All runtime assets (ripgrep, locales, config, skills) are embedded into the
++# executable via Node.js SEA Assets API — no external assets/ folder needed.
++
++set -e
++
++SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
++ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
++cd "$ROOT_DIR"
++
++TARGET_WINDOWS=false
++NODE_DL_VERSION="$(node -v)"
++
++if [ "$1" = "--windows" ]; then
++  TARGET_WINDOWS=true
++fi
++
++echo "=== moli-code SEA Build ==="
++echo "Node.js: $NODE_DL_VERSION"
++echo "Target: $([ "$TARGET_WINDOWS" = true ] && echo 'Windows x64' || echo 'Current platform')"
++echo ""
++
++# Step 1: Build the project
++echo "[1/7] Building project..."
++npm run build
++
++# Step 2: Copy runtime assets into dist-sea/assets/ (before esbuild, which reads them)
++echo "[2/7] Copying runtime assets..."
++ASSETS_DIR="dist-sea/assets"
++rm -rf "$ASSETS_DIR"
++mkdir -p "$ASSETS_DIR"
++
++# Build dist/ assets first
++node scripts/copy_bundle_assets.js
++
++# Copy from dist/ to dist-sea/assets/
++[ -d "dist/vendor" ] && cp -R dist/vendor "$ASSETS_DIR/"
++[ -d "dist/locales" ] && cp -R dist/locales "$ASSETS_DIR/"
++[ -d "dist/bundled" ] && cp -R dist/bundled "$ASSETS_DIR/"
++[ -f "dist/molimate.config.json" ] && cp dist/molimate.config.json "$ASSETS_DIR/"
++for f in dist/*.sb; do
++  [ -f "$f" ] && cp "$f" "$ASSETS_DIR/" 2>/dev/null || true
++done
++
++echo "   Assets copied to $ASSETS_DIR"
++
++# Step 3: Generate sea-config.json with embedded assets
++echo "[3/7] Generating SEA config with embedded assets..."
++if [ "$TARGET_WINDOWS" = true ]; then
++  node scripts/generate_sea_assets.js --windows
++else
++  node scripts/generate_sea_assets.js
++fi
++
++# Step 4: Create CJS bundle for SEA (reads sea-config.json for asset keys)
++echo "[4/7] Creating CJS bundle for SEA..."
++node esbuild.sea.config.js
++
++# Step 5: Generate SEA blob (now includes embedded assets)
++echo "[5/7] Generating SEA blob..."
++node --experimental-sea-config sea-config.json
++
++# Helper: download official Node.js binary (Homebrew builds lack SEA fuse)
++download_node_binary() {
++  local platform="$1"  # darwin-arm64, darwin-x64, linux-x64, win-x64
++  local cache_dir="dist-sea/.node-cache"
++  mkdir -p "$cache_dir"
++
++  if [ "$platform" = "win-x64" ]; then
++    local cached="$cache_dir/node-${NODE_DL_VERSION}-win-x64.exe"
++    if [ ! -f "$cached" ]; then
++      local url="https://nodejs.org/dist/${NODE_DL_VERSION}/win-x64/node.exe"
++      echo "   Downloading $url ..." >&2
++      curl -L -o "$cached" "$url"
++    else
++      echo "   Using cached $cached" >&2
++    fi
++    echo "$cached"
++  else
++    local cached="$cache_dir/node-${NODE_DL_VERSION}-${platform}"
++    if [ ! -f "$cached" ]; then
++      local url="https://nodejs.org/dist/${NODE_DL_VERSION}/node-${NODE_DL_VERSION}-${platform}.tar.gz"
++      echo "   Downloading $url ..." >&2
++      curl -L -o "${cached}.tar.gz" "$url"
++      tar xzf "${cached}.tar.gz" -C "$cache_dir" "node-${NODE_DL_VERSION}-${platform}/bin/node"
++      mv "$cache_dir/node-${NODE_DL_VERSION}-${platform}/bin/node" "$cached"
++      rm -rf "$cache_dir/node-${NODE_DL_VERSION}-${platform}" "${cached}.tar.gz"
++    else
++      echo "   Using cached $cached" >&2
++    fi
++    echo "$cached"
++  fi
++}
++
++# Step 6 & 7: Build the executable
++if [ "$TARGET_WINDOWS" = true ]; then
++  echo "[6/8] Preparing Windows Node.js binary..."
++  NODE_BIN=$(download_node_binary "win-x64")
++  DEST_EXE="dist-sea/moli-code.exe"
++  cp "$NODE_BIN" "$DEST_EXE"
++
++  # Set custom application icon BEFORE postject (smaller file = faster rcedit)
++  if [ -f "logo.ico" ]; then
++    echo "[7/8] Setting application icon..."
++    RCEDIT_BIN="node_modules/rcedit/bin/rcedit-x64.exe"
++    if [ -f "$RCEDIT_BIN" ]; then
++      "$RCEDIT_BIN" "$DEST_EXE" --set-icon "logo.ico"
++    else
++      echo "   rcedit not found, installing..."
++      npm install --no-save rcedit >&2
++      "$RCEDIT_BIN" "$DEST_EXE" --set-icon "logo.ico"
++    fi
++  else
++    echo "   Warning: logo.ico not found, skipping icon step"
++  fi
++
++  echo "[8/8] Injecting SEA blob into Windows exe..."
++  npx --yes postject "$DEST_EXE" NODE_SEA_BLOB dist-sea/sea-prep.blob \
++    --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 \
++    --overwrite
++
++  # Clean up build artifacts (keep only the exe)
++  rm -rf dist-sea/assets dist-sea/cli.cjs dist-sea/sea-prep.blob dist-sea/.node-cache
++
++  EXE_SIZE=$(du -h "$DEST_EXE" | cut -f1)
++  echo ""
++  echo "=== Build Complete ==="
++  echo "Executable: $DEST_EXE ($EXE_SIZE)"
++  echo ""
++  echo "All assets are embedded — just run:"
++  echo "  moli-code.exe"
++
++else
++  # Detect current platform
++  ARCH=$(uname -m)
++  OS=$(uname -s | tr '[:upper:]' '[:lower:]')
++  case "$ARCH" in
++    arm64|aarch64) PLATFORM="${OS}-arm64" ;;
++    x86_64)        PLATFORM="${OS}-x64" ;;
++    *)             echo "Unsupported architecture: $ARCH"; exit 1 ;;
++  esac
++
++  echo "[6/7] Preparing Node.js binary ($PLATFORM)..."
++  NODE_BIN=$(download_node_binary "$PLATFORM")
++  DEST_BIN="dist-sea/moli-code"
++  cp "$NODE_BIN" "$DEST_BIN"
++  chmod u+w "$DEST_BIN"
++
++  # Remove code signature on macOS (required before postject)
++  if [ "$(uname)" = "Darwin" ]; then
++    codesign --remove-signature "$DEST_BIN" 2>/dev/null || true
++  fi
++
++  echo "[7/7] Injecting SEA blob..."
++  npx --yes postject "$DEST_BIN" NODE_SEA_BLOB dist-sea/sea-prep.blob \
++    --sentinel-fuse NODE_SEA_FUSE_fce680ab2cc467b6e072b8b5df1996b2 \
++    --overwrite \
++    $([ "$(uname)" = "Darwin" ] && echo "--macho-segment-name NODE_SEA")
++
++  # Re-sign on macOS
++  if [ "$(uname)" = "Darwin" ]; then
++    codesign --sign - "$DEST_BIN" 2>/dev/null || true
++  fi
++
++  chmod +x "$DEST_BIN"
++
++  # Clean up build artifacts (keep only the binary)
++  rm -rf dist-sea/assets dist-sea/cli.cjs dist-sea/sea-prep.blob dist-sea/.node-cache
++
++  BIN_SIZE=$(du -h "$DEST_BIN" | cut -f1)
++  echo ""
++  echo "=== Build Complete ==="
++  echo "Executable: $DEST_BIN ($BIN_SIZE)"
++  echo ""
++  echo "All assets are embedded — just run:"
++  echo "  ./dist-sea/moli-code"
++fi
+diff --git a/scripts/build_vscode_companion.js b/scripts/build_vscode_companion.js
+index ed55078..2836387 100644
+--- a/scripts/build_vscode_companion.js
++++ b/scripts/build_vscode_companion.js
+@@ -24,7 +24,7 @@ import { fileURLToPath } from 'node:url';
+ const __dirname = dirname(fileURLToPath(import.meta.url));
+ const root = join(__dirname, '..');
+ 
+-execSync('npm --workspace=qwen-code-vscode-ide-companion run package', {
++execSync('npm --workspace=moli-code-vscode-ide-companion run package', {
+   stdio: 'inherit',
+   cwd: root,
+ });
+diff --git a/scripts/check-build-status.js b/scripts/check-build-status.js
+index fbaedb3..63a001a 100644
+--- a/scripts/check-build-status.js
++++ b/scripts/check-build-status.js
+@@ -17,7 +17,7 @@ const filesToWatch = [
+   path.join(cliPackageDir, 'tsconfig.json'),
+ ]; // Specific files within the CLI package
+ const buildDir = path.join(cliPackageDir, 'dist'); // Build output directory within the CLI package
+-const warningsFilePath = path.join(os.tmpdir(), 'qwen-code-warnings.txt'); // Temp file for warnings
++const warningsFilePath = path.join(os.tmpdir(), 'moli-code-warnings.txt'); // Temp file for warnings
+ // ---------------------
+ 
+ function getMtime(filePath) {
+diff --git a/scripts/check-i18n.ts b/scripts/check-i18n.ts
+index 0bd7452..48817fe 100644
+--- a/scripts/check-i18n.ts
++++ b/scripts/check-i18n.ts
+@@ -2,7 +2,7 @@
+ 
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/scripts/copy_bundle_assets.js b/scripts/copy_bundle_assets.js
+index 83ca91f..1ebc1ed 100644
+--- a/scripts/copy_bundle_assets.js
++++ b/scripts/copy_bundle_assets.js
+@@ -27,6 +27,16 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
+ const root = join(__dirname, '..');
+ const distDir = join(root, 'dist');
+ const coreVendorDir = join(root, 'packages', 'core', 'vendor');
++const cliLocalesDir = join(
++  root,
++  'packages',
++  'cli',
++  'dist',
++  'src',
++  'i18n',
++  'locales',
++);
++const distLocalesDir = join(distDir, 'locales');
+ 
+ // Create the dist directory if it doesn't exist
+ if (!existsSync(distDir)) {
+@@ -51,6 +61,15 @@ if (existsSync(coreVendorDir)) {
+   console.warn(`Warning: Vendor directory not found at ${coreVendorDir}`);
+ }
+ 
++// Copy locale files
++console.log('Copying locale files...');
++if (existsSync(cliLocalesDir)) {
++  copyRecursiveSync(cliLocalesDir, distLocalesDir);
++  console.log('Copied locale files to dist/');
++} else {
++  console.warn(`Warning: Locale directory not found at ${cliLocalesDir}`);
++}
++
+ // Copy bundled skills (e.g. /review) so they are available at runtime.
+ // In the esbuild bundle, import.meta.url resolves to dist/cli.js, so
+ // SkillManager looks for bundled skills at dist/bundled/.
+@@ -72,6 +91,18 @@ if (existsSync(bundledSkillsDir)) {
+   );
+ }
+ 
++// Copy molimate.config.json so it's available next to the bundled cli.js
++const molimateConfigSrc = join(root, 'packages', 'cli', 'molimate.config.json');
++if (existsSync(molimateConfigSrc)) {
++  copyFileSync(molimateConfigSrc, join(distDir, 'molimate.config.json'));
++  console.log('Copied molimate.config.json to dist/');
++} else {
++  console.warn(
++    `Warning: molimate.config.json not found at ${molimateConfigSrc}. ` +
++      'Copy molimate.config.example.json to molimate.config.json and fill in your values.',
++  );
++}
++
+ console.log('\n✅ All bundle assets copied to dist/');
+ 
+ /**
+diff --git a/scripts/create_alias.sh b/scripts/create_alias.sh
+index 0a6b836..68dd01b 100755
+--- a/scripts/create_alias.sh
++++ b/scripts/create_alias.sh
+@@ -5,7 +5,7 @@ set -euo pipefail
+ 
+ # Determine the project directory
+ PROJECT_DIR=$(cd "$(dirname "$0")/.." && pwd)
+-ALIAS_COMMAND="alias qwen='node "${PROJECT_DIR}/scripts/start.js"'"
++ALIAS_COMMAND="alias moli-code='node "${PROJECT_DIR}/scripts/start.js"'"
+ 
+ # Detect shell and set config file path
+ if [[ "${SHELL}" == *"/bash" ]]; then
+@@ -22,8 +22,8 @@ echo "  ${ALIAS_COMMAND}"
+ echo ""
+ 
+ # Check if the alias already exists
+-if grep -q "alias qwen=" "${CONFIG_FILE}"; then
+-    echo "A 'qwen' alias already exists in ${CONFIG_FILE}. No changes were made."
++if grep -q "alias moli-code=" "${CONFIG_FILE}"; then
++    echo "A 'moli-code' alias already exists in ${CONFIG_FILE}. No changes were made."
+     exit 0
+ fi
+ 
+@@ -33,7 +33,7 @@ if [[ "${REPLY}" =~ ^[Yy]$ ]]; then
+     echo "${ALIAS_COMMAND}" >> "${CONFIG_FILE}"
+     echo ""
+     echo "Alias added to ${CONFIG_FILE}."
+-    echo "Please run 'source ${CONFIG_FILE}' or open a new terminal to use the 'qwen' command."
++    echo "Please run 'source ${CONFIG_FILE}' or open a new terminal to use the 'moli-code' command."
+ else
+     echo "Aborted. No changes were made."
+ fi
+diff --git a/scripts/dev.js b/scripts/dev.js
+index 32f4a22..35564ea 100644
+--- a/scripts/dev.js
++++ b/scripts/dev.js
+@@ -1,11 +1,11 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+ /**
+- * Development entry point for Qwen Code CLI.
++ * Development entry point for Moli Code CLI.
+  *
+  * Runs the CLI directly from TypeScript source files without requiring a build step.
+  * Changes to packages/core or packages/cli are reflected immediately.
+@@ -28,7 +28,7 @@ const cliPackageDir = join(root, 'packages', 'cli');
+ const cliEntry = join(cliPackageDir, 'index.ts');
+ 
+ // Create a temporary loader file
+-const tmpDir = mkdtempSync(join(tmpdir(), 'qwen-dev-'));
++const tmpDir = mkdtempSync(join(tmpdir(), 'moli-dev-'));
+ const loaderPath = join(tmpDir, 'loader.mjs');
+ 
+ const coreSourcePath = join(root, 'packages', 'core', 'index.ts');
+@@ -40,7 +40,7 @@ import { pathToFileURL } from 'node:url';
+ const coreSourceUrl = '${coreSourceUrl}';
+ 
+ export function resolve(specifier, context, nextResolve) {
+-  if (specifier === '@qwen-code/qwen-code-core') {
++  if (specifier === '@dobby/moli-code-core') {
+     return {
+       shortCircuit: true,
+       url: coreSourceUrl,
+diff --git a/scripts/esbuild-shims.js b/scripts/esbuild-shims.js
+index 9b71a3d..e2183f6 100644
+--- a/scripts/esbuild-shims.js
++++ b/scripts/esbuild-shims.js
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/scripts/generate-settings-schema.ts b/scripts/generate-settings-schema.ts
+index 9031312..035a576 100644
+--- a/scripts/generate-settings-schema.ts
++++ b/scripts/generate-settings-schema.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen team
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -166,7 +166,7 @@ function generateJsonSchema(
+   const jsonSchema: JsonSchemaProperty = {
+     $schema: 'http://json-schema.org/draft-07/schema#',
+     type: 'object',
+-    description: 'Qwen Code settings configuration',
++    description: 'Moli Code settings configuration',
+     properties: {},
+     additionalProperties: true,
+   };
+diff --git a/scripts/generate_sea_assets.js b/scripts/generate_sea_assets.js
+new file mode 100644
+index 0000000..a9c5359
+--- /dev/null
++++ b/scripts/generate_sea_assets.js
+@@ -0,0 +1,107 @@
++/**
++ * Generate sea-config.json with embedded assets for Node.js SEA build.
++ *
++ * Scans dist-sea/assets/ and writes sea-config.json with an "assets" field
++ * so all runtime files are embedded into the single executable.
++ *
++ * Usage:
++ *   node scripts/generate_sea_assets.js              # Include all assets
++ *   node scripts/generate_sea_assets.js --windows     # Windows-only (x64-win32 ripgrep, skip .sb)
++ */
++
++import { readdirSync, statSync, writeFileSync, existsSync } from 'node:fs';
++import { join, dirname, relative, posix } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++const __dirname = dirname(fileURLToPath(import.meta.url));
++const rootDir = join(__dirname, '..');
++const assetsDir = join(rootDir, 'dist-sea', 'assets');
++
++const isWindows = process.argv.includes('--windows');
++
++/**
++ * Recursively collect all file paths under a directory.
++ */
++function walkDir(dir, base = dir) {
++  const results = [];
++  if (!existsSync(dir)) return results;
++
++  for (const entry of readdirSync(dir)) {
++    if (entry === '.DS_Store') continue;
++    const fullPath = join(dir, entry);
++    const stat = statSync(fullPath);
++    if (stat.isDirectory()) {
++      results.push(...walkDir(fullPath, base));
++    } else {
++      // Key = relative path with forward slashes (POSIX style for sea-config)
++      const relPath = relative(base, fullPath).split('\\').join('/');
++      results.push(relPath);
++    }
++  }
++  return results;
++}
++
++/**
++ * Filter assets based on target platform.
++ */
++function filterAssets(files, windowsOnly) {
++  if (!windowsOnly) return files;
++
++  return files.filter((f) => {
++    // Skip macOS sandbox profiles
++    if (f.endsWith('.sb')) return false;
++
++    // For ripgrep binaries, only keep the target platform
++    if (f.startsWith('vendor/ripgrep/')) {
++      const platformDirs = [
++        'arm64-darwin',
++        'x64-darwin',
++        'x64-linux',
++        'arm64-linux',
++      ];
++      for (const pd of platformDirs) {
++        if (f.includes(pd + '/')) return false;
++      }
++    }
++
++    return true;
++  });
++}
++
++// --- Main ---
++
++if (!existsSync(assetsDir)) {
++  console.error(
++    `Error: ${assetsDir} does not exist. Run asset copy step first.`,
++  );
++  process.exit(1);
++}
++
++const allFiles = walkDir(assetsDir);
++const filteredFiles = filterAssets(allFiles, isWindows);
++
++// Build the assets map: key (relative path) -> filepath (relative to project root)
++const assets = {};
++for (const relPath of filteredFiles) {
++  // Use POSIX paths in the config for cross-platform compatibility in sea-config
++  const filePath = posix.join('dist-sea/assets', relPath);
++  assets[relPath] = filePath;
++}
++
++const seaConfig = {
++  main: 'dist-sea/cli.cjs',
++  output: 'dist-sea/sea-prep.blob',
++  disableExperimentalSEAWarning: true,
++  useCodeCache: false,
++  assets,
++};
++
++const outPath = join(rootDir, 'sea-config.json');
++writeFileSync(outPath, JSON.stringify(seaConfig, null, 2) + '\n');
++
++console.log(
++  `Generated sea-config.json with ${filteredFiles.length} embedded assets:`,
++);
++for (const f of filteredFiles) {
++  console.log(`  ${f}`);
++}
+diff --git a/scripts/get-release-version.js b/scripts/get-release-version.js
+index 41e84d8..f20fdc5 100644
+--- a/scripts/get-release-version.js
++++ b/scripts/get-release-version.js
+@@ -27,7 +27,7 @@ function getArgs() {
+ }
+ 
+ function getVersionFromNPM(distTag) {
+-  const command = `npm view @qwen-code/qwen-code version --tag=${distTag}`;
++  const command = `npm view @dobby/moli-code version --tag=${distTag}`;
+   try {
+     return execSync(command).toString().trim();
+   } catch (error) {
+@@ -39,7 +39,7 @@ function getVersionFromNPM(distTag) {
+ }
+ 
+ function getAllVersionsFromNPM() {
+-  const command = `npm view @qwen-code/qwen-code versions --json`;
++  const command = `npm view @dobby/moli-code versions --json`;
+   try {
+     const versionsJson = execSync(command).toString().trim();
+     return JSON.parse(versionsJson);
+@@ -50,7 +50,7 @@ function getAllVersionsFromNPM() {
+ }
+ 
+ function isVersionDeprecated(version) {
+-  const command = `npm view @qwen-code/qwen-code@${version} deprecated`;
++  const command = `npm view @dobby/moli-code@${version} deprecated`;
+   try {
+     const output = execSync(command).toString().trim();
+     return output.length > 0;
+@@ -131,7 +131,7 @@ function detectRollbackAndGetBaseline(npmDistTag) {
+ function doesVersionExist(version) {
+   // Check NPM
+   try {
+-    const command = `npm view @qwen-code/qwen-code@${version} version 2>/dev/null`;
++    const command = `npm view @dobby/moli-code@${version} version 2>/dev/null`;
+     const output = execSync(command).toString().trim();
+     if (output === version) {
+       console.error(`Version ${version} already exists on NPM.`);
+diff --git a/scripts/installation/INSTALLATION_GUIDE.md b/scripts/installation/INSTALLATION_GUIDE.md
+index 8a41bc4..d3c1639 100644
+--- a/scripts/installation/INSTALLATION_GUIDE.md
++++ b/scripts/installation/INSTALLATION_GUIDE.md
+@@ -1,40 +1,40 @@
+-# Installation Guide for Qwen Code with Source Tracking
++# Installation Guide for Moli Code with Source Tracking
+ 
+-This guide describes how to install Node.js and Qwen Code with source information tracking.
++This guide describes how to install Node.js and Moli Code with source information tracking.
+ 
+ ## Overview
+ 
+-The installation scripts automate the process of installing Node.js (if not present or below version 20) and Qwen Code, while capturing and storing the installation source information for analytics and tracking purposes.
++The installation scripts automate the process of installing Node.js (if not present or below version 20) and Moli Code, while capturing and storing the installation source information for analytics and tracking purposes.
+ 
+ ## Installation Scripts
+ 
+ We provide platform-specific installation scripts:
+ 
+-- **Linux/macOS**: `install-qwen-with-source.sh`
+-- **Windows**: `install-qwen-with-source.bat`
++- **Linux/macOS**: `install-moli-with-source.sh`
++- **Windows**: `install-moli-with-source.bat`
+ 
+ ## Linux/macOS Installation
+ 
+-### Script: install-qwen-with-source.sh
++### Script: install-moli-with-source.sh
+ 
+ #### Features:
+ 
+ - Checks for existing Node.js installation and version
+ - Installs Node.js 20+ if needed using NVM
+-- Installs Qwen Code globally with source information
+-- Stores the source information in `~/.qwen/source.json`
++- Installs Moli Code globally with source information
++- Stores the source information in `~/.moli/source.json`
+ 
+ #### Usage:
+ 
+ ```bash
+ # Install with a specific source
+-sh install-qwen-with-source.sh --source github
++sh install-moli-with-source.sh --source github
+ 
+ # Install with internal source
+-sh install-qwen-with-source.sh -s internal
++sh install-moli-with-source.sh -s internal
+ 
+ # Show help
+-sh install-qwen-with-source.sh --help
++sh install-moli-with-source.sh --help
+ ```
+ 
+ #### Supported Source Values:
+@@ -46,10 +46,10 @@ sh install-qwen-with-source.sh --help
+ 
+ #### How it Works:
+ 
+-1. The script accepts a `--source` parameter to specify where Qwen Code is being installed from
++1. The script accepts a `--source` parameter to specify where Moli Code is being installed from
+ 2. It installs Node.js if needed
+-3. It installs Qwen Code globally
+-4. It creates `~/.qwen/source.json` with the specified source information
++3. It installs Moli Code globally
++4. It creates `~/.moli/source.json` with the specified source information
+ 
+ #### Important Notes:
+ 
+@@ -61,7 +61,7 @@ source ~/.bashrc  # For bash users
+ source ~/.zshrc   # For zsh users
+ ```
+ 
+-This is required to load the newly installed Node.js and Qwen Code into your PATH.
++This is required to load the newly installed Node.js and Moli Code into your PATH.
+ 
+ #### Prerequisites:
+ 
+@@ -70,19 +70,19 @@ This is required to load the newly installed Node.js and Qwen Code into your PAT
+ 
+ ## Windows Installation
+ 
+-### Script: install-qwen-with-source.bat
++### Script: install-moli-with-source.bat
+ 
+ #### Features:
+ 
+ - Checks for existing Node.js installation and version (requires version 18+)
+ - Automatically downloads and installs Node.js 24 LTS if not present or version is too low
+-- Installs Qwen Code globally with source information
+-- Stores the source information in `%USERPROFILE%\.qwen\source.json`
++- Installs Moli Code globally with source information
++- Stores the source information in `%USERPROFILE%\.moli\source.json`
+ 
+ #### Prerequisites:
+ 
+ - **PowerShell (Administrator)**: The script must be run in PowerShell with Administrator privileges
+-- Internet connection for downloading Node.js and Qwen Code
++- Internet connection for downloading Node.js and Moli Code
+ 
+ #### Usage:
+ 
+@@ -97,13 +97,13 @@ This is required to load the newly installed Node.js and Qwen Code into your PAT
+ 
+ ```powershell
+ # Install with a specific source using --source parameter
+-./install-qwen-with-source.bat --source github
++./install-moli-with-source.bat --source github
+ 
+ # Install with short parameter
+-./install-qwen-with-source.bat -s internal
++./install-moli-with-source.bat -s internal
+ 
+ # Use default source (unknown)
+-./install-qwen-with-source.bat
++./install-moli-with-source.bat
+ ```
+ 
+ #### Supported Source Values:
+@@ -115,11 +115,11 @@ This is required to load the newly installed Node.js and Qwen Code into your PAT
+ 
+ #### How it Works:
+ 
+-1. The script accepts a `--source` or `-s` parameter to specify where Qwen Code is being installed from
++1. The script accepts a `--source` or `-s` parameter to specify where Moli Code is being installed from
+ 2. It checks if Node.js is already installed and if the version is 18 or higher
+ 3. If Node.js is not installed or version is too low, it automatically downloads and installs Node.js 24 LTS
+-4. It installs Qwen Code globally using npm
+-5. It creates `%USERPROFILE%\.qwen\source.json` with the specified source information
++4. It installs Moli Code globally using npm
++5. It creates `%USERPROFILE%\.moli\source.json` with the specified source information
+ 
+ #### Why Administrator Privileges are Required:
+ 
+@@ -131,14 +131,14 @@ This is required to load the newly installed Node.js and Qwen Code into your PAT
+ 
+ ### Overview
+ 
+-This feature implements the ability to capture and store the installation source of the Qwen Code package. The source information is used for analytics and tracking purposes.
++This feature implements the ability to capture and store the installation source of the Moli Code package. The source information is used for analytics and tracking purposes.
+ 
+ ### Storage Location
+ 
+ The installation source is stored in a separate file at:
+ 
+-- **Unix/Linux/macOS**: `~/.qwen/source.json`
+-- **Windows**: `%USERPROFILE%\.qwen\source.json` (equivalent to `C:\Users\{username}\.qwen\source.json`)
++- **Unix/Linux/macOS**: `~/.moli/source.json`
++- **Windows**: `%USERPROFILE%\.moli\source.json` (equivalent to `C:\Users\{username}\.moli\source.json`)
+ 
+ ### File Format
+ 
+@@ -153,13 +153,13 @@ The `source.json` file contains:
+ ### How the Source Information is Used
+ 
+ 1. **Telemetry Tracking**: The source information is included in RUM (Real User Monitoring) telemetry logs
+-2. **Analytics**: Helps understand how users are discovering and installing Qwen Code
++2. **Analytics**: Helps understand how users are discovering and installing Moli Code
+ 3. **Distribution Analysis**: Tracks which distribution channels are most popular
+ 
+ ### Technical Implementation
+ 
+ - The source information is stored as a separate JSON file
+-- The `QwenLogger` class reads this file during telemetry initialization
++- The `MoliLogger` class reads this file during telemetry initialization
+ - The source is included in the `app.channel` field of the RUM payload
+ - The implementation gracefully handles missing files, unknown values, and parsing errors
+ 
+@@ -170,13 +170,13 @@ After installation and restarting your terminal (or sourcing your shell configur
+ **Linux/macOS:**
+ 
+ ```bash
+-cat ~/.qwen/source.json
++cat ~/.moli/source.json
+ ```
+ 
+ **Windows:**
+ 
+ ```cmd
+-type %USERPROFILE%\.qwen\source.json
++type %USERPROFILE%\.moli\source.json
+ ```
+ 
+ ## Manual Installation (Without Source Tracking)
+@@ -193,13 +193,13 @@ curl -qL https://www.npmjs.com/install.sh | sh
+ ### NPM Installation
+ 
+ ```bash
+-npm install -g @qwen-code/qwen-code@latest
++npm install -g @moli-code/moli-code@latest
+ ```
+ 
+ ### Homebrew (macOS, Linux)
+ 
+ ```bash
+-brew install qwen-code
++brew install moli-code
+ ```
+ 
+ ## Troubleshooting
+@@ -210,24 +210,24 @@ brew install qwen-code
+ 
+ ```bash
+ # Run with sh
+-sh install-qwen-with-source.sh --source github
++sh install-moli-with-source.sh --source github
+ ```
+ 
+ **Windows (PowerShell as Administrator):**
+ 
+ ```powershell
+ # Run the script with --source parameter
+-./install-qwen-with-source.bat --source github
++./install-moli-with-source.bat --source github
+ 
+ # Or with short parameter
+-./install-qwen-with-source.bat -s github
++./install-moli-with-source.bat -s github
+ ```
+ 
+ ### Node.js Installation Issues
+ 
+ **Linux/macOS:**
+ 
+-- Ensure NVM is installed: `curl -o- https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install_nvm.sh | bash`
++- Ensure NVM is installed: `curl -o- https://moli-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install_nvm.sh | bash`
+ - Restart your terminal or run: `source ~/.bashrc`
+ 
+ **Windows:**
+@@ -244,7 +244,7 @@ You may need administrative privileges for global npm installation:
+ 
+ ## Notes
+ 
+-- The scripts require internet access to download Node.js and Qwen Code
++- The scripts require internet access to download Node.js and Moli Code
+ - Administrative privileges may be required for global npm installation
+ - The installation source is stored locally and used for tracking purposes only
+ - If the source file is missing or invalid, the application continues to work normally
+diff --git a/scripts/installation/install-qwen-with-source.bat b/scripts/installation/install-qwen-with-source.bat
+deleted file mode 100644
+index fe5263e..0000000
+--- a/scripts/installation/install-qwen-with-source.bat
++++ /dev/null
+@@ -1,304 +0,0 @@
+-@echo off
+-REM Script to install Node.js and Qwen Code with source information
+-REM This script handles the installation process and sets the installation source
+-REM
+-REM Usage: install-qwen-with-source.bat --source <source>
+-REM        install-qwen-with-source.bat -s <source>
+-REM
+-
+-setlocal enabledelayedexpansion
+-
+-set "SOURCE=unknown"
+-
+-REM Parse command line arguments
+-:parse_args
+-if "%~1"=="" goto end_parse
+-if /i "%~1"=="--source" (
+-    if not "%~2"=="" (
+-        set "SOURCE=%~2"
+-        shift
+-        shift
+-        goto parse_args
+-    )
+-)
+-if /i "%~1"=="-s" (
+-    if not "%~2"=="" (
+-        set "SOURCE=%~2"
+-        shift
+-        shift
+-        goto parse_args
+-    )
+-)
+-shift
+-goto parse_args
+-
+-:end_parse
+-
+-echo ===========================================
+-echo Qwen Code Installation Script with Source Tracking
+-echo ===========================================
+-echo.
+-echo INFO: Installation source: %SOURCE%
+-echo.
+-
+-REM Check if Node.js is already installed
+-call :CheckCommandExists node
+-if !ERRORLEVEL! EQU 0 (
+-    for /f "delims=" %%i in ('node --version') do set "NODE_VERSION=%%i"
+-    echo INFO: Node.js is already installed: !NODE_VERSION!
+-    
+-    REM Extract major version number
+-    set "MAJOR_VERSION=!NODE_VERSION:v=!"
+-    for /f "tokens=1 delims=." %%a in ("!MAJOR_VERSION!") do (
+-        set "MAJOR_VERSION=%%a"
+-    )
+-    
+-    if !MAJOR_VERSION! GEQ 20 (
+-        echo INFO: Node.js version !NODE_VERSION! is sufficient. Skipping Node.js installation.
+-        goto :InstallQwenCode
+-    ) else (
+-        echo INFO: Node.js version !NODE_VERSION! is too low. Need version 20 or higher.
+-        echo INFO: Installing Node.js 20+
+-        call :InstallNodeJSDirectly
+-        if !ERRORLEVEL! NEQ 0 (
+-            echo ERROR: Failed to install Node.js. Cannot continue with Qwen Code installation.
+-            exit /b 1
+-        )
+-    )
+-) else (
+-    echo INFO: Node.js not found. Installing Node.js 20+
+-    call :InstallNodeJSDirectly
+-    if !ERRORLEVEL! NEQ 0 (
+-        echo ERROR: Failed to install Node.js. Cannot continue with Qwen Code installation.
+-        exit /b 1
+-    )
+-)
+-
+-:InstallQwenCode
+-
+-REM Verify npm is available before installing Qwen Code
+-REM Always use full path to npm to avoid local node_modules conflicts
+-set "NODEJS_PATH=C:\Program Files\nodejs"
+-set "NODEJS_PATH_X86=C:\Program Files (x86)\nodejs"
+-
+-if exist "!NODEJS_PATH!\npm.cmd" (
+-    echo INFO: Using npm from !NODEJS_PATH!
+-    set "NPM_CMD=!NODEJS_PATH!\npm.cmd"
+-) else if exist "!NODEJS_PATH_X86!\npm.cmd" (
+-    echo INFO: Using npm from !NODEJS_PATH_X86!
+-    set "NPM_CMD=!NODEJS_PATH_X86!\npm.cmd"
+-) else (
+-    call :CheckCommandExists npm
+-    if !ERRORLEVEL! NEQ 0 (
+-        echo ERROR: npm command not found. Node.js installation may have failed.
+-        echo INFO: Please restart your command prompt and try again.
+-        echo INFO: If the problem persists, manually install Node.js from: https://nodejs.org/
+-        exit /b 1
+-    )
+-    set "NPM_CMD=npm"
+-)
+-
+-REM Install Qwen Code with source information
+-echo INFO: Installing Qwen Code with source: %SOURCE%
+-echo INFO: Running: %NPM_CMD% install -g @qwen-code/qwen-code@latest --registry https://registry.npmmirror.com
+-call "%NPM_CMD%" install -g @qwen-code/qwen-code@latest --registry https://registry.npmmirror.com
+-
+-if %ERRORLEVEL% EQU 0 (
+-    echo SUCCESS: Qwen Code installed successfully!
+-) else (
+-    echo ERROR: Failed to install Qwen Code.
+-    exit /b 1
+-)
+-
+-REM Create source.json only if --source or -s was explicitly provided
+-if not "!SOURCE!"=="unknown" (
+-    echo INFO: Creating source.json in %USERPROFILE%\.qwen...
+-
+-    set "QWEN_DIR=%USERPROFILE%\.qwen"
+-    if not exist "!QWEN_DIR!" (
+-        mkdir "!QWEN_DIR!"
+-    )
+-
+-    REM Create the source.json file with the installation source
+-    (
+-    echo {
+-    echo   "source": "!SOURCE!"
+-    echo }
+-    ) > "!QWEN_DIR!\source.json"
+-
+-    echo SUCCESS: Installation source saved to %USERPROFILE%\.qwen\source.json
+-)
+-
+-REM Verify installation
+-call :CheckCommandExists qwen
+-if %ERRORLEVEL% EQU 0 (
+-    echo SUCCESS: Qwen Code is available as 'qwen' command.
+-    call qwen --version
+-    echo.
+-    echo INFO: Starting Qwen Code...
+-    echo.
+-    call qwen
+-) else (
+-    echo WARNING: Qwen Code may not be in PATH. Please check your npm global bin directory.
+-    echo.
+-    echo ===========================================
+-    echo SUCCESS: Installation completed!
+-    echo The source information is stored in %USERPROFILE%\.qwen\source.json
+-    echo.
+-    echo ===========================================
+-)
+-
+-endlocal
+-exit /b 0
+-
+-REM ============================================================
+-REM Function: CheckCommandExists
+-REM Description: Check if a command exists in the system
+-REM ============================================================
+-:CheckCommandExists
+-where %~1 >nul 2>&1
+-exit /b %ERRORLEVEL%
+-
+-REM ============================================================
+-REM Function: InstallNodeJSDirectly
+-REM Description: Download and install Node.js directly from official website
+-REM ============================================================
+-:InstallNodeJSDirectly
+-echo INFO: Downloading Node.js LTS (20.x) from official website
+-
+-REM Create temp directory for download
+-set "TEMP_DIR=%TEMP%\qwen-nodejs-install"
+-if not exist "%TEMP_DIR%" mkdir "%TEMP_DIR%"
+-
+-REM Determine architecture
+-set "ARCH=x64"
+-if "%PROCESSOR_ARCHITECTURE%"=="x86" set "ARCH=x86"
+-if "%PROCESSOR_ARCHITECTURE%"=="AMD64" set "ARCH=x64"
+-if defined PROCESSOR_ARCHITEW6432 set "ARCH=x64"
+-
+-REM Set Node.js download URL (LTS version 20.x)
+-set "NODE_VERSION=20.18.1"
+-set "NODE_URL=https://nodejs.org/dist/v!NODE_VERSION!/node-v!NODE_VERSION!-!ARCH!.msi"
+-set "NODE_INSTALLER=%TEMP_DIR%\nodejs-installer.msi"
+-
+-echo INFO: Downloading from: !NODE_URL!
+-echo INFO: Architecture: !ARCH!
+-
+-REM Download Node.js installer using PowerShell
+-powershell -Command "try { Invoke-WebRequest -Uri '!NODE_URL!' -OutFile '!NODE_INSTALLER!' -UseBasicParsing; Write-Host 'Download completed successfully.' } catch { Write-Host 'Download failed:' $_.Exception.Message; exit 1 }"
+-
+-if !ERRORLEVEL! NEQ 0 (
+-    echo ERROR: Failed to download Node.js installer from official source.
+-    echo INFO: Please manually download and install Node.js from: https://nodejs.org/
+-    echo INFO: After manual installation, restart your command prompt and run this script again.
+-    exit /b 1
+-)
+-
+-if not exist "!NODE_INSTALLER!" (
+-    echo ERROR: Node.js installer not found after download.
+-    exit /b 1
+-)
+-
+-echo INFO: Installing Node.js silently
+-REM Install Node.js silently
+-msiexec /i "!NODE_INSTALLER!" /quiet /norestart ADDLOCAL=ALL
+-
+-if !ERRORLEVEL! NEQ 0 (
+-    echo ERROR: Failed to install Node.js.
+-    echo INFO: You may need to run this script as Administrator.
+-    echo INFO: Or manually install Node.js from: https://nodejs.org/
+-    exit /b 1
+-)
+-
+-echo INFO: Node.js installation completed.
+-
+-REM Clean up installer
+-del "!NODE_INSTALLER!" 2>nul
+-rmdir "!TEMP_DIR!" 2>nul
+-
+-REM Refresh environment variables
+-echo INFO: Refreshing environment variables
+-call :RefreshEnvVars
+-
+-REM Verify installation and return success
+-set "NODEJS_INSTALL_PATH=C:\Program Files\nodejs"
+-if exist "!NODEJS_INSTALL_PATH!\node.exe" (
+-    for /f "delims=" %%i in ('"!NODEJS_INSTALL_PATH!\node.exe" --version') do set "NODE_VERSION=%%i"
+-    echo SUCCESS: Node.js !NODE_VERSION! installed successfully!
+-    exit /b 0
+-)
+-
+-set "NODEJS_INSTALL_PATH_X86=C:\Program Files (x86)\nodejs"
+-if exist "!NODEJS_INSTALL_PATH_X86!\node.exe" (
+-    for /f "delims=" %%i in ('"!NODEJS_INSTALL_PATH_X86!\node.exe" --version') do set "NODE_VERSION=%%i"
+-    echo SUCCESS: Node.js !NODE_VERSION! installed successfully!
+-    exit /b 0
+-)
+-
+-call :CheckCommandExists node
+-if !ERRORLEVEL! EQU 0 (
+-    for /f "delims=" %%i in ('node --version') do set "NODE_VERSION=%%i"
+-    echo SUCCESS: Node.js !NODE_VERSION! installed successfully!
+-    exit /b 0
+-) else (
+-    echo WARNING: Node.js installed but not found in PATH.
+-    echo INFO: Trying to use Node.js from default installation path
+-    
+-    REM Try to use Node.js directly from installation path
+-    set "NODE_PATH=C:\Program Files\nodejs"
+-    if exist "%NODE_PATH%\node.exe" (
+-        echo INFO: Found Node.js at %NODE_PATH%
+-        REM Update PATH for current session
+-        set "PATH=%PATH%;%NODE_PATH%"
+-        
+-        REM Test if node works now
+-        "%NODE_PATH%\node.exe" --version >nul 2>&1
+-        if !ERRORLEVEL! EQU 0 (
+-            for /f "delims=" %%i in ('"%NODE_PATH%\node.exe" --version') do set "NODE_VERSION=%%i"
+-            echo SUCCESS: Node.js %NODE_VERSION% is working from %NODE_PATH%
+-            exit /b 0
+-        )
+-    )
+-    
+-    REM Try x86 path
+-    set "NODE_PATH_X86=C:\Program Files (x86)\nodejs"
+-    if exist "%NODE_PATH_X86%\node.exe" (
+-        echo INFO: Found Node.js at %NODE_PATH_X86%
+-        REM Update PATH for current session
+-        set "PATH=%PATH%;%NODE_PATH_X86%"
+-        
+-        REM Test if node works now
+-        "%NODE_PATH_X86%\node.exe" --version >nul 2>&1
+-        if !ERRORLEVEL! EQU 0 (
+-            for /f "delims=" %%i in ('"%NODE_PATH_X86%\node.exe" --version') do set "NODE_VERSION=%%i"
+-            echo SUCCESS: Node.js %NODE_VERSION% is working from %NODE_PATH_X86%
+-            exit /b 0
+-        )
+-    )
+-    
+-    echo ERROR: Node.js installation completed but cannot be executed
+-    exit /b 1
+-)
+-
+-exit /b 0
+-
+-REM ============================================================
+-REM Function: RefreshEnvVars
+-REM Description: Refresh environment variables without restarting
+-REM ============================================================
+-:RefreshEnvVars
+-REM Add Node.js to PATH if not already there
+-set "NODEJS_DIR=C:\Program Files\nodejs"
+-if exist "!NODEJS_DIR!\node.exe" (
+-    echo INFO: Found Node.js at !NODEJS_DIR!
+-    set "PATH=!PATH!;!NODEJS_DIR!"
+-)
+-
+-REM Try alternative path for x86 systems
+-set "NODEJS_DIR_X86=C:\Program Files (x86)\nodejs"
+-if exist "!NODEJS_DIR_X86!\node.exe" (
+-    echo INFO: Found Node.js at !NODEJS_DIR_X86!
+-    set "PATH=!PATH!;!NODEJS_DIR_X86!"
+-)
+-
+-exit /b 0
+diff --git a/scripts/installation/install-qwen-with-source.sh b/scripts/installation/install-qwen-with-source.sh
+deleted file mode 100755
+index ce6d46c..0000000
+--- a/scripts/installation/install-qwen-with-source.sh
++++ /dev/null
+@@ -1,574 +0,0 @@
+-#!/bin/bash
+-
+-# Qwen Code Installation Script
+-# This script installs Node.js (via NVM) and Qwen Code CLI
+-# Supports Linux and macOS
+-#
+-# Usage: install-qwen-with-source.sh --source [github|npm|internal|local-build]
+-#        install-qwen-with-source.sh -s [github|npm|internal|local-build]
+-
+-# Re-execute with bash if running with sh or other shells
+-# This block must use POSIX-compliant syntax ([ not [[) since it runs before we know bash is available
+-if [ -z "${BASH_VERSION}" ] && [ -z "${__QWEN_INSTALL_REEXEC:-}" ]; then
+-    # Check if we're in a git hook environment
+-    case "${0}" in
+-        *.git/hooks/*) export __QWEN_IN_GIT_HOOK=1 ;;
+-    esac
+-    if [ -n "${GIT_DIR:-}" ]; then
+-        export __QWEN_IN_GIT_HOOK=1
+-    fi
+-
+-    # Try to find bash
+-    if command -v bash >/dev/null 2>&1; then
+-        export __QWEN_INSTALL_REEXEC=1
+-        # Re-exec with bash, preserving all arguments
+-        exec bash -- "${0}" "$@"
+-    else
+-        echo "Error: This script requires bash. Please install bash first."
+-        exit 1
+-    fi
+-fi
+-
+-# Enable strict mode (bash-specific options)
+-# pipefail requires bash 3+; check before setting
+-if [ -n "${BASH_VERSION:-}" ]; then
+-    # shellcheck disable=SC3040
+-    set -eo pipefail
+-else
+-    set -e
+-fi
+-
+-# ============================================
+-# Color definitions
+-# ============================================
+-RED='\033[0;31m'
+-GREEN='\033[0;32m'
+-YELLOW='\033[1;33m'
+-BLUE='\033[0;34m'
+-NC='\033[0m' # No Color
+-
+-# ============================================
+-# Log functions
+-# ============================================
+-log_info() {
+-    echo -e "${BLUE}ℹ️  $1${NC}"
+-}
+-
+-log_success() {
+-    echo -e "${GREEN}✅ $1${NC}"
+-}
+-
+-log_warning() {
+-    echo -e "${YELLOW}⚠️  $1${NC}"
+-}
+-
+-log_error() {
+-    echo -e "${RED}❌ $1${NC}"
+-}
+-
+-# ============================================
+-# Utility functions
+-# ============================================
+-command_exists() {
+-    command -v "$1" >/dev/null 2>&1
+-}
+-
+-get_shell_profile() {
+-    local current_shell
+-    current_shell=$(basename "${SHELL}")
+-    case "${current_shell}" in
+-        bash)
+-            echo "${HOME}/.bashrc"
+-            ;;
+-        zsh)
+-            echo "${HOME}/.zshrc"
+-            ;;
+-        fish)
+-            # Fish uses its own syntax; bash/zsh export statements are not compatible.
+-            # Return empty string to signal callers to skip automatic profile writes.
+-            echo ""
+-            ;;
+-        *)
+-            echo "${HOME}/.profile"
+-            ;;
+-    esac
+-}
+-
+-# ============================================
+-# Parse command line arguments
+-# ============================================
+-SOURCE="unknown"
+-while [[ $# -gt 0 ]]; do
+-    case $1 in
+-        -s|--source)
+-            if [[ -z "$2" ]] || [[ "$2" == -* ]]; then
+-                log_error "--source requires a value"
+-                exit 1
+-            fi
+-            SOURCE="$2"
+-            shift 2
+-            ;;
+-        -h|--help)
+-            echo "Usage: $0 [OPTIONS]"
+-            echo ""
+-            echo "Options:"
+-            echo "  -s, --source SOURCE    Specify the installation source (e.g., github, npm, internal)"
+-            echo "  -h, --help             Show this help message"
+-            echo ""
+-            exit 0
+-            ;;
+-        *)
+-            log_error "Unknown option: $1"
+-            exit 1
+-            ;;
+-    esac
+-done
+-
+-# ============================================
+-# Print header
+-# ============================================
+-echo "=========================================="
+-echo "   Qwen Code Installation Script"
+-echo "=========================================="
+-echo ""
+-log_info "System: $(uname -s) $(uname -r)" || true
+-log_info "Shell: $(basename "${SHELL}")"
+-echo ""
+-
+-# ============================================
+-# Ensure download tool is available
+-# ============================================
+-ensure_download_tool() {
+-    if command_exists curl; then
+-        DOWNLOAD_CMD="curl"
+-        DOWNLOAD_ARGS="-fsSL"
+-        return 0
+-    fi
+-
+-    if command_exists wget; then
+-        DOWNLOAD_CMD="wget"
+-        DOWNLOAD_ARGS="-qO -"
+-        return 0
+-    fi
+-
+-    log_error "Neither curl nor wget found"
+-    log_info "Please install curl or wget manually:"
+-    echo "  - macOS: brew install curl"
+-    echo "  - Ubuntu/Debian: sudo apt-get install curl"
+-    echo "  - CentOS/RHEL: sudo yum install curl"
+-    exit 1
+-}
+-
+-# ============================================
+-# Clean npm configuration conflicts
+-# ============================================
+-clean_npmrc_conflict() {
+-    local npmrc="${HOME}/.npmrc"
+-    if [[ -f "${npmrc}" ]]; then
+-        # Only clean if conflicting entries actually exist
+-        if grep -Eq '^(prefix|globalconfig) *= *' "${npmrc}" 2>/dev/null; then
+-            log_info "Cleaning npmrc conflicts..."
+-            # Backup original npmrc before modifying
+-            cp -f "${npmrc}" "${npmrc}.bak"
+-            log_info "Backed up original .npmrc to ${npmrc}.bak"
+-            grep -Ev '^(prefix|globalconfig) *= *' "${npmrc}.bak" > "${npmrc}.tmp" || true
+-            mv -f "${npmrc}.tmp" "${npmrc}" || true
+-            log_success "Removed conflicting prefix/globalconfig entries from .npmrc"
+-        fi
+-    fi
+-}
+-
+-# ============================================
+-# Install NVM
+-# ============================================
+-install_nvm() {
+-    local NVM_DIR="${NVM_DIR:-${HOME}/.nvm}"
+-    local NVM_VERSION="${NVM_VERSION:-v0.40.3}"
+-
+-    if [[ -s "${NVM_DIR}/nvm.sh" ]]; then
+-        log_info "NVM is already installed at ${NVM_DIR}"
+-        return 0
+-    fi
+-
+-    log_info "Installing NVM ${NVM_VERSION}..."
+-
+-    # Download and install NVM from Aliyun OSS
+-    # Use temporary file instead of pipe to avoid potential subshell issues
+-    local NVM_INSTALL_TEMP
+-    NVM_INSTALL_TEMP=$(mktemp)
+-    if "${DOWNLOAD_CMD}" "${DOWNLOAD_ARGS}" "https://qwen-code-assets.oss-cn-hangzhou.aliyuncs.com/installation/install_nvm.sh" > "${NVM_INSTALL_TEMP}"; then
+-        # Run the script in current shell environment
+-        # shellcheck source=/dev/null
+-        . "${NVM_INSTALL_TEMP}"
+-        rm -f "${NVM_INSTALL_TEMP}"
+-        log_success "NVM installed successfully"
+-    else
+-        rm -f "${NVM_INSTALL_TEMP}"
+-        log_error "Failed to install NVM"
+-        log_info "Please install NVM manually: https://github.com/nvm-sh/nvm#install--update-script"
+-        exit 1
+-    fi
+-
+-    # Configure shell profile
+-    local PROFILE_FILE
+-    PROFILE_FILE=$(get_shell_profile)
+-
+-    # Fish shell returns empty string from get_shell_profile because export/source
+-    # syntax is incompatible with fish. Skip automatic profile writes for fish users.
+-    if [[ -z "${PROFILE_FILE}" ]]; then
+-        log_warning "Fish shell detected: automatic shell profile configuration is not supported."
+-        log_info "Please add NVM configuration manually. See: https://github.com/nvm-sh/nvm#fish"
+-    # Check if profile file is writable
+-    elif [[ -f "${PROFILE_FILE}" ]] && [[ ! -w "${PROFILE_FILE}" ]]; then
+-        log_warning "Cannot write to ${PROFILE_FILE} (permission denied)"
+-        log_info "Skipping shell profile configuration"
+-        log_info "You may need to manually add NVM configuration to your shell profile"
+-    elif ! grep -q 'NVM_DIR' "${PROFILE_FILE}" 2>/dev/null; then
+-        # shellcheck disable=SC2016
+-        # The following echo statements intentionally use single quotes to write literal strings
+-        {
+-            echo ""
+-            echo "# NVM configuration (added by Qwen Code installer)"
+-            echo "export NVM_DIR=\"\$HOME/.nvm\""
+-            echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"'
+-            echo '[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"'
+-        } >> "${PROFILE_FILE}" 2>/dev/null || {
+-            log_warning "Failed to write to ${PROFILE_FILE}"
+-            log_info "Skipping shell profile configuration"
+-            return 0
+-        }
+-        log_info "Added NVM config to ${PROFILE_FILE}"
+-    fi
+-
+-    # Load NVM for current session
+-    export NVM_DIR="${NVM_DIR}"
+-    # shellcheck source=/dev/null
+-    [[ -s "${NVM_DIR}/nvm.sh" ]] && \. "${NVM_DIR}/nvm.sh"
+-
+-    log_success "NVM configured successfully"
+-    return 0
+-}
+-
+-# ============================================
+-# Install Node.js via NVM
+-# ============================================
+-install_nodejs_with_nvm() {
+-    local NODE_VERSION="${NODE_VERSION:-20}"
+-    local NVM_DIR="${NVM_DIR:-${HOME}/.nvm}"
+-
+-    # Ensure NVM is loaded
+-    export NVM_DIR="${NVM_DIR}"
+-    # shellcheck source=/dev/null
+-    [[ -s "${NVM_DIR}/nvm.sh" ]] && \. "${NVM_DIR}/nvm.sh"
+-
+-    if ! command_exists nvm; then
+-        log_error "NVM not loaded properly"
+-        return 1
+-    fi
+-
+-    # Set Node.js mirror source for faster downloads in China
+-    export NVM_NODEJS_ORG_MIRROR="https://npmmirror.com/mirrors/node"
+-
+-    # Install Node.js
+-    log_info "Installing Node.js v${NODE_VERSION}..."
+-    if nvm install "${NODE_VERSION}"; then
+-        nvm alias default "${NODE_VERSION}" || true
+-        nvm use default || true
+-        log_success "Node.js v${NODE_VERSION} installed successfully"
+-
+-        # Verify installation
+-        log_info "Node.js version: $(node -v)" || true
+-        log_info "npm version: $(npm -v)" || true
+-
+-        return 0
+-    else
+-        log_error "Failed to install Node.js"
+-        return 1
+-    fi
+-}
+-
+-# ============================================
+-# Check Node.js version
+-# ============================================
+-check_node_version() {
+-    if ! command_exists node; then
+-        return 1
+-    fi
+-
+-    local current_version
+-    current_version=$(node -v | sed 's/v//')
+-    local major_version
+-    major_version=$(echo "${current_version}" | cut -d. -f1 | sed 's/[^0-9]//g')
+-
+-    # Handle cases where major_version is empty or non-numeric
+-    if [[ -z "${major_version}" ]]; then
+-        log_warning "Unable to determine Node.js version from: $(node -v)"
+-        return 1
+-    fi
+-
+-    if [[ "${major_version}" -ge 20 ]]; then
+-        log_success "Node.js v${current_version} is already installed (>= 20)"
+-        return 0
+-    else
+-        log_warning "Node.js v${current_version} is installed but version < 20"
+-        return 1
+-    fi
+-}
+-
+-# ============================================
+-# Install Node.js
+-# ============================================
+-install_nodejs() {
+-    local platform
+-    platform=$(uname -s)
+-
+-    case "${platform}" in
+-        Linux|Darwin)
+-            log_info "Installing Node.js on ${platform}..."
+-
+-            # Install NVM
+-            if ! install_nvm; then
+-                log_error "Failed to install NVM"
+-                return 1
+-            fi
+-
+-            # Load NVM
+-            export NVM_DIR="${HOME}/.nvm"
+-            # shellcheck source=/dev/null
+-            [[ -s "${NVM_DIR}/nvm.sh" ]] && \. "${NVM_DIR}/nvm.sh"
+-
+-            # Install Node.js
+-            if ! install_nodejs_with_nvm; then
+-                log_error "Failed to install Node.js"
+-                return 1
+-            fi
+-            ;;
+-        MINGW*|CYGWIN*|MSYS*)
+-            log_error "Windows platform detected. Please use Windows installer or WSL."
+-            log_info "Visit: https://nodejs.org/en/download/"
+-            exit 1
+-            ;;
+-        *)
+-            log_error "Unsupported platform: ${platform}"
+-            exit 1
+-            ;;
+-    esac
+-}
+-
+-# ============================================
+-# Check and install Node.js
+-# ============================================
+-check_and_install_nodejs() {
+-    if check_node_version; then
+-        log_info "Using existing Node.js installation"
+-        clean_npmrc_conflict
+-    else
+-        log_warning "Installing or upgrading Node.js..."
+-        install_nodejs
+-    fi
+-}
+-
+-# ============================================
+-# Fix npm permissions (without using sudo)
+-# ============================================
+-fix_npm_permissions() {
+-    log_info "Checking npm permissions..."
+-
+-    local NPM_GLOBAL_DIR
+-    NPM_GLOBAL_DIR=$(npm config get prefix 2>/dev/null) || true
+-
+-    # Determine whether we need to fall back to ~/.npm-global:
+-    # 1. prefix is empty or contains an error string
+-    # 2. prefix is a system directory (would break sudo setuid binaries)
+-    # 3. prefix directory is not writable
+-    local use_user_dir=false
+-
+-    if [[ -z "${NPM_GLOBAL_DIR}" ]] || [[ "${NPM_GLOBAL_DIR}" == *"error"* ]]; then
+-        log_info "npm prefix is unset or invalid, switching to user directory"
+-        use_user_dir=true
+-    else
+-        # SAFETY CHECK: Never use system directories
+-        case "${NPM_GLOBAL_DIR}" in
+-            /|/usr|/usr/local|/bin|/sbin|/lib|/lib64|/opt|/snap|/var|/etc)
+-                log_warning "npm prefix is a system directory (${NPM_GLOBAL_DIR}), switching to user directory to avoid breaking system binaries."
+-                use_user_dir=true
+-                ;;
+-        esac
+-    fi
+-
+-    if [[ "${use_user_dir}" == false ]] && [[ ! -w "${NPM_GLOBAL_DIR}" ]]; then
+-        log_warning "npm global directory is not writable: ${NPM_GLOBAL_DIR}, switching to user directory."
+-        use_user_dir=true
+-    fi
+-
+-    if [[ "${use_user_dir}" == true ]]; then
+-        NPM_GLOBAL_DIR="${HOME}/.npm-global"
+-        # Create the directory before setting prefix so npm config set succeeds
+-        mkdir -p "${NPM_GLOBAL_DIR}"
+-        npm config set prefix "${NPM_GLOBAL_DIR}"
+-        log_success "npm prefix set to: ${NPM_GLOBAL_DIR}"
+-
+-        # Only add ~/.npm-global/bin to PATH when we actually use it
+-        local PROFILE_FILE
+-        PROFILE_FILE=$(get_shell_profile)
+-        if [[ -n "${PROFILE_FILE}" ]] && ! grep -q '.npm-global/bin' "${PROFILE_FILE}" 2>/dev/null; then
+-            {
+-                echo ""
+-                echo "# NPM global bin (added by Qwen Code installer)"
+-                echo "export PATH=\"\$HOME/.npm-global/bin:\$PATH\""
+-            } >> "${PROFILE_FILE}" 2>/dev/null || log_warning "Failed to write PATH update to ${PROFILE_FILE}"
+-            log_info "Added npm global bin to PATH in ${PROFILE_FILE}"
+-        fi
+-    else
+-        log_info "npm global directory is writable: ${NPM_GLOBAL_DIR}"
+-    fi
+-
+-    return 0
+-}
+-
+-# ============================================
+-# Install Qwen Code
+-# ============================================
+-install_qwen_code() {
+-    # Ensure NVM node is in PATH
+-    export NVM_DIR="${HOME}/.nvm"
+-    # shellcheck source=/dev/null
+-    [[ -s "${NVM_DIR}/nvm.sh" ]] && \. "${NVM_DIR}/nvm.sh" 2>/dev/null || true
+-
+-    # Add npm global bin to PATH
+-    local NPM_GLOBAL_BIN
+-    NPM_GLOBAL_BIN=$(npm config get prefix 2>/dev/null)/bin
+-    if [[ -n "${NPM_GLOBAL_BIN}" ]]; then
+-        export PATH="${NPM_GLOBAL_BIN}:${PATH}"
+-    fi
+-
+-    if command_exists qwen; then
+-        local QWEN_VERSION
+-        QWEN_VERSION=$(qwen --version 2>/dev/null || echo "unknown")
+-        log_success "Qwen Code is already installed: ${QWEN_VERSION}"
+-        log_info "Upgrading to the latest version..."
+-    fi
+-
+-    # Clean npmrc conflicts
+-    clean_npmrc_conflict
+-
+-    # Fix npm permissions if needed
+-    fix_npm_permissions
+-
+-    # Install Qwen Code
+-    log_info "Installing Qwen Code..."
+-    if npm install -g @qwen-code/qwen-code@latest --registry https://registry.npmmirror.com; then
+-        log_success "Qwen Code installed successfully!"
+-
+-        # Verify installation
+-        if command_exists qwen; then
+-            local qwen_version
+-            qwen_version=$(qwen --version 2>/dev/null) || qwen_version="unknown"
+-            log_info "Qwen Code version: ${qwen_version}"
+-        fi
+-    else
+-        log_error "Failed to install Qwen Code!"
+-        log_info "Please check your internet connection and try again"
+-        exit 1
+-    fi
+-
+-    # Create source.json if source parameter was provided
+-    if [[ "${SOURCE}" != "unknown" ]]; then
+-        create_source_json
+-    fi
+-}
+-
+-# ============================================
+-# Create source.json
+-# ============================================
+-create_source_json() {
+-    local QWEN_DIR="${HOME}/.qwen"
+-
+-    mkdir -p "${QWEN_DIR}"
+-
+-    # Escape special characters in SOURCE for JSON
+-    local ESCAPED_SOURCE
+-    ESCAPED_SOURCE=$(printf '%s' "${SOURCE}" | sed 's/\\/\\\\/g; s/"/\\"/g')
+-
+-    cat > "${QWEN_DIR}/source.json" <<EOF
+-{
+-  "source": "${ESCAPED_SOURCE}"
+-}
+-EOF
+-
+-    log_success "Installation source saved to ~/.qwen/source.json"
+-}
+-
+-# ============================================
+-# Main function
+-# ============================================
+-main() {
+-    # Validate HOME variable
+-    if [[ -z "${HOME}" ]]; then
+-        log_warning "HOME environment variable is not set"
+-        local MAIN_UID
+-        MAIN_UID=$(id -u) || true
+-        if [[ "${MAIN_UID}" -eq 0 ]]; then
+-            export HOME="/root"
+-        else
+-            local CURRENT_USER
+-            CURRENT_USER=$(whoami) || true
+-            local user_home
+-            user_home=$(eval echo "~${CURRENT_USER}") || true
+-            export HOME="${user_home}"
+-        fi
+-        log_info "Using HOME=${HOME}"
+-    fi
+-
+-    # Ensure download tool is available
+-    ensure_download_tool
+-
+-    # Check and install Node.js
+-    check_and_install_nodejs
+-    echo ""
+-
+-    # Install Qwen Code
+-    install_qwen_code
+-    echo ""
+-
+-    # ============================================
+-    # Final instructions
+-    # ============================================
+-    echo "=========================================="
+-    echo "✅ Installation completed!"
+-    echo "=========================================="
+-    echo ""
+-
+-    # Ensure NVM and npm global bin are in PATH
+-    export NVM_DIR="${HOME}/.nvm"
+-    # shellcheck source=/dev/null
+-    [[ -s "${NVM_DIR}/nvm.sh" ]] && \. "${NVM_DIR}/nvm.sh" 2>/dev/null || true
+-    local NPM_GLOBAL_BIN
+-    NPM_GLOBAL_BIN=$(npm config get prefix 2>/dev/null)/bin
+-    if [[ -n "${NPM_GLOBAL_BIN}" ]]; then
+-        export PATH="${NPM_GLOBAL_BIN}:${PATH}"
+-    fi
+-
+-    # Check if qwen is immediately available
+-    if command_exists qwen; then
+-        log_success "Qwen Code is ready to use!"
+-        echo ""
+-        echo "You can now run: qwen"
+-        echo ""
+-        # Auto-start qwen
+-        log_info "Starting Qwen Code..."
+-        echo ""
+-        exec qwen
+-    else
+-        log_warning "Qwen Code command not found in current session"
+-        echo ""
+-        echo "To use Qwen Code immediately without restarting your terminal,"
+-        echo "run the following command in your current shell:"
+-        echo "  eval \$(${0} --print-env)"
+-        echo ""
+-        log_info "Or simply restart your terminal, then run: qwen"
+-    fi
+-}
+-
+-# Run main function
+-main "$@"
+diff --git a/scripts/lint.js b/scripts/lint.js
+index 4bce9d9..045f0e0 100644
+--- a/scripts/lint.js
++++ b/scripts/lint.js
+@@ -15,7 +15,7 @@ const ACTIONLINT_VERSION = '1.7.7';
+ const SHELLCHECK_VERSION = '0.11.0';
+ const YAMLLINT_VERSION = '1.35.1';
+ 
+-const TEMP_DIR = join(tmpdir(), 'qwen-code-linters');
++const TEMP_DIR = join(tmpdir(), 'moli-code-linters');
+ 
+ function getPlatformArch() {
+   const platform = process.platform;
+diff --git a/scripts/local_telemetry.js b/scripts/local_telemetry.js
+index f5707e9..69937f2 100755
+--- a/scripts/local_telemetry.js
++++ b/scripts/local_telemetry.js
+@@ -70,7 +70,7 @@ service:
+ 
+ async function main() {
+   // 1. Ensure binaries are available, downloading if necessary.
+-  // Binaries are stored in the project's .qwen/otel/bin directory
++  // Binaries are stored in the project's .moli/otel/bin directory
+   // to avoid modifying the user's system.
+   if (!fileExists(BIN_DIR)) fs.mkdirSync(BIN_DIR, { recursive: true });
+ 
+diff --git a/scripts/prepare-package.js b/scripts/prepare-package.js
+index f587f26..719ed01 100644
+--- a/scripts/prepare-package.js
++++ b/scripts/prepare-package.js
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -152,7 +152,15 @@ const distPackageJson = {
+     moli: 'cli.js',
+     'moli-code': 'cli.js',
+   },
+-  files: ['cli.js', 'vendor', '*.sb', 'README.md', 'LICENSE', 'locales'],
++  files: [
++    'cli.js',
++    'vendor',
++    '*.sb',
++    'README.md',
++    'LICENSE',
++    'locales',
++    'molimate.config.json',
++  ],
+   config: rootPackageJson.config,
+   dependencies: {},
+   // Removed optionalDependencies for offline installation
+diff --git a/scripts/sandbox_command.js b/scripts/sandbox_command.js
+index 629e96f..331c79a 100644
+--- a/scripts/sandbox_command.js
++++ b/scripts/sandbox_command.js
+@@ -32,27 +32,27 @@ const argv = yargs(hideBin(process.argv)).option('q', {
+   default: false,
+ }).argv;
+ 
+-let qwenSandbox = process.env.QWEN_SANDBOX;
++let moliSandbox = process.env.MOLI_SANDBOX;
+ 
+-if (!qwenSandbox) {
+-  const userSettingsFile = join(os.homedir(), '.qwen', 'settings.json');
++if (!moliSandbox) {
++  const userSettingsFile = join(os.homedir(), '.moli', 'settings.json');
+   if (existsSync(userSettingsFile)) {
+     const settings = JSON.parse(
+       stripJsonComments(readFileSync(userSettingsFile, 'utf-8')),
+     );
+     if (settings.sandbox) {
+-      qwenSandbox = settings.sandbox;
++      moliSandbox = settings.sandbox;
+     }
+   }
+ }
+ 
+-if (!qwenSandbox) {
++if (!moliSandbox) {
+   let currentDir = process.cwd();
+   while (true) {
+-    const qwenEnv = join(currentDir, '.qwen', '.env');
++    const moliEnv = join(currentDir, '.moli', '.env');
+     const regularEnv = join(currentDir, '.env');
+-    if (existsSync(qwenEnv)) {
+-      dotenv.config({ path: qwenEnv, quiet: true });
++    if (existsSync(moliEnv)) {
++      dotenv.config({ path: moliEnv, quiet: true });
+       break;
+     } else if (existsSync(regularEnv)) {
+       dotenv.config({ path: regularEnv, quiet: true });
+@@ -64,10 +64,10 @@ if (!qwenSandbox) {
+     }
+     currentDir = parentDir;
+   }
+-  qwenSandbox = process.env.QWEN_SANDBOX;
++  moliSandbox = process.env.MOLI_SANDBOX;
+ }
+ 
+-qwenSandbox = (qwenSandbox || '').toLowerCase();
++moliSandbox = (moliSandbox || '').toLowerCase();
+ 
+ const commandExists = (cmd) => {
+   // Use 'where.exe' (not 'where') on Windows because PowerShell aliases
+@@ -90,23 +90,23 @@ const commandExists = (cmd) => {
+ };
+ 
+ let command = '';
+-if (['1', 'true'].includes(qwenSandbox)) {
++if (['1', 'true'].includes(moliSandbox)) {
+   if (commandExists('docker')) {
+     command = 'docker';
+   } else if (commandExists('podman')) {
+     command = 'podman';
+   } else {
+     console.error(
+-      'ERROR: install docker or podman or specify command in QWEN_SANDBOX',
++      'ERROR: install docker or podman or specify command in MOLI_SANDBOX',
+     );
+     process.exit(1);
+   }
+-} else if (qwenSandbox && !['0', 'false'].includes(qwenSandbox)) {
+-  if (commandExists(qwenSandbox)) {
+-    command = qwenSandbox;
++} else if (moliSandbox && !['0', 'false'].includes(moliSandbox)) {
++  if (commandExists(moliSandbox)) {
++    command = moliSandbox;
+   } else {
+     console.error(
+-      `ERROR: missing sandbox command '${qwenSandbox}' (from QWEN_SANDBOX)`,
++      `ERROR: missing sandbox command '${moliSandbox}' (from MOLI_SANDBOX)`,
+     );
+     process.exit(1);
+   }
+diff --git a/scripts/start.js b/scripts/start.js
+index 49037b7..d0965fa 100644
+--- a/scripts/start.js
++++ b/scripts/start.js
+@@ -67,11 +67,11 @@ const env = {
+ if (process.env.DEBUG) {
+   // If this is not set, the debugger will pause on the outer process rather
+   // than the relaunched process making it harder to debug.
+-  env.QWEN_CODE_NO_RELAUNCH = 'true';
++  env.MOLI_CODE_NO_RELAUNCH = 'true';
+ }
+ // Use process.cwd() to inherit the working directory from launch.json cwd setting
+ // This allows debugging from a specific directory (e.g., .todo)
+-const workingDir = process.env.QWEN_WORKING_DIR || process.cwd();
++const workingDir = process.env.MOLI_WORKING_DIR || process.cwd();
+ const child = spawn('node', nodeArgs, {
+   stdio: 'inherit',
+   env,
+diff --git a/scripts/telemetry.js b/scripts/telemetry.js
+index b07e2ef..b9cf580 100755
+--- a/scripts/telemetry.js
++++ b/scripts/telemetry.js
+@@ -12,7 +12,7 @@ import { existsSync, readFileSync } from 'node:fs';
+ 
+ const projectRoot = join(import.meta.dirname, '..');
+ 
+-const SETTINGS_DIRECTORY_NAME = '.qwen';
++const SETTINGS_DIRECTORY_NAME = '.moli';
+ const USER_SETTINGS_DIR = join(
+   process.env.HOME || process.env.USERPROFILE || process.env.HOMEPATH || '',
+   SETTINGS_DIRECTORY_NAME,
+diff --git a/scripts/telemetry_gcp.js b/scripts/telemetry_gcp.js
+index 58c563e..0cec3da 100755
+--- a/scripts/telemetry_gcp.js
++++ b/scripts/telemetry_gcp.js
+@@ -166,7 +166,7 @@ async function main() {
+ 
+   console.log(`\n✨ Local OTEL collector for GCP is running.`);
+   console.log(
+-    '\n🚀 To send telemetry, run Qwen Code in a separate terminal window.',
++    '\n🚀 To send telemetry, run Moli Code in a separate terminal window.',
+   );
+   console.log(`\n📄 Collector logs are being written to: ${OTEL_LOG_FILE}`);
+   console.log(
+diff --git a/scripts/telemetry_utils.js b/scripts/telemetry_utils.js
+index 8806521..8c3962c 100644
+--- a/scripts/telemetry_utils.js
++++ b/scripts/telemetry_utils.js
+@@ -35,29 +35,29 @@ function getProjectHash(projectRoot) {
+ const projectHash = getProjectHash(projectRoot);
+ 
+ // User-level .gemini directory in home
+-const USER_GEMINI_DIR = path.join(os.homedir(), '.qwen');
++const USER_GEMINI_DIR = path.join(os.homedir(), '.moli');
+ // Project-level .gemini directory in the workspace
+-const WORKSPACE_QWEN_DIR = path.join(projectRoot, '.qwen');
++const WORKSPACE_MOLI_DIR = path.join(projectRoot, '.moli');
+ 
+-// Telemetry artifacts are stored in a hashed directory under the user's ~/.qwen/tmp
++// Telemetry artifacts are stored in a hashed directory under the user's ~/.moli/tmp
+ export const OTEL_DIR = path.join(USER_GEMINI_DIR, 'tmp', projectHash, 'otel');
+ export const BIN_DIR = path.join(OTEL_DIR, 'bin');
+ 
+ // Workspace settings remain in the project's .gemini directory
+ export const WORKSPACE_SETTINGS_FILE = path.join(
+-  WORKSPACE_QWEN_DIR,
++  WORKSPACE_MOLI_DIR,
+   'settings.json',
+ );
+ 
+ export function getJson(url) {
+   const tmpFile = path.join(
+     os.tmpdir(),
+-    `qwen-code-releases-${Date.now()}.json`,
++    `moli-code-releases-${Date.now()}.json`,
+   );
+   try {
+     const result = spawnSync(
+       'curl',
+-      ['-sL', '-H', 'User-Agent: qwen-code-dev-script', '-o', tmpFile, url],
++      ['-sL', '-H', 'User-Agent: moli-code-dev-script', '-o', tmpFile, url],
+       { stdio: 'pipe', encoding: 'utf-8' },
+     );
+     if (result.status !== 0) {
+@@ -261,7 +261,7 @@ export async function ensureBinary(
+   }
+ 
+   const downloadUrl = asset.browser_download_url;
+-  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'qwen-code-telemetry-'));
++  const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'moli-code-telemetry-'));
+   const archivePath = path.join(tmpDir, asset.name);
+ 
+   try {
+diff --git a/scripts/tests/get-release-version.test.js b/scripts/tests/get-release-version.test.js
+index 7adf003..a5e1299 100644
+--- a/scripts/tests/get-release-version.test.js
++++ b/scripts/tests/get-release-version.test.js
+@@ -55,10 +55,7 @@ describe('getVersion', () => {
+     if (command.includes('git rev-parse --short HEAD')) return 'd3bf8a3d';
+ 
+     // For doesVersionExist checks - default to not found
+-    if (
+-      command.includes('npm view') &&
+-      command.includes('@qwen-code/qwen-code@')
+-    ) {
++    if (command.includes('npm view') && command.includes('@dobby/moli-code@')) {
+       throw new Error('NPM version not found');
+     }
+     if (command.includes('git tag -l')) return '';
+@@ -124,7 +121,7 @@ describe('getVersion', () => {
+         // Mock the deprecation check
+         if (
+           command.includes(
+-            'npm view @qwen-code/qwen-code@0.9.0-nightly.20250917.deprecated deprecated',
++            'npm view @dobby/moli-code@0.9.0-nightly.20250917.deprecated deprecated',
+           )
+         )
+           return 'This version is deprecated';
+@@ -161,16 +158,12 @@ describe('getVersion', () => {
+       const mockWithConflict = (command) => {
+         // The calculated preview 0.8.0-preview.0 already exists on NPM
+         if (
+-          command.includes(
+-            'npm view @qwen-code/qwen-code@0.8.0-preview.0 version',
+-          )
++          command.includes('npm view @dobby/moli-code@0.8.0-preview.0 version')
+         )
+           return '0.8.0-preview.0';
+         // The next one is available
+         if (
+-          command.includes(
+-            'npm view @qwen-code/qwen-code@0.8.0-preview.1 version',
+-          )
++          command.includes('npm view @dobby/moli-code@0.8.0-preview.1 version')
+         )
+           throw new Error('Not found');
+ 
+diff --git a/scripts/unused-keys-only-in-locales.json b/scripts/unused-keys-only-in-locales.json
+index 45097f8..fa07edd 100644
+--- a/scripts/unused-keys-only-in-locales.json
++++ b/scripts/unused-keys-only-in-locales.json
+@@ -45,8 +45,8 @@
+     "Persist for this user on this machine",
+     "Plan mode - Analyze only, do not modify files or execute commands",
+     "Pro quota limit reached for {{model}}.",
+-    "Qwen OAuth authentication cancelled.",
+-    "Qwen OAuth authentication timed out. Please try again.",
++    "Moli OAuth authentication cancelled.",
++    "Moli OAuth authentication timed out. Please try again.",
+     "Resume a conversation from a checkpoint. Usage: /chat resume <tag>",
+     "Save the current conversation as a checkpoint. Usage: /chat save <tag>",
+     "Scope subcommands do not accept additional arguments.",
+diff --git a/scripts/version.js b/scripts/version.js
+index d67ff71..461c801 100644
+--- a/scripts/version.js
++++ b/scripts/version.js
+@@ -38,7 +38,7 @@ run(`npm version ${versionType} --no-git-tag-version --allow-same-version`);
+ 
+ // 3. Get all workspaces and filter out the one we don't want to version.
+ // We intend to maintain sdk version independently.
+-const workspacesToExclude = ['@qwen-code/sdk'];
++const workspacesToExclude = ['@dobby/moli-code-sdk'];
+ let lsOutput;
+ try {
+   lsOutput = JSON.parse(

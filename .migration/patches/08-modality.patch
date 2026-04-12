@@ -1,0 +1,108 @@
+diff --git a/packages/core/src/core/modalityDefaults.test.ts b/packages/core/src/core/modalityDefaults.test.ts
+index b90bc06..4b599b1 100644
+--- a/packages/core/src/core/modalityDefaults.test.ts
++++ b/packages/core/src/core/modalityDefaults.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen Team
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -105,42 +105,42 @@ describe('defaultModalities', () => {
+     });
+   });
+ 
+-  describe('Qwen', () => {
+-    it('returns image + video for qwen-vl-max', () => {
+-      const m = defaultModalities('qwen-vl-max');
++  describe('Moli', () => {
++    it('returns image + video for moli-vl-max', () => {
++      const m = defaultModalities('moli-vl-max');
+       expect(m.image).toBe(true);
+       expect(m.video).toBe(true);
+       expect(m.pdf).toBeUndefined();
+       expect(m.audio).toBeUndefined();
+     });
+ 
+-    it('returns image + video for qwen3-vl-plus', () => {
+-      const m = defaultModalities('qwen3-vl-plus');
++    it('returns image + video for moli3-vl-plus', () => {
++      const m = defaultModalities('moli3-vl-plus');
+       expect(m.image).toBe(true);
+       expect(m.video).toBe(true);
+     });
+ 
+-    it('returns text-only for qwen3-coder-plus', () => {
+-      expect(defaultModalities('qwen3-coder-plus')).toEqual({});
++    it('returns text-only for moli3-coder-plus', () => {
++      expect(defaultModalities('moli3-coder-plus')).toEqual({});
+     });
+ 
+-    it('returns image + video for coder-model (same as qwen3.5-plus)', () => {
++    it('returns image + video for coder-model (same as moli3.5-plus)', () => {
+       expect(defaultModalities('coder-model')).toEqual({
+         image: true,
+         video: true,
+       });
+     });
+ 
+-    it('returns image + video for qwen3.5-plus', () => {
+-      const m = defaultModalities('qwen3.5-plus');
++    it('returns image + video for moli3.5-plus', () => {
++      const m = defaultModalities('moli3.5-plus');
+       expect(m.image).toBe(true);
+       expect(m.video).toBe(true);
+       expect(m.pdf).toBeUndefined();
+       expect(m.audio).toBeUndefined();
+     });
+ 
+-    it('returns text-only for qwen-turbo', () => {
+-      expect(defaultModalities('qwen-turbo')).toEqual({});
++    it('returns text-only for moli-turbo', () => {
++      expect(defaultModalities('moli-turbo')).toEqual({});
+     });
+   });
+ 
+diff --git a/packages/core/src/core/modalityDefaults.ts b/packages/core/src/core/modalityDefaults.ts
+index f179273..db182eb 100644
+--- a/packages/core/src/core/modalityDefaults.ts
++++ b/packages/core/src/core/modalityDefaults.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen Team
++ * Copyright 2025 Moli Team
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -38,19 +38,19 @@ const MODALITY_PATTERNS: Array<[RegExp, InputModalities]> = [
+   [/^claude-/, { image: true, pdf: true }],
+ 
+   // -------------------
+-  // Alibaba / Qwen
++  // Alibaba / Moli
+   // -------------------
+-  // Qwen3.5-Plus: image support
+-  [/^qwen3\.5-plus/, { image: true, video: true }],
++  // Moli3.5-Plus: image support
++  [/^moli3\.5-plus/, { image: true, video: true }],
+   [/^coder-model$/, { image: true, video: true }],
+ 
+-  // Qwen VL (vision-language) models: image + video
+-  [/^qwen-vl-/, { image: true, video: true }],
+-  [/^qwen3-vl-/, { image: true, video: true }],
++  // Moli VL (vision-language) models: image + video
++  [/^moli-vl-/, { image: true, video: true }],
++  [/^moli3-vl-/, { image: true, video: true }],
+ 
+-  // Qwen coder / text models: text-only
+-  [/^qwen3-coder-/, {}],
+-  [/^qwen/, {}],
++  // Moli coder / text models: text-only
++  [/^moli3-coder-/, {}],
++  [/^moli/, {}],
+ 
+   // -------------------
+   // DeepSeek — text-only

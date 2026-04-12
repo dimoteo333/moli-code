@@ -1,0 +1,299 @@
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/README.md b/packages/core/src/core/openaiContentGenerator/provider/README.md
+index c1e2d7a..3fd03ea 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/README.md
++++ b/packages/core/src/core/openaiContentGenerator/provider/README.md
+@@ -1,13 +1,13 @@
+ # Provider Structure
+ 
+-This folder contains the different provider implementations for the Qwen Code refactor system.
++This folder contains the different provider implementations for the Moli Code refactor system.
+ 
+ ## File Structure
+ 
+ - `constants.ts` - Common constants used across all providers
+ - `types.ts` - Type definitions and interfaces for providers
+ - `default.ts` - Default provider for standard OpenAI-compatible APIs
+-- `dashscope.ts` - DashScope (Qwen) specific provider implementation
++- `dashscope.ts` - DashScope (Moli) specific provider implementation
+ - `openrouter.ts` - OpenRouter specific provider implementation
+ - `index.ts` - Main export file for all providers
+ 
+@@ -19,7 +19,7 @@ The `DefaultOpenAICompatibleProvider` is the fallback provider for standard Open
+ 
+ ### DashScope Provider
+ 
+-The `DashScopeOpenAICompatibleProvider` handles DashScope (Qwen) specific features like cache control and metadata.
++The `DashScopeOpenAICompatibleProvider` handles DashScope (Moli) specific features like cache control and metadata.
+ 
+ ### OpenRouter Provider
+ 
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/dashscope.test.ts b/packages/core/src/core/openaiContentGenerator/provider/dashscope.test.ts
+index a0cd944..6f157b4 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/dashscope.test.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/dashscope.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -817,12 +817,12 @@ describe('DashScopeOpenAICompatibleProvider', () => {
+       const request: OpenAI.Chat.ChatCompletionCreateParams = {
+         model: 'unknown-model',
+         messages: [{ role: 'user', content: 'Hello' }],
+-        max_tokens: 10000, // Exceeds the default limit
++        max_tokens: 20000, // Exceeds the default limit
+       };
+ 
+       const result = provider.buildRequest(request, 'test-prompt-id');
+ 
+-      expect(result.max_tokens).toBe(8192); // Should be limited to default output limit (8K)
++      expect(result.max_tokens).toBe(16384); // Should be limited to default output limit (16K)
+     });
+ 
+     it('should preserve other request parameters when limiting max_tokens', () => {
+@@ -985,7 +985,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
+       );
+ 
+       const request: OpenAI.Chat.ChatCompletionCreateParams = {
+-        model: 'qwen-vl-max',
++        model: 'moli-vl-max',
+         messages: [{ role: 'user', content: 'Hello' }],
+       };
+ 
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/dashscope.ts b/packages/core/src/core/openaiContentGenerator/provider/dashscope.ts
+index 2fa6530..4d94d6a 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/dashscope.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/dashscope.ts
+@@ -285,7 +285,7 @@ export class DashScopeOpenAICompatibleProvider
+   private static readonly VISION_MODEL_EXACT_MATCHES = new Set(['coder-model']);
+ 
+   private static readonly VISION_MODEL_PREFIX_PATTERNS = [
+-    'qwen-vl', // qwen-vl-max, moli-vl-max-latest, etc.
++    'moli-vl', // moli-vl-max, moli-vl-max-latest, etc.
+     'moli-vl-plus', // moli-vl-plus variants
+     'moli3.5-plus', // moli3.5-plus (has built-in vision capabilities)
+   ];
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/deepseek.test.ts b/packages/core/src/core/openaiContentGenerator/provider/deepseek.test.ts
+index f4ced4c..d3577f8 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/deepseek.test.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/deepseek.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/deepseek.ts b/packages/core/src/core/openaiContentGenerator/provider/deepseek.ts
+index e34dc72..525a098 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/deepseek.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/deepseek.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/default.test.ts b/packages/core/src/core/openaiContentGenerator/provider/default.test.ts
+index cc227b4..976b76a 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/default.test.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/default.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -81,7 +81,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
+       const headers = provider.buildHeaders();
+ 
+       expect(headers).toEqual({
+-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
++        'User-Agent': `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
+       });
+     });
+ 
+@@ -115,7 +115,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
+       const headers = provider.buildHeaders();
+ 
+       expect(headers).toEqual({
+-        'User-Agent': `QwenCode/unknown (${process.platform}; ${process.arch})`,
++        'User-Agent': `MoliCode/unknown (${process.platform}; ${process.arch})`,
+       });
+     });
+   });
+@@ -131,7 +131,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
+           timeout: 60000,
+           maxRetries: 2,
+           defaultHeaders: {
+-            'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
++            'User-Agent': `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
+           },
+         }),
+       );
+@@ -152,7 +152,7 @@ describe('DefaultOpenAICompatibleProvider', () => {
+           timeout: DEFAULT_TIMEOUT,
+           maxRetries: DEFAULT_MAX_RETRIES,
+           defaultHeaders: {
+-            'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
++            'User-Agent': `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
+           },
+         }),
+       );
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/default.ts b/packages/core/src/core/openaiContentGenerator/provider/default.ts
+index 783c962..e2c3a12 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/default.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/default.ts
+@@ -25,7 +25,7 @@ export class DefaultOpenAICompatibleProvider
+ 
+   buildHeaders(): Record<string, string | undefined> {
+     const version = this.cliConfig.getCliVersion() || 'unknown';
+-    const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
++    const userAgent = `MoliCode/${version} (${process.platform}; ${process.arch})`;
+     const { customHeaders } = this.contentGeneratorConfig;
+     const defaultHeaders = {
+       'User-Agent': userAgent,
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/modelscope.test.ts b/packages/core/src/core/openaiContentGenerator/provider/modelscope.test.ts
+index da5a71a..d745d78 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/modelscope.test.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/modelscope.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -21,7 +21,7 @@ describe('ModelScopeOpenAICompatibleProvider', () => {
+     mockContentGeneratorConfig = {
+       apiKey: 'test-api-key',
+       baseUrl: 'https://api.modelscope.cn/v1',
+-      model: 'qwen-max',
++      model: 'moli-max',
+     } as ContentGeneratorConfig;
+ 
+     mockCliConfig = {
+@@ -57,7 +57,7 @@ describe('ModelScopeOpenAICompatibleProvider', () => {
+   describe('buildRequest', () => {
+     it('should remove stream_options when stream is false', () => {
+       const originalRequest: OpenAI.Chat.ChatCompletionCreateParams = {
+-        model: 'qwen-max',
++        model: 'moli-max',
+         messages: [{ role: 'user', content: 'Hello!' }],
+         stream: false,
+         stream_options: { include_usage: true },
+@@ -70,7 +70,7 @@ describe('ModelScopeOpenAICompatibleProvider', () => {
+ 
+     it('should keep stream_options when stream is true', () => {
+       const originalRequest: OpenAI.Chat.ChatCompletionCreateParams = {
+-        model: 'qwen-max',
++        model: 'moli-max',
+         messages: [{ role: 'user', content: 'Hello!' }],
+         stream: true,
+         stream_options: { include_usage: true },
+@@ -83,7 +83,7 @@ describe('ModelScopeOpenAICompatibleProvider', () => {
+ 
+     it('should handle requests without stream_options', () => {
+       const originalRequest: OpenAI.Chat.ChatCompletionCreateParams = {
+-        model: 'qwen-max',
++        model: 'moli-max',
+         messages: [{ role: 'user', content: 'Hello!' }],
+         stream: false,
+       };
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/openrouter.test.ts b/packages/core/src/core/openaiContentGenerator/provider/openrouter.test.ts
+index 385cdd5..cb01658 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/openrouter.test.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/openrouter.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -95,7 +95,7 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
+ 
+       // Should include User-Agent from parent
+       expect(headers['User-Agent']).toBe(
+-        `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
++        `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
+       );
+     });
+ 
+@@ -103,9 +103,9 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
+       const headers = provider.buildHeaders();
+ 
+       expect(headers).toEqual({
+-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+-        'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+-        'X-OpenRouter-Title': 'Qwen Code',
++        'User-Agent': `MoliCode/1.0.0 (${process.platform}; ${process.arch})`,
++        'HTTP-Referer': 'https://github.com/MoliLM/moli-code.git',
++        'X-OpenRouter-Title': 'Moli Code',
+       });
+     });
+ 
+@@ -124,8 +124,8 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
+ 
+       expect(headers).toEqual({
+         'User-Agent': 'ParentAgent/1.0.0',
+-        'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git', // OpenRouter-specific value should override
+-        'X-OpenRouter-Title': 'Qwen Code',
++        'HTTP-Referer': 'https://github.com/MoliLM/moli-code.git', // OpenRouter-specific value should override
++        'X-OpenRouter-Title': 'Moli Code',
+       });
+ 
+       parentBuildHeaders.mockRestore();
+@@ -137,12 +137,12 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
+       const headers = provider.buildHeaders();
+ 
+       expect(headers['User-Agent']).toBe(
+-        `QwenCode/unknown (${process.platform}; ${process.arch})`,
++        `MoliCode/unknown (${process.platform}; ${process.arch})`,
+       );
+       expect(headers['HTTP-Referer']).toBe(
+-        'https://github.com/QwenLM/qwen-code.git',
++        'https://github.com/MoliLM/moli-code.git',
+       );
+-      expect(headers['X-OpenRouter-Title']).toBe('Qwen Code');
++      expect(headers['X-OpenRouter-Title']).toBe('Moli Code');
+     });
+   });
+ 
+@@ -213,9 +213,9 @@ describe('OpenRouterOpenAICompatibleProvider', () => {
+       // Should have both parent and OpenRouter-specific headers
+       expect(headers['User-Agent']).toBeDefined(); // From parent
+       expect(headers['HTTP-Referer']).toBe(
+-        'https://github.com/QwenLM/qwen-code.git',
++        'https://github.com/MoliLM/moli-code.git',
+       ); // OpenRouter-specific
+-      expect(headers['X-OpenRouter-Title']).toBe('Qwen Code'); // OpenRouter-specific
++      expect(headers['X-OpenRouter-Title']).toBe('Moli Code'); // OpenRouter-specific
+     });
+   });
+ });
+diff --git a/packages/core/src/core/openaiContentGenerator/provider/openrouter.ts b/packages/core/src/core/openaiContentGenerator/provider/openrouter.ts
+index 9bf8716..6cdb483 100644
+--- a/packages/core/src/core/openaiContentGenerator/provider/openrouter.ts
++++ b/packages/core/src/core/openaiContentGenerator/provider/openrouter.ts
+@@ -24,8 +24,8 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
+     // Add OpenRouter-specific headers
+     return {
+       ...baseHeaders,
+-      'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+-      'X-OpenRouter-Title': 'Qwen Code',
++      'HTTP-Referer': 'https://github.com/MoliLM/moli-code.git',
++      'X-OpenRouter-Title': 'Moli Code',
+     };
+   }
+ }

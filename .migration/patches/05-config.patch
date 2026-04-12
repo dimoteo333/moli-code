@@ -1,0 +1,605 @@
+diff --git a/packages/core/src/config/config.test.ts b/packages/core/src/config/config.test.ts
+index 30b24c0..7497ea8 100644
+--- a/packages/core/src/config/config.test.ts
++++ b/packages/core/src/config/config.test.ts
+@@ -13,7 +13,7 @@ import { setGeminiMdFilename as mockSetGeminiMdFilename } from '../tools/memoryT
+ import {
+   DEFAULT_TELEMETRY_TARGET,
+   DEFAULT_OTLP_ENDPOINT,
+-  QwenLogger,
++  MoliLogger,
+ } from '../telemetry/index.js';
+ import type {
+   ContentGenerator,
+@@ -117,10 +117,10 @@ vi.mock('../tools/read-many-files', () => ({
+ vi.mock('../tools/memoryTool', () => ({
+   MemoryTool: createToolMock('save_memory'),
+   setGeminiMdFilename: vi.fn(),
+-  getCurrentGeminiMdFilename: vi.fn(() => 'QWEN.md'), // Mock the original filename
+-  getAllGeminiMdFilenames: vi.fn(() => ['QWEN.md', 'AGENTS.md']),
+-  DEFAULT_CONTEXT_FILENAME: 'QWEN.md',
+-  QWEN_CONFIG_DIR: '.qwen',
++  getCurrentGeminiMdFilename: vi.fn(() => 'MOLI.md'), // Mock the original filename
++  getAllGeminiMdFilenames: vi.fn(() => ['MOLI.md', 'AGENTS.md']),
++  DEFAULT_CONTEXT_FILENAME: 'MOLI.md',
++  MOLI_CONFIG_DIR: '.moli',
+ }));
+ 
+ vi.mock('../core/contentGenerator.js');
+@@ -197,7 +197,7 @@ import { BaseLlmClient } from '../core/baseLlmClient.js';
+ vi.mock('../core/baseLlmClient.js');
+ 
+ describe('Server Config (config.ts)', () => {
+-  const MODEL = 'qwen3-coder-plus';
++  const MODEL = 'moli3-coder-plus';
+ 
+   // Default mock for canUseRipgrep to return true (tests that care about ripgrep will override this)
+   beforeEach(() => {
+@@ -205,7 +205,7 @@ describe('Server Config (config.ts)', () => {
+   });
+   const SANDBOX: SandboxConfig = {
+     command: 'docker',
+-    image: 'qwen-code-sandbox',
++    image: 'moli-code-sandbox',
+   };
+   const TARGET_DIR = '/path/to/target';
+   const DEBUG_MODE = false;
+@@ -230,7 +230,7 @@ describe('Server Config (config.ts)', () => {
+   beforeEach(() => {
+     // Reset mocks if necessary
+     vi.clearAllMocks();
+-    vi.spyOn(QwenLogger.prototype, 'logStartSessionEvent').mockImplementation(
++    vi.spyOn(MoliLogger.prototype, 'logStartSessionEvent').mockImplementation(
+       async () => undefined,
+     );
+ 
+@@ -292,7 +292,7 @@ describe('Server Config (config.ts)', () => {
+       const authType = AuthType.USE_GEMINI;
+       const mockContentConfig = {
+         apiKey: 'test-key',
+-        model: 'qwen3-coder-plus',
++        model: 'moli3-coder-plus',
+         authType,
+       };
+ 
+@@ -335,14 +335,14 @@ describe('Server Config (config.ts)', () => {
+     });
+   });
+ 
+-  describe('model switching optimization (QWEN_OAUTH)', () => {
+-    it('should switch qwen-oauth model in-place without refreshing auth when safe', async () => {
++  describe('model switching optimization (MOLI_OAUTH)', () => {
++    it('should switch moli-oauth model in-place without refreshing auth when safe', async () => {
+       const config = new Config(baseParams);
+ 
+       const mockContentConfig: ContentGeneratorConfig = {
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+         model: 'coder-model',
+-        apiKey: 'QWEN_OAUTH_DYNAMIC_TOKEN',
++        apiKey: 'MOLI_OAUTH_DYNAMIC_TOKEN',
+         baseUrl: DEFAULT_DASHSCOPE_BASE_URL,
+         timeout: 60000,
+         maxRetries: 3,
+@@ -365,13 +365,13 @@ describe('Server Config (config.ts)', () => {
+         embedContent: vi.fn(),
+       } as unknown as ContentGenerator);
+ 
+-      // Establish initial qwen-oauth content generator config/content generator.
+-      await config.refreshAuth(AuthType.QWEN_OAUTH);
++      // Establish initial moli-oauth content generator config/content generator.
++      await config.refreshAuth(AuthType.MOLI_OAUTH);
+ 
+       // Spy after initial refresh to ensure model switch does not re-trigger refreshAuth.
+       const refreshSpy = vi.spyOn(config, 'refreshAuth');
+ 
+-      await config.switchModel(AuthType.QWEN_OAUTH, 'coder-model');
++      await config.switchModel(AuthType.MOLI_OAUTH, 'coder-model');
+ 
+       expect(config.getModel()).toBe('coder-model');
+       expect(refreshSpy).not.toHaveBeenCalled();
+@@ -608,7 +608,7 @@ describe('Server Config (config.ts)', () => {
+       });
+       await config.initialize();
+ 
+-      expect(QwenLogger.prototype.logStartSessionEvent).toHaveBeenCalledOnce();
++      expect(MoliLogger.prototype.logStartSessionEvent).toHaveBeenCalledOnce();
+     });
+   });
+ 
+@@ -1318,7 +1318,7 @@ describe('Model Switching and Config Updates', () => {
+     cwd: '/tmp',
+     targetDir: '/path/to/target',
+     debugMode: false,
+-    model: 'qwen3-coder-plus',
++    model: 'moli3-coder-plus',
+     usageStatisticsEnabled: false,
+     telemetry: { enabled: false },
+   };
+@@ -1332,8 +1332,8 @@ describe('Model Switching and Config Updates', () => {
+ 
+     // Initialize with first model
+     const initialConfig: ContentGeneratorConfig = {
+-      ['model']: 'qwen3-coder-plus',
+-      ['authType']: AuthType.QWEN_OAUTH,
++      ['model']: 'moli3-coder-plus',
++      ['authType']: AuthType.MOLI_OAUTH,
+       ['apiKey']: 'test-key',
+       ['contextWindowSize']: 1_000_000,
+       ['samplingParams']: { temperature: 0.7 },
+@@ -1348,17 +1348,17 @@ describe('Model Switching and Config Updates', () => {
+       },
+     });
+ 
+-    await config.refreshAuth(AuthType.QWEN_OAUTH);
++    await config.refreshAuth(AuthType.MOLI_OAUTH);
+ 
+     // Verify initial config
+     const contentGenConfig = config.getContentGeneratorConfig();
+-    expect(contentGenConfig['model']).toBe('qwen3-coder-plus');
++    expect(contentGenConfig['model']).toBe('moli3-coder-plus');
+     expect(contentGenConfig['contextWindowSize']).toBe(1_000_000);
+ 
+     // Switch to a different model with different token limits
+     const newConfig: ContentGeneratorConfig = {
+-      ['model']: 'qwen-max',
+-      ['authType']: AuthType.QWEN_OAUTH,
++      ['model']: 'moli-max',
++      ['authType']: AuthType.MOLI_OAUTH,
+       ['apiKey']: 'test-key',
+       ['contextWindowSize']: 128_000,
+       ['samplingParams']: { temperature: 0.8 },
+@@ -1383,11 +1383,11 @@ describe('Model Switching and Config Updates', () => {
+           requiresRefresh: boolean,
+         ) => Promise<void>;
+       }
+-    ).handleModelChange(AuthType.QWEN_OAUTH, false);
++    ).handleModelChange(AuthType.MOLI_OAUTH, false);
+ 
+     // Verify all fields are updated
+     const updatedConfig = config.getContentGeneratorConfig();
+-    expect(updatedConfig['model']).toBe('qwen-max');
++    expect(updatedConfig['model']).toBe('moli-max');
+     expect(updatedConfig['contextWindowSize']).toBe(128_000);
+     expect(updatedConfig['samplingParams']?.temperature).toBe(0.8);
+     expect(updatedConfig['enableCacheControl']).toBe(false);
+@@ -1402,13 +1402,13 @@ describe('Model Switching and Config Updates', () => {
+     expect(sources['enableCacheControl']?.kind).toBe('settings');
+   });
+ 
+-  it('should trigger full refresh when switching to non-qwen-oauth provider', async () => {
++  it('should trigger full refresh when switching to non-moli-oauth provider', async () => {
+     const config = new Config(baseParams);
+ 
+-    // Initialize with qwen-oauth
++    // Initialize with moli-oauth
+     const initialConfig: ContentGeneratorConfig = {
+-      ['model']: 'qwen3-coder-plus',
+-      ['authType']: AuthType.QWEN_OAUTH,
++      ['model']: 'moli3-coder-plus',
++      ['authType']: AuthType.MOLI_OAUTH,
+       ['apiKey']: 'test-key',
+       ['contextWindowSize']: 1_000_000,
+     };
+@@ -1418,7 +1418,7 @@ describe('Model Switching and Config Updates', () => {
+       sources: {},
+     });
+ 
+-    await config.refreshAuth(AuthType.QWEN_OAUTH);
++    await config.refreshAuth(AuthType.MOLI_OAUTH);
+ 
+     // Switch to different auth type (should trigger full refresh)
+     const newConfig: ContentGeneratorConfig = {
+@@ -1459,8 +1459,8 @@ describe('Model Switching and Config Updates', () => {
+ 
+     // Initialize with config that has undefined token limits
+     const initialConfig: ContentGeneratorConfig = {
+-      ['model']: 'qwen3-coder-plus',
+-      ['authType']: AuthType.QWEN_OAUTH,
++      ['model']: 'moli3-coder-plus',
++      ['authType']: AuthType.MOLI_OAUTH,
+       ['apiKey']: 'test-key',
+       ['contextWindowSize']: undefined,
+     };
+@@ -1470,12 +1470,12 @@ describe('Model Switching and Config Updates', () => {
+       sources: {},
+     });
+ 
+-    await config.refreshAuth(AuthType.QWEN_OAUTH);
++    await config.refreshAuth(AuthType.MOLI_OAUTH);
+ 
+     // Switch to model with defined limits
+     const newConfig: ContentGeneratorConfig = {
+-      ['model']: 'qwen-max',
+-      ['authType']: AuthType.QWEN_OAUTH,
++      ['model']: 'moli-max',
++      ['authType']: AuthType.MOLI_OAUTH,
+       ['apiKey']: 'test-key',
+       ['contextWindowSize']: 128_000,
+     };
+@@ -1492,7 +1492,7 @@ describe('Model Switching and Config Updates', () => {
+           requiresRefresh: boolean,
+         ) => Promise<void>;
+       }
+-    ).handleModelChange(AuthType.QWEN_OAUTH, false);
++    ).handleModelChange(AuthType.MOLI_OAUTH, false);
+ 
+     // Verify limits are now defined
+     const updatedConfig = config.getContentGeneratorConfig();
+diff --git a/packages/core/src/config/config.ts b/packages/core/src/config/config.ts
+index 2a941ea..af185f8 100644
+--- a/packages/core/src/config/config.ts
++++ b/packages/core/src/config/config.ts
+@@ -106,7 +106,7 @@ import {
+   DEFAULT_FILE_FILTERING_OPTIONS,
+   DEFAULT_MEMORY_FILE_FILTERING_OPTIONS,
+ } from './constants.js';
+-import { DEFAULT_QWEN_EMBEDDING_MODEL } from './models.js';
++import { DEFAULT_MOLI_EMBEDDING_MODEL } from './models.js';
+ import { Storage } from './storage.js';
+ import { ChatRecordingService } from '../services/chatRecordingService.js';
+ import {
+@@ -214,7 +214,7 @@ export interface GitCoAuthorSettings {
+   email?: string;
+ }
+ 
+-export type ExtensionOriginSource = 'QwenCode' | 'Claude' | 'Gemini';
++export type ExtensionOriginSource = 'MoliCode' | 'Claude' | 'Gemini'; // MOLI: branded origin source
+ 
+ export interface ExtensionInstallMetadata {
+   source: string;
+@@ -314,7 +314,7 @@ export interface ConfigParameters {
+   usageStatisticsEnabled?: boolean;
+   fileFiltering?: {
+     respectGitIgnore?: boolean;
+-    respectQwenIgnore?: boolean;
++    respectMoliIgnore?: boolean;
+     enableRecursiveFileSearch?: boolean;
+     enableFuzzySearch?: boolean;
+   };
+@@ -468,7 +468,7 @@ export class Config {
+   private baseLlmClient!: BaseLlmClient;
+   private readonly fileFiltering: {
+     respectGitIgnore: boolean;
+-    respectQwenIgnore: boolean;
++    respectMoliIgnore: boolean;
+     enableRecursiveFileSearch: boolean;
+     enableFuzzySearch: boolean;
+   };
+@@ -534,7 +534,7 @@ export class Config {
+     this.sessionData = params.sessionData;
+     setDebugLogSession(this);
+     this.debugLogger = createDebugLogger();
+-    this.embeddingModel = params.embeddingModel ?? DEFAULT_QWEN_EMBEDDING_MODEL;
++    this.embeddingModel = params.embeddingModel ?? DEFAULT_MOLI_EMBEDDING_MODEL;
+     this.fileSystemService = new StandardFileSystemService();
+     this.sandbox = params.sandbox;
+     this.targetDir = path.resolve(params.targetDir);
+@@ -578,15 +578,15 @@ export class Config {
+     };
+     this.gitCoAuthor = {
+       enabled: params.gitCoAuthor ?? true,
+-      name: 'Qwen-Coder',
+-      email: 'qwen-coder@alibabacloud.com',
++      name: 'Moli-Coder', // MOLI: branded git co-author
++      email: 'moli-coder@alibabacloud.com', // MOLI: branded git co-author email
+     };
+     this.usageStatisticsEnabled = params.usageStatisticsEnabled ?? true;
+     this.outputLanguageFilePath = params.outputLanguageFilePath;
+ 
+     this.fileFiltering = {
+       respectGitIgnore: params.fileFiltering?.respectGitIgnore ?? true,
+-      respectQwenIgnore: params.fileFiltering?.respectQwenIgnore ?? true,
++      respectMoliIgnore: params.fileFiltering?.respectMoliIgnore ?? true,
+       enableRecursiveFileSearch:
+         params.fileFiltering?.enableRecursiveFileSearch ?? true,
+       enableFuzzySearch: params.fileFiltering?.enableFuzzySearch ?? true,
+@@ -1018,14 +1018,14 @@ export class Config {
+       return;
+     }
+ 
+-    // Hot update path: only supported for qwen-oauth.
++    // Hot update path: only supported for moli-oauth.
+     // For other auth types we always refresh to recreate the ContentGenerator.
+     //
+     // Rationale:
+-    // - Non-qwen providers may need to re-validate credentials / baseUrl / envKey.
++    // - Non-moli providers may need to re-validate credentials / baseUrl / envKey.
+     // - ModelsConfig.applyResolvedModelDefaults can clear or change credentials sources.
+     // - Refresh keeps runtime behavior consistent and centralized.
+-    if (authType === AuthType.QWEN_OAUTH && !requiresRefresh) {
++    if (authType === AuthType.MOLI_OAUTH && !requiresRefresh) {
+       const { config, sources } = resolveContentGeneratorConfigWithSources(
+         this,
+         authType,
+@@ -1037,7 +1037,7 @@ export class Config {
+         },
+       );
+ 
+-      // Hot-update fields (qwen-oauth models share the same auth + client).
++      // Hot-update fields (moli-oauth models share the same auth + client).
+       this.contentGeneratorConfig.model = config.model;
+       this.contentGeneratorConfig.samplingParams = config.samplingParams;
+       this.contentGeneratorConfig.contextWindowSize = config.contextWindowSize;
+@@ -1104,7 +1104,7 @@ export class Config {
+    *
+    * For runtime models, the modelId should be in format `$runtime|${authType}|${modelId}`.
+    * This triggers a refresh of the ContentGenerator when required (always on authType changes).
+-   * For qwen-oauth model switches that are hot-update safe, this may update in place.
++   * For moli-oauth model switches that are hot-update safe, this may update in place.
+    *
+    * @param authType - Target authentication type
+    * @param modelId - Target model ID (or `$runtime|${authType}|${modelId}` for runtime models)
+@@ -1397,14 +1397,14 @@ export class Config {
+   getFileFilteringRespectGitIgnore(): boolean {
+     return this.fileFiltering.respectGitIgnore;
+   }
+-  getFileFilteringRespectQwenIgnore(): boolean {
+-    return this.fileFiltering.respectQwenIgnore;
++  getFileFilteringRespectMoliIgnore(): boolean {
++    return this.fileFiltering.respectMoliIgnore;
+   }
+ 
+   getFileFilteringOptions(): FileFilteringOptions {
+     return {
+       respectGitIgnore: this.fileFiltering.respectGitIgnore,
+-      respectQwenIgnore: this.fileFiltering.respectQwenIgnore,
++      respectMoliIgnore: this.fileFiltering.respectMoliIgnore,
+     };
+   }
+ 
+@@ -1873,7 +1873,7 @@ export class Config {
+     !this.sdkMode && registerCoreTool(ExitPlanModeTool, this);
+     registerCoreTool(WebFetchTool, this);
+     // Conditionally register web search tool if web search provider is configured
+-    // buildWebSearchConfig ensures qwen-oauth users get dashscope provider, so
++    // buildWebSearchConfig ensures moli-oauth users get dashscope provider, so
+     // if tool is registered, config must exist
+     if (this.getWebSearchConfig()) {
+       registerCoreTool(WebSearchTool, this);
+diff --git a/packages/core/src/config/constants.ts b/packages/core/src/config/constants.ts
+index 969539e..d5cf646 100644
+--- a/packages/core/src/config/constants.ts
++++ b/packages/core/src/config/constants.ts
+@@ -6,17 +6,17 @@
+ 
+ export interface FileFilteringOptions {
+   respectGitIgnore: boolean;
+-  respectQwenIgnore: boolean;
++  respectMoliIgnore: boolean;
+ }
+ 
+ // For memory files
+ export const DEFAULT_MEMORY_FILE_FILTERING_OPTIONS: FileFilteringOptions = {
+   respectGitIgnore: false,
+-  respectQwenIgnore: true,
++  respectMoliIgnore: true,
+ };
+ 
+ // For all other files
+ export const DEFAULT_FILE_FILTERING_OPTIONS: FileFilteringOptions = {
+   respectGitIgnore: true,
+-  respectQwenIgnore: true,
++  respectMoliIgnore: true,
+ };
+diff --git a/packages/core/src/config/models.ts b/packages/core/src/config/models.ts
+index a507b7f..56b387c 100644
+--- a/packages/core/src/config/models.ts
++++ b/packages/core/src/config/models.ts
+@@ -4,7 +4,7 @@
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+-export const DEFAULT_QWEN_MODEL = 'coder-model';
+-export const DEFAULT_QWEN_FLASH_MODEL = 'coder-model';
+-export const DEFAULT_QWEN_EMBEDDING_MODEL = 'text-embedding-v4';
+-export const MAINLINE_CODER_MODEL = 'qwen3.5-plus';
++export const DEFAULT_MOLI_MODEL = 'coder-model'; // MOLI: renamed from DEFAULT_MOLI_MODEL
++export const DEFAULT_MOLI_FLASH_MODEL = 'coder-model'; // MOLI: renamed
++export const DEFAULT_MOLI_EMBEDDING_MODEL = 'text-embedding-v4'; // MOLI: renamed
++export const MAINLINE_CODER_MODEL = 'moli3.5-plus'; // MOLI: renamed
+diff --git a/packages/core/src/config/storage.test.ts b/packages/core/src/config/storage.test.ts
+index 36cc1b2..1a47097 100644
+--- a/packages/core/src/config/storage.test.ts
++++ b/packages/core/src/config/storage.test.ts
+@@ -10,8 +10,8 @@ import * as path from 'node:path';
+ import { Storage } from './storage.js';
+ 
+ describe('Storage – getGlobalSettingsPath', () => {
+-  it('returns path to ~/.qwen/settings.json', () => {
+-    const expected = path.join(os.homedir(), '.qwen', 'settings.json');
++  it('returns path to ~/.moli/settings.json', () => {
++    const expected = path.join(os.homedir(), '.moli', 'settings.json');
+     expect(Storage.getGlobalSettingsPath()).toBe(expected);
+   });
+ });
+@@ -20,23 +20,23 @@ describe('Storage – additional helpers', () => {
+   const projectRoot = '/tmp/project';
+   const storage = new Storage(projectRoot);
+ 
+-  it('getWorkspaceSettingsPath returns project/.qwen/settings.json', () => {
+-    const expected = path.join(projectRoot, '.qwen', 'settings.json');
++  it('getWorkspaceSettingsPath returns project/.moli/settings.json', () => {
++    const expected = path.join(projectRoot, '.moli', 'settings.json');
+     expect(storage.getWorkspaceSettingsPath()).toBe(expected);
+   });
+ 
+-  it('getUserCommandsDir returns ~/.qwen/commands', () => {
+-    const expected = path.join(os.homedir(), '.qwen', 'commands');
++  it('getUserCommandsDir returns ~/.moli/commands', () => {
++    const expected = path.join(os.homedir(), '.moli', 'commands');
+     expect(Storage.getUserCommandsDir()).toBe(expected);
+   });
+ 
+-  it('getProjectCommandsDir returns project/.qwen/commands', () => {
+-    const expected = path.join(projectRoot, '.qwen', 'commands');
++  it('getProjectCommandsDir returns project/.moli/commands', () => {
++    const expected = path.join(projectRoot, '.moli', 'commands');
+     expect(storage.getProjectCommandsDir()).toBe(expected);
+   });
+ 
+-  it('getMcpOAuthTokensPath returns ~/.qwen/mcp-oauth-tokens.json', () => {
+-    const expected = path.join(os.homedir(), '.qwen', 'mcp-oauth-tokens.json');
++  it('getMcpOAuthTokensPath returns ~/.moli/mcp-oauth-tokens.json', () => {
++    const expected = path.join(os.homedir(), '.moli', 'mcp-oauth-tokens.json');
+     expect(Storage.getMcpOAuthTokensPath()).toBe(expected);
+   });
+ });
+diff --git a/packages/core/src/config/storage.ts b/packages/core/src/config/storage.ts
+index 3293280..60ae427 100644
+--- a/packages/core/src/config/storage.ts
++++ b/packages/core/src/config/storage.ts
+@@ -7,9 +7,9 @@
+ import * as path from 'node:path';
+ import * as os from 'node:os';
+ import * as fs from 'node:fs';
+-import { getProjectHash, sanitizeCwd } from '../utils/paths.js';
++import { getProjectHash } from '../utils/paths.js'; // MOLI: removed sanitizeCwd import
+ 
+-export const QWEN_DIR = '.qwen';
++export const MOLI_DIR = '.moli'; // MOLI: renamed from MOLI_DIR
+ export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
+ export const OAUTH_FILE = 'oauth_creds.json';
+ const TMP_DIR_NAME = 'tmp';
+@@ -25,44 +25,44 @@ export class Storage {
+     this.targetDir = targetDir;
+   }
+ 
+-  static getGlobalQwenDir(): string {
++  static getGlobalMoliDir(): string {
+     const homeDir = os.homedir();
+     if (!homeDir) {
+-      return path.join(os.tmpdir(), '.qwen');
++      return path.join(os.tmpdir(), '.moli');
+     }
+-    return path.join(homeDir, QWEN_DIR);
++    return path.join(homeDir, MOLI_DIR);
+   }
+ 
+   static getMcpOAuthTokensPath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'mcp-oauth-tokens.json');
++    return path.join(Storage.getGlobalMoliDir(), 'mcp-oauth-tokens.json');
+   }
+ 
+   static getGlobalSettingsPath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'settings.json');
++    return path.join(Storage.getGlobalMoliDir(), 'settings.json');
+   }
+ 
+   static getInstallationIdPath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'installation_id');
++    return path.join(Storage.getGlobalMoliDir(), 'installation_id');
+   }
+ 
+   static getGoogleAccountsPath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), GOOGLE_ACCOUNTS_FILENAME);
++    return path.join(Storage.getGlobalMoliDir(), GOOGLE_ACCOUNTS_FILENAME);
+   }
+ 
+   static getUserCommandsDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'commands');
++    return path.join(Storage.getGlobalMoliDir(), 'commands');
+   }
+ 
+   static getGlobalMemoryFilePath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'memory.md');
++    return path.join(Storage.getGlobalMoliDir(), 'memory.md');
+   }
+ 
+   static getGlobalTempDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), TMP_DIR_NAME);
++    return path.join(Storage.getGlobalMoliDir(), TMP_DIR_NAME);
+   }
+ 
+   static getGlobalDebugDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), DEBUG_DIR_NAME);
++    return path.join(Storage.getGlobalMoliDir(), DEBUG_DIR_NAME);
+   }
+ 
+   static getDebugLogPath(sessionId: string): string {
+@@ -70,20 +70,21 @@ export class Storage {
+   }
+ 
+   static getGlobalIdeDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), IDE_DIR_NAME);
++    return path.join(Storage.getGlobalMoliDir(), IDE_DIR_NAME);
+   }
+ 
+   static getGlobalBinDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), BIN_DIR_NAME);
++    return path.join(Storage.getGlobalMoliDir(), BIN_DIR_NAME);
+   }
+ 
+-  getQwenDir(): string {
+-    return path.join(this.targetDir, QWEN_DIR);
++  getMoliDir(): string {
++    // MOLI: renamed from getMoliDir
++    return path.join(this.targetDir, MOLI_DIR);
+   }
+ 
+   getProjectDir(): string {
+-    const projectId = sanitizeCwd(this.getProjectRoot());
+-    const projectsDir = path.join(Storage.getGlobalQwenDir(), PROJECT_DIR_NAME);
++    const projectId = this.sanitizeCwd(this.getProjectRoot()); // MOLI: use instance method
++    const projectsDir = path.join(Storage.getGlobalMoliDir(), PROJECT_DIR_NAME);
+     return path.join(projectsDir, projectId);
+   }
+ 
+@@ -99,7 +100,7 @@ export class Storage {
+   }
+ 
+   static getOAuthCredsPath(): string {
+-    return path.join(Storage.getGlobalQwenDir(), OAUTH_FILE);
++    return path.join(Storage.getGlobalMoliDir(), OAUTH_FILE);
+   }
+ 
+   getProjectRoot(): string {
+@@ -108,17 +109,17 @@ export class Storage {
+ 
+   getHistoryDir(): string {
+     const hash = getProjectHash(this.getProjectRoot());
+-    const historyDir = path.join(Storage.getGlobalQwenDir(), 'history');
++    const historyDir = path.join(Storage.getGlobalMoliDir(), 'history');
+     const targetDir = path.join(historyDir, hash);
+     return targetDir;
+   }
+ 
+   getWorkspaceSettingsPath(): string {
+-    return path.join(this.getQwenDir(), 'settings.json');
++    return path.join(this.getMoliDir(), 'settings.json');
+   }
+ 
+   getProjectCommandsDir(): string {
+-    return path.join(this.getQwenDir(), 'commands');
++    return path.join(this.getMoliDir(), 'commands');
+   }
+ 
+   getProjectTempCheckpointsDir(): string {
+@@ -126,18 +127,24 @@ export class Storage {
+   }
+ 
+   getExtensionsDir(): string {
+-    return path.join(this.getQwenDir(), 'extensions');
++    return path.join(this.getMoliDir(), 'extensions');
+   }
+ 
+   getExtensionsConfigPath(): string {
+-    return path.join(this.getExtensionsDir(), 'qwen-extension.json');
++    return path.join(this.getExtensionsDir(), 'moli-extension.json'); // MOLI: renamed
+   }
+ 
+   getUserSkillsDir(): string {
+-    return path.join(Storage.getGlobalQwenDir(), 'skills');
++    return path.join(Storage.getGlobalMoliDir(), 'skills');
+   }
+ 
+   getHistoryFilePath(): string {
+     return path.join(this.getProjectTempDir(), 'shell_history');
+   }
++
++  // MOLI: private sanitizeCwd moved from utils/paths.js
++  private sanitizeCwd(cwd: string): string {
++    const normalizedCwd = os.platform() === 'win32' ? cwd.toLowerCase() : cwd;
++    return normalizedCwd.replace(/[^a-zA-Z0-9]/g, '-');
++  }
+ }

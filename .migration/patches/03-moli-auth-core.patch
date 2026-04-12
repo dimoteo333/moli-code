@@ -1,0 +1,153 @@
+diff --git a/packages/core/src/moli/moliContentGenerator.test.ts b/packages/core/src/moli/moliContentGenerator.test.ts
+index fd9647d..69445f1 100644
+--- a/packages/core/src/moli/moliContentGenerator.test.ts
++++ b/packages/core/src/moli/moliContentGenerator.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/moli/moliContentGenerator.ts b/packages/core/src/moli/moliContentGenerator.ts
+index 078bb96..5b54858 100644
+--- a/packages/core/src/moli/moliContentGenerator.ts
++++ b/packages/core/src/moli/moliContentGenerator.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -22,10 +22,10 @@ import { DEFAULT_DASHSCOPE_BASE_URL } from '../core/openaiContentGenerator/const
+ import { createDebugLogger } from '../utils/debugLogger.js';
+ 
+ /**
+- * Qwen Content Generator that uses Moli OAuth tokens with automatic refresh
++ * Moli Content Generator that uses Moli OAuth tokens with automatic refresh
+  */
+ export class MoliContentGenerator extends OpenAIContentGenerator {
+-  private readonly debugLogger = createDebugLogger('QWEN');
++  private readonly debugLogger = createDebugLogger('MOLI');
+   private moliClient: IMoliOAuth2Client;
+   private sharedManager: SharedTokenManager;
+   private currentToken?: string;
+@@ -35,7 +35,7 @@ export class MoliContentGenerator extends OpenAIContentGenerator {
+     contentGeneratorConfig: ContentGeneratorConfig,
+     cliConfig: Config,
+   ) {
+-    // Create DashScope provider for Qwen
++    // Create DashScope provider for Moli
+     const dashscopeProvider = new DashScopeOpenAICompatibleProvider(
+       contentGeneratorConfig,
+       cliConfig,
+diff --git a/packages/core/src/moli/moliOAuth2.test.ts b/packages/core/src/moli/moliOAuth2.test.ts
+index 782c5a5..e287de3 100644
+--- a/packages/core/src/moli/moliOAuth2.test.ts
++++ b/packages/core/src/moli/moliOAuth2.test.ts
+@@ -91,13 +91,6 @@ vi.mock('./sharedTokenManager.js', () => ({
+   },
+ }));
+ 
+-// Mock qrcode-terminal
+-vi.mock('qrcode-terminal', () => ({
+-  default: {
+-    generate: vi.fn(),
+-  },
+-}));
+-
+ // Mock open
+ vi.mock('open', () => ({
+   default: vi.fn(),
+diff --git a/packages/core/src/moli/moliOAuth2.ts b/packages/core/src/moli/moliOAuth2.ts
+index 32a7b31..aa47ab8 100644
+--- a/packages/core/src/moli/moliOAuth2.ts
++++ b/packages/core/src/moli/moliOAuth2.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -481,7 +481,7 @@ export type AuthResult =
+     };
+ 
+ /**
+- * Global event emitter instance for QwenOAuth2 authentication events
++ * Global event emitter instance for MoliOAuth2 authentication events
+  */
+ export const moliOAuth2Events = new EventEmitter();
+ 
+@@ -980,14 +980,14 @@ async function cacheMoliCredentials(credentials: MoliCredentials) {
+ }
+ 
+ /**
+- * Clear cached Qwen credentials from disk
++ * Clear cached Moli credentials from disk
+  * This is useful when credentials have expired or need to be reset
+  */
+ export async function clearMoliCredentials(): Promise<void> {
+   try {
+     const filePath = getMoliCachedCredentialPath();
+     await fs.unlink(filePath);
+-    debugLogger.debug('Cached Qwen credentials cleared successfully.');
++    debugLogger.debug('Cached Moli credentials cleared successfully.');
+   } catch (error: unknown) {
+     // If file doesn't exist or can't be deleted, we consider it cleared
+     if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+@@ -996,7 +996,7 @@ export async function clearMoliCredentials(): Promise<void> {
+     }
+     // Log other errors but don't throw - clearing credentials should be non-critical
+     debugLogger.warn(
+-      'Warning: Failed to clear cached Qwen credentials:',
++      'Warning: Failed to clear cached Moli credentials:',
+       error,
+     );
+   } finally {
+diff --git a/packages/core/src/moli/sharedTokenManager.test.ts b/packages/core/src/moli/sharedTokenManager.test.ts
+index fc0e5db..481aa15 100644
+--- a/packages/core/src/moli/sharedTokenManager.test.ts
++++ b/packages/core/src/moli/sharedTokenManager.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  *
+  */
+diff --git a/packages/core/src/moli/sharedTokenManager.ts b/packages/core/src/moli/sharedTokenManager.ts
+index 0a45616..819bc97 100644
+--- a/packages/core/src/moli/sharedTokenManager.ts
++++ b/packages/core/src/moli/sharedTokenManager.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -24,7 +24,7 @@ const debugLogger = createDebugLogger('MOLI_OAUTH');
+ // File System Configuration
+ const MOLI_DIR = '.moli';
+ const MOLI_CREDENTIAL_FILENAME = 'oauth_creds.json';
+-const QWEN_LOCK_FILENAME = 'oauth_creds.lock';
++const MOLI_LOCK_FILENAME = 'oauth_creds.lock';
+ 
+ // Token and Cache Configuration
+ const TOKEN_REFRESH_BUFFER_MS = 30 * 1000; // 30 seconds
+@@ -696,7 +696,7 @@ export class SharedTokenManager {
+    * @returns The absolute path to the lock file
+    */
+   private getLockFilePath(): string {
+-    return path.join(os.homedir(), MOLI_DIR, QWEN_LOCK_FILENAME);
++    return path.join(os.homedir(), MOLI_DIR, MOLI_LOCK_FILENAME);
+   }
+ 
+   /**

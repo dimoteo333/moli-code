@@ -1,0 +1,15 @@
+diff --git a/packages/core/src/tools/read-file.ts b/packages/core/src/tools/read-file.ts
+index e09a1ac..d5641dc 100644
+--- a/packages/core/src/tools/read-file.ts
++++ b/packages/core/src/tools/read-file.ts
+@@ -211,8 +211,8 @@ export class ReadFileTool extends BaseDeclarativeTool<
+     }
+ 
+     const fileService = this.config.getFileService();
+-    if (fileService.shouldQwenIgnoreFile(params.absolute_path)) {
+-      return `File path '${filePath}' is ignored by .qwenignore pattern(s).`;
++    if (fileService.shouldMoliIgnoreFile(params.absolute_path)) {
++      return `File path '${filePath}' is ignored by .moliignore pattern(s).`;
+     }
+ 
+     return null;

@@ -1,0 +1,470 @@
+diff --git a/packages/core/src/subagents/builtin-agents.test.ts b/packages/core/src/subagents/builtin-agents.test.ts
+index 9e7debc..5cd79ec 100644
+--- a/packages/core/src/subagents/builtin-agents.test.ts
++++ b/packages/core/src/subagents/builtin-agents.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/builtin-agents.ts b/packages/core/src/subagents/builtin-agents.ts
+index 4057619..b90af2b 100644
+--- a/packages/core/src/subagents/builtin-agents.ts
++++ b/packages/core/src/subagents/builtin-agents.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/index.ts b/packages/core/src/subagents/index.ts
+index 17c62a2..e4e2cb7 100644
+--- a/packages/core/src/subagents/index.ts
++++ b/packages/core/src/subagents/index.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/subagent-events.ts b/packages/core/src/subagents/subagent-events.ts
+index 5de09a3..9f25aab 100644
+--- a/packages/core/src/subagents/subagent-events.ts
++++ b/packages/core/src/subagents/subagent-events.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/subagent-hooks.ts b/packages/core/src/subagents/subagent-hooks.ts
+index f3bf997..9117f2d 100644
+--- a/packages/core/src/subagents/subagent-hooks.ts
++++ b/packages/core/src/subagents/subagent-hooks.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/subagent-manager.test.ts b/packages/core/src/subagents/subagent-manager.test.ts
+index cf3afb4..d817cd1 100644
+--- a/packages/core/src/subagents/subagent-manager.test.ts
++++ b/packages/core/src/subagents/subagent-manager.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -167,7 +167,7 @@ describe('SubagentManager', () => {
+     description: 'A test subagent',
+     systemPrompt: 'You are a helpful assistant.',
+     level: 'project',
+-    filePath: '/test/project/.qwen/agents/test-agent.md',
++    filePath: '/test/project/.moli/agents/test-agent.md',
+   };
+ 
+   const validMarkdown = `---
+@@ -314,8 +314,8 @@ You are a helpful assistant.
+     });
+ 
+     it('should determine level from file path', () => {
+-      const projectPath = '/test/project/.qwen/agents/test-agent.md';
+-      const userPath = '/home/user/.qwen/agents/test-agent.md';
++      const projectPath = '/test/project/.moli/agents/test-agent.md';
++      const userPath = '/home/user/.moli/agents/test-agent.md';
+ 
+       const projectConfig = manager.parseSubagentContent(
+         validMarkdown,
+@@ -381,7 +381,7 @@ You are a helpful assistant.
+ 
+     it('should not warn when filename matches subagent name', () => {
+       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+-      const matchingPath = '/test/project/.qwen/agents/test-agent.md';
++      const matchingPath = '/test/project/.moli/agents/test-agent.md';
+ 
+       const config = manager.parseSubagentContent(
+         validMarkdown,
+@@ -525,10 +525,10 @@ You are a helpful assistant.
+       expect(config).toBeDefined();
+       expect(config!.name).toBe('test-agent');
+       expect(fs.readdir).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents'),
++        path.normalize('/test/project/.moli/agents'),
+       );
+       expect(fs.readFile).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents/test-agent.md'),
++        path.normalize('/test/project/.moli/agents/test-agent.md'),
+         'utf8',
+       );
+     });
+@@ -545,10 +545,10 @@ You are a helpful assistant.
+       expect(config).toBeDefined();
+       expect(config!.name).toBe('test-agent');
+       expect(fs.readdir).toHaveBeenCalledWith(
+-        path.normalize('/home/user/.qwen/agents'),
++        path.normalize('/home/user/.moli/agents'),
+       );
+       expect(fs.readFile).toHaveBeenCalledWith(
+-        path.normalize('/home/user/.qwen/agents/test-agent.md'),
++        path.normalize('/home/user/.moli/agents/test-agent.md'),
+         'utf8',
+       );
+     });
+@@ -604,12 +604,12 @@ You are another assistant.`;
+       expect(config).toBeDefined();
+       expect(config!.name).toBe('correct-agent-name');
+       expect(config!.filePath).toBe(
+-        path.normalize('/test/project/.qwen/agents/wrong-filename.md'),
++        path.normalize('/test/project/.moli/agents/wrong-filename.md'),
+       );
+ 
+       // Verify it scanned the directory instead of using direct path
+       expect(fs.readdir).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents'),
++        path.normalize('/test/project/.moli/agents'),
+       );
+     });
+ 
+@@ -655,7 +655,7 @@ You are a helpful assistant.`;
+       expect(config).toBeDefined();
+       expect(config!.name).toBe('target-agent');
+       expect(config!.filePath).toBe(
+-        path.normalize('/home/user/.qwen/agents/user-agent.md'),
++        path.normalize('/home/user/.moli/agents/user-agent.md'),
+       );
+       expect(config!.level).toBe('user');
+     });
+@@ -683,7 +683,7 @@ You are a helpful assistant.`;
+       expect(config).toBeDefined();
+       expect(config!.name).toBe('specific-agent');
+       expect(config!.filePath).toBe(
+-        path.normalize('/test/project/.qwen/agents/misnamed-file.md'),
++        path.normalize('/test/project/.moli/agents/misnamed-file.md'),
+       );
+     });
+   });
+@@ -743,7 +743,7 @@ You are a helpful assistant.`;
+       await manager.deleteSubagent('test-agent', 'project');
+ 
+       expect(fs.unlink).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents/test-agent.md'),
++        path.normalize('/test/project/.moli/agents/test-agent.md'),
+       );
+     });
+ 
+@@ -760,10 +760,10 @@ You are a helpful assistant.`;
+ 
+       expect(fs.unlink).toHaveBeenCalledTimes(2);
+       expect(fs.unlink).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents/test-agent.md'),
++        path.normalize('/test/project/.moli/agents/test-agent.md'),
+       );
+       expect(fs.unlink).toHaveBeenCalledWith(
+-        path.normalize('/home/user/.qwen/agents/test-agent.md'),
++        path.normalize('/home/user/.moli/agents/test-agent.md'),
+       );
+     });
+ 
+@@ -814,7 +814,7 @@ You are a helpful assistant.`;
+ 
+       // Should delete the actual file, not the expected filename
+       expect(fs.unlink).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents/wrong-name.md'),
++        path.normalize('/test/project/.moli/agents/wrong-name.md'),
+       );
+     });
+ 
+@@ -871,7 +871,7 @@ Target content`,
+       // Should only delete the matching file
+       expect(fs.unlink).toHaveBeenCalledTimes(1);
+       expect(fs.unlink).toHaveBeenCalledWith(
+-        path.normalize('/test/project/.qwen/agents/target-file.md'),
++        path.normalize('/test/project/.moli/agents/target-file.md'),
+       );
+     });
+   });
+diff --git a/packages/core/src/subagents/subagent-manager.ts b/packages/core/src/subagents/subagent-manager.ts
+index 0552fa6..11a9aed 100644
+--- a/packages/core/src/subagents/subagent-manager.ts
++++ b/packages/core/src/subagents/subagent-manager.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -35,7 +35,7 @@ const debugLogger = createDebugLogger('SUBAGENT_MANAGER');
+ import { BuiltinAgentRegistry } from './builtin-agents.js';
+ import { ToolDisplayNamesMigration } from '../tools/tool-names.js';
+ 
+-const QWEN_CONFIG_DIR = '.qwen';
++const MOLI_CONFIG_DIR = '.moli';
+ const AGENT_CONFIG_DIR = 'agents';
+ 
+ /**
+@@ -756,10 +756,10 @@ export class SubagentManager {
+       level === 'project'
+         ? path.join(
+             this.config.getProjectRoot(),
+-            QWEN_CONFIG_DIR,
++            MOLI_CONFIG_DIR,
+             AGENT_CONFIG_DIR,
+           )
+-        : path.join(os.homedir(), QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
++        : path.join(os.homedir(), MOLI_CONFIG_DIR, AGENT_CONFIG_DIR);
+ 
+     return path.join(baseDir, `${name}.md`);
+   }
+@@ -795,7 +795,7 @@ export class SubagentManager {
+     }
+ 
+     let baseDir = level === 'project' ? projectRoot : homeDir;
+-    baseDir = path.join(baseDir, QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
++    baseDir = path.join(baseDir, MOLI_CONFIG_DIR, AGENT_CONFIG_DIR);
+ 
+     try {
+       const files = await fs.readdir(baseDir);
+diff --git a/packages/core/src/subagents/subagent-statistics.test.ts b/packages/core/src/subagents/subagent-statistics.test.ts
+index 39ba70a..bc20e6a 100644
+--- a/packages/core/src/subagents/subagent-statistics.test.ts
++++ b/packages/core/src/subagents/subagent-statistics.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/subagent-statistics.ts b/packages/core/src/subagents/subagent-statistics.ts
+index 72308c6..f9ec26c 100644
+--- a/packages/core/src/subagents/subagent-statistics.ts
++++ b/packages/core/src/subagents/subagent-statistics.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/subagent.test.ts b/packages/core/src/subagents/subagent.test.ts
+index 0286d11..fae8e12 100644
+--- a/packages/core/src/subagents/subagent.test.ts
++++ b/packages/core/src/subagents/subagent.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -22,7 +22,7 @@ import {
+   type Mock,
+ } from 'vitest';
+ import { Config, type ConfigParameters } from '../config/config.js';
+-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
++import { DEFAULT_MOLI_MODEL } from '../config/models.js';
+ import {
+   createContentGenerator,
+   createContentGeneratorConfig,
+@@ -53,7 +53,7 @@ vi.mock('../core/geminiChat.js');
+ vi.mock('../core/contentGenerator.js', async (importOriginal) => {
+   const actual =
+     await importOriginal<typeof import('../core/contentGenerator.js')>();
+-  const { DEFAULT_QWEN_MODEL } = await import('../config/models.js');
++  const { DEFAULT_MOLI_MODEL } = await import('../config/models.js');
+   return {
+     ...actual,
+     createContentGenerator: vi.fn().mockResolvedValue({
+@@ -64,12 +64,12 @@ vi.mock('../core/contentGenerator.js', async (importOriginal) => {
+       useSummarizedThinking: vi.fn().mockReturnValue(false),
+     }),
+     createContentGeneratorConfig: vi.fn().mockReturnValue({
+-      model: DEFAULT_QWEN_MODEL,
++      model: DEFAULT_MOLI_MODEL,
+       authType: actual.AuthType.USE_GEMINI,
+     }),
+     resolveContentGeneratorConfigWithSources: vi.fn().mockReturnValue({
+       config: {
+-        model: DEFAULT_QWEN_MODEL,
++        model: DEFAULT_MOLI_MODEL,
+         authType: actual.AuthType.USE_GEMINI,
+         apiKey: 'test-api-key',
+       },
+@@ -121,7 +121,7 @@ async function createMockConfig(
+   toolRegistryMocks = {},
+ ): Promise<{ config: Config; toolRegistry: ToolRegistry }> {
+   const configParams: ConfigParameters = {
+-    model: DEFAULT_QWEN_MODEL,
++    model: DEFAULT_MOLI_MODEL,
+     targetDir: '.',
+     debugMode: false,
+     cwd: process.cwd(),
+@@ -145,7 +145,7 @@ async function createMockConfig(
+ 
+   // Mock getContentGeneratorConfig to return a valid config
+   vi.spyOn(config, 'getContentGeneratorConfig').mockReturnValue({
+-    model: DEFAULT_QWEN_MODEL,
++    model: DEFAULT_MOLI_MODEL,
+     authType: AuthType.USE_GEMINI,
+   });
+ 
+@@ -230,7 +230,7 @@ describe('subagent.ts', () => {
+     let mockSendMessageStream: Mock;
+ 
+     const defaultModelConfig: ModelConfig = {
+-      model: 'qwen3-coder-plus',
++      model: 'moli3-coder-plus',
+       temp: 0.5, // Specific temp to test override
+       top_p: 1,
+     };
+@@ -248,12 +248,12 @@ describe('subagent.ts', () => {
+         // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       } as any);
+       vi.mocked(createContentGeneratorConfig).mockReturnValue({
+-        model: DEFAULT_QWEN_MODEL,
++        model: DEFAULT_MOLI_MODEL,
+         authType: undefined,
+       });
+       vi.mocked(resolveContentGeneratorConfigWithSources).mockReturnValue({
+         config: {
+-          model: DEFAULT_QWEN_MODEL,
++          model: DEFAULT_MOLI_MODEL,
+           authType: AuthType.USE_GEMINI,
+           apiKey: 'test-api-key',
+         },
+diff --git a/packages/core/src/subagents/subagent.ts b/packages/core/src/subagents/subagent.ts
+index 613bc80..78bfc7d 100644
+--- a/packages/core/src/subagents/subagent.ts
++++ b/packages/core/src/subagents/subagent.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -57,7 +57,7 @@ import type { SubagentHooks } from './subagent-hooks.js';
+ import { logSubagentExecution } from '../telemetry/loggers.js';
+ import { SubagentExecutionEvent } from '../telemetry/types.js';
+ import { TaskTool } from '../tools/task.js';
+-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
++import { DEFAULT_MOLI_MODEL } from '../config/models.js';
+ 
+ /**
+  * @fileoverview Defines the configuration interfaces for a subagent.
+@@ -334,7 +334,7 @@ export class SubAgentScope {
+         model:
+           this.modelConfig.model ||
+           this.runtimeContext.getModel() ||
+-          DEFAULT_QWEN_MODEL,
++          DEFAULT_MOLI_MODEL,
+         tools: (this.toolConfig?.tools || ['*']).map((t) =>
+           typeof t === 'string' ? t : t.name,
+         ),
+@@ -385,7 +385,7 @@ export class SubAgentScope {
+         const responseStream = await chat.sendMessageStream(
+           this.modelConfig.model ||
+             this.runtimeContext.getModel() ||
+-            DEFAULT_QWEN_MODEL,
++            DEFAULT_MOLI_MODEL,
+           messageParams,
+           promptId,
+         );
+@@ -999,7 +999,7 @@ Important Rules:
+  - Use tools only when necessary to obtain facts or make changes.
+  - When the task is complete, return the final result as a normal model response (not a tool call) and stop.`;
+ 
+-    // Append user memory (QWEN.md + output-language.md) to ensure subagent respects project conventions
++    // Append user memory (MOLI.md + output-language.md) to ensure subagent respects project conventions
+     const userMemory = this.runtimeContext.getUserMemory();
+     if (userMemory && userMemory.trim().length > 0) {
+       finalPrompt += `\n\n---\n\n${userMemory.trim()}`;
+diff --git a/packages/core/src/subagents/types.test.ts b/packages/core/src/subagents/types.test.ts
+index db6433e..25d595c 100644
+--- a/packages/core/src/subagents/types.test.ts
++++ b/packages/core/src/subagents/types.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/types.ts b/packages/core/src/subagents/types.ts
+index efa73a7..d710a34 100644
+--- a/packages/core/src/subagents/types.ts
++++ b/packages/core/src/subagents/types.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+@@ -9,8 +9,8 @@ import type { Content, FunctionDeclaration } from '@google/genai';
+ /**
+  * Represents the storage level for a subagent configuration.
+  * - 'session': Session-level agents provided at runtime, read-only (highest priority)
+- * - 'project': Stored in `.qwen/agents/` within the project directory
+- * - 'user': Stored in `~/.qwen/agents/` in the user's home directory
++ * - 'project': Stored in `.moli/agents/` within the project directory
++ * - 'user': Stored in `~/.moli/agents/` in the user's home directory
+  * - 'extension': Provided by an installed extension
+  * - 'builtin': Built-in agents embedded in the codebase, always available (lowest priority)
+  */
+@@ -239,7 +239,7 @@ export interface ToolConfig {
+  */
+ export interface ModelConfig {
+   /**
+-   * The name or identifier of the model to be used (e.g., 'qwen3-coder-plus').
++   * The name or identifier of the model to be used (e.g., 'moli3-coder-plus').
+    *
+    * TODO: In the future, this needs to support 'auto' or some other string to support routing use cases.
+    */
+diff --git a/packages/core/src/subagents/validation.test.ts b/packages/core/src/subagents/validation.test.ts
+index 1d705cc..305071f 100644
+--- a/packages/core/src/subagents/validation.test.ts
++++ b/packages/core/src/subagents/validation.test.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 
+diff --git a/packages/core/src/subagents/validation.ts b/packages/core/src/subagents/validation.ts
+index ac45a37..dfe83b0 100644
+--- a/packages/core/src/subagents/validation.ts
++++ b/packages/core/src/subagents/validation.ts
+@@ -1,6 +1,6 @@
+ /**
+  * @license
+- * Copyright 2025 Qwen
++ * Copyright 2025 Moli
+  * SPDX-License-Identifier: Apache-2.0
+  */
+ 

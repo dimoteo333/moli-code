@@ -1,0 +1,381 @@
+diff --git a/packages/cli/src/utils/httpsAgent.test.ts b/packages/cli/src/utils/httpsAgent.test.ts
+new file mode 100644
+index 0000000..8d48d67
+--- /dev/null
++++ b/packages/cli/src/utils/httpsAgent.test.ts
+@@ -0,0 +1,192 @@
++/**
++ * @license
++ * Copyright 2025 Moli Team
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
++
++// Mock tls
++const mockCreateSecureContext = vi.fn((options) => ({
++  context: options,
++}));
++
++vi.mock('node:tls', async () => ({
++  rootCertificates: ['mock-root-cert-1', 'mock-root-cert-2'],
++  createSecureContext: mockCreateSecureContext,
++}));
++
++// Mock child_process
++const mockExecSync = vi.fn();
++
++vi.mock('node:child_process', async () => ({
++  execSync: mockExecSync,
++}));
++
++// Mock logger
++vi.mock('@dobby/moli-code-core', () => ({
++  createDebugLogger: vi.fn(() => ({
++    debug: vi.fn(),
++    error: vi.fn(),
++    info: vi.fn(),
++  })),
++}));
++
++describe('httpsAgent', () => {
++  beforeEach(() => {
++    vi.clearAllMocks();
++    vi.resetModules();
++  });
++
++  afterEach(() => {
++    vi.unstubAllGlobals();
++  });
++
++  describe('Windows certificate extraction', () => {
++    beforeEach(() => {
++      vi.stubGlobal('process', {
++        ...process,
++        platform: 'win32',
++      });
++    });
++
++    it('should extract certificates from Windows Root store', async () => {
++      const mockCertOutput = `
++================ Certificate 0 ================
++Version: 3
++Serial Number: 1234
++Issuer: CN=Root CA
++Subject: CN=Root CA
++-----BEGIN CERTIFICATE-----
++MIIDdzCCAl+gAwIBAgIEAgAAuTANBgkqhkiG9w0BAQUFADBaMQswCQYDVQQGEwJJ
++...
++-----END CERTIFICATE-----
++`;
++
++      mockExecSync.mockReturnValue(mockCertOutput);
++
++      // Import the module to trigger initialization
++      await import('./httpsAgent.js');
++
++      expect(mockExecSync).toHaveBeenCalledWith(
++        'certutil -store Root',
++        expect.objectContaining({
++          encoding: 'utf-8',
++          timeout: 15000,
++          windowsHide: true,
++        }),
++      );
++    });
++
++    it('should extract certificates from Windows CA store', async () => {
++      const mockCertOutput = `
++================ Certificate 0 ================
++Version: 3
++Issuer: CN=CA
++Subject: CN=CA
++-----BEGIN CERTIFICATE-----
++MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
++...
++-----END CERTIFICATE-----
++`;
++
++      mockExecSync.mockReturnValue(mockCertOutput);
++
++      await import('./httpsAgent.js');
++
++      expect(mockExecSync).toHaveBeenCalledWith(
++        'certutil -store CA',
++        expect.any(Object),
++      );
++    });
++
++    it('should handle certutil command failure gracefully', async () => {
++      mockExecSync.mockImplementation(() => {
++        throw new Error('certutil not found');
++      });
++
++      const { createDebugLogger } = await import('@dobby/moli-code-core');
++      const mockLogger = {
++        debug: vi.fn(),
++        info: vi.fn(),
++        warn: vi.fn(),
++        error: vi.fn(),
++      };
++      vi.mocked(createDebugLogger).mockReturnValue(mockLogger);
++
++      await import('./httpsAgent.js');
++
++      expect(mockLogger.error).toHaveBeenCalled();
++    });
++
++    it('should handle empty certificate output', async () => {
++      mockExecSync.mockReturnValue('');
++
++      await import('./httpsAgent.js');
++
++      // Should not crash with empty output
++      expect(mockCreateSecureContext).toHaveBeenCalled();
++    });
++  });
++
++  describe('TLS context patching', () => {
++    beforeEach(() => {
++      vi.stubGlobal('process', {
++        ...process,
++        platform: 'win32',
++      });
++    });
++
++    it('should patch createSecureContext on Windows', async () => {
++      mockExecSync.mockReturnValue(
++        '-----BEGIN CERTIFICATE-----\nwindows-cert\n-----END CERTIFICATE-----',
++      );
++
++      await import('./httpsAgent.js');
++
++      expect(mockCreateSecureContext).toHaveBeenCalled();
++    });
++
++    it('should not patch on non-Windows platforms', async () => {
++      vi.unstubAllGlobals();
++      vi.stubGlobal('process', {
++        ...process,
++        platform: 'darwin',
++      });
++
++      await import('./httpsAgent.js');
++
++      expect(mockExecSync).not.toHaveBeenCalled();
++    });
++  });
++
++  describe('Error handling', () => {
++    it('should handle certutil timeout', async () => {
++      vi.stubGlobal('process', {
++        ...process,
++        platform: 'win32',
++      });
++
++      mockExecSync.mockImplementation(() => {
++        throw new Error('Command timed out');
++      });
++
++      const { createDebugLogger } = await import('@dobby/moli-code-core');
++      const mockLogger = {
++        debug: vi.fn(),
++        info: vi.fn(),
++        warn: vi.fn(),
++        error: vi.fn(),
++      };
++      vi.mocked(createDebugLogger).mockReturnValue(mockLogger);
++
++      await import('./httpsAgent.js');
++
++      expect(mockLogger.error).toHaveBeenCalledWith(
++        expect.any(String),
++        expect.any(Error),
++      );
++      vi.unstubAllGlobals();
++    });
++  });
++});
+diff --git a/packages/cli/src/utils/httpsAgent.ts b/packages/cli/src/utils/httpsAgent.ts
+new file mode 100644
+index 0000000..1839a95
+--- /dev/null
++++ b/packages/cli/src/utils/httpsAgent.ts
+@@ -0,0 +1,152 @@
++/**
++ * @license
++ * Copyright 2025 Moli Team
++ * SPDX-License-Identifier: Apache-2.0
++ */
++
++import { execSync } from 'node:child_process';
++import tls from 'node:tls';
++import { createDebugLogger } from '@dobby/moli-code-core';
++
++const logger = createDebugLogger('HTTPS_AGENT');
++
++/**
++ * Extract CA certificates from Windows certificate store using certutil.
++ * Parses PEM-formatted certificate blocks from certutil output.
++ * @returns Array of PEM-formatted certificate strings
++ */
++function extractWindowsCerts(): string[] {
++  const certs: string[] = [];
++  // Machine-level Root and CA stores cover corporate/enterprise certificates
++  const stores = ['Root', 'CA'];
++
++  for (const store of stores) {
++    try {
++      const output = execSync(`certutil -store ${store}`, {
++        encoding: 'utf-8',
++        timeout: 15000,
++        windowsHide: true,
++      });
++
++      const pemRegex =
++        /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g;
++      const matches = output.match(pemRegex);
++      if (matches) {
++        certs.push(...matches);
++      }
++    } catch (error) {
++      logger.error(
++        `Failed to read Windows certificate store "${store}":`,
++        error,
++      );
++    }
++  }
++
++  return certs;
++}
++
++/**
++ * Monkey-patch tls.createSecureContext to include Windows system certificates.
++ * This ensures all TLS connections (including fetch/undici) trust
++ * certificates from the Windows certificate store.
++ */
++function injectCertsIntoTLS(windowsCerts: string[]): void {
++  if (windowsCerts.length === 0) return;
++
++  const origCreateSecureContext = tls.createSecureContext;
++
++  tls.createSecureContext = function (options?: tls.SecureContextOptions) {
++    // If caller provided custom ca, merge with Windows certs.
++    // If not, use Node.js default root certs + Windows certs.
++    const existingCA = options?.ca
++      ? Array.isArray(options.ca)
++        ? options.ca
++        : [options.ca]
++      : tls.rootCertificates;
++
++    const mergedOptions = {
++      ...options,
++      ca: [...existingCA, ...windowsCerts],
++    };
++
++    return origCreateSecureContext.call(tls, mergedOptions);
++  };
++}
++
++/**
++ * Initialize Windows certificate store CA certificates for Node.js.
++ * Uses certutil to extract certificates and injects them into Node.js's TLS trust store.
++ * This should be called once at application startup.
++ */
++export function initializeCustomCerts(): void {
++  if (process.platform !== 'win32') {
++    logger.debug(
++      'Skipping Windows certificate injection: not running on Windows',
++    );
++    return;
++  }
++
++  try {
++    const certs = extractWindowsCerts();
++
++    if (certs.length > 0) {
++      injectCertsIntoTLS(certs);
++      logger.debug(
++        `Injected ${certs.length} certificates from Windows certificate store`,
++      );
++    } else {
++      logger.debug('No certificates found in Windows certificate store');
++    }
++  } catch (error) {
++    logger.error('Failed to initialize Windows certificates:', error);
++  }
++}
++
++/**
++ * Get a user-friendly error message for TLS/SSL errors
++ * @param error - The error object
++ * @returns Formatted error message with troubleshooting tips
++ */
++export function formatTLSError(error: unknown): string {
++  if (error instanceof Error) {
++    const errorMessage = error.message;
++
++    // Check for common TLS error codes
++    if (
++      errorMessage.includes('UNABLE_TO_GET_ISSUER_CERT_LOCALLY') ||
++      errorMessage.includes('UNABLE_TO_VERIFY_LEAF_SIGNATURE') ||
++      errorMessage.includes('SELF_SIGNED_CERT_IN_CHAIN') ||
++      errorMessage.includes('DEPTH_ZERO_SELF_SIGNED_CERT') ||
++      errorMessage.includes('CERT_HAS_EXPIRED') ||
++      errorMessage.includes('ERR_TLS_CERT_ALTNAME_INVALID')
++    ) {
++      return `SSL/TLS Certificate Error: ${errorMessage}
++
++Troubleshooting:
++- If your network uses a corporate TLS inspection CA, import it into the Windows certificate store:
++  certutil -addstore -f "Root" your-corporate-ca.crt
++
++- Alternatively, set NODE_EXTRA_CA_CERTS:
++  set NODE_EXTRA_CA_CERTS=C:\\path\\to\\your\\corporate-ca.crt
++
++- For development only (insecure), you can disable certificate verification:
++  set NODE_TLS_REJECT_UNAUTHORIZED=0
++
++  WARNING: This is insecure and should never be used in production!`;
++    }
++
++    if (
++      errorMessage.includes('ETIMEDOUT') ||
++      errorMessage.includes('ECONNREFUSED')
++    ) {
++      return `Network Error: ${errorMessage}
++
++Please check:
++- Your internet connection
++- Firewall settings
++- Proxy configuration (if applicable)`;
++    }
++  }
++
++  return `Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`;
++}
+diff --git a/sea-config.json b/sea-config.json
+new file mode 100644
+index 0000000..6c6d683
+--- /dev/null
++++ b/sea-config.json
+@@ -0,0 +1,19 @@
++{
++  "main": "dist-sea/cli.cjs",
++  "output": "dist-sea/sea-prep.blob",
++  "disableExperimentalSEAWarning": true,
++  "useCodeCache": false,
++  "assets": {
++    "bundled/review/SKILL.md": "dist-sea/assets/bundled/review/SKILL.md",
++    "locales/de.js": "dist-sea/assets/locales/de.js",
++    "locales/en.js": "dist-sea/assets/locales/en.js",
++    "locales/ja.js": "dist-sea/assets/locales/ja.js",
++    "locales/ko.js": "dist-sea/assets/locales/ko.js",
++    "locales/pt.js": "dist-sea/assets/locales/pt.js",
++    "locales/ru.js": "dist-sea/assets/locales/ru.js",
++    "locales/zh.js": "dist-sea/assets/locales/zh.js",
++    "molimate.config.json": "dist-sea/assets/molimate.config.json",
++    "vendor/ripgrep/COPYING": "dist-sea/assets/vendor/ripgrep/COPYING",
++    "vendor/ripgrep/x64-win32/rg.exe": "dist-sea/assets/vendor/ripgrep/x64-win32/rg.exe"
++  }
++}

@@ -1,0 +1,167 @@
+diff --git a/packages/core/src/utils/retry.test.ts b/packages/core/src/utils/retry.test.ts
+index a628719..b596011 100644
+--- a/packages/core/src/utils/retry.test.ts
++++ b/packages/core/src/utils/retry.test.ts
+@@ -285,8 +285,8 @@ describe('retryWithBackoff', () => {
+     });
+   });
+ 
+-  describe('Qwen OAuth 429 error handling', () => {
+-    it('should retry for Qwen OAuth 429 errors that are throttling-related', async () => {
++  describe('Moli OAuth 429 error handling', () => {
++    it('should retry for Moli OAuth 429 errors that are throttling-related', async () => {
+       const errorWith429: HttpError = new Error('Rate limit exceeded');
+       errorWith429.status = 429;
+ 
+@@ -299,7 +299,7 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 100,
+         maxDelayMs: 1000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+       // Fast-forward time for delays
+@@ -311,7 +311,7 @@ describe('retryWithBackoff', () => {
+       expect(fn).toHaveBeenCalledTimes(2);
+     });
+ 
+-    it('should throw immediately for Qwen OAuth with insufficient_quota message', async () => {
++    it('should throw immediately for Moli OAuth with insufficient_quota message', async () => {
+       const errorWithInsufficientQuota = new Error('insufficient_quota');
+ 
+       const fn = vi.fn().mockRejectedValue(errorWithInsufficientQuota);
+@@ -320,16 +320,16 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 1000,
+         maxDelayMs: 5000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
++      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
+ 
+       // Should be called only once (no retries)
+       expect(fn).toHaveBeenCalledTimes(1);
+     });
+ 
+-    it('should throw immediately for Qwen OAuth with free allocated quota exceeded message', async () => {
++    it('should throw immediately for Moli OAuth with free allocated quota exceeded message', async () => {
+       const errorWithQuotaExceeded = new Error(
+         'Free allocated quota exceeded.',
+       );
+@@ -340,16 +340,16 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 1000,
+         maxDelayMs: 5000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
++      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
+ 
+       // Should be called only once (no retries)
+       expect(fn).toHaveBeenCalledTimes(1);
+     });
+ 
+-    it('should retry for Qwen OAuth with throttling message', async () => {
++    it('should retry for Moli OAuth with throttling message', async () => {
+       const throttlingError: HttpError = new Error(
+         'requests throttling triggered',
+       );
+@@ -365,7 +365,7 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 100,
+         maxDelayMs: 1000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+       // Fast-forward time for delays
+@@ -377,7 +377,7 @@ describe('retryWithBackoff', () => {
+       expect(fn).toHaveBeenCalledTimes(3);
+     });
+ 
+-    it('should retry for Qwen OAuth with throttling error', async () => {
++    it('should retry for Moli OAuth with throttling error', async () => {
+       const throttlingError: HttpError = new Error('throttling');
+       throttlingError.status = 429;
+ 
+@@ -390,7 +390,7 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 100,
+         maxDelayMs: 1000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+       // Fast-forward time for delays
+@@ -402,7 +402,7 @@ describe('retryWithBackoff', () => {
+       expect(fn).toHaveBeenCalledTimes(2);
+     });
+ 
+-    it('should throw immediately for Qwen OAuth with quota message', async () => {
++    it('should throw immediately for Moli OAuth with quota message', async () => {
+       const errorWithQuota = new Error('quota exceeded');
+ 
+       const fn = vi.fn().mockRejectedValue(errorWithQuota);
+@@ -411,16 +411,16 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 1000,
+         maxDelayMs: 5000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+-      await expect(promise).rejects.toThrow(/Qwen OAuth quota exceeded/);
++      await expect(promise).rejects.toThrow(/Moli OAuth quota exceeded/);
+ 
+       // Should be called only once (no retries)
+       expect(fn).toHaveBeenCalledTimes(1);
+     });
+ 
+-    it('should retry normal errors for Qwen OAuth (not quota-related)', async () => {
++    it('should retry normal errors for Moli OAuth (not quota-related)', async () => {
+       const normalError: HttpError = new Error('Network error');
+       normalError.status = 500;
+ 
+@@ -434,7 +434,7 @@ describe('retryWithBackoff', () => {
+         maxAttempts: 5,
+         initialDelayMs: 100,
+         maxDelayMs: 1000,
+-        authType: AuthType.QWEN_OAUTH,
++        authType: AuthType.MOLI_OAUTH,
+       });
+ 
+       // Fast-forward time for delays
+diff --git a/packages/core/src/utils/retry.ts b/packages/core/src/utils/retry.ts
+index 5ce79f0..11ebf84 100644
+--- a/packages/core/src/utils/retry.ts
++++ b/packages/core/src/utils/retry.ts
+@@ -6,7 +6,7 @@
+ 
+ import type { GenerateContentResponse } from '@google/genai';
+ import { AuthType } from '../core/contentGenerator.js';
+-import { isQwenQuotaExceededError } from './quotaErrorDetection.js';
++import { isMoliQuotaExceededError } from './quotaErrorDetection.js'; // MOLI: renamed from isMoliQuotaExceededError
+ import { createDebugLogger } from './debugLogger.js';
+ 
+ const debugLogger = createDebugLogger('RETRY');
+@@ -107,11 +107,11 @@ export async function retryWithBackoff<T>(
+     } catch (error) {
+       const errorStatus = getErrorStatus(error);
+ 
+-      // Check for Qwen OAuth quota exceeded error - throw immediately without retry
+-      if (authType === AuthType.QWEN_OAUTH && isQwenQuotaExceededError(error)) {
++      // MOLI: Check for Moli OAuth quota exceeded error - throw immediately without retry
++      if (authType === AuthType.MOLI_OAUTH && isMoliQuotaExceededError(error)) {
+         throw new Error(
+-          `Qwen OAuth quota exceeded: Your free daily quota has been reached.\n\n` +
+-            `To continue using Qwen Code without waiting, upgrade to the Alibaba Cloud Coding Plan:\n` +
++          `Moli OAuth quota exceeded: Your free daily quota has been reached.\n\n` +
++            `To continue using Moli Code without waiting, upgrade to the Alibaba Cloud Coding Plan:\n` +
+             `  China:       https://help.aliyun.com/zh/model-studio/coding-plan\n` +
+             `  Global/Intl: https://www.alibabacloud.com/help/en/model-studio/coding-plan\n\n` +
+             `After subscribing, run /auth to configure your Coding Plan API key.`,
