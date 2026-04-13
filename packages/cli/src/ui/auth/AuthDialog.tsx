@@ -28,7 +28,7 @@ import {
 } from '../../constants/alibabaStandardApiKey.js';
 
 const MODEL_PROVIDERS_DOCUMENTATION_URL =
-  'https://qwenlm.github.io/qwen-code-docs/en/users/configuration/model-providers/';
+  'https://molimate.github.io/moli-code-docs/en/users/configuration/model-providers/';
 
 function parseDefaultAuthType(
   defaultAuthType: string | undefined,
@@ -104,8 +104,8 @@ export function AuthDialog(): React.JSX.Element {
   const mainItems = [
     {
       key: AuthType.MOLI_OAUTH,
-      title: t('Qwen OAuth'),
-      label: t('Qwen OAuth'),
+      title: t('Moli OAuth'),
+      label: t('Moli OAuth'),
       description: t(
         'Free \u00B7 Up to 1,000 requests/day \u00B7 Qwen latest models',
       ),
@@ -113,10 +113,10 @@ export function AuthDialog(): React.JSX.Element {
     },
     {
       key: 'CODING_PLAN',
-      title: t('Alibaba Cloud Coding Plan'),
-      label: t('Alibaba Cloud Coding Plan'),
+      title: t('Molimate Plan'),
+      label: t('Molimate Plan'),
       description: t(
-        'Paid \u00B7 Up to 6,000 requests/5 hrs \u00B7 All Alibaba Cloud Coding Plan Models',
+        'Paid \u00B7 Up to 6,000 requests/5 hrs \u00B7 All Molimate Plan Models',
       ),
       value: 'CODING_PLAN' as MainOption,
     },
@@ -129,7 +129,7 @@ export function AuthDialog(): React.JSX.Element {
     },
   ];
 
-  // Region selection entries (shown after selecting Alibaba Cloud Coding Plan)
+  // Region selection entries (shown after selecting Molimate Plan)
   const regionItems = [
     {
       key: 'china',
@@ -291,7 +291,7 @@ export function AuthDialog(): React.JSX.Element {
       return;
     }
 
-    // For Qwen OAuth, proceed directly
+    // For Moli OAuth, proceed directly
     await onAuthSelect(value);
   };
 
@@ -450,7 +450,7 @@ export function AuthDialog(): React.JSX.Element {
     </>
   );
 
-  // Render region selection for Alibaba Cloud Coding Plan
+  // Render region selection for Molimate Plan
   const renderRegionSelectView = () => (
     <>
       <Box marginTop={1}>
@@ -712,11 +712,11 @@ export function AuthDialog(): React.JSX.Element {
           </Box>
           <Box>
             <Link
-              url="https://qwenlm.github.io/qwen-code-docs/en/users/support/tos-privacy/"
+              url="https://molimate.github.io/moli-code-docs/en/users/support/tos-privacy/"
               fallback={false}
             >
               <Text color={theme.text.secondary} underline>
-                https://qwenlm.github.io/qwen-code-docs/en/users/support/tos-privacy/
+                https://molimate.github.io/moli-code-docs/en/users/support/tos-privacy/
               </Text>
             </Link>
           </Box>

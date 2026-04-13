@@ -442,7 +442,7 @@ class QwenAgent implements Agent {
     const errorMessage = this.extractErrorMessage(error);
     if (
       errorMessage?.includes('moli-oauth') ||
-      errorMessage?.includes('Qwen OAuth')
+      errorMessage?.includes('Moli OAuth')
     ) {
       const qwenOAuthMethods = authMethods.filter(
         (m) => m.id === AuthType.MOLI_OAUTH,

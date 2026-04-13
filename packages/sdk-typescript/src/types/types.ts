@@ -418,7 +418,7 @@ export interface QueryOptions {
   /**
    * Authentication type for the AI service.
    * - 'openai': Use OpenAI-compatible authentication
-   * - 'moli-oauth': Use Qwen OAuth authentication
+   * - 'moli-oauth': Use Moli OAuth authentication
    *
    * Though we support 'moli-oauth', it's not recommended to use it in the SDK.
    * Because the credentials are stored in `~/.moli` and may need to refresh periodically.

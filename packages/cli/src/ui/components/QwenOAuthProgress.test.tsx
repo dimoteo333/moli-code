@@ -83,7 +83,7 @@ describe('QwenOAuthProgress', () => {
       const { lastFrame } = renderComponent();
 
       const output = lastFrame();
-      expect(output).toContain('Waiting for Qwen OAuth authentication...');
+      expect(output).toContain('Waiting for Moli OAuth authentication...');
       expect(output).toContain('Esc to cancel');
     });
 
@@ -92,7 +92,7 @@ describe('QwenOAuthProgress', () => {
       const output = lastFrame();
 
       // Should contain the auth title even in loading state
-      expect(output).toContain('Qwen OAuth Authentication');
+      expect(output).toContain('Moli OAuth Authentication');
       // Loading state shows time remaining with default timeout
       expect(output).toContain('Time remaining:');
     });
@@ -406,7 +406,7 @@ describe('QwenOAuthProgress', () => {
         <QwenOAuthProgress onTimeout={mockOnTimeout} onCancel={mockOnCancel} />,
       );
 
-      expect(lastFrame()).toContain('Waiting for Qwen OAuth authentication...');
+      expect(lastFrame()).toContain('Waiting for Moli OAuth authentication...');
       expect(lastFrame()).not.toContain('Waiting for authorization');
     });
   });
@@ -419,7 +419,7 @@ describe('QwenOAuthProgress', () => {
       });
 
       const output = lastFrame();
-      expect(output).toContain('Qwen OAuth Authentication Timeout');
+      expect(output).toContain('Moli OAuth Authentication Timeout');
       expect(output).toContain('Custom timeout message');
       expect(output).toContain(
         'Press any key to return to authentication type selection.',
@@ -432,7 +432,7 @@ describe('QwenOAuthProgress', () => {
       });
 
       const output = lastFrame();
-      expect(output).toContain('Qwen OAuth Authentication Timeout');
+      expect(output).toContain('Moli OAuth Authentication Timeout');
       expect(output).toContain(
         'OAuth token expired (over 300 seconds). Please select authentication method again.',
       );

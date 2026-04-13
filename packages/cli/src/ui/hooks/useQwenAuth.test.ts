@@ -397,7 +397,7 @@ describe('useQwenAuth', () => {
   });
 
   it('should handle different auth types correctly', () => {
-    // Test with Qwen OAuth - should set up event listeners when authenticating
+    // Test with Moli OAuth - should set up event listeners when authenticating
     const { result: qwenResult } = renderHook(() =>
       useQwenAuth(AuthType.MOLI_OAUTH, true),
     );

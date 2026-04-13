@@ -108,10 +108,10 @@ export async function retryWithBackoff<T>(
     } catch (error) {
       const errorStatus = getErrorStatus(error);
 
-      // Check for Qwen OAuth quota exceeded error - throw immediately without retry
+      // Check for Moli OAuth quota exceeded error - throw immediately without retry
       if (authType === AuthType.MOLI_OAUTH && isQwenQuotaExceededError(error)) {
         throw new Error(
-          `Qwen OAuth quota exceeded: Your free daily quota has been reached.\n\n` +
+          `Moli OAuth quota exceeded: Your free daily quota has been reached.\n\n` +
             `To continue using Moli Code without waiting, upgrade to the Alibaba Cloud Coding Plan:\n` +
             `  China:       https://help.aliyun.com/zh/model-studio/coding-plan\n` +
             `  Global/Intl: https://www.alibabacloud.com/help/en/model-studio/coding-plan\n\n` +

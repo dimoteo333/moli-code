@@ -22,7 +22,7 @@ import { DEFAULT_DASHSCOPE_BASE_URL } from '../core/openaiContentGenerator/const
 import { createDebugLogger } from '../utils/debugLogger.js';
 
 /**
- * Qwen Content Generator that uses Qwen OAuth tokens with automatic refresh
+ * Qwen Content Generator that uses Moli OAuth tokens with automatic refresh
  */
 export class QwenContentGenerator extends OpenAIContentGenerator {
   private readonly debugLogger = createDebugLogger('QWEN');

@@ -143,8 +143,8 @@ describe('modelConfigResolver', () => {
       });
     });
 
-    describe('Qwen OAuth auth type', () => {
-      it('uses default model for Qwen OAuth', () => {
+    describe('Moli OAuth auth type', () => {
+      it('uses default model for Moli OAuth', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {},
@@ -157,7 +157,7 @@ describe('modelConfigResolver', () => {
         expect(result.sources['apiKey'].kind).toBe('computed');
       });
 
-      it('allows coder-model for Qwen OAuth', () => {
+      it('allows coder-model for Moli OAuth', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {
@@ -171,7 +171,7 @@ describe('modelConfigResolver', () => {
         expect(result.sources['model'].kind).toBe('cli');
       });
 
-      it('warns and falls back for unsupported Qwen OAuth models', () => {
+      it('warns and falls back for unsupported Moli OAuth models', () => {
         const result = resolveModelConfig({
           authType: AuthType.MOLI_OAUTH,
           cli: {
@@ -311,7 +311,7 @@ describe('modelConfigResolver', () => {
       expect(result.errors[0].message).toContain('Missing model');
     });
 
-    it('always passes for Qwen OAuth', () => {
+    it('always passes for Moli OAuth', () => {
       const result = validateModelConfig({
         authType: AuthType.MOLI_OAUTH,
         model: DEFAULT_QWEN_MODEL,

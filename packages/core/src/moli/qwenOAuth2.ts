@@ -111,7 +111,7 @@ export class CredentialsClearRequiredError extends Error {
 }
 
 /**
- * Qwen OAuth2 credentials interface
+ * Moli OAuth2 credentials interface
  */
 export interface QwenCredentials {
   access_token?: string;
@@ -232,7 +232,7 @@ export interface TokenRefreshData {
 export type TokenRefreshResponse = TokenRefreshData | ErrorData;
 
 /**
- * Qwen OAuth2 client interface
+ * Moli OAuth2 client interface
  */
 export interface IQwenOAuth2Client {
   setCredentials(credentials: QwenCredentials): void;
@@ -251,7 +251,7 @@ export interface IQwenOAuth2Client {
 }
 
 /**
- * Qwen OAuth2 client implementation
+ * Moli OAuth2 client implementation
  */
 export class QwenOAuth2Client implements IQwenOAuth2Client {
   private credentials: QwenCredentials = {};
@@ -525,7 +525,7 @@ export async function getQwenOAuthClient(
 
     if (options?.requireCachedCredentials) {
       throw new Error(
-        'Qwen OAuth credentials expired. Please use /auth to re-authenticate with moli-oauth.',
+        'Moli OAuth credentials expired. Please use /auth to re-authenticate with moli-oauth.',
       );
     }
 
@@ -549,14 +549,14 @@ export async function getQwenOAuthClient(
         (() => {
           switch (result.reason) {
             case 'timeout':
-              return 'Qwen OAuth authentication timed out';
+              return 'Moli OAuth authentication timed out';
             case 'cancelled':
-              return 'Qwen OAuth authentication was cancelled by user';
+              return 'Moli OAuth authentication was cancelled by user';
             case 'rate_limit':
-              return 'Too many request for Qwen OAuth authentication, please try again later.';
+              return 'Too many request for Moli OAuth authentication, please try again later.';
             case 'error':
             default:
-              return 'Qwen OAuth authentication failed';
+              return 'Moli OAuth authentication failed';
           }
         })();
 
@@ -575,7 +575,7 @@ export async function getQwenOAuthClient(
  * convention of user-facing messages to stderr.
  */
 function showFallbackMessage(verificationUriComplete: string): void {
-  const title = 'Qwen OAuth Device Authorization';
+  const title = 'Moli OAuth Device Authorization';
   const url = verificationUriComplete;
   const minWidth = 70;
   const maxWidth = 80;

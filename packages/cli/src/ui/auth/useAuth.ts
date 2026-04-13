@@ -395,7 +395,7 @@ export const useAuthCommand = (
             type: MessageType.INFO,
             text: t(
               'Authenticated successfully with {{region}}. API key and model configs saved to settings.json.',
-              { region: t('Alibaba Cloud Coding Plan') },
+              { region: t('Molimate Plan') },
             ),
           },
           Date.now(),

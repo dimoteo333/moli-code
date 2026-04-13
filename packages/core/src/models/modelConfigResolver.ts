@@ -123,7 +123,7 @@ export function resolveModelConfig(
   const warnings: string[] = [];
   const sources: ConfigSources = {};
 
-  // Special handling for Qwen OAuth
+  // Special handling for Moli OAuth
   if (authType === AuthType.MOLI_OAUTH) {
     return resolveQwenOAuthConfig(input, warnings);
   }
@@ -270,8 +270,8 @@ export function resolveModelConfig(
 }
 
 /**
- * Special resolver for Qwen OAuth authentication.
- * Qwen OAuth has fixed model options and uses dynamic tokens.
+ * Special resolver for Moli OAuth authentication.
+ * Moli OAuth has fixed model options and uses dynamic tokens.
  */
 function resolveQwenOAuthConfig(
   input: ModelConfigSourcesInput,
@@ -280,7 +280,7 @@ function resolveQwenOAuthConfig(
   const { cli, settings, proxy, modelProvider } = input;
   const sources: ConfigSources = {};
 
-  // Qwen OAuth only allows specific models
+  // Moli OAuth only allows specific models
   const allowedModels = new Set<string>(MOLI_OAUTH_ALLOWED_MODELS);
 
   // Determine requested model
@@ -301,7 +301,7 @@ function resolveQwenOAuthConfig(
         ? ` Note: vision-model has been removed since coder-model now supports vision capabilities.`
         : '';
       warnings.push(
-        `Warning: Unsupported Qwen OAuth model '${requestedModel}', falling back to '${DEFAULT_QWEN_MODEL}'.${extraMessage}`,
+        `Warning: Unsupported Moli OAuth model '${requestedModel}', falling back to '${DEFAULT_QWEN_MODEL}'.${extraMessage}`,
       );
     }
     resolvedModel = DEFAULT_QWEN_MODEL;
@@ -309,7 +309,7 @@ function resolveQwenOAuthConfig(
   }
 
   sources['model'] = modelSource;
-  sources['apiKey'] = computedSource('Qwen OAuth dynamic token');
+  sources['apiKey'] = computedSource('Moli OAuth dynamic token');
   sources['authType'] = computedSource('provided by caller');
 
   if (proxy) {

@@ -834,7 +834,7 @@ describe('getQwenOAuthClient', () => {
         }),
       ),
     ).rejects.toThrow(
-      'Qwen OAuth credentials expired. Please use /auth to re-authenticate with moli-oauth.',
+      'Moli OAuth credentials expired. Please use /auth to re-authenticate with moli-oauth.',
     );
 
     expect(global.fetch).not.toHaveBeenCalled();

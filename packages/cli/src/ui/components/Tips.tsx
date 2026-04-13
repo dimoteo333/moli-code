@@ -16,7 +16,7 @@ const startupTips: Tip[] = [
   'Start a fresh idea with /clear or /new; the previous session stays available in history.',
   'Use /bug to submit issues to the maintainers when something goes off.',
   'Switch auth type quickly with /auth.',
-  'You can run any shell commands from Qwen Code using ! (e.g. !ls).',
+  'You can run any shell commands from Moli Code using ! (e.g. !ls).',
   'Type / to open the command popup; Tab autocompletes slash commands and saved prompts.',
   'You can resume a previous conversation by running qwen --continue or qwen --resume.',
   process.platform === 'win32'

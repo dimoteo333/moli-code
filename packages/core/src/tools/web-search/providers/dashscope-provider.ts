@@ -70,7 +70,7 @@ function getQwenCachedCredentialPath(): string {
 }
 
 /**
- * Load cached Qwen OAuth credentials from disk.
+ * Load cached Moli OAuth credentials from disk.
  */
 async function loadQwenCredentials(): Promise<QwenCredentials | null> {
   try {

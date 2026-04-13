@@ -95,7 +95,7 @@ export const DEFAULT_MODELS = {
 } as Partial<Record<AuthType, string>>;
 
 /**
- * Hard-coded Qwen OAuth models that are always available.
+ * Hard-coded Moli OAuth models that are always available.
  * These cannot be overridden by user configuration.
  */
 export const MOLI_OAUTH_MODELS: ModelConfig[] = [

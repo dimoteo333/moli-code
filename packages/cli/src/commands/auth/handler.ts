@@ -135,13 +135,13 @@ export async function handleQwenAuth(
 }
 
 /**
- * Handles Qwen OAuth authentication
+ * Handles Moli OAuth authentication
  */
 async function handleQwenOAuth(
   config: Config,
   settings: LoadedSettings,
 ): Promise<void> {
-  writeStdoutLine(t('Starting Qwen OAuth authentication...'));
+  writeStdoutLine(t('Starting Moli OAuth authentication...'));
 
   try {
     await config.refreshAuth(AuthType.MOLI_OAUTH);
@@ -154,11 +154,11 @@ async function handleQwenOAuth(
       AuthType.MOLI_OAUTH,
     );
 
-    writeStdoutLine(t('Successfully authenticated with Qwen OAuth.'));
+    writeStdoutLine(t('Successfully authenticated with Moli OAuth.'));
     process.exit(0);
   } catch (error) {
     writeStderrLine(
-      t('Failed to authenticate with Qwen OAuth: {{error}}', {
+      t('Failed to authenticate with Moli OAuth: {{error}}', {
         error: getErrorMessage(error),
       }),
     );
@@ -369,7 +369,7 @@ export async function runInteractiveAuth() {
     [
       {
         value: 'moli-oauth' as const,
-        label: t('Qwen OAuth'),
+        label: t('Moli OAuth'),
         description: t('Free · Up to 1,000 requests/day · Qwen latest models'),
       },
       {
@@ -410,7 +410,7 @@ export async function showAuthStatus(): Promise<void> {
       writeStdoutLine(t('Run one of the following commands to get started:\n'));
       writeStdoutLine(
         t(
-          '  qwen auth moli-oauth     - Authenticate with Qwen OAuth (free tier)',
+          '  qwen auth moli-oauth     - Authenticate with Moli OAuth (free tier)',
         ),
       );
       writeStdoutLine(
@@ -427,7 +427,7 @@ export async function showAuthStatus(): Promise<void> {
 
     // Display status based on auth type
     if (selectedType === AuthType.MOLI_OAUTH) {
-      writeStdoutLine(t('✓ Authentication Method: Qwen OAuth'));
+      writeStdoutLine(t('✓ Authentication Method: Moli OAuth'));
       writeStdoutLine(t('  Type: Free tier'));
       writeStdoutLine(t('  Limit: Up to 1,000 requests/day'));
       writeStdoutLine(t('  Models: Qwen latest models\n'));

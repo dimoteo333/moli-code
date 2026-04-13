@@ -221,7 +221,7 @@ export function validateModelConfig(
 ): ModelConfigValidationResult {
   const errors: Error[] = [];
 
-  // Qwen OAuth doesn't need validation - it uses dynamic tokens
+  // Moli OAuth doesn't need validation - it uses dynamic tokens
   if (config.authType === AuthType.MOLI_OAUTH) {
     return { valid: true, errors: [] };
   }
