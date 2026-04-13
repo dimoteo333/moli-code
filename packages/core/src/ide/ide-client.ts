@@ -163,7 +163,7 @@ export class IdeClient {
     }
     const workspacePath =
       this.connectionConfig?.workspacePath ??
-      process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];
+      process.env['MOLI_CODE_IDE_WORKSPACE_PATH'];
 
     const { isValid, error } = IdeClient.validateWorkspacePath(
       workspacePath,
@@ -548,7 +548,7 @@ export class IdeClient {
   }
 
   private getPortFromEnv(): string | undefined {
-    const port = process.env['QWEN_CODE_IDE_SERVER_PORT'];
+    const port = process.env['MOLI_CODE_IDE_SERVER_PORT'];
     if (!port) {
       return undefined;
     }

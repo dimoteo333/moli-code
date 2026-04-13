@@ -21,7 +21,7 @@ import { registerNewCommands } from './commands/index.js';
 import { ReadonlyFileSystemProvider } from './services/readonlyFileSystemProvider.js';
 import { isWindows } from './utils/platform.js';
 
-const CLI_IDE_COMPANION_IDENTIFIER = 'qwenlm.moli-code-vscode-ide-companion';
+const CLI_IDE_COMPANION_IDENTIFIER = 'molimate.moli-code-vscode-ide-companion';
 const INFO_MESSAGE_SHOWN_KEY = 'qwenCodeInfoMessageShown';
 export const DIFF_SCHEME = 'qwen-diff';
 

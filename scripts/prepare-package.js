@@ -150,12 +150,13 @@ const distPackageJson = {
   name: rootPackageJson.name,
   version: rootPackageJson.version,
   description:
-    rootPackageJson.description || 'Qwen Code - AI-powered coding assistant',
+    rootPackageJson.description || 'Moli Code - 몰리와 함께 AI 한 발짝',
   repository: rootPackageJson.repository,
   type: 'module',
   main: 'cli.js',
   bin: {
-    qwen: 'cli.js',
+    'moli': 'cli.js',
+    'moli-code': 'cli.js',
   },
   files: [
     'cli.js',

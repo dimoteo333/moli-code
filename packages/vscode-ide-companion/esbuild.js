@@ -177,7 +177,7 @@ async function main() {
     sourcemap: !production,
     sourcesContent: false,
     platform: 'node',
-    outfile: 'dist/extension.cjs',
+    outfile: 'dist/extension.cjs.js',
     external: ['vscode'],
     logLevel: 'silent',
     banner: {

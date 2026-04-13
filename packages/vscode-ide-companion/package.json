@@ -3,11 +3,11 @@
   "displayName": "Moli Code Companion",
   "description": "Enable Moli Code with direct access to your VS Code workspace.",
   "version": "0.3.0",
-  "publisher": "qwenlm",
+  "publisher": "molimate",
   "icon": "assets/icon.png",
   "repository": {
     "type": "git",
-    "url": "https://github.com/QwenLM/moli-code.git",
+    "url": "https://github.com/dimoteo333/moli-code.git",
     "directory": "packages/vscode-ide-companion"
   },
   "engines": {
@@ -20,9 +20,9 @@
   ],
   "keywords": [
     "moli-code",
-    "qwen code",
-    "qwen",
-    "qwen code",
+    "moli code",
+    "moli",
+    "moli code",
     "cli",
     "ide integration",
     "ide companion"
@@ -177,7 +177,7 @@
       }
     ]
   },
-  "main": "./dist/extension.cjs",
+  "main": "./dist/extension.cjs.js",
   "type": "module",
   "scripts": {
     "prepackage": "node ./scripts/prepackage.js",

@@ -84,7 +84,8 @@ if (existsSync(userDocsDir)) {
 // Copy molimate.config.json if it exists in packages/cli/dist
 const molimateConfig = join(root, 'packages', 'cli', 'dist', 'molimate.config.json');
 if (existsSync(molimateConfig)) {
-  copyFileSync(molimateConfig, join(distDir, 'molimate.config.json'));n  console.log('Copied molimate.config.json to dist/');
+  copyFileSync(molimateConfig, join(distDir, 'molimate.config.json'));
+  console.log('Copied molimate.config.json to dist/');
 }
 } else {
   console.warn(`Warning: User docs directory not found at ${userDocsDir}`);
