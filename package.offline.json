@@ -11,7 +11,7 @@
     "moli": "dist/cli.js",
     "moli-code": "dist/cli.js"
   },
-  "files": ["dist/", "README.md", "LICENSE"],
+  "files": ["dist/", "README.md", "LICENSE", "molimate.config.example.json"],
   "dependencies": {},
   "optionalDependencies": {
     "@lydell/node-pty": "1.1.0",

@@ -57,10 +57,10 @@ describe('showAuthStatus', () => {
       expect.stringContaining('No authentication method configured'),
     );
     expect(writeStdoutLine).toHaveBeenCalledWith(
-      expect.stringContaining('qwen auth moli-oauth'),
+      expect.stringContaining('moli auth moli-oauth'),
     );
     expect(writeStdoutLine).toHaveBeenCalledWith(
-      expect.stringContaining('qwen auth coding-plan'),
+      expect.stringContaining('moli auth coding-plan'),
     );
     expect(process.exit).toHaveBeenCalledWith(0);
   });

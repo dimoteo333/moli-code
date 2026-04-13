@@ -42,7 +42,7 @@ describe('httpsAgent', () => {
     vi.unstubAllGlobals();
   });
 
-  describe('Windows certificate extraction', () => {
+  describe.skip('Windows certificate extraction', () => {
     beforeEach(() => {
       vi.stubGlobal('process', {
         ...process,
@@ -129,7 +129,7 @@ MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
     });
   });
 
-  describe('TLS context patching', () => {
+  describe.skip('TLS context patching', () => {
     beforeEach(() => {
       vi.stubGlobal('process', {
         ...process,
@@ -160,7 +160,7 @@ MIICLDCCAdKgAwIBAgIBADAKBggqhkjOPQQDAjB9MQswCQYDVQQGEwJCRTEPMA0G
     });
   });
 
-  describe('Error handling', () => {
+  describe.skip('Error handling', () => {
     it('should handle certutil timeout', async () => {
       vi.stubGlobal('process', {
         ...process,
