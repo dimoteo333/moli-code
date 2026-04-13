@@ -108,8 +108,8 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    'Analisa o projeto e cria um arquivo QWEN.md personalizado.',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    'Analisa o projeto e cria um arquivo MOLI.md personalizado.',
   'List available Qwen Code tools. Usage: /tools [desc]':
     'Listar ferramentas Qwen Code disponíveis. Uso: /tools [desc]',
   'List available skills.': 'Listar habilidades disponíveis.',
@@ -451,8 +451,8 @@ export default {
   remote: 'remoto',
   'This extension will add the following commands: {{commands}}.':
     'Esta extensão adicionará os seguintes comandos: {{commands}}.',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
-    'Esta extensão anexará informações ao seu contexto QWEN.md usando {{fileName}}',
+  'This extension will append info to your MOLI.md context using {{fileName}}':
+    'Esta extensão anexará informações ao seu contexto MOLI.md usando {{fileName}}',
   'This extension will exclude the following core tools: {{tools}}':
     'Esta extensão excluirá as seguintes ferramentas principais: {{tools}}',
   'This extension will install the following skills:':
@@ -1044,8 +1044,8 @@ export default {
     'O comando /directory add não é suportado em perfis de sandbox restritivos. Use --include-directories ao iniciar a sessão.',
   "Error adding '{{path}}': {{error}}":
     "Erro ao adicionar '{{path}}': {{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    'Arquivos QWEN.md adicionados com sucesso dos seguintes diretórios, se houverem:\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    'Arquivos MOLI.md adicionados com sucesso dos seguintes diretórios, se houverem:\n- {{directories}}',
   'Error refreshing memory: {{error}}': 'Erro ao atualizar memória: {{error}}',
   'Successfully added directories:\n- {{directories}}':
     'Diretórios adicionados com sucesso:\n- {{directories}}',

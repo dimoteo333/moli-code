@@ -661,7 +661,7 @@ export const AppContainer = (props: AppContainerProps) => {
     historyManager.addItem(
       {
         type: MessageType.INFO,
-        text: 'Refreshing hierarchical memory (QWEN.md or other context files)...',
+        text: 'Refreshing hierarchical memory (MOLI.md or other context files)...',
       },
       Date.now(),
     );

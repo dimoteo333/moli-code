@@ -147,7 +147,7 @@ async function getGeminiMdFilePathsInternalForEachDir(
     const isHomeDirectory = resolvedDir === resolvedHome;
 
     if (isHomeDirectory) {
-      // For home directory, only check for QWEN.md directly in the home directory
+      // For home directory, only check for context files (MOLI.md, AGENTS.md, QWEN.md) directly in the home directory
       const homeContextPath = path.join(resolvedHome, geminiMdFilename);
       try {
         await fs.access(homeContextPath, fsSync.constants.R_OK);
@@ -306,7 +306,7 @@ export interface LoadServerHierarchicalMemoryResponse {
 }
 
 /**
- * Loads hierarchical QWEN.md files and concatenates their content.
+ * Loads hierarchical context files (MOLI.md, AGENTS.md, QWEN.md) files and concatenates their content.
  * This function is intended for use by the server.
  */
 export async function loadServerHierarchicalMemory(
@@ -333,7 +333,7 @@ export async function loadServerHierarchicalMemory(
     folderTrust,
   );
   if (filePaths.length === 0) {
-    logger.debug('No QWEN.md files found in hierarchy.');
+    logger.debug('No context files found in hierarchy.');
     return { memoryContent: '', fileCount: 0 };
   }
   const contentsWithPaths = await readGeminiMdFiles(filePaths, importFormat);

@@ -82,8 +82,8 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    'プロジェクトを分析し、カスタマイズされた QWEN.md ファイルを作成',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    'プロジェクトを分析し、カスタマイズされた MOLI.md ファイルを作成',
   'List available Qwen Code tools. Usage: /tools [desc]':
     '利用可能な Qwen Code ツールを一覧表示。使い方: /tools [desc]',
   'List available skills.': '利用可能なスキルを一覧表示する。',
@@ -781,8 +781,8 @@ export default {
     '制限的なサンドボックスプロファイルでは /directory add コマンドはサポートされていません。代わりにセッション開始時に --include-directories を使用してください',
   "Error adding '{{path}}': {{error}}":
     "'{{path}}' の追加中にエラー: {{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    '以下のディレクトリから QWEN.md ファイルを追加しました(存在する場合):\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    '以下のディレクトリから MOLI.md ファイルを追加しました(存在する場合):\n- {{directories}}',
   'Error refreshing memory: {{error}}': 'メモリの更新中にエラー: {{error}}',
   'Successfully added directories:\n- {{directories}}':
     'ディレクトリを正常に追加しました:\n- {{directories}}',

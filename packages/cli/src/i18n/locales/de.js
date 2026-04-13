@@ -96,8 +96,8 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    'Analysiert das Projekt und erstellt eine maßgeschneiderte QWEN.md-Datei.',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    'Analysiert das Projekt und erstellt eine maßgeschneiderte MOLI.md-Datei.',
   'List available Qwen Code tools. Usage: /tools [desc]':
     'Verfügbare Qwen Code Werkzeuge auflisten. Verwendung: /tools [desc]',
   'List available skills.': 'Verfügbare Skills auflisten.',
@@ -428,8 +428,8 @@ export default {
   remote: 'remote',
   'This extension will add the following commands: {{commands}}.':
     'Diese Erweiterung wird folgende Befehle hinzufügen: {{commands}}.',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
-    'Diese Erweiterung wird Informationen zu Ihrem QWEN.md-Kontext mit {{fileName}} hinzufügen',
+  'This extension will append info to your MOLI.md context using {{fileName}}':
+    'Diese Erweiterung wird Informationen zu Ihrem MOLI.md-Kontext mit {{fileName}} hinzufügen',
   'This extension will exclude the following core tools: {{tools}}':
     'Diese Erweiterung wird folgende Kernwerkzeuge ausschließen: {{tools}}',
   'This extension will install the following skills:':
@@ -1038,8 +1038,8 @@ export default {
     'Der Befehl /directory add wird in restriktiven Sandbox-Profilen nicht unterstützt. Bitte verwenden Sie --include-directories beim Starten der Sitzung.',
   "Error adding '{{path}}': {{error}}":
     "Fehler beim Hinzufügen von '{{path}}': {{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    'QWEN.md-Dateien aus folgenden Verzeichnissen erfolgreich hinzugefügt, falls vorhanden:\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    'MOLI.md-Dateien aus folgenden Verzeichnissen erfolgreich hinzugefügt, falls vorhanden:\n- {{directories}}',
   'Error refreshing memory: {{error}}':
     'Fehler beim Aktualisieren des Speichers: {{error}}',
   'Successfully added directories:\n- {{directories}}':

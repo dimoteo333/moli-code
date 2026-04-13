@@ -115,8 +115,8 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    'Analyzes the project and creates a tailored QWEN.md file.',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    'Analyzes the project and creates a tailored MOLI.md file.',
   'List available Moli Code tools. Usage: /tools [desc]':
     'List available Moli Code tools. Usage: /tools [desc]',
   'List available skills.': 'List available skills.',
@@ -509,8 +509,8 @@ export default {
   remote: 'remote',
   'This extension will add the following commands: {{commands}}.':
     'This extension will add the following commands: {{commands}}.',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
-    'This extension will append info to your QWEN.md context using {{fileName}}',
+  'This extension will append info to your MOLI.md context using {{fileName}}':
+    'This extension will append info to your MOLI.md context using {{fileName}}',
   'This extension will exclude the following core tools: {{tools}}':
     'This extension will exclude the following core tools: {{tools}}',
   'This extension will install the following skills:':
@@ -1197,8 +1197,8 @@ export default {
   'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.':
     'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.',
   "Error adding '{{path}}': {{error}}": "Error adding '{{path}}': {{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}',
   'Error refreshing memory: {{error}}': 'Error refreshing memory: {{error}}',
   'Successfully added directories:\n- {{directories}}':
     'Successfully added directories:\n- {{directories}}',

@@ -175,7 +175,7 @@ describe('memoryCommand', () => {
       );
       if (!projectCommand?.action) throw new Error('Command has no action');
 
-      setGeminiMdFilename(['QWEN.md', 'AGENTS.md']);
+      setGeminiMdFilename(['MOLI.md', 'AGENTS.md', 'QWEN.md']);
       vi.spyOn(process, 'cwd').mockReturnValue('/test/project');
       mockReadFile.mockImplementation(async (filePath: string) => {
         if (filePath.endsWith('AGENTS.md')) return 'agents memory content';
@@ -201,7 +201,7 @@ describe('memoryCommand', () => {
       );
       if (!globalCommand?.action) throw new Error('Command has no action');
 
-      setGeminiMdFilename(['QWEN.md', 'AGENTS.md']);
+      setGeminiMdFilename(['MOLI.md', 'AGENTS.md', 'QWEN.md']);
       vi.spyOn(os, 'homedir').mockReturnValue('/home/user');
       mockReadFile.mockImplementation(async (filePath: string) => {
         if (filePath.endsWith('AGENTS.md')) return 'global agents memory';
@@ -221,13 +221,13 @@ describe('memoryCommand', () => {
       );
     });
 
-    it('should show content from both QWEN.md and AGENTS.md for --project when both exist', async () => {
+    it('should show content from MOLI.md, AGENTS.md, and QWEN.md for --project when both exist', async () => {
       const projectCommand = showCommand.subCommands?.find(
         (cmd) => cmd.name === '--project',
       );
       if (!projectCommand?.action) throw new Error('Command has no action');
 
-      setGeminiMdFilename(['QWEN.md', 'AGENTS.md']);
+      setGeminiMdFilename(['MOLI.md', 'AGENTS.md', 'QWEN.md']);
       vi.spyOn(process, 'cwd').mockReturnValue('/test/project');
       mockReadFile.mockImplementation(async (filePath: string) => {
         if (filePath.endsWith('QWEN.md')) return 'qwen memory';
@@ -256,7 +256,7 @@ describe('memoryCommand', () => {
       );
       if (!globalCommand?.action) throw new Error('Command has no action');
 
-      setGeminiMdFilename(['QWEN.md', 'AGENTS.md']);
+      setGeminiMdFilename(['MOLI.md', 'AGENTS.md', 'QWEN.md']);
       vi.spyOn(os, 'homedir').mockReturnValue('/home/user');
       mockReadFile.mockImplementation(async (filePath: string) => {
         if (filePath.endsWith('QWEN.md')) return 'global qwen memory';

@@ -116,7 +116,7 @@ export default {
   // ============================================================================
   'Analyzes the project and creates a tailored MOLI.md file.':
     '프로젝트를 분석하고 맞춤형 MOLI.md 파일을 생성해요.',
-  'Analyzes the project and creates a tailored QWEN.md file.':
+  'Analyzes the project and creates a tailored MOLI.md file.':
     '프로젝트를 분석하고 맞춤형 MOLI.md 파일을 생성해요.',
   'list available Moli Code tools. Usage: /tools [desc]':
     '사용 가능한 몰리코드 도구를 보여드려요. 사용법: /tools [desc]',
@@ -509,7 +509,7 @@ export default {
     '이 확장은 다음 명령을 추가해요: {{commands}}.',
   'This extension will append info to your MOLI.md context using {{fileName}}':
     '이 확장은 {{fileName}}을(를) 사용해 MOLI.md 컨텍스트에 정보를 추가해요',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
+  'This extension will append info to your MOLI.md context using {{fileName}}':
     '이 확장은 {{fileName}}을(를) 사용해 MOLI.md 컨텍스트에 정보를 추가해요',
   'This extension will exclude the following core tools: {{tools}}':
     '이 확장은 다음 핵심 도구를 제외해요: {{tools}}',
@@ -1059,7 +1059,7 @@ export default {
   "Error adding '{{path}}': {{error}}": "'{{path}}' 추가 오류: {{error}}",
   'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
     '다음 디렉터리에서 MOLI.md 파일을 성공적으로 추가했어요(있는 경우):\n- {{directories}}',
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
     '다음 디렉터리에서 MOLI.md 파일을 성공적으로 추가했어요(있는 경우):\n- {{directories}}',
   'Error refreshing memory: {{error}}': '메모리 새로고침 오류: {{error}}',
   'Successfully added directories:\n- {{directories}}':

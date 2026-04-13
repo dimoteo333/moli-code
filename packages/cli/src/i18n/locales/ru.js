@@ -116,8 +116,8 @@ export default {
   // ============================================================================
   // Команды - Общие
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    'Анализ проекта и создание адаптированного файла QWEN.md',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    'Анализ проекта и создание адаптированного файла MOLI.md',
   'List available Qwen Code tools. Usage: /tools [desc]':
     'Просмотр доступных инструментов Qwen Code. Использование: /tools [desc]',
   'List available skills.': 'Показать доступные навыки.',
@@ -448,8 +448,8 @@ export default {
   remote: 'удалённый',
   'This extension will add the following commands: {{commands}}.':
     'Это расширение добавит следующие команды: {{commands}}.',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
-    'Это расширение добавит информацию в ваш контекст QWEN.md с помощью {{fileName}}',
+  'This extension will append info to your MOLI.md context using {{fileName}}':
+    'Это расширение добавит информацию в ваш контекст MOLI.md с помощью {{fileName}}',
   'This extension will exclude the following core tools: {{tools}}':
     'Это расширение исключит следующие основные инструменты: {{tools}}',
   'This extension will install the following skills:':
@@ -1043,8 +1043,8 @@ export default {
     'Команда /directory add не поддерживается в ограничительных профилях песочницы. Пожалуйста, используйте --include-directories при запуске сессии.',
   "Error adding '{{path}}': {{error}}":
     "Ошибка при добавлении '{{path}}': {{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    'Успешно добавлены файлы QWEN.md из следующих директорий (если они есть):\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    'Успешно добавлены файлы MOLI.md из следующих директорий (если они есть):\n- {{directories}}',
   'Error refreshing memory: {{error}}':
     'Ошибка при обновлении памяти: {{error}}',
   'Successfully added directories:\n- {{directories}}':

@@ -603,6 +603,7 @@ describe('loadCliConfig', () => {
     expect(setGeminiMdFilenameSpy).toHaveBeenCalledWith([
       ServerConfig.DEFAULT_CONTEXT_FILENAME,
       ServerConfig.AGENT_CONTEXT_FILENAME,
+      'QWEN.md',
     ]);
   });
 
@@ -648,7 +649,7 @@ describe('loadCliConfig', () => {
     process.argv = ['node', 'script.js'];
     const argv = await parseArguments();
     const settings: Settings = {};
-    const defaultContextFiles = ['QWEN.md', 'AGENTS.md'];
+    const defaultContextFiles = ['MOLI.md', 'AGENTS.md', 'QWEN.md'];
     const getAllSpy = vi
       .spyOn(ServerConfig, 'getAllGeminiMdFilenames')
       .mockReturnValue(defaultContextFiles);

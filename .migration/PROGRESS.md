@@ -164,3 +164,21 @@ f3e6041 feat: disable channel commands + fix remaining branding
 ...     docs(migration): add migration log and rebrand-v2.sh
 ...     chore(migration): Phase 1 — prepare migration infrastructure
 ```
+
+---
+
+## 추가 작업 (2026-04-13 19:00)
+
+### ✅ XML Tool Call 파서 (main + v0.3.0 양쪽 적용)
+- `packages/core/src/utils/xmlToolCallParser.ts` 신규
+- `packages/core/src/core/openaiContentGenerator/converter.ts` 수정
+- Qwen 모델이 XML 텍스트로 tool call 출력 시 자동 감지 + 파싱
+- 16개 테스트 케이스 통과
+
+### ✅ VSCode VSIX 연동 테스트
+- `code --install-extension moli-code-vscode-ide-companion-0.3.0.vsix` 설치 성공
+- 확장 ID: `molimate.moli-code-vscode-ide-companion@0.3.0`
+- 내부 CLI: `dist/qwen-cli/cli.js` → `--version` → `0.3.0` 정상
+- ripgrep (arm64-darwin), node-pty, clipboard 포함 확인
+- extension.cjs.js (6.4MB) 정상 로드
+- commands 9개 등록 확인 (Moli Code: Open, Login, New Conversation 등)

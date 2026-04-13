@@ -113,8 +113,8 @@ export default {
   // ============================================================================
   // Commands - General
   // ============================================================================
-  'Analyzes the project and creates a tailored QWEN.md file.':
-    '分析项目并创建定制的 QWEN.md 文件',
+  'Analyzes the project and creates a tailored MOLI.md file.':
+    '分析项目并创建定制的 MOLI.md 文件',
   'List available Qwen Code tools. Usage: /tools [desc]':
     '列出可用的 Qwen Code 工具。用法：/tools [desc]',
   'List available skills.': '列出可用技能。',
@@ -485,8 +485,8 @@ export default {
   remote: '远程',
   'This extension will add the following commands: {{commands}}.':
     '此扩展将添加以下命令：{{commands}}。',
-  'This extension will append info to your QWEN.md context using {{fileName}}':
-    '此扩展将使用 {{fileName}} 向您的 QWEN.md 上下文追加信息',
+  'This extension will append info to your MOLI.md context using {{fileName}}':
+    '此扩展将使用 {{fileName}} 向您的 MOLI.md 上下文追加信息',
   'This extension will exclude the following core tools: {{tools}}':
     '此扩展将排除以下核心工具：{{tools}}',
   'This extension will install the following skills:': '此扩展将安装以下技能：',
@@ -1134,8 +1134,8 @@ export default {
   'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.':
     '/directory add 命令在限制性沙箱配置文件中不受支持。请改为在启动会话时使用 --include-directories。',
   "Error adding '{{path}}': {{error}}": "添加 '{{path}}' 时出错：{{error}}",
-  'Successfully added QWEN.md files from the following directories if there are:\n- {{directories}}':
-    '如果存在，已成功从以下目录添加 QWEN.md 文件：\n- {{directories}}',
+  'Successfully added MOLI.md files from the following directories if there are:\n- {{directories}}':
+    '如果存在，已成功从以下目录添加 MOLI.md 文件：\n- {{directories}}',
   'Error refreshing memory: {{error}}': '刷新内存时出错：{{error}}',
   'Successfully added directories:\n- {{directories}}':
     '成功添加目录：\n- {{directories}}',
