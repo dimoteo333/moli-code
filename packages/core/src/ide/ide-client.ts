@@ -556,12 +556,12 @@ export class IdeClient {
   }
 
   private getStdioConfigFromEnv(): StdioConfig | undefined {
-    const command = process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'];
+    const command = process.env['MOLI_CODE_IDE_SERVER_STDIO_COMMAND'];
     if (!command) {
       return undefined;
     }
 
-    const argsStr = process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'];
+    const argsStr = process.env['MOLI_CODE_IDE_SERVER_STDIO_ARGS'];
     let args: string[] = [];
     if (argsStr) {
       try {
@@ -570,12 +570,12 @@ export class IdeClient {
           args = parsedArgs;
         } else {
           debugLogger.error(
-            'QWEN_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
+            'MOLI_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.',
           );
         }
       } catch (e) {
         debugLogger.error(
-          'Failed to parse QWEN_CODE_IDE_SERVER_STDIO_ARGS:',
+          'Failed to parse MOLI_CODE_IDE_SERVER_STDIO_ARGS:',
           e,
         );
       }

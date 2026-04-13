@@ -21,6 +21,10 @@ import { GenerateContentResponse, FinishReason } from '@google/genai';
 import type OpenAI from 'openai';
 import { safeJsonParse } from '../../utils/safeJsonParse.js';
 import { createDebugLogger } from '../../utils/debugLogger.js';
+import {
+  parseXmlToolCalls,
+  containsXmlToolCall,
+} from '../../utils/xmlToolCallParser.js';
 import type { InputModalities } from '../contentGenerator.js';
 import { StreamingToolCallParser } from './streamingToolCallParser.js';
 import {
@@ -836,8 +840,33 @@ export class OpenAIContentConverter {
       }
 
       // Handle text content
-      if (choice.message.content) {
-        parts.push({ text: choice.message.content });
+      let textContent: string | null = choice.message.content;
+
+      // Defensive: parse XML tool calls from text if model emitted them
+      // instead of using the proper tool_calls API
+      if (textContent && !choice.message.tool_calls?.length) {
+        if (containsXmlToolCall(textContent)) {
+          const { calls, remainingText } = parseXmlToolCalls(textContent);
+          if (calls.length > 0) {
+            debugLogger.debug(
+              `Extracted ${calls.length} XML tool call(s) from text`,
+            );
+            for (const call of calls) {
+              parts.push({
+                functionCall: {
+                  id: `xml_call_${calls.indexOf(call)}`,
+                  name: call.name,
+                  args: call.args,
+                },
+              });
+            }
+            textContent = remainingText.length > 0 ? remainingText : null;
+          }
+        }
+      }
+
+      if (textContent) {
+        parts.push({ text: textContent });
       }
 
       // Handle tool calls

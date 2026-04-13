@@ -31,7 +31,7 @@ vi.mock(import('node:fs/promises'), async (importOriginal) => {
 
 vi.mock('os');
 
-const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+const MEMORY_SECTION_HEADER = '## Moli Added Memories';
 
 // Define a type for our fsAdapter to ensure consistency
 interface FsAdapter {
@@ -350,10 +350,10 @@ describe('MemoryTool', () => {
         expect(result.fileName).toContain(path.join('mock', 'home', '.moli'));
         expect(result.fileName).toContain('QWEN.md');
         expect(result.fileDiff).toContain('Index: QWEN.md');
-        expect(result.fileDiff).toContain('+## Qwen Added Memories');
+        expect(result.fileDiff).toContain('+## Moli Added Memories');
         expect(result.fileDiff).toContain('+- Test fact');
         expect(result.originalContent).toBe('');
-        expect(result.newContent).toContain('## Qwen Added Memories');
+        expect(result.newContent).toContain('## Moli Added Memories');
         expect(result.newContent).toContain('- Test fact');
       }
     });
@@ -375,10 +375,10 @@ describe('MemoryTool', () => {
         );
         expect(result.fileName).toBe(expectedPath);
         expect(result.fileDiff).toContain('Index: QWEN.md');
-        expect(result.fileDiff).toContain('+## Qwen Added Memories');
+        expect(result.fileDiff).toContain('+## Moli Added Memories');
         expect(result.fileDiff).toContain('+- Test fact');
         expect(result.originalContent).toBe('');
-        expect(result.newContent).toContain('## Qwen Added Memories');
+        expect(result.newContent).toContain('## Moli Added Memories');
         expect(result.newContent).toContain('- Test fact');
       }
     });
@@ -405,7 +405,7 @@ describe('MemoryTool', () => {
     it('should handle existing memory file with content for global scope', async () => {
       const params = { fact: 'New fact', scope: 'global' as const };
       const existingContent =
-        'Some existing content.\n\n## Qwen Added Memories\n- Old fact\n';
+        'Some existing content.\n\n## Moli Added Memories\n- Old fact\n';
 
       // Mock fs.readFile to return existing content
       vi.mocked(fs.readFile).mockResolvedValue(existingContent);
