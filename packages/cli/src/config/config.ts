@@ -51,7 +51,8 @@ import { getCliVersion } from '../utils/version.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
 import { appEvents } from '../utils/events.js';
 import { mcpCommand } from '../commands/mcp.js';
-import { channelCommand } from '../commands/channel.js';
+// Channel commands disabled for moli-code
+// import { channelCommand } from '../commands/channel.js';
 
 // UUID v4 regex pattern for validation
 const SESSION_ID_REGEX =
@@ -160,7 +161,7 @@ export interface CliArgs {
   coreTools: string[] | undefined;
   excludeTools: string[] | undefined;
   authType: string | undefined;
-  channel: string | undefined;
+  channel: string | undefined; // disabled for moli-code
 }
 
 function normalizeOutputFormat(
@@ -352,11 +353,11 @@ export async function parseArguments(): Promise<CliArgs> {
             'Enable experimental LSP (Language Server Protocol) feature for code intelligence',
           default: false,
         })
-        .option('channel', {
-          type: 'string',
-          choices: ['VSCode', 'ACP', 'SDK', 'CI'],
-          description: 'Channel identifier (VSCode, ACP, SDK, CI)',
-        })
+        // .option('channel', {
+        //   type: 'string',
+        //   choices: ['VSCode', 'ACP', 'SDK', 'CI'],
+        //   description: 'Channel identifier (VSCode, ACP, SDK, CI)',
+        // })
         .option('allowed-mcp-server-names', {
           type: 'array',
           string: true,
@@ -584,9 +585,9 @@ export async function parseArguments(): Promise<CliArgs> {
     // Register Auth subcommands
     .command(authCommand)
     // Register Hooks subcommands
-    .command(hooksCommand)
-    // Register Channel subcommands
-    .command(channelCommand);
+    .command(hooksCommand);
+  // Channel commands disabled for moli-code
+  // .command(channelCommand);
 
   yargsInstance
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
@@ -607,8 +608,7 @@ export async function parseArguments(): Promise<CliArgs> {
     result._.length > 0 &&
     (result._[0] === 'mcp' ||
       result._[0] === 'extensions' ||
-      result._[0] === 'hooks' ||
-      result._[0] === 'channel')
+      result._[0] === 'hooks')
   ) {
     // MCP/Extensions/Hooks commands handle their own execution and process exit
     process.exit(0);

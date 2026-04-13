@@ -60,9 +60,7 @@ const statusCommand = {
 
 export const authCommand: CommandModule = {
   command: 'auth',
-  describe: t(
-    'Configure Qwen authentication information with Moli-OAuth or Alibaba Cloud Coding Plan',
-  ),
+  describe: t('Configure Moli authentication information'),
   builder: (yargs: Argv) =>
     yargs
       .command(qwenOauthCommand)

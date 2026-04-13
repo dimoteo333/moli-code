@@ -83,13 +83,16 @@
     "src/ui/themes/theme.test.ts",
     "src/validateNonInterActiveAuth.test.ts",
     "src/services/prompt-processors/shellProcessor.test.ts",
-    "src/commands/extensions/examples/**"
+    "src/commands/extensions/examples/**",
+    "src/commands/channel/**",
+    "src/commands/channel.ts"
   ],
   "references": [
-    { "path": "../core" },
-    { "path": "../channels/base" },
-    { "path": "../channels/telegram" },
-    { "path": "../channels/weixin" },
-    { "path": "../channels/dingtalk" }
+    { "path": "../core" }
+    // Channel references disabled for moli-code
+    // , { "path": "../channels/base" }
+    // , { "path": "../channels/telegram" }
+    // , { "path": "../channels/weixin" }
+    // , { "path": "../channels/dingtalk" }
   ]
 }
