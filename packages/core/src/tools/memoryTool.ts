@@ -78,7 +78,7 @@ Do NOT use this tool:
 export const MOLI_CONFIG_DIR = '.moli';
 export const DEFAULT_CONTEXT_FILENAME = 'QWEN.md';
 export const AGENT_CONTEXT_FILENAME = 'AGENTS.md';
-export const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+export const MEMORY_SECTION_HEADER = '## Moli Added Memories';
 
 // This variable will hold the currently configured filename for context files.
 // It defaults to include both QWEN.md and AGENTS.md but can be overridden by setGeminiMdFilename.

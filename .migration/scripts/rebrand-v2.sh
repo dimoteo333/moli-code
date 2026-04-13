@@ -64,10 +64,21 @@ find . ! -path "*/node_modules/*" ! -path "*/.git/*" ! -path "*/.migration/*" \(
     {} +
 
 # ── 3. 설정 디렉토리: .qwen → .moli ──
-echo "  📁 .qwen → .moli"
-find packages/ ! -path "*/node_modules/*" -exec sed -i '' \
-    -e "s|\.qwen|.moli|g" \
-    -e "s|QWEN_DIR|MOLI_DIR|g" \
+# 주의: 변수명 내부의 qwen (qwenDir, qwenClient 등)은 건드리지 않음
+# 문자열 리터럴 내의 경로만 치환
+echo "  📁 .qwen → .moli (string literals only)"
+find packages/ ! -path "*/node_modules/*" \( -name "*.ts" -o -name "*.tsx" -o -name "*.js" \) -exec sed -i '' \
+    -e "s|'\/.qwen'|'/.moli'|g" \
+    -e "s|\"/.qwen\"|\"/.moli\"|g" \
+    -e "s|'\.qwen'|'.moli'|g" \
+    -e "s|\"\.qwen\"|\".moli\"|g" \
+    -e "s|'\.qwenignore'|'.moliignore'|g" \
+    {} +
+
+# 환경변수 QWEN_DIR → MOLI_DIR (대문자만)
+find packages/ ! -path "*/node_modules/*" \( -name "*.ts" -o -name "*.tsx" \) -exec sed -i '' \
+    -e "s|'QWEN_DIR'|'MOLI_DIR'|g" \
+    -e "s|process\.env\.QWEN_DIR|process.env.MOLI_DIR|g" \
     {} +
 
 # ── 4. 표시명 ──
@@ -163,11 +174,15 @@ find packages/ ! -path "*/node_modules/*" -exec sed -i '' \
     {} +
 
 # ── 16. Auth: QWEN_OAUTH → MOLI_OAUTH ──
-echo "  🔐 Auth type"
-find packages/ ! -path "*/node_modules/*" -exec sed -i '' \
-    -e "s|QWEN_OAUTH|MOLI_OAUTH|g" \
-    -e "s|qwen-oauth|moli-oauth|g" \
-    -e "s|useQwenAuth|useMoliAuth|g" \
+# 주의: qwenOauthClient 등 변수명은 건드리지 않음
+# 문자열 리터럴, enum 값, CSS 클래스만 치환
+echo "  🔐 Auth type (string/enum only)"
+find packages/ ! -path "*/node_modules/*" \( -name "*.ts" -o -name "*.tsx" \) -exec sed -i '' \
+    -e "s|'QWEN_OAUTH'|'MOLI_OAUTH'|g" \
+    -e "s|\"QWEN_OAUTH\"|\"MOLI_OAUTH\"|g" \
+    -e "s|AuthType\.QWEN_OAUTH|AuthType.MOLI_OAUTH|g" \
+    -e "s|'qwen-oauth'|'moli-oauth'|g" \
+    -e "s|\"qwen-oauth\"|\"moli-oauth\"|g" \
     {} +
 
 # ── 17. Salt / internal identifiers ──
