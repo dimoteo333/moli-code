@@ -15,3 +15,4 @@
 src/
 *.map
 *.test.*
+dist/extension.cjs.js.map
