@@ -23,6 +23,14 @@ import {
   isCodingPlanConfig,
 } from '../../constants/codingPlan.js';
 import {
+  authenticateWithMolimate,
+  validateEmployeeId,
+} from '../../services/molimateAuthService.js';
+import {
+  fetchRemoteMolimateConfig,
+  getMolimateConfigSafe,
+} from '../../constants/molimateConfig.js';
+import {
   ALIBABA_STANDARD_API_KEY_ENDPOINTS,
   type AlibabaStandardRegion,
 } from '../../constants/alibabaStandardApiKey.js';
@@ -43,7 +51,11 @@ function parseDefaultAuthType(
 }
 
 // Main menu option type
-type MainOption = typeof AuthType.MOLI_OAUTH | 'CODING_PLAN' | 'API_KEY';
+type MainOption =
+  | typeof AuthType.MOLI_OAUTH
+  | 'CODING_PLAN'
+  | 'API_KEY'
+  | 'MOLIMATE';
 type ApiKeyOption = 'ALIBABA_STANDARD_API_KEY' | 'CUSTOM_API_KEY';
 
 // View level for navigation
@@ -55,7 +67,9 @@ type ViewLevel =
   | 'alibaba-standard-region-select'
   | 'alibaba-standard-api-key-input'
   | 'alibaba-standard-model-id-input'
-  | 'custom-info';
+  | 'custom-info'
+  | 'molimate-auth'
+  | 'loading-config';
 
 const ALIBABA_STANDARD_MODEL_IDS_PLACEHOLDER = 'qwen3.5-plus,glm-5,kimi-k2.5';
 const ALIBABA_STANDARD_API_DOCUMENTATION_URLS: Record<
@@ -99,6 +113,8 @@ export function AuthDialog(): React.JSX.Element {
   const [alibabaStandardModelId, setAlibabaStandardModelId] = useState('');
   const [alibabaStandardModelIdError, setAlibabaStandardModelIdError] =
     useState<string | null>(null);
+  const [molimateEmployeeId, setMolimateEmployeeId] = useState<string>('');
+  const [molimateAuthLoading, setMolimateAuthLoading] = useState(false);
 
   // Main authentication entries (flat three-option layout)
   const mainItems = [
@@ -128,6 +144,20 @@ export function AuthDialog(): React.JSX.Element {
       value: 'API_KEY' as MainOption,
     },
   ];
+
+  // Add Molimate option if config exists
+  const molimateConfig = getMolimateConfigSafe();
+  if (molimateConfig) {
+    mainItems.splice(1, 0, {
+      key: 'MOLIMATE',
+      title: t('Molimate Auth'),
+      label: t('Molimate Auth'),
+      description: t(
+        'Employee ID \u00B7 Molimate managed models \u00B7 Corporate plan',
+      ),
+      value: 'MOLIMATE' as MainOption,
+    });
+  }
 
   // Region selection entries (shown after selecting Molimate Plan)
   const regionItems = [
@@ -291,6 +321,23 @@ export function AuthDialog(): React.JSX.Element {
       return;
     }
 
+    if (value === 'MOLIMATE') {
+      setViewLevel('loading-config');
+      fetchRemoteMolimateConfig()
+        .then(() => {
+          setViewLevel('molimate-auth');
+        })
+        .catch((err: Error) => {
+          setErrorMessage(
+            t('Failed to load remote configuration: {{message}}', {
+              message: err.message,
+            }),
+          );
+          setViewLevel('main');
+        });
+      return;
+    }
+
     // For Moli OAuth, proceed directly
     await onAuthSelect(value);
   };
@@ -392,6 +439,11 @@ export function AuthDialog(): React.JSX.Element {
       setViewLevel('alibaba-standard-region-select');
     } else if (viewLevel === 'alibaba-standard-model-id-input') {
       setViewLevel('alibaba-standard-api-key-input');
+    } else if (
+      viewLevel === 'molimate-auth' ||
+      viewLevel === 'loading-config'
+    ) {
+      setViewLevel('main');
     }
   };
 
@@ -642,6 +694,66 @@ export function AuthDialog(): React.JSX.Element {
     </>
   );
 
+  const handleMolimateAuth = async () => {
+    if (!validateEmployeeId(molimateEmployeeId)) {
+      setErrorMessage(t('Employee ID must be alphanumeric'));
+      return;
+    }
+    setMolimateAuthLoading(true);
+    setErrorMessage(null);
+    try {
+      const result = await authenticateWithMolimate(molimateEmployeeId);
+      if (result.success && result.data?.token) {
+        // Use MOLI_OAUTH with the Molimate token as the auth type
+        const remoteConfig = getMolimateConfigSafe();
+        config.updateCredentials({
+          apiKey: result.data.token,
+          baseUrl: remoteConfig?.defaultBaseUrl,
+          model: remoteConfig?.models[0]?.id,
+        });
+        await onAuthSelect(AuthType.USE_OPENAI);
+      } else {
+        setErrorMessage(result.message || t('Authentication failed'));
+      }
+    } catch (err) {
+      setErrorMessage(
+        t('Authentication error: {{message}}', {
+          message: err instanceof Error ? err.message : String(err),
+        }),
+      );
+    } finally {
+      setMolimateAuthLoading(false);
+    }
+  };
+
+  const renderMolimateAuthView = () => (
+    <>
+      <Box marginTop={1} flexDirection="column">
+        <Text color={theme.text.primary}>
+          {t('Enter your Employee ID to authenticate with Molimate')}
+        </Text>
+      </Box>
+      <Box marginTop={1}>
+        <TextInput
+          value={molimateEmployeeId}
+          onChange={setMolimateEmployeeId}
+          placeholder={t('Employee ID')}
+          onSubmit={handleMolimateAuth}
+        />
+      </Box>
+      {molimateAuthLoading && (
+        <Box marginTop={1}>
+          <Text color={theme.text.secondary}>{t('Authenticating...')}</Text>
+        </Box>
+      )}
+      <Box marginTop={1}>
+        <Text color={theme.text.secondary}>
+          {t('Enter to submit, Esc to go back')}
+        </Text>
+      </Box>
+    </>
+  );
+
   const getViewTitle = () => {
     switch (viewLevel) {
       case 'main':
@@ -654,6 +766,10 @@ export function AuthDialog(): React.JSX.Element {
         return t('Select API Key Type');
       case 'custom-info':
         return t('Custom Configuration');
+      case 'molimate-auth':
+        return t('Molimate Authentication');
+      case 'loading-config':
+        return t('Loading Configuration...');
       case 'alibaba-standard-region-select':
         return t(
           'Select Region for Alibaba Cloud ModelStudio Standard API Key',
@@ -688,6 +804,14 @@ export function AuthDialog(): React.JSX.Element {
       {viewLevel === 'alibaba-standard-model-id-input' &&
         renderAlibabaStandardModelIdInputView()}
       {viewLevel === 'custom-info' && renderCustomInfoView()}
+      {viewLevel === 'loading-config' && (
+        <Box marginTop={1} flexDirection="column">
+          <Text color={theme.text.secondary}>
+            {t('Loading Molimate configuration...')}
+          </Text>
+        </Box>
+      )}
+      {viewLevel === 'molimate-auth' && renderMolimateAuthView()}
 
       {(authError || errorMessage) && (
         <Box marginTop={1}>
