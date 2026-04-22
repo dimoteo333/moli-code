@@ -27,8 +27,8 @@ export default defineConfig({
           'react-dom/client': 'ReactDOM',
         },
         assetFileNames: (assetInfo) => {
-          if (assetInfo.name === 'style.css') return 'main.css';
-          return assetInfo.name;
+          if (assetInfo.name?.endsWith('.css')) return 'main.css';
+          return assetInfo.name ?? 'assets/[name][extname]';
         },
       },
     },

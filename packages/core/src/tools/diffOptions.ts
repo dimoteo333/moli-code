@@ -5,9 +5,18 @@
  */
 
 import * as Diff from 'diff';
+import type {
+  CreatePatchOptionsNonabortable,
+  StructuredPatchOptionsNonabortable,
+  StructuredPatch,
+  StructuredPatchHunk,
+} from 'diff';
 import type { DiffStat } from './tools.js';
 
-export const DEFAULT_DIFF_OPTIONS: Diff.PatchOptions = {
+type DefaultDiffOptions = Omit<CreatePatchOptionsNonabortable, 'callback'> &
+  Omit<StructuredPatchOptionsNonabortable, 'callback'>;
+
+export const DEFAULT_DIFF_OPTIONS: DefaultDiffOptions = {
   context: 3,
   ignoreWhitespace: true,
 };
@@ -18,13 +27,13 @@ export function getDiffStat(
   aiStr: string,
   userStr: string,
 ): DiffStat {
-  const getStats = (patch: Diff.ParsedDiff) => {
+  const getStats = (patch: StructuredPatch) => {
     let addedLines = 0;
     let removedLines = 0;
     let addedChars = 0;
     let removedChars = 0;
 
-    patch.hunks.forEach((hunk: Diff.Hunk) => {
+    patch.hunks.forEach((hunk: StructuredPatchHunk) => {
       hunk.lines.forEach((line: string) => {
         if (line.startsWith('+')) {
           addedLines++;

@@ -595,6 +595,18 @@ export class OpenAIContentConverter {
       };
     }
 
+    if (contentParts.every((part) => part.type === 'text')) {
+      return {
+        role: 'tool' as const,
+        tool_call_id: response.id || '',
+        content: contentParts
+          .map(
+            (part) => (part as OpenAI.Chat.ChatCompletionContentPartText).text,
+          )
+          .join('\n'),
+      };
+    }
+
     // Cast to OpenAI type - some OpenAI-compatible APIs support richer content in tool messages
     return {
       role: 'tool' as const,

@@ -130,13 +130,7 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('Raw output text');
+      expect(toolMessage?.content).toBe('Raw output text');
     });
 
     it('should prioritize error field when present', () => {
@@ -148,13 +142,7 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('Command failed');
+      expect(toolMessage?.content).toBe('Command failed');
     });
 
     it('should stringify non-string responses', () => {
@@ -166,13 +154,7 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('{"data":{"value":42}}');
+      expect(toolMessage?.content).toBe('{"data":{"value":42}}');
     });
 
     it('should convert function responses with inlineData to tool message with embedded image_url', () => {
@@ -719,18 +701,10 @@ describe('OpenAIContentConverter', () => {
 
       const toolMessage = messages.find((message) => message.role === 'tool');
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray).toHaveLength(2);
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('File content');
-      expect(contentArray[1].type).toBe('text');
-      expect(contentArray[1].text).toContain('Unsupported inline media type');
-      expect(contentArray[1].text).toContain('application/zip');
-      expect(contentArray[1].text).toContain('archive.zip');
+      expect(toolMessage?.content).toContain('File content');
+      expect(toolMessage?.content).toContain('Unsupported inline media type');
+      expect(toolMessage?.content).toContain('application/zip');
+      expect(toolMessage?.content).toContain('archive.zip');
     });
 
     it('should render unsupported fileData types (including audio) as a text block', () => {
@@ -777,21 +751,13 @@ describe('OpenAIContentConverter', () => {
 
       const toolMessage = messages.find((message) => message.role === 'tool');
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray).toHaveLength(2);
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('File content');
-      expect(contentArray[1].type).toBe('text');
-      expect(contentArray[1].text).toContain('Unsupported file media type');
-      expect(contentArray[1].text).toContain('audio/mpeg');
-      expect(contentArray[1].text).toContain('audio.mp3');
+      expect(toolMessage?.content).toContain('File content');
+      expect(toolMessage?.content).toContain('Unsupported file media type');
+      expect(toolMessage?.content).toContain('audio/mpeg');
+      expect(toolMessage?.content).toContain('audio.mp3');
     });
 
-    it('should create tool message with text-only content when no media parts', () => {
+    it('should create tool message with string content when no media parts', () => {
       const request = createRequestWithFunctionResponse({
         output: 'Plain text output',
       });
@@ -800,14 +766,7 @@ describe('OpenAIContentConverter', () => {
       const toolMessage = messages.find((message) => message.role === 'tool');
 
       expect(toolMessage).toBeDefined();
-      expect(Array.isArray(toolMessage?.content)).toBe(true);
-      const contentArray = toolMessage?.content as Array<{
-        type: string;
-        text?: string;
-      }>;
-      expect(contentArray).toHaveLength(1);
-      expect(contentArray[0].type).toBe('text');
-      expect(contentArray[0].text).toBe('Plain text output');
+      expect(toolMessage?.content).toBe('Plain text output');
 
       // No user message should be created when there's no media
       const userMessage = messages.find((message) => message.role === 'user');
@@ -926,15 +885,9 @@ describe('OpenAIContentConverter', () => {
         'call_mcp_1',
       );
 
-      // All content is in the tool message
-      const toolContent = toolMessage?.content;
-      expect(Array.isArray(toolContent)).toBe(true);
-      const toolTexts = (toolContent as Array<{ type: string; text?: string }>)
-        .filter((p) => p.type === 'text')
-        .map((p) => p.text);
-      expect(toolTexts).toHaveLength(1);
-      expect(toolTexts[0]).toContain('data-node-id');
-      expect(toolTexts[0]).toContain('SUPER CRITICAL');
+      // All content is in the tool message.
+      expect(toolMessage?.content).toContain('data-node-id');
+      expect(toolMessage?.content).toContain('SUPER CRITICAL');
 
       // No user message should be created
       const userMessages = messages.filter((m) => m.role === 'user');
@@ -1767,18 +1720,11 @@ describe('MCP tool result end-to-end through OpenAI converter (issue #1520)', ()
     // No content should leak into a user message
     expect(userMessages).toHaveLength(0);
 
-    // Tool message should contain the actual MCP content
+    // Tool message should contain the actual MCP content.
     const toolMsg = toolMessages[0];
     expect((toolMsg as { tool_call_id: string }).tool_call_id).toBe(callId);
-
-    const toolContent = toolMsg.content;
-    expect(Array.isArray(toolContent)).toBe(true);
-    const toolTexts = (toolContent as Array<{ type: string; text?: string }>)
-      .filter((p) => p.type === 'text')
-      .map((p) => p.text);
-    expect(toolTexts).toHaveLength(1);
-    expect(toolTexts[0]).toContain('data-node-id');
-    expect(toolTexts[0]).toContain('SUPER CRITICAL');
+    expect(toolMsg.content).toContain('data-node-id');
+    expect(toolMsg.content).toContain('SUPER CRITICAL');
   });
 
   it('should preserve MCP text+image content in tool message', () => {
@@ -1897,13 +1843,7 @@ describe('MCP tool result end-to-end through OpenAI converter (issue #1520)', ()
     expect(userMessages).toHaveLength(0);
 
     const toolMsg = toolMessages[0];
-    const toolContent = toolMsg.content;
-    expect(Array.isArray(toolContent)).toBe(true);
-    const toolTexts = (toolContent as Array<{ type: string; text?: string }>)
-      .filter((p) => p.type === 'text')
-      .map((p) => p.text);
-    expect(toolTexts).toHaveLength(1);
-    expect(toolTexts[0]).toBe('Single text response from MCP tool');
+    expect(toolMsg.content).toBe('Single text response from MCP tool');
   });
 
   it('should preserve MCP multi-text + multi-image content in tool message', () => {
