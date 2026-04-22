@@ -347,7 +347,7 @@ export class RipGrepTool extends BaseDeclarativeTool<
               'File or directory to search in (rg PATH). Defaults to current working directory.',
           },
           limit: {
-            type: 'number',
+            type: 'integer',
             description:
               'Limit output to first N lines/entries. Optional - shows all matches if not specified.',
           },

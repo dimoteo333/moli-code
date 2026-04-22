@@ -583,7 +583,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
               'File or directory to search in. Defaults to current working directory.',
           },
           limit: {
-            type: 'number',
+            type: 'integer',
             description:
               'Limit output to first N matching lines. Optional - shows all matches if not specified.',
           },

@@ -908,8 +908,8 @@ describe('LspTool', () => {
      *     "properties": {
      *       "operation": { "type": "string", "enum": [...] },
      *       "filePath": { "type": "string" },
-     *       "line": { "type": "number" },
-     *       "character": { "type": "number" },
+     *       "line": { "type": "integer" },
+     *       "character": { "type": "integer" },
      *       "includeDeclaration": { "type": "boolean" },
      *       "query": { "type": "string" },
      *       "callHierarchyItem": { ... }
@@ -1033,8 +1033,8 @@ describe('LspTool', () => {
           character?: { type?: string };
         };
       };
-      expect(schema.properties?.line?.type).toBe('number');
-      expect(schema.properties?.character?.type).toBe('number');
+      expect(schema.properties?.line?.type).toBe('integer');
+      expect(schema.properties?.character?.type).toBe('integer');
     });
 
     it('includeDeclaration property has correct type', () => {
@@ -1073,7 +1073,7 @@ describe('LspTool', () => {
       expect(itemDef?.properties).toHaveProperty('selectionRange');
     });
 
-    it('supports rawKind for SymbolKind numeric preservation', () => {
+    it('supports rawKind for SymbolKind integer preservation', () => {
       const tool = createTool();
       const schema = tool.schema.parametersJsonSchema as {
         definitions?: {
@@ -1085,7 +1085,7 @@ describe('LspTool', () => {
         };
       };
       const itemDef = schema.definitions?.LspCallHierarchyItem;
-      expect(itemDef?.properties?.rawKind?.type).toBe('number');
+      expect(itemDef?.properties?.rawKind?.type).toBe('integer');
     });
 
     describe('schema definitions deep validation', () => {
@@ -1106,8 +1106,8 @@ describe('LspTool', () => {
         const posDef = schema.definitions?.LspPosition;
         expect(posDef).toBeDefined();
         expect(posDef?.type).toBe('object');
-        expect(posDef?.properties?.line?.type).toBe('number');
-        expect(posDef?.properties?.character?.type).toBe('number');
+        expect(posDef?.properties?.line?.type).toBe('integer');
+        expect(posDef?.properties?.character?.type).toBe('integer');
         expect(posDef?.required).toEqual(['line', 'character']);
       });
 

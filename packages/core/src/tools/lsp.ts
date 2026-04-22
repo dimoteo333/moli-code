@@ -1046,20 +1046,20 @@ export class LspTool extends BaseDeclarativeTool<LspToolParams, ToolResult> {
             description: 'File path (absolute or workspace-relative).',
           },
           line: {
-            type: 'number',
+            type: 'integer',
             description: '1-based line number for the target location.',
           },
           character: {
-            type: 'number',
+            type: 'integer',
             description:
               '1-based character/column number for the target location.',
           },
           endLine: {
-            type: 'number',
+            type: 'integer',
             description: '1-based end line number for range-based operations.',
           },
           endCharacter: {
-            type: 'number',
+            type: 'integer',
             description: '1-based end character for range-based operations.',
           },
           includeDeclaration: {
@@ -1080,7 +1080,7 @@ export class LspTool extends BaseDeclarativeTool<LspToolParams, ToolResult> {
             description: 'Optional LSP server name to target.',
           },
           limit: {
-            type: 'number',
+            type: 'integer',
             description: 'Optional maximum number of results to return.',
           },
           diagnostics: {
@@ -1100,8 +1100,8 @@ export class LspTool extends BaseDeclarativeTool<LspToolParams, ToolResult> {
           LspPosition: {
             type: 'object',
             properties: {
-              line: { type: 'number' },
-              character: { type: 'number' },
+              line: { type: 'integer' },
+              character: { type: 'integer' },
             },
             required: ['line', 'character'],
           },
@@ -1118,7 +1118,7 @@ export class LspTool extends BaseDeclarativeTool<LspToolParams, ToolResult> {
             properties: {
               name: { type: 'string' },
               kind: { type: 'string' },
-              rawKind: { type: 'number' },
+              rawKind: { type: 'integer' },
               detail: { type: 'string' },
               uri: { type: 'string' },
               range: { $ref: '#/definitions/LspRange' },
@@ -1136,7 +1136,7 @@ export class LspTool extends BaseDeclarativeTool<LspToolParams, ToolResult> {
                 type: 'string',
                 enum: ['error', 'warning', 'information', 'hint'],
               },
-              code: { type: ['string', 'number'] },
+              code: { type: ['string', 'integer'] },
               source: { type: 'string' },
               message: { type: 'string' },
               serverName: { type: 'string' },

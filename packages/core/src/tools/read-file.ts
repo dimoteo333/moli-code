@@ -185,12 +185,12 @@ export class ReadFileTool extends BaseDeclarativeTool<
           offset: {
             description:
               "Optional: For text files, the 0-based line number to start reading from. Requires 'limit' to be set. Use for paginating through large files.",
-            type: 'number',
+            type: 'integer',
           },
           limit: {
             description:
               "Optional: For text files, maximum number of lines to read. Use with 'offset' to paginate through large files. If omitted, reads the entire file (if feasible, up to a default limit).",
-            type: 'number',
+            type: 'integer',
           },
         },
         required: ['file_path'],
