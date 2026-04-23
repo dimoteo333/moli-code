@@ -979,6 +979,38 @@ describe('OpenAIContentConverter', () => {
 
       expect(response.candidates).toEqual([]);
     });
+
+    it('should parse XML-style tool calls from text content defensively', () => {
+      const response = converter.convertOpenAIResponseToGemini({
+        object: 'chat.completion',
+        id: 'chatcmpl-xml-tool',
+        created: 123,
+        model: 'gpt-test',
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content:
+                'I will inspect it.\n<function=read_file><parameter=absolute_path>/tmp/a.ts</parameter></function>\nDone.',
+            },
+            finish_reason: 'stop',
+            logprobs: null,
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletion);
+
+      const parts = response.candidates?.[0]?.content?.parts;
+      expect(parts?.[0]).toEqual(
+        expect.objectContaining({ text: 'I will inspect it.\n\nDone.' }),
+      );
+      expect(parts?.[1]).toEqual({
+        functionCall: {
+          name: 'read_file',
+          args: { absolute_path: '/tmp/a.ts' },
+        },
+      });
+    });
   });
 
   describe('OpenAI -> Gemini reasoning content', () => {

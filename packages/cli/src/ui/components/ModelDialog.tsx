@@ -146,7 +146,9 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
 
     // Separate runtime models from registry models
     const runtimeModels = allModels.filter((m) => m.isRuntimeModel);
-    const registryModels = allModels.filter((m) => !m.isRuntimeModel);
+    const registryModels = allModels.filter(
+      (m) => !m.isRuntimeModel && m.authType !== AuthType.MOLI_OAUTH,
+    );
 
     // Group registry models by authType
     const modelsByAuthTypeMap = new Map<AuthType, CoreAvailableModel[]>();
@@ -158,9 +160,8 @@ export function ModelDialog({ onClose }: ModelDialogProps): React.JSX.Element {
       modelsByAuthTypeMap.get(authType)!.push(model);
     }
 
-    // Fixed order: moli-oauth first, then others in a stable order
+    // Fixed order for user-configurable provider models.
     const authTypeOrder: AuthType[] = [
-      AuthType.MOLI_OAUTH,
       AuthType.USE_OPENAI,
       AuthType.USE_ANTHROPIC,
       AuthType.USE_GEMINI,

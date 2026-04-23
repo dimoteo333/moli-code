@@ -240,6 +240,22 @@ describe('SchemaValidator', () => {
       expect(SchemaValidator.validate(schema, invalidParams)).not.toBeNull();
     });
 
+    it('should coerce integer-like strings and still reject decimal strings for integer fields', () => {
+      const schema = {
+        type: 'object',
+        properties: {
+          count: { type: 'integer' },
+        },
+        required: ['count'],
+      };
+      const validParams = { count: '42' };
+      const invalidParams = { count: '3.14' };
+
+      expect(SchemaValidator.validate(schema, validParams)).toBeNull();
+      expect(validParams.count).toBe(42);
+      expect(SchemaValidator.validate(schema, invalidParams)).not.toBeNull();
+    });
+
     it('should support JSON Schema draft-07 (default)', () => {
       const schema = {
         $schema: 'http://json-schema.org/draft-07/schema#',

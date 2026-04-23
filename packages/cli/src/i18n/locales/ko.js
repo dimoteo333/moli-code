@@ -1340,6 +1340,16 @@ export default {
   'Try /insight to generate personalized insights from your chat history.':
     '/insight를 사용하여 대화 기록에서 개인화된 인사이트를 생성해 보세요.',
 
+  // Bundled skill slash command descriptions
+  'Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, or applications. Generates creative, polished code and UI design that avoids generic AI aesthetics.':
+    '독창적이고 프로덕션급인 고품질 프론트엔드 인터페이스를 만듭니다. 웹 컴포넌트, 페이지, 애플리케이션 제작 요청에 사용하세요. 흔한 AI 느낌을 피하고 창의적이며 완성도 높은 코드와 UI 디자인을 생성합니다.',
+  'Create a recurring loop that runs a prompt on a schedule. Usage - /loop 5m check the build, /loop check the PR every 30m, /loop run tests (defaults to 10m). /loop list to show jobs, /loop clear to cancel all.':
+    '정해진 일정에 따라 프롬프트를 반복 실행하는 루프를 만듭니다. 사용법: /loop 5m check the build, /loop check the PR every 30m, /loop run tests (기본값 10m). /loop list는 작업 목록을 표시하고, /loop clear는 모두 취소합니다.',
+  'Answer any question about Moli Code usage, features, configuration, and troubleshooting by referencing the official user documentation. Also helps users view or modify their settings.json. Invoke with `/qc-helper` followed by a question, e.g. `/qc-helper how do I configure MCP servers?` or `/qc-helper change approval mode to yolo`.':
+    '공식 사용자 문서를 참고하여 Moli Code 사용법, 기능, 설정, 문제 해결에 관한 질문에 답합니다. settings.json 확인이나 수정도 도와줍니다. `/qc-helper` 뒤에 질문을 붙여 실행하세요. 예: `/qc-helper how do I configure MCP servers?`, `/qc-helper change approval mode to yolo`.',
+  'Review changed code for correctness, security, code quality, and performance. Use when the user asks to review code changes, a PR, or specific files. Invoke with `/review`, `/review <pr-number>`, or `/review <file-path>`.':
+    '변경된 코드를 정확성, 보안, 코드 품질, 성능 관점에서 검토합니다. 코드 변경, PR, 특정 파일 리뷰 요청에 사용하세요. `/review`, `/review <pr-number>`, `/review <file-path>`로 실행합니다.',
+
   // ============================================================================
   // Exit Screen / Stats
   // ============================================================================

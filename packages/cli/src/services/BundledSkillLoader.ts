@@ -12,6 +12,7 @@ import type {
   SlashCommandActionReturn,
 } from '../ui/commands/types.js';
 import { CommandKind } from '../ui/commands/types.js';
+import { t } from '../i18n/index.js';
 
 const debugLogger = createDebugLogger('BUNDLED_SKILL_LOADER');
 
@@ -37,7 +38,7 @@ export class BundledSkillLoader implements ICommandLoader {
 
       return skills.map((skill) => ({
         name: skill.name,
-        description: skill.description,
+        description: t(skill.description),
         kind: CommandKind.SKILL,
         action: async (context, _args): Promise<SlashCommandActionReturn> => {
           const content = context.invocation?.args

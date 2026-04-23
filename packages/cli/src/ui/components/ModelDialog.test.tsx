@@ -17,6 +17,8 @@ import type { LoadedSettings } from '../../config/settings.js';
 import { SettingScope } from '../../config/settings.js';
 import { getFilteredMoliModels } from '../models/availableModels.js';
 
+const OPENAI_MODEL = 'gpt-4o';
+
 vi.mock('../hooks/useKeypress.js', () => ({
   useKeypress: vi.fn(),
 }));
@@ -26,18 +28,6 @@ vi.mock('./shared/DescriptiveRadioButtonSelect.js', () => ({
   DescriptiveRadioButtonSelect: vi.fn(() => null),
 }));
 
-// Helper to create getAvailableModelsForAuthType mock
-const createMockGetAvailableModelsForAuthType = () =>
-  vi.fn((t: AuthType) => {
-    if (t === AuthType.MOLI_OAUTH) {
-      return getFilteredMoliModels().map((m) => ({
-        id: m.id,
-        label: m.label,
-        authType: AuthType.MOLI_OAUTH,
-      }));
-    }
-    return [];
-  });
 const mockedSelect = vi.mocked(DescriptiveRadioButtonSelect);
 
 const renderComponent = (
@@ -58,26 +48,32 @@ const renderComponent = (
 
   const mockConfig = {
     // --- Functions used by ModelDialog ---
-    getModel: vi.fn(() => DEFAULT_MOLI_MODEL),
+    getModel: vi.fn(() => OPENAI_MODEL),
     setModel: vi.fn().mockResolvedValue(undefined),
     switchModel: vi.fn().mockResolvedValue(undefined),
-    getAuthType: vi.fn(() => 'moli-oauth'),
-    getAllConfiguredModels: vi.fn(() =>
-      getFilteredMoliModels().map((m) => ({
+    getAuthType: vi.fn(() => AuthType.USE_OPENAI),
+    getAllConfiguredModels: vi.fn(() => [
+      ...getFilteredMoliModels().map((m) => ({
         id: m.id,
         label: m.label,
         description: m.description || '',
         authType: AuthType.MOLI_OAUTH,
       })),
-    ),
+      {
+        id: OPENAI_MODEL,
+        label: OPENAI_MODEL,
+        description: 'OpenAI model',
+        authType: AuthType.USE_OPENAI,
+      },
+    ]),
 
     // --- Functions used by ClearcutLogger ---
     getUsageStatisticsEnabled: vi.fn(() => true),
     getSessionId: vi.fn(() => 'mock-session-id'),
     getDebugMode: vi.fn(() => false),
     getContentGeneratorConfig: vi.fn(() => ({
-      authType: AuthType.MOLI_OAUTH,
-      model: DEFAULT_MOLI_MODEL,
+      authType: AuthType.USE_OPENAI,
+      model: OPENAI_MODEL,
     })),
     getUseModelRouter: vi.fn(() => false),
     getProxy: vi.fn(() => undefined),
@@ -124,40 +120,35 @@ describe('<ModelDialog />', () => {
     expect(mockedSelect).toHaveBeenCalledTimes(1);
 
     const props = mockedSelect.mock.calls[0][0];
-    expect(props.items).toHaveLength(getFilteredMoliModels().length);
-    // coder-model is the only model and it has vision capability
+    expect(props.items).toHaveLength(1);
     expect(props.items[0].value).toBe(
+      `${AuthType.USE_OPENAI}::${OPENAI_MODEL}`,
+    );
+    expect(props.items.map((item) => item.value)).not.toContain(
       `${AuthType.MOLI_OAUTH}::${DEFAULT_MOLI_MODEL}`,
     );
     expect(props.showNumbers).toBe(true);
   });
 
   it('initializes with the model from ConfigContext', () => {
-    const mockGetModel = vi.fn(() => DEFAULT_MOLI_MODEL);
+    const mockGetModel = vi.fn(() => OPENAI_MODEL);
     renderComponent(
       {},
       {
         getModel: mockGetModel,
-        getAvailableModelsForAuthType:
-          createMockGetAvailableModelsForAuthType(),
       },
     );
 
     expect(mockGetModel).toHaveBeenCalled();
-    // Calculate expected index dynamically based on model list
-    const moliModels = getFilteredMoliModels();
-    const expectedIndex = moliModels.findIndex(
-      (m) => m.id === DEFAULT_MOLI_MODEL,
-    );
     expect(mockedSelect).toHaveBeenCalledWith(
       expect.objectContaining({
-        initialIndex: expectedIndex,
+        initialIndex: 0,
       }),
       undefined,
     );
   });
 
-  it('initializes with default coder model if context is not provided', () => {
+  it('initializes with first visible provider model if context is not provided', () => {
     renderComponent({}, undefined);
 
     expect(mockedSelect).toHaveBeenCalledWith(
@@ -174,15 +165,11 @@ describe('<ModelDialog />', () => {
       {},
       {
         getModel: mockGetModel,
-        getAvailableModelsForAuthType:
-          createMockGetAvailableModelsForAuthType(),
       },
     );
 
     expect(mockGetModel).toHaveBeenCalled();
 
-    // When getModel returns undefined, preferredModel falls back to DEFAULT_MOLI_MODEL
-    // which has index 0, so initialIndex should be 0
     expect(mockedSelect).toHaveBeenCalledWith(
       expect.objectContaining({
         initialIndex: 0,
@@ -193,72 +180,52 @@ describe('<ModelDialog />', () => {
   });
 
   it('calls config.switchModel and onClose when DescriptiveRadioButtonSelect.onSelect is triggered', async () => {
-    const { props, mockConfig, mockSettings } = renderComponent(
-      {},
-      {
-        getAvailableModelsForAuthType: vi.fn((t: AuthType) => {
-          if (t === AuthType.MOLI_OAUTH) {
-            return getFilteredMoliModels().map((m) => ({
-              id: m.id,
-              label: m.label,
-              authType: AuthType.MOLI_OAUTH,
-            }));
-          }
-          return [];
-        }),
-      },
-    );
+    const { props, mockConfig, mockSettings } = renderComponent();
 
     const childOnSelect = mockedSelect.mock.calls[0][0].onSelect;
     expect(childOnSelect).toBeDefined();
 
-    await childOnSelect(`${AuthType.MOLI_OAUTH}::${DEFAULT_MOLI_MODEL}`);
+    await childOnSelect(`${AuthType.USE_OPENAI}::${OPENAI_MODEL}`);
 
     expect(mockConfig?.switchModel).toHaveBeenCalledWith(
-      AuthType.MOLI_OAUTH,
-      DEFAULT_MOLI_MODEL,
+      AuthType.USE_OPENAI,
+      OPENAI_MODEL,
       undefined,
     );
     expect(mockSettings.setValue).toHaveBeenCalledWith(
       SettingScope.User,
       'model.name',
-      DEFAULT_MOLI_MODEL,
+      OPENAI_MODEL,
     );
     expect(mockSettings.setValue).toHaveBeenCalledWith(
       SettingScope.User,
       'security.auth.selectedType',
-      AuthType.MOLI_OAUTH,
+      AuthType.USE_OPENAI,
     );
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });
 
   it('calls config.switchModel and persists authType+model when selecting a different authType', async () => {
     const switchModel = vi.fn().mockResolvedValue(undefined);
-    const getAuthType = vi.fn(() => AuthType.USE_OPENAI);
-    const getAvailableModelsForAuthType = vi.fn((t: AuthType) => {
-      if (t === AuthType.USE_OPENAI) {
-        return [{ id: 'gpt-4', label: 'GPT-4', authType: t }];
-      }
-      if (t === AuthType.MOLI_OAUTH) {
-        return getFilteredMoliModels().map((m) => ({
-          id: m.id,
-          label: m.label,
-          authType: AuthType.MOLI_OAUTH,
-        }));
-      }
-      return [];
-    });
+    const getAuthType = vi.fn(() => AuthType.MOLI_OAUTH);
 
     const mockConfigWithSwitchAuthType = {
       getAuthType,
-      getModel: vi.fn(() => 'gpt-4'),
+      getModel: vi.fn(() => DEFAULT_MOLI_MODEL),
       getContentGeneratorConfig: vi.fn(() => ({
-        authType: AuthType.MOLI_OAUTH,
-        model: DEFAULT_MOLI_MODEL,
+        authType: AuthType.USE_OPENAI,
+        model: OPENAI_MODEL,
       })),
       // Add switchModel to the mock object (not the type)
       switchModel,
-      getAvailableModelsForAuthType,
+      getAllConfiguredModels: vi.fn(() => [
+        {
+          id: OPENAI_MODEL,
+          label: OPENAI_MODEL,
+          description: 'OpenAI model',
+          authType: AuthType.USE_OPENAI,
+        },
+      ]),
     };
 
     const { props, mockSettings } = renderComponent(
@@ -268,22 +235,22 @@ describe('<ModelDialog />', () => {
     );
 
     const childOnSelect = mockedSelect.mock.calls[0][0].onSelect;
-    await childOnSelect(`${AuthType.MOLI_OAUTH}::${DEFAULT_MOLI_MODEL}`);
+    await childOnSelect(`${AuthType.USE_OPENAI}::${OPENAI_MODEL}`);
 
     expect(switchModel).toHaveBeenCalledWith(
-      AuthType.MOLI_OAUTH,
-      DEFAULT_MOLI_MODEL,
-      { requireCachedCredentials: true },
+      AuthType.USE_OPENAI,
+      OPENAI_MODEL,
+      undefined,
     );
     expect(mockSettings.setValue).toHaveBeenCalledWith(
       SettingScope.User,
       'model.name',
-      DEFAULT_MOLI_MODEL,
+      OPENAI_MODEL,
     );
     expect(mockSettings.setValue).toHaveBeenCalledWith(
       SettingScope.User,
       'security.auth.selectedType',
-      AuthType.MOLI_OAUTH,
+      AuthType.USE_OPENAI,
     );
     expect(props.onClose).toHaveBeenCalledTimes(1);
   });
@@ -328,8 +295,8 @@ describe('<ModelDialog />', () => {
   });
 
   it('updates initialIndex when config context changes', () => {
-    const mockGetModel = vi.fn(() => DEFAULT_MOLI_MODEL);
-    const mockGetAuthType = vi.fn(() => 'moli-oauth');
+    const mockGetModel = vi.fn(() => OPENAI_MODEL);
+    const mockGetAuthType = vi.fn(() => AuthType.USE_OPENAI);
     const mockSettings = {
       isTrusted: true,
       user: { settings: {} },
@@ -343,16 +310,20 @@ describe('<ModelDialog />', () => {
             {
               getModel: mockGetModel,
               getAuthType: mockGetAuthType,
-              getAvailableModelsForAuthType:
-                createMockGetAvailableModelsForAuthType(),
-              getAllConfiguredModels: vi.fn(() =>
-                getFilteredMoliModels().map((m) => ({
-                  id: m.id,
-                  label: m.label,
-                  description: m.description || '',
-                  authType: AuthType.MOLI_OAUTH,
-                })),
-              ),
+              getAllConfiguredModels: vi.fn(() => [
+                {
+                  id: 'gpt-3.5',
+                  label: 'gpt-3.5',
+                  description: 'OpenAI model',
+                  authType: AuthType.USE_OPENAI,
+                },
+                {
+                  id: OPENAI_MODEL,
+                  label: OPENAI_MODEL,
+                  description: 'OpenAI model',
+                  authType: AuthType.USE_OPENAI,
+                },
+              ]),
             } as unknown as Config
           }
         >
@@ -361,22 +332,26 @@ describe('<ModelDialog />', () => {
       </SettingsContext.Provider>,
     );
 
-    // DEFAULT_MOLI_MODEL (coder-model) is at index 0
-    expect(mockedSelect.mock.calls[0][0].initialIndex).toBe(0);
+    expect(mockedSelect.mock.calls[0][0].initialIndex).toBe(1);
 
-    mockGetModel.mockReturnValue(DEFAULT_MOLI_MODEL);
+    mockGetModel.mockReturnValue('gpt-3.5');
     const newMockConfig = {
       getModel: mockGetModel,
       getAuthType: mockGetAuthType,
-      getAvailableModelsForAuthType: createMockGetAvailableModelsForAuthType(),
-      getAllConfiguredModels: vi.fn(() =>
-        getFilteredMoliModels().map((m) => ({
-          id: m.id,
-          label: m.label,
-          description: m.description || '',
-          authType: AuthType.MOLI_OAUTH,
-        })),
-      ),
+      getAllConfiguredModels: vi.fn(() => [
+        {
+          id: 'gpt-3.5',
+          label: 'gpt-3.5',
+          description: 'OpenAI model',
+          authType: AuthType.USE_OPENAI,
+        },
+        {
+          id: OPENAI_MODEL,
+          label: OPENAI_MODEL,
+          description: 'OpenAI model',
+          authType: AuthType.USE_OPENAI,
+        },
+      ]),
     } as unknown as Config;
 
     rerender(
@@ -389,11 +364,6 @@ describe('<ModelDialog />', () => {
 
     // Should be called at least twice: initial render + re-render after context change
     expect(mockedSelect).toHaveBeenCalledTimes(2);
-    // Calculate expected index for DEFAULT_MOLI_MODEL dynamically
-    const moliModels = getFilteredMoliModels();
-    const expectedCoderIndex = moliModels.findIndex(
-      (m) => m.id === DEFAULT_MOLI_MODEL,
-    );
-    expect(mockedSelect.mock.calls[1][0].initialIndex).toBe(expectedCoderIndex);
+    expect(mockedSelect.mock.calls[1][0].initialIndex).toBe(0);
   });
 });

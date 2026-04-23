@@ -27,6 +27,7 @@ import {
   convertSchema,
   type SchemaComplianceMode,
 } from '../../utils/schemaConverter.js';
+import { parseXmlToolCalls } from '../../utils/xmlToolCallParser.js';
 
 const debugLogger = createDebugLogger('CONVERTER');
 
@@ -862,7 +863,18 @@ export class OpenAIContentConverter {
       if (choice.message.content) {
         const cleaned = this.stripSpecialTokens(choice.message.content);
         if (cleaned) {
-          parts.push({ text: cleaned });
+          const { calls, remainingText } = parseXmlToolCalls(cleaned);
+          if (remainingText) {
+            parts.push({ text: remainingText });
+          }
+          for (const call of calls) {
+            parts.push({
+              functionCall: {
+                name: call.name,
+                args: call.args,
+              },
+            });
+          }
         }
       }
 
@@ -975,7 +987,18 @@ export class OpenAIContentConverter {
         if (typeof choice.delta.content === 'string') {
           const cleaned = this.stripSpecialTokens(choice.delta.content);
           if (cleaned) {
-            parts.push({ text: cleaned });
+            const { calls, remainingText } = parseXmlToolCalls(cleaned);
+            if (remainingText) {
+              parts.push({ text: remainingText });
+            }
+            for (const call of calls) {
+              parts.push({
+                functionCall: {
+                  name: call.name,
+                  args: call.args,
+                },
+              });
+            }
           }
         }
       }
