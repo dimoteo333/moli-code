@@ -2,13 +2,8 @@ import { defineConfig } from 'vitest/config';
 
 export default defineConfig({
   test: {
-    projects: [
-      'packages/cli',
-      'packages/core',
-      'packages/vscode-ide-companion',
-      'packages/sdk-typescript',
-      'integration-tests',
-      'scripts',
-    ],
+    // Root vitest should mirror the documented unit-test scope for moli-code.
+    // Integration and package-specific suites remain runnable from their own configs.
+    projects: ['packages/cli', 'packages/core', 'scripts'],
   },
 });
