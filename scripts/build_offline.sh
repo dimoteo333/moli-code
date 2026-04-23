@@ -5,6 +5,7 @@
 set -e
 
 echo "Building moli-code offline package..."
+node scripts/sync-package-versions.js
 PACKAGE_VERSION=$(node -p "require('./package.offline.json').version")
 PACKAGE_FILE="moli-code-${PACKAGE_VERSION}.tgz"
 

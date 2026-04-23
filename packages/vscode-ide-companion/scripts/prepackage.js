@@ -178,6 +178,11 @@ function removeSelfReferenceFromNodeModules() {
 function main() {
   const npm = npmBin();
 
+  console.log('[prepackage] Syncing package versions...');
+  run('node', [path.join(repoRoot, 'scripts', 'sync-package-versions.js')], {
+    cwd: repoRoot,
+  });
+
   // Root bundling depends on built workspace outputs. Use the root build to
   // ensure all required workspace dist/ artifacts exist.
   console.log('[prepackage] Building repo...');

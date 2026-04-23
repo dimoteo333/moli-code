@@ -2,7 +2,7 @@
   "name": "moli-code-vscode-ide-companion",
   "displayName": "Moli Code Companion",
   "description": "VS Code 워크스페이스와 바로 연결되어 파일 컨텍스트, 편집 흐름, 대화형 에이전트 작업을 한곳에서 이어갈 수 있는 Moli Code 전용 확장입니다.",
-  "version": "0.12.5",
+  "version": "0.3.1",
   "publisher": "dobby",
   "icon": "assets/logo.ico",
   "repository": {

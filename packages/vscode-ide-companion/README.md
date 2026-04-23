@@ -1,70 +1,67 @@
 # Moli Code Companion
 
-[![Version](https://img.shields.io/visual-studio-marketplace/v/dobby.moli-code-vscode-ide-companion)](https://marketplace.visualstudio.com/items?itemName=dobby.moli-code-vscode-ide-companion)
-[![VS Code Installs](https://img.shields.io/visual-studio-marketplace/i/dobby.moli-code-vscode-ide-companion)](https://marketplace.visualstudio.com/items?itemName=dobby.moli-code-vscode-ide-companion)
-[![Open VSX Downloads](https://img.shields.io/open-vsx/dt/dobby/moli-code-vscode-ide-companion)](https://open-vsx.org/extension/dobby/moli-code-vscode-ide-companion)
-[![Rating](https://img.shields.io/visual-studio-marketplace/r/dobby.moli-code-vscode-ide-companion)](https://marketplace.visualstudio.com/items?itemName=dobby.moli-code-vscode-ide-companion)
+Moli Code Companion은 VS Code 안에서 Moli Code를 바로 실행하고, 현재 워크스페이스 문맥을 유지한 채 대화, 코드 수정, 파일 참조, diff 검토까지 이어서 처리할 수 있도록 만든 전용 확장입니다.
 
-Seamlessly integrate [Moli Code](https://github.com/MoliLM/moli-code) into Visual Studio Code with native IDE features and an intuitive chat interface. This extension bundles everything you need — no additional installation required.
+별도의 전역 CLI 설치 없이도 확장 내부에 번들된 Moli Code를 사용하며, 편집기 안에서 자연스럽게 에이전트 작업 흐름을 이어갈 수 있습니다.
 
-## Demo
+## 주요 기능
 
-<video src="https://cloud.video.taobao.com/vod/IKKwfM-kqNI3OJjM_U8uMCSMAoeEcJhs6VNCQmZxUfk.mp4" controls width="800">
-  Your browser does not support the video tag. You can open the video directly:
-  https://cloud.video.taobao.com/vod/IKKwfM-kqNI3OJjM_U8uMCSMAoeEcJhs6VNCQmZxUfk.mp4
-</video>
+- VS Code 사이드바에서 Moli Code 채팅 열기
+- 현재 워크스페이스, 열린 파일, 선택 영역 문맥과 연동
+- 코드 변경 사항을 VS Code diff 화면에서 검토하고 수락 또는 닫기
+- 여러 세션 기록 조회 및 이어서 작업
+- 번들된 CLI 기반 실행으로 오프라인 배포 패키지와 함께 사용 가능
 
-## Features
+## 사용 환경
 
-- **Native IDE experience**: Dedicated Moli Code Chat panel accessed via the Moli icon in the editor title bar
-- **Native diffing**: Review, edit, and accept changes in VS Code's diff view
-- **Auto-accept edits mode**: Automatically apply Moli's changes as they're made
-- **File management**: @-mention files or attach files and images using the system file picker
-- **Conversation history & multiple sessions**: Access past conversations and run multiple sessions simultaneously
-- **Open file & selection context**: Share active files, cursor position, and selections for more precise help
+- Visual Studio Code 1.85.0 이상
+- Cursor, Windsurf 등 VS Code 기반 에디터에서도 사용 가능
 
-## Requirements
+## 시작하기
 
-- Visual Studio Code 1.85.0 or newer (also works with Cursor, Windsurf, and other VS Code-based editors)
+1. 확장을 설치합니다.
+2. 명령 팔레트에서 `Moli Code: Open`을 실행하거나 에디터 우측 상단의 Moli Code 아이콘을 클릭합니다.
+3. 채팅 패널이 열리면 바로 Moli Code와 대화를 시작합니다.
 
-## Quick Start
+## 제공 명령어
 
-1. **Install** from the [VS Code Marketplace](https://marketplace.visualstudio.com/items?itemName=dobby.moli-code-vscode-ide-companion) or [Open VSX Registry](https://open-vsx.org/extension/dobby/moli-code-vscode-ide-companion)
+| 명령어                                | 설명                                       |
+| ------------------------------------- | ------------------------------------------ |
+| `Moli Code: Open`                     | Moli Code 채팅 패널을 엽니다.              |
+| `Moli Code: Run`                      | 번들된 Moli Code CLI를 실행합니다.         |
+| `Moli Code: Accept Current Diff`      | 현재 열려 있는 diff 변경사항을 반영합니다. |
+| `Moli Code: Close Diff Editor`        | 현재 diff 편집기를 닫습니다.               |
+| `Moli Code: View Third-Party Notices` | 서드파티 고지 문서를 엽니다.               |
 
-2. **Open the Chat panel** using one of these methods:
-   - Click the **Moli icon** in the top-right corner of the editor
-   - Run `Moli Code: Open` from the Command Palette (`Cmd+Shift+P` / `Ctrl+Shift+P`)
+## 오프라인 설치
 
-3. **Start chatting** — Ask Moli to help with coding tasks, explain code, fix bugs, or write new features
+사내 배포나 폐쇄망 환경에서는 제공된 VSIX 파일을 사용해 설치할 수 있습니다.
 
-## Commands
+```bash
+code --install-extension moli-code-vscode-ide-companion-<version>.vsix --force
+```
 
-| Command                          | Description                                            |
-| -------------------------------- | ------------------------------------------------------ |
-| `Moli Code: Open`                | Open the Moli Code Chat panel                          |
-| `Moli Code: Run`                 | Launch a classic terminal session with the bundled CLI |
-| `Moli Code: Accept Current Diff` | Accept the currently displayed diff                    |
-| `Moli Code: Close Diff Editor`   | Close/reject the current diff                          |
+## 이런 작업에 적합합니다
 
-## Feedback & Issues
+- 레포지토리 구조를 이해한 뒤 코드 수정 요청하기
+- 현재 파일이나 선택 영역 기준으로 수정/설명 받기
+- 생성된 변경사항을 diff로 검토한 뒤 반영하기
+- CLI와 IDE 경험을 같은 워크플로우로 묶어서 사용하기
 
-- 🐛 [Report bugs](https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&labels=bug,vscode-ide-companion)
-- 💡 [Request features](https://github.com/dimoteo333/moli-code/issues/new?template=feature_request.yml&labels=enhancement,vscode-ide-companion)
-- 📖 [Documentation](https://molilm.github.io/moli-code-docs/)
-- 📋 [Changelog](https://github.com/MoliLM/moli-code/releases)
+## 문제 제보
 
-## Contributing
+- 버그 신고: https://github.com/dimoteo333/moli-code/issues/new?template=bug_report.yml&labels=bug,vscode-ide-companion
+- 기능 제안: https://github.com/dimoteo333/moli-code/issues/new?template=feature_request.yml&labels=enhancement,vscode-ide-companion
 
-We welcome contributions! See our [Contributing Guide](https://github.com/MoliLM/moli-code/blob/main/CONTRIBUTING.md) for details on:
+## 참고
 
-- Setting up the development environment
-- Building and debugging the extension locally
-- Submitting pull requests
+- 프로젝트 저장소: https://github.com/dimoteo333/moli-code
+- 릴리스: https://github.com/dimoteo333/moli-code/releases
 
-## Terms of Service and Privacy Notice
+## 이용 안내
 
-By installing this extension, you agree to the [Terms of Service](https://github.com/MoliLM/moli-code/blob/main/docs/tos-privacy.md).
+이 확장을 설치하면 Moli Code 관련 이용약관 및 개인정보처리방침 안내를 함께 따릅니다.
 
-## License
+## 라이선스
 
-[Apache-2.0](https://github.com/MoliLM/moli-code/blob/main/LICENSE)
+Apache-2.0
