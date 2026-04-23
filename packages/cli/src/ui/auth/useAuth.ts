@@ -41,7 +41,10 @@ import {
   validateEmployeeId,
 } from '../../services/molimateAuthService.js';
 import type { LocalConfigValues } from '../components/LocalConfigWizard.js';
-import { getMolimateConfig } from '../../constants/molimateConfig.js';
+import {
+  getMolimateConfig,
+  getMolimateConfigSafe,
+} from '../../constants/molimateConfig.js';
 
 export type { MoliAuthState } from '../hooks/useMoliAuth.js';
 
@@ -667,8 +670,8 @@ export const useAuthCommand = (
       setAuthError(null);
 
       try {
-        const molimateConfig = getMolimateConfig();
         const persistScope = getPersistScopeForModelSelection(settings);
+        const molimateConfig = getMolimateConfigSafe();
 
         // Backup settings file before modification
         const settingsFile = settings.forScope(persistScope);
@@ -681,7 +684,10 @@ export const useAuthCommand = (
           {
             id: modelId,
             name: modelId,
-            baseUrl: values.baseUrl || molimateConfig.defaultBaseUrl,
+            baseUrl:
+              values.baseUrl ||
+              molimateConfig?.defaultBaseUrl ||
+              'https://testai.apitest.com/compatible-mode/v1',
             description: `${modelId} via local config`,
             envKey,
           },
@@ -689,14 +695,22 @@ export const useAuthCommand = (
 
         // Get existing configs and filter out conflicting ones
         const molimateModelIds = new Set(
-          molimateConfig.models.map((m) => m.id),
+          Array.isArray(molimateConfig?.models)
+            ? molimateConfig.models.map((m) => m.id)
+            : [],
         );
-        const existingConfigs =
+        const existingOpenAIConfigs =
           (
             settings.merged.modelProviders as ModelProvidersConfig | undefined
           )?.[AuthType.USE_OPENAI] || [];
+        const existingConfigs = Array.isArray(existingOpenAIConfigs)
+          ? existingOpenAIConfigs
+          : [];
         const nonLocalConfigs = existingConfigs.filter(
-          (config) => !molimateModelIds.has(config.id),
+          (config) =>
+            config.id !== modelId &&
+            config.envKey !== envKey &&
+            !molimateModelIds.has(config.id),
         );
 
         // Merge with new configs

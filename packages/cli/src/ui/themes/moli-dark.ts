@@ -24,7 +24,7 @@ const moliDarkColors: ColorsTheme = {
   DiffRemoved: '#F26D78',
   Comment: '#646A71',
   Gray: '#3D4149',
-  GradientColors: ['#FFD700', '#da7959'],
+  GradientColors: ['#9B59B6', '#D2A6FF'],
 };
 
 export const MoliDark: Theme = new Theme(

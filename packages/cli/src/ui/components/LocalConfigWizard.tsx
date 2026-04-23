@@ -117,6 +117,7 @@ export function LocalConfigWizard({
             </Box>
             <Box marginTop={1}>
               <TextInput
+                key="local-config-model-name"
                 value={modelName}
                 onChange={setModelName}
                 placeholder="e.g. share-Qwen3-Coder-30B-A3"
@@ -140,6 +141,7 @@ export function LocalConfigWizard({
             </Box>
             <Box marginTop={1}>
               <TextInput
+                key="local-config-api-key"
                 value={apiKey}
                 onChange={setApiKey}
                 placeholder="sk-..."
@@ -163,6 +165,7 @@ export function LocalConfigWizard({
             </Box>
             <Box marginTop={1}>
               <TextInput
+                key="local-config-base-url"
                 value={baseUrl}
                 onChange={setBaseUrl}
                 placeholder={DEFAULT_BASE_URL}

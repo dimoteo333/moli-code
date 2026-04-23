@@ -492,6 +492,9 @@ export const useSlashCommandProcessor = (
                     case 'extensions_manage':
                       actions.openExtensionsManagerDialog();
                       return { type: 'handled' };
+                    case 'trust':
+                      actions.openPermissionsDialog();
+                      return { type: 'handled' };
                     case 'help':
                       return { type: 'handled' };
                     default: {

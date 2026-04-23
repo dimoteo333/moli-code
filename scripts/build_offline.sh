@@ -5,6 +5,8 @@
 set -e
 
 echo "Building moli-code offline package..."
+PACKAGE_VERSION=$(node -p "require('./package.offline.json').version")
+PACKAGE_FILE="moli-code-${PACKAGE_VERSION}.tgz"
 
 # Build and bundle the project
 echo "Running build and bundle..."
@@ -26,7 +28,7 @@ mv package.json.backup package.json
 
 echo ""
 echo "✅ Offline package created successfully!"
-echo "Package: moli-code-0.2.0.tgz"
+echo "Package: ${PACKAGE_FILE}"
 echo ""
 echo "To install offline:"
-echo "  npm install -g moli-code-0.2.0.tgz"
+echo "  npm install -g ${PACKAGE_FILE}"
