@@ -5,6 +5,7 @@
  */
 
 import * as vscode from 'vscode';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 /**
  * Panel and Tab Manager
@@ -57,7 +58,7 @@ export class PanelManager {
       );
       this.panel = vscode.window.createWebviewPanel(
         'moliCode.chat',
-        'Moli Code',
+        UI_STRINGS.panelTitle,
         { viewColumn: existingGroup.viewColumn, preserveFocus: false },
         {
           enableScripts: true,
@@ -85,7 +86,7 @@ export class PanelManager {
           vscode.window.activeTextEditor?.viewColumn || vscode.ViewColumn.One;
         this.panel = vscode.window.createWebviewPanel(
           'moliCode.chat',
-          'Moli Code',
+          UI_STRINGS.panelTitle,
           { viewColumn: activeColumn, preserveFocus: false },
           {
             enableScripts: true,
@@ -106,7 +107,7 @@ export class PanelManager {
 
       this.panel = vscode.window.createWebviewPanel(
         'moliCode.chat',
-        'Moli Code',
+        UI_STRINGS.panelTitle,
         { viewColumn: newGroupColumn, preserveFocus: false },
         {
           enableScripts: true,
@@ -129,7 +130,7 @@ export class PanelManager {
     this.panel.iconPath = vscode.Uri.joinPath(
       this.extensionUri,
       'assets',
-      'icon.png',
+      'logo.ico',
     );
 
     // Try to capture Tab info shortly after creation so we can track the

@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { FC } from 'react';
 import type { ModelInfo } from '@agentclientprotocol/sdk';
 import { PlanCompletedIcon } from '@dobby/moli-code-webui';
+import { UI_STRINGS } from '../../../i18n/strings.js';
 
 interface ModelSelectorProps {
   visible: boolean;
@@ -136,14 +137,14 @@ export const ModelSelector: FC<ModelSelectorProps> = ({
     >
       {/* Header */}
       <div className="px-3 py-1.5 text-[var(--app-secondary-foreground)] text-[0.8em] uppercase tracking-wider">
-        Select a model
+        {UI_STRINGS.modelSelectorTitle}
       </div>
 
       {/* Model list */}
       <div className="flex max-h-[300px] flex-col overflow-y-auto p-[var(--app-list-padding)] pb-2">
         {models.length === 0 ? (
           <div className="px-3 py-4 text-center text-[var(--app-secondary-foreground)] text-sm">
-            No models available. Check console for details.
+            {UI_STRINGS.modelSelectorEmpty}
           </div>
         ) : (
           models.map((model, index) => {

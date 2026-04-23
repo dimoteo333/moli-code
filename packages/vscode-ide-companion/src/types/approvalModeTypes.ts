@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import { UI_STRINGS } from '../i18n/strings.js';
+
 /**
  * Enum for approval modes with UI-friendly labels
  * Represents the different approval modes available in the ACP protocol
@@ -38,23 +40,23 @@ export const APPROVAL_MODE_INFO: Record<
   }
 > = {
   [ApprovalMode.PLAN]: {
-    label: 'Plan mode',
-    title: 'Moli will plan before executing. Click to switch modes.',
+    label: UI_STRINGS.approvalPlanLabel,
+    title: UI_STRINGS.approvalPlanTitle,
     iconType: 'plan',
   },
   [ApprovalMode.DEFAULT]: {
-    label: 'Ask before edits',
-    title: 'Moli will ask before each edit. Click to switch modes.',
+    label: UI_STRINGS.approvalDefaultLabel,
+    title: UI_STRINGS.approvalDefaultTitle,
     iconType: 'edit',
   },
   [ApprovalMode.AUTO_EDIT]: {
-    label: 'Edit automatically',
-    title: 'Moli will edit files automatically. Click to switch modes.',
+    label: UI_STRINGS.approvalAutoLabel,
+    title: UI_STRINGS.approvalAutoTitle,
     iconType: 'auto',
   },
   [ApprovalMode.YOLO]: {
-    label: 'YOLO',
-    title: 'Automatically approve all tools. Click to switch modes.',
+    label: UI_STRINGS.approvalYoloLabel,
+    title: UI_STRINGS.approvalYoloTitle,
     iconType: 'yolo',
   },
 };
@@ -72,8 +74,8 @@ export function getApprovalModeInfoFromString(mode: string): {
     return APPROVAL_MODE_INFO[enumValue];
   }
   return {
-    label: 'Unknown mode',
-    title: 'Unknown edit mode',
+    label: '알 수 없는 모드',
+    title: '알 수 없는 편집 모드',
     iconType: undefined,
   };
 }

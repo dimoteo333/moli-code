@@ -48,7 +48,7 @@
         {
           "id": "moli-code-sidebar",
           "title": "Moli Code",
-          "icon": "assets/sidebar-icon.svg",
+          "icon": "assets/logo.ico",
           "when": "moli-code:doesNotSupportSecondarySidebar"
         }
       ],
@@ -56,7 +56,7 @@
         {
           "id": "moli-code-secondary",
           "title": "Moli Code",
-          "icon": "assets/sidebar-icon.svg",
+          "icon": "assets/logo.ico",
           "when": "!moli-code:doesNotSupportSecondarySidebar"
         }
       ]
@@ -67,7 +67,7 @@
           "type": "webview",
           "id": "moli-code.chatView.sidebar",
           "name": "Moli Code",
-          "icon": "assets/sidebar-icon.svg",
+          "icon": "assets/logo.ico",
           "when": "moli-code:doesNotSupportSecondarySidebar"
         }
       ],
@@ -76,7 +76,7 @@
           "type": "webview",
           "id": "moli-code.chatView.secondary",
           "name": "Moli Code",
-          "icon": "assets/sidebar-icon.svg",
+          "icon": "assets/logo.ico",
           "when": "!moli-code:doesNotSupportSecondarySidebar"
         }
       ]

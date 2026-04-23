@@ -22,6 +22,10 @@ export interface EmptyStateProps {
   logoUrl?: string;
   /** App name for welcome message */
   appName?: string;
+  /** Optional custom description */
+  description?: string;
+  /** Default platform resource name for the logo */
+  defaultLogoResourceName?: string;
 }
 
 /**
@@ -46,17 +50,21 @@ export const EmptyState: FC<EmptyStateProps> = ({
   loadingMessage,
   logoUrl,
   appName = 'Moli Code',
+  description,
+  defaultLogoResourceName = 'icon.png',
 }) => {
   const platform = usePlatform();
 
   // Get logo URL: custom prop > platform resource > undefined
-  const iconUri = logoUrl ?? platform.getResourceUrl?.('icon.png');
+  const iconUri = logoUrl ?? platform.getResourceUrl?.(defaultLogoResourceName);
 
-  const description = loadingMessage
-    ? `Preparing ${appName}…`
-    : isAuthenticated
-      ? 'What would you like to do? Ask about this codebase or we can start writing code.'
-      : `Welcome! Please log in to start using ${appName}.`;
+  const resolvedDescription =
+    description ??
+    (loadingMessage
+      ? `Preparing ${appName}…`
+      : isAuthenticated
+        ? 'What would you like to do? Ask about this codebase or we can start writing code.'
+        : `Welcome! Please log in to start using ${appName}.`);
 
   return (
     <div className="flex flex-col items-center justify-center h-full p-5 md:p-10">
@@ -89,7 +97,7 @@ export const EmptyState: FC<EmptyStateProps> = ({
           )}
           <div className="text-center">
             <div className="text-[15px] text-app-primary-foreground leading-normal font-normal max-w-[400px]">
-              {description}
+              {resolvedDescription}
             </div>
           </div>
         </div>

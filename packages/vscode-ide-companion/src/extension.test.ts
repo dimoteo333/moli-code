@@ -11,6 +11,7 @@ import {
   IDE_DEFINITIONS,
   detectIdeFromEnv,
 } from '@dobby/moli-code-core/src/ide/detect-ide.js';
+import { UI_STRINGS } from './i18n/strings.js';
 
 vi.mock('@dobby/moli-code-core/src/ide/detect-ide.js', async () => {
   const actual = await vi.importActual(
@@ -120,7 +121,7 @@ describe('activate', () => {
     } as vscode.Extension<unknown>);
     await activate(context);
     expect(showInformationMessageMock).toHaveBeenCalledWith(
-      'Moli Code Companion extension successfully installed.',
+      UI_STRINGS.installedMessage,
     );
   });
 
@@ -164,7 +165,7 @@ describe('activate', () => {
     } as vscode.Extension<unknown>);
     await activate(context);
     expect(showInformationMessageMock).toHaveBeenCalledWith(
-      'Moli Code Companion extension successfully installed.',
+      UI_STRINGS.installedMessage,
     );
   });
 
@@ -197,8 +198,8 @@ describe('activate', () => {
       await activate(context);
 
       expect(showInformationMessageMock).toHaveBeenCalledWith(
-        'A new version (1.2.0) of the Moli Code Companion extension is available.',
-        'Update to latest version',
+        UI_STRINGS.updatedVersionMessage('1.2.0'),
+        UI_STRINGS.updateNow,
       );
     });
 
@@ -285,7 +286,7 @@ describe('activate', () => {
         }),
       } as Response);
       vi.mocked(vscode.window.showInformationMessage).mockResolvedValue(
-        'Update to latest version' as never,
+        UI_STRINGS.updateNow as never,
       );
       const executeCommandMock = vi.mocked(vscode.commands.executeCommand);
 

@@ -23,6 +23,7 @@ import { getFileName } from '../utils/webviewUtils.js';
 import { type ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import { isAuthenticationRequiredError } from '../../utils/authErrors.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 export class WebViewProvider {
   private panelManager: PanelManager;
@@ -656,7 +657,7 @@ export class WebViewProvider {
           ).trim();
           const panelRef = this.panelManager.getPanel();
           if (panelRef) {
-            panelRef.title = title || 'Moli Code';
+            panelRef.title = title || UI_STRINGS.panelTitle;
           }
           return;
         }
@@ -943,7 +944,7 @@ export class WebViewProvider {
           // Send success notification to WebView
           this.sendMessageToWebView({
             type: 'loginSuccess',
-            data: { message: 'Successfully logged in!' },
+            data: { message: '로그인이 완료되었습니다.' },
           });
         } catch (_error) {
           const errorMsg = getErrorMessage(_error);
@@ -1352,7 +1353,7 @@ export class WebViewProvider {
 
     // Ensure restored tab title starts from default label
     try {
-      panel.title = 'Moli Code';
+      panel.title = UI_STRINGS.panelTitle;
     } catch (e) {
       console.warn(
         '[WebViewProvider] Failed to reset restored panel title:',
@@ -1382,7 +1383,7 @@ export class WebViewProvider {
           ).trim();
           const panelRef = this.panelManager.getPanel();
           if (panelRef) {
-            panelRef.title = title || 'Moli Code';
+            panelRef.title = title || UI_STRINGS.panelTitle;
           }
           return;
         }

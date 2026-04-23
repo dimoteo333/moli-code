@@ -6,6 +6,7 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import type { VSCodeAPI } from '../../hooks/useVSCode.js';
+import { UI_STRINGS } from '../../../i18n/strings.js';
 
 /**
  * Session management Hook
@@ -16,8 +17,9 @@ export const useSessionManagement = (vscode: VSCodeAPI) => {
     Array<Record<string, unknown>>
   >([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [currentSessionTitle, setCurrentSessionTitle] =
-    useState<string>('Past Conversations');
+  const [currentSessionTitle, setCurrentSessionTitle] = useState<string>(
+    UI_STRINGS.pastConversations,
+  );
   const [showSessionSelector, setShowSessionSelector] = useState(false);
   const [sessionSearchQuery, setSessionSearchQuery] = useState('');
   const [nextCursor, setNextCursor] = useState<number | undefined>(undefined);

@@ -10,6 +10,7 @@ import type { ChatMessage } from '../../services/moliAgentManager.js';
 import type { ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import { isAuthenticationRequiredError } from '../../utils/authErrors.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 /**
  * Session message handler
@@ -215,8 +216,11 @@ export class SessionMessageHandler extends BaseMessageHandler {
    * Returns true if a login was initiated.
    */
   private async promptLogin(message: string): Promise<boolean> {
-    const result = await vscode.window.showWarningMessage(message, 'Login Now');
-    if (result === 'Login Now') {
+    const result = await vscode.window.showWarningMessage(
+      message,
+      UI_STRINGS.loginNow,
+    );
+    if (result === UI_STRINGS.loginNow) {
       if (this.loginHandler) {
         await this.loginHandler();
       } else {
@@ -236,11 +240,11 @@ export class SessionMessageHandler extends BaseMessageHandler {
   ): Promise<'login' | 'offline' | 'dismiss'> {
     const selection = await vscode.window.showWarningMessage(
       message,
-      'Login Now',
-      'View Offline',
+      UI_STRINGS.loginNow,
+      UI_STRINGS.viewOffline,
     );
 
-    if (selection === 'Login Now') {
+    if (selection === UI_STRINGS.loginNow) {
       if (this.loginHandler) {
         await this.loginHandler();
       } else {
@@ -248,7 +252,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       }
       return 'login';
     }
-    if (selection === 'View Offline') {
+    if (selection === UI_STRINGS.viewOffline) {
       return 'offline';
     }
     return 'dismiss';
@@ -393,7 +397,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       console.warn('[SessionMessageHandler] Agent not connected');
 
       // Show non-modal notification with Login button
-      await this.promptLogin('You need to login first to use Moli Code.');
+      await this.promptLogin(UI_STRINGS.loginToUseMoli);
       return;
     }
 
@@ -410,12 +414,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
         );
         const errorMsg = this.getErrorMessage(createErr);
         if (this.shouldPromptLogin(createErr)) {
-          await this.promptLogin(
-            'Your login session has expired or is invalid. Please login again to continue using Moli Code.',
-          );
+          await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
           return;
         }
-        vscode.window.showErrorMessage(`Failed to create session: ${errorMsg}`);
+        vscode.window.showErrorMessage(
+          UI_STRINGS.sessionCreateFailed(errorMsg),
+        );
         return;
       }
     }
@@ -491,14 +495,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
         this.shouldPromptLogin(error)
       ) {
         // Show a more user-friendly error message for expired sessions
-        await this.promptLogin(
-          'Your login session has expired or is invalid. Please login again to continue using Moli Code.',
-        );
+        await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
         // Send a specific error to the webview for better UI handling
         this.sendToWebView({
           type: 'sessionExpired',
-          data: { message: 'Session expired. Please login again.' },
+          data: { message: UI_STRINGS.sessionExpired },
         });
         this.sendStreamEnd('session_expired', myRequestId);
       } else {
@@ -526,7 +528,9 @@ export class SessionMessageHandler extends BaseMessageHandler {
           this.sendStreamEnd('timeout', myRequestId);
         } else {
           // Handling of Non-Timeout Errors
-          vscode.window.showErrorMessage(`Error sending message: ${errorMsg}`);
+          vscode.window.showErrorMessage(
+            UI_STRINGS.sessionSendFailed(errorMsg),
+          );
           this.sendToWebView({
             type: 'error',
             data: { message: errorMsg },
@@ -547,7 +551,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // Ensure connection (login) before creating a new session
       if (!this.agentManager.isConnected) {
         const proceeded = await this.promptLogin(
-          'You need to login before creating a new session.',
+          UI_STRINGS.loginBeforeNewSession,
         );
         if (!proceeded) {
           return;
@@ -577,14 +581,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // Check for authentication/session expiration errors
       if (this.shouldPromptLogin(error)) {
         // Show a more user-friendly error message for expired sessions
-        await this.promptLogin(
-          'Your login session has expired or is invalid. Please login again to create a new session.',
-        );
+        await this.promptLogin(UI_STRINGS.loginExpiredForNewSession);
 
         // Send a specific error to the webview for better UI handling
         this.sendToWebView({
           type: 'sessionExpired',
-          data: { message: 'Session expired. Please login again.' },
+          data: { message: UI_STRINGS.sessionExpired },
         });
       } else {
         this.sendToWebView({
@@ -605,7 +607,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // If not connected yet, offer to login or view offline
       if (!this.agentManager.isConnected) {
         const choice = await this.promptLoginOrOffline(
-          'You are not logged in. Login now to fully restore this session, or view it offline.',
+          UI_STRINGS.notLoggedInRestoreOrOffline,
         );
 
         if (choice === 'offline') {
@@ -617,9 +619,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             type: 'moliSessionSwitched',
             data: { sessionId, messages },
           });
-          vscode.window.showInformationMessage(
-            'Showing cached session content. Login to interact with the AI.',
-          );
+          vscode.window.showInformationMessage(UI_STRINGS.cachedSessionInfo);
           return;
         } else if (choice !== 'login') {
           // User dismissed; do nothing
@@ -678,14 +678,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
         // Check for authentication/session expiration errors
         if (this.shouldPromptLogin(loadError)) {
           // Show a more user-friendly error message for expired sessions
-          await this.promptLogin(
-            'Your login session has expired or is invalid. Please login again to switch sessions.',
-          );
+          await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
           // Send a specific error to the webview for better UI handling
           this.sendToWebView({
             type: 'sessionExpired',
-            data: { message: 'Session expired. Please login again.' },
+            data: { message: UI_STRINGS.sessionExpired },
           });
           return;
         }
@@ -715,9 +713,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
               typeof loadError === 'object' &&
               !('result' in loadError)
             ) {
-              vscode.window.showWarningMessage(
-                'Session restored from local cache. Some context may be incomplete.',
-              );
+              vscode.window.showWarningMessage(UI_STRINGS.sessionCacheWarning);
             }
           } catch (createError) {
             console.error(
@@ -728,14 +724,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
             // Check for authentication/session expiration errors in session creation
             if (this.shouldPromptLogin(createError)) {
               // Show a more user-friendly error message for expired sessions
-              await this.promptLogin(
-                'Your login session has expired or is invalid. Please login again to switch sessions.',
-              );
+              await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
               // Send a specific error to the webview for better UI handling
               this.sendToWebView({
                 type: 'sessionExpired',
-                data: { message: 'Session expired. Please login again.' },
+                data: { message: UI_STRINGS.sessionExpired },
               });
               return;
             }
@@ -749,9 +743,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             type: 'moliSessionSwitched',
             data: { sessionId, messages, session: sessionDetails },
           });
-          vscode.window.showWarningMessage(
-            'Showing cached session content. Login to interact with the AI.',
-          );
+          vscode.window.showWarningMessage(UI_STRINGS.cachedSessionInfo);
         }
       }
     } catch (error) {
@@ -762,14 +754,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // Check for authentication/session expiration errors
       if (this.shouldPromptLogin(error)) {
         // Show a more user-friendly error message for expired sessions
-        await this.promptLogin(
-          'Your login session has expired or is invalid. Please login again to switch sessions.',
-        );
+        await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
         // Send a specific error to the webview for better UI handling
         this.sendToWebView({
           type: 'sessionExpired',
-          data: { message: 'Session expired. Please login again.' },
+          data: { message: UI_STRINGS.sessionExpired },
         });
       } else {
         this.sendToWebView({
@@ -811,14 +801,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // Check for authentication/session expiration errors
       if (this.shouldPromptLogin(error)) {
         // Show a more user-friendly error message for expired sessions
-        await this.promptLogin(
-          'Your login session has expired or is invalid. Please login again to view sessions.',
-        );
+        await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
         // Send a specific error to the webview for better UI handling
         this.sendToWebView({
           type: 'sessionExpired',
-          data: { message: 'Session expired. Please login again.' },
+          data: { message: UI_STRINGS.sessionExpired },
         });
       } else {
         this.sendToWebView({
@@ -859,7 +847,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // If not connected, offer to login or view offline
       if (!this.agentManager.isConnected) {
         const choice = await this.promptLoginOrOffline(
-          'You are not logged in. Login now to fully restore this session, or view it offline.',
+          UI_STRINGS.notLoggedInRestoreOrOffline,
         );
 
         if (choice === 'offline') {
@@ -870,9 +858,7 @@ export class SessionMessageHandler extends BaseMessageHandler {
             type: 'moliSessionSwitched',
             data: { sessionId, messages },
           });
-          vscode.window.showInformationMessage(
-            'Showing cached session content. Login to interact with the AI.',
-          );
+          vscode.window.showInformationMessage(UI_STRINGS.cachedSessionInfo);
           return;
         } else if (choice !== 'login') {
           return;
@@ -900,14 +886,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
         // Check for authentication/session expiration errors
         if (this.shouldPromptLogin(acpError)) {
           // Show a more user-friendly error message for expired sessions
-          await this.promptLogin(
-            'Your login session has expired or is invalid. Please login again to resume sessions.',
-          );
+          await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
           // Send a specific error to the webview for better UI handling
           this.sendToWebView({
             type: 'sessionExpired',
-            data: { message: 'Session expired. Please login again.' },
+            data: { message: UI_STRINGS.sessionExpired },
           });
           return;
         }
@@ -922,14 +906,12 @@ export class SessionMessageHandler extends BaseMessageHandler {
       // Check for authentication/session expiration errors
       if (this.shouldPromptLogin(error)) {
         // Show a more user-friendly error message for expired sessions
-        await this.promptLogin(
-          'Your login session has expired or is invalid. Please login again to resume sessions.',
-        );
+        await this.promptLogin(UI_STRINGS.loginExpiredForSwitchSession);
 
         // Send a specific error to the webview for better UI handling
         this.sendToWebView({
           type: 'sessionExpired',
-          data: { message: 'Session expired. Please login again.' },
+          data: { message: UI_STRINGS.sessionExpired },
         });
       } else {
         this.sendToWebView({

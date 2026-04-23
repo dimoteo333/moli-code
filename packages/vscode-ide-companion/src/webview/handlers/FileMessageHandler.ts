@@ -15,6 +15,7 @@ import {
 import { ReadonlyFileSystemProvider } from '../../services/readonlyFileSystemProvider.js';
 import { FileDiscoveryService } from '@dobby/moli-code-core/src/services/fileDiscoveryService.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 /**
  * File message handler
@@ -100,7 +101,7 @@ export class FileMessageHandler extends BaseMessageHandler {
         canSelectMany: false,
         canSelectFiles: true,
         canSelectFolders: false,
-        openLabel: 'Attach',
+        openLabel: UI_STRINGS.attach,
       });
 
       if (uris && uris.length > 0) {
@@ -140,7 +141,7 @@ export class FileMessageHandler extends BaseMessageHandler {
         const fileName = getFileName(activeEditor.document.uri.fsPath);
         items.push({
           label: `$(file) ${fileName}`,
-          description: 'Current file',
+          description: UI_STRINGS.currentFile,
           detail: activeEditor.document.uri.fsPath,
         });
       }
@@ -148,17 +149,17 @@ export class FileMessageHandler extends BaseMessageHandler {
       // Add file picker option
       items.push({
         label: '$(file) File...',
-        description: 'Choose a file to attach',
+        description: UI_STRINGS.chooseFileToAttach,
       });
 
       // Add workspace files option
       items.push({
         label: '$(search) Search files...',
-        description: 'Search workspace files',
+        description: UI_STRINGS.searchWorkspaceFiles,
       });
 
       const selected = await vscode.window.showQuickPick(items, {
-        placeHolder: 'Attach context',
+        placeHolder: UI_STRINGS.attachContext,
         matchOnDescription: true,
         matchOnDetail: true,
       });
@@ -183,7 +184,7 @@ export class FileMessageHandler extends BaseMessageHandler {
             canSelectMany: false,
             canSelectFiles: true,
             canSelectFolders: false,
-            openLabel: 'Attach',
+            openLabel: UI_STRINGS.attach,
           });
 
           if (uri && uri.length > 0) {

@@ -7,6 +7,7 @@
 import * as vscode from 'vscode';
 import { BaseMessageHandler } from './BaseMessageHandler.js';
 import { getErrorMessage } from '../../utils/errorMessage.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 /**
  * Auth message handler
@@ -62,9 +63,7 @@ export class AuthMessageHandler extends BaseMessageHandler {
       } else {
         console.log('[AuthMessageHandler] Using fallback login method');
         // Fallback: show message and use command
-        vscode.window.showInformationMessage(
-          'Please wait while we connect to Moli Code...',
-        );
+        vscode.window.showInformationMessage(UI_STRINGS.connectingToMoli);
         await vscode.commands.executeCommand('moli-code.login');
       }
     } catch (error) {

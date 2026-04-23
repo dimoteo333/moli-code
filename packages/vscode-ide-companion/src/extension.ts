@@ -20,6 +20,7 @@ import { registerChatViewProviders } from './webview/providers/chatViewRegistrat
 import { registerNewCommands } from './commands/index.js';
 import { ReadonlyFileSystemProvider } from './services/readonlyFileSystemProvider.js';
 import { isWindows } from './utils/platform.js';
+import { UI_STRINGS } from './i18n/strings.js';
 
 const CLI_IDE_COMPANION_IDENTIFIER = 'dobby.moli-code-vscode-ide-companion';
 const INFO_MESSAGE_SHOWN_KEY = 'moliCodeInfoMessageShown';
@@ -90,10 +91,10 @@ async function checkForUpdates(
 
     if (latestVersion && semver.gt(latestVersion, currentVersion)) {
       const selection = await vscode.window.showInformationMessage(
-        `A new version (${latestVersion}) of the Moli Code Companion extension is available.`,
-        'Update to latest version',
+        UI_STRINGS.updatedVersionMessage(latestVersion),
+        UI_STRINGS.updateNow,
       );
-      if (selection === 'Update to latest version') {
+      if (selection === UI_STRINGS.updateNow) {
         // The install command will update the extension if a newer version is found.
         await vscode.commands.executeCommand(
           'workbench.extensions.installExtension',
@@ -288,9 +289,7 @@ export async function activate(context: vscode.ExtensionContext) {
   );
 
   if (!context.globalState.get(INFO_MESSAGE_SHOWN_KEY) && infoMessageEnabled) {
-    void vscode.window.showInformationMessage(
-      'Moli Code Companion extension successfully installed.',
-    );
+    void vscode.window.showInformationMessage(UI_STRINGS.installedMessage);
     context.globalState.update(INFO_MESSAGE_SHOWN_KEY, true);
   }
 
@@ -310,9 +309,7 @@ export async function activate(context: vscode.ExtensionContext) {
       ) => {
         const workspaceFolders = vscode.workspace.workspaceFolders;
         if (!workspaceFolders || workspaceFolders.length === 0) {
-          vscode.window.showInformationMessage(
-            'No folder open. Please open a folder to run Moli Code.',
-          );
+          vscode.window.showInformationMessage(UI_STRINGS.noFolderOpen);
           return;
         }
 
@@ -321,7 +318,7 @@ export async function activate(context: vscode.ExtensionContext) {
           selectedFolder = workspaceFolders[0];
         } else {
           selectedFolder = await vscode.window.showWorkspaceFolderPick({
-            placeHolder: 'Select a folder to run Moli Code in',
+            placeHolder: UI_STRINGS.selectFolderToRun,
           });
         }
 

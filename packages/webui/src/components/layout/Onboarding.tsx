@@ -20,6 +20,8 @@ export interface OnboardingProps {
   subtitle?: string;
   /** Button text (defaults to "Get Started with Moli Code") */
   buttonText?: string;
+  /** Optional custom title */
+  title?: string;
 }
 
 /**
@@ -32,6 +34,7 @@ export const Onboarding: FC<OnboardingProps> = ({
   appName = 'Moli Code',
   subtitle = 'Unlock the power of AI to understand, navigate, and transform your codebase faster than ever before.',
   buttonText = 'Get Started with Moli Code',
+  title,
 }) => (
   <div className="flex flex-col items-center justify-center h-full p-5 md:p-10">
     <div className="flex flex-col items-center gap-8 w-full max-w-md mx-auto">
@@ -49,7 +52,7 @@ export const Onboarding: FC<OnboardingProps> = ({
 
         <div className="text-center">
           <h1 className="text-2xl font-bold text-[var(--app-primary-foreground)] mb-2">
-            Welcome to {appName}
+            {title ?? `Welcome to ${appName}`}
           </h1>
           <p className="text-[var(--app-secondary-foreground)] max-w-sm">
             {subtitle}

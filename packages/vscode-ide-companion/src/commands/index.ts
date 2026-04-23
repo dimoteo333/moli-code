@@ -12,6 +12,7 @@ import {
   CHAT_VIEW_ID_SIDEBAR,
   CHAT_VIEW_ID_SECONDARY,
 } from '../constants/viewIds.js';
+import { UI_STRINGS } from '../i18n/strings.js';
 
 type Logger = (message: string) => void;
 
@@ -82,7 +83,7 @@ export function registerNewCommands(
         } catch (error) {
           const errorMsg = getErrorMessage(error);
           log(`[Command] Error showing diff: ${errorMsg}`);
-          vscode.window.showErrorMessage(`Failed to show diff: ${errorMsg}`);
+          vscode.window.showErrorMessage(UI_STRINGS.failedShowDiff(errorMsg));
         }
       },
     ),
@@ -102,9 +103,7 @@ export function registerNewCommands(
       if (providers.length > 0) {
         await providers[providers.length - 1].forceReLogin();
       } else {
-        vscode.window.showInformationMessage(
-          'Please open Moli Code chat first before logging in.',
-        );
+        vscode.window.showInformationMessage(UI_STRINGS.loginNeedsOpenChat);
       }
     }),
   );
@@ -135,9 +134,7 @@ export function registerNewCommands(
       if (outputChannel) {
         outputChannel.show(true);
       } else {
-        vscode.window.showWarningMessage(
-          'Moli Code Companion log channel is not available.',
-        );
+        vscode.window.showWarningMessage(UI_STRINGS.logChannelUnavailable);
       }
     }),
   );

@@ -54,6 +54,12 @@ import {
   tokenLimit,
 } from '@dobby/moli-code-core/src/core/tokenLimits.js';
 import { AskUserQuestionDialog } from '@dobby/moli-code-webui';
+import { generateIconUrl } from './utils/resourceUrl.js';
+import {
+  UI_STRINGS,
+  formatSessionTimeAgo,
+  getSessionGroupLabel,
+} from '../i18n/strings.js';
 
 export const App: React.FC = () => {
   const vscode = useVSCode();
@@ -152,8 +158,8 @@ export const App: React.FC = () => {
           return [
             {
               id: 'loading-files',
-              label: 'Searching files…',
-              description: 'Type to filter, or wait a moment…',
+              label: UI_STRINGS.searchingFiles,
+              description: UI_STRINGS.searchingFilesHint,
               type: 'info' as const,
             },
           ];
@@ -166,7 +172,7 @@ export const App: React.FC = () => {
         const modelGroupItems: CompletionItem[] = [
           {
             id: 'model',
-            label: 'Switch model...',
+            label: UI_STRINGS.switchModel,
             description: modelInfo?.name || 'Default',
             type: 'command',
             group: 'Model',
@@ -177,8 +183,8 @@ export const App: React.FC = () => {
         const accountGroupItems: CompletionItem[] = [
           {
             id: 'login',
-            label: 'Login',
-            description: 'Login to Moli Code',
+            label: UI_STRINGS.loginLabel,
+            description: UI_STRINGS.loginDescription,
             type: 'command',
             group: 'Account',
           },
@@ -904,7 +910,7 @@ export const App: React.FC = () => {
           <div className="text-center">
             <div className="border-primary mx-auto mb-2 h-8 w-8 animate-spin rounded-full border-b-2"></div>
             <p className="text-muted-foreground text-sm">
-              Preparing Moli Code...
+              {UI_STRINGS.preparingApp}
             </p>
           </div>
         </div>
@@ -915,6 +921,13 @@ export const App: React.FC = () => {
         sessions={sessionManagement.filteredSessions}
         currentSessionId={sessionManagement.currentSessionId}
         searchQuery={sessionManagement.sessionSearchQuery}
+        searchPlaceholder={UI_STRINGS.sessionSearchPlaceholder}
+        searchAriaLabel={UI_STRINGS.sessionSearchAriaLabel}
+        emptyMessage={UI_STRINGS.noSessionsAvailable}
+        noMatchMessage={UI_STRINGS.noMatchingSessions}
+        loadingMessage={UI_STRINGS.sessionsLoading}
+        formatGroupLabel={getSessionGroupLabel}
+        formatTimeAgoLabel={formatSessionTimeAgo}
         onSearchChange={sessionManagement.setSessionSearchQuery}
         onSelectSession={(sessionId: string) => {
           sessionManagement.handleSwitchSession(sessionId);
@@ -928,6 +941,9 @@ export const App: React.FC = () => {
 
       <ChatHeader
         currentSessionTitle={sessionManagement.currentSessionTitle}
+        sessionButtonTitle={UI_STRINGS.pastConversationsTitle}
+        newSessionTitle={UI_STRINGS.newSessionTitle}
+        newSessionAriaLabel={UI_STRINGS.newSessionAriaLabel}
         onLoadSessions={sessionManagement.handleLoadMoliSessions}
         onNewSession={sessionManagement.handleNewMoliSession}
       />
@@ -941,15 +957,25 @@ export const App: React.FC = () => {
             <Onboarding
               onLogin={() => {
                 vscode.postMessage({ type: 'login', data: {} });
-                messageHandling.setWaitingForResponse(
-                  'Logging in to Moli Code...',
-                );
+                messageHandling.setWaitingForResponse(UI_STRINGS.loginLoading);
               }}
             />
           ) : isAuthenticated === null ? (
-            <EmptyState loadingMessage="Checking login status…" />
+            <EmptyState
+              appName={UI_STRINGS.appName}
+              logoUrl={generateIconUrl('logo.ico')}
+              loadingMessage={UI_STRINGS.emptyStateCheckingLogin}
+              description={UI_STRINGS.emptyStateCheckingLogin}
+              defaultLogoResourceName="logo.ico"
+            />
           ) : (
-            <EmptyState isAuthenticated />
+            <EmptyState
+              isAuthenticated
+              appName={UI_STRINGS.appName}
+              logoUrl={generateIconUrl('logo.ico')}
+              description={UI_STRINGS.emptyStateReady}
+              defaultLogoResourceName="logo.ico"
+            />
           )
         ) : (
           <>
@@ -1035,6 +1061,7 @@ export const App: React.FC = () => {
           completionItems={completion.items}
           onCompletionSelect={handleCompletionSelect}
           onCompletionClose={completion.closeCompletion}
+          placeholder={UI_STRINGS.askPlaceholder}
           showModelSelector={showModelSelector}
           availableModels={availableModels}
           currentModelId={modelInfo?.modelId}

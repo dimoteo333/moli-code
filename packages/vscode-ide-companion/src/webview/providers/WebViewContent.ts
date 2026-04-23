@@ -6,6 +6,7 @@
 
 import * as vscode from 'vscode';
 import { escapeHtml } from '../utils/webviewUtils.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 /** Anything that exposes a `.webview` property (WebviewPanel, WebviewView, etc.) */
 type WebviewHost = vscode.Webview | { webview: vscode.Webview };
@@ -51,7 +52,7 @@ export class WebViewContent {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src ${webview.cspSource}; script-src ${webview.cspSource}; style-src ${webview.cspSource} 'unsafe-inline';">
-  <title>Moli Code</title>
+  <title>${escapeHtml(UI_STRINGS.panelTitle)}</title>
 </head>
 <body data-extension-uri="${safeExtensionUri}">
   <div id="root"></div>

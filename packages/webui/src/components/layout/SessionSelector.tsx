@@ -39,6 +39,20 @@ export interface SessionSelectorProps {
   isLoading?: boolean;
   /** Callback to load more sessions */
   onLoadMore?: () => void;
+  /** Search placeholder text */
+  searchPlaceholder?: string;
+  /** Search aria-label */
+  searchAriaLabel?: string;
+  /** Empty state text when no sessions exist */
+  emptyMessage?: string;
+  /** Empty state text when search matches nothing */
+  noMatchMessage?: string;
+  /** Loading footer text */
+  loadingMessage?: string;
+  /** Group label formatter */
+  formatGroupLabel?: (label: string) => string;
+  /** Relative time formatter */
+  formatTimeAgoLabel?: (timestamp: string) => string;
 }
 
 /**
@@ -75,6 +89,13 @@ export const SessionSelector: FC<SessionSelectorProps> = ({
   hasMore = false,
   isLoading = false,
   onLoadMore,
+  searchPlaceholder = 'Search sessions…',
+  searchAriaLabel = 'Search sessions',
+  emptyMessage = 'No sessions available',
+  noMatchMessage = 'No matching sessions',
+  loadingMessage = 'Loading…',
+  formatGroupLabel,
+  formatTimeAgoLabel,
 }) => {
   if (!visible) {
     return null;
@@ -103,8 +124,8 @@ export const SessionSelector: FC<SessionSelectorProps> = ({
           <input
             type="text"
             className="session-search-input flex-1 bg-transparent border-none outline-none text-[var(--app-menu-foreground)] text-[var(--vscode-chat-font-size,13px)] font-[var(--vscode-chat-font-family)] p-0 placeholder:text-[var(--app-input-placeholder-foreground)] placeholder:opacity-60"
-            placeholder="Search sessions…"
-            aria-label="Search sessions"
+            placeholder={searchPlaceholder}
+            aria-label={searchAriaLabel}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
           />
@@ -131,13 +152,15 @@ export const SessionSelector: FC<SessionSelectorProps> = ({
                 color: 'var(--app-secondary-foreground)',
               }}
             >
-              {searchQuery ? 'No matching sessions' : 'No sessions available'}
+              {searchQuery ? noMatchMessage : emptyMessage}
             </div>
           ) : (
             groupSessionsByDate(sessions).map((group) => (
               <Fragment key={group.label}>
                 <div className="session-group-label p-1 px-2 text-[var(--app-primary-foreground)] opacity-50 text-[0.9em] font-medium [&:not(:first-child)]:mt-2">
-                  {group.label}
+                  {formatGroupLabel
+                    ? formatGroupLabel(group.label)
+                    : group.label}
                 </div>
                 <div className="session-group flex flex-col gap-[2px]">
                   {group.sessions.map((session) => {
@@ -173,7 +196,9 @@ export const SessionSelector: FC<SessionSelectorProps> = ({
                           {title}
                         </span>
                         <span className="session-item-time opacity-60 text-[0.9em] flex-shrink-0 ml-3">
-                          {getTimeAgo(lastUpdated)}
+                          {formatTimeAgoLabel
+                            ? formatTimeAgoLabel(lastUpdated)
+                            : getTimeAgo(lastUpdated)}
                         </span>
                       </button>
                     );
@@ -184,7 +209,7 @@ export const SessionSelector: FC<SessionSelectorProps> = ({
           )}
           {hasMore && (
             <div className="p-2 text-center opacity-60 text-[0.9em]">
-              {isLoading ? 'Loading…' : ''}
+              {isLoading ? loadingMessage : ''}
             </div>
           )}
         </div>

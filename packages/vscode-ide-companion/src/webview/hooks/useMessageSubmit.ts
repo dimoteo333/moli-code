@@ -7,6 +7,7 @@
 import { useCallback } from 'react';
 import type { VSCodeAPI } from './useVSCode.js';
 import { getRandomLoadingMessage } from '../../constants/loadingMessages.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 interface UseMessageSubmitProps {
   vscode: VSCodeAPI;
@@ -69,7 +70,7 @@ export const useMessageSubmit = ({
         });
         // Show a friendly loading message in the chat while logging in
         try {
-          messageHandling.setWaitingForResponse('Logging in to Moli Code...');
+          messageHandling.setWaitingForResponse(UI_STRINGS.loginLoading);
         } catch (_err) {
           // Best-effort UI hint; ignore if hook not available
         }

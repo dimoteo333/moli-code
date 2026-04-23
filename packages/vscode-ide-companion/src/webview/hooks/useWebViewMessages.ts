@@ -19,6 +19,7 @@ import type { ApprovalModeValue } from '../../types/approvalModeValueTypes.js';
 import type { PlanEntry } from '../../types/chatTypes.js';
 import type { ModelInfo, AvailableCommand } from '@agentclientprotocol/sdk';
 import type { Question } from '../../types/acpTypes.js';
+import { UI_STRINGS } from '../../i18n/strings.js';
 
 const FORCE_CLEAR_STREAM_END_REASONS = new Set([
   'user_cancelled',
@@ -362,7 +363,7 @@ export const useWebViewMessages = ({
           handlers.messageHandling.clearWaitingForResponse();
           handlers.messageHandling.addMessage({
             role: 'assistant',
-            content: 'Successfully logged in. You can continue chatting.',
+            content: '로그인이 완료되었습니다. 계속 대화를 이어가세요.',
             timestamp: Date.now(),
           });
           // Set authentication state to true
@@ -842,7 +843,7 @@ export const useWebViewMessages = ({
               const title =
                 (currentSession.title as string) ||
                 (currentSession.name as string) ||
-                'Past Conversations';
+                UI_STRINGS.pastConversations;
               handlers.sessionManagement.setCurrentSessionTitle(title);
             }
           }
@@ -861,7 +862,7 @@ export const useWebViewMessages = ({
             const title =
               (session.title as string) ||
               (session.name as string) ||
-              'Past Conversations';
+              UI_STRINGS.pastConversations;
             handlers.sessionManagement.setCurrentSessionTitle(title);
             // Update the VS Code webview tab title as well
             vscode.postMessage({ type: 'updatePanelTitle', data: { title } });
@@ -905,12 +906,12 @@ export const useWebViewMessages = ({
           handlers.clearToolCalls();
           handlers.sessionManagement.setCurrentSessionId(null);
           handlers.sessionManagement.setCurrentSessionTitle(
-            'Past Conversations',
+            UI_STRINGS.pastConversations,
           );
           // Reset the VS Code tab title to default label
           vscode.postMessage({
             type: 'updatePanelTitle',
-            data: { title: 'Moli Code' },
+            data: { title: UI_STRINGS.panelTitle },
           });
           lastPlanSnapshotRef.current = null;
           break;

@@ -6,6 +6,7 @@
 
 import * as vscode from 'vscode';
 import type { AuthenticateUpdateNotification } from '../types/acpTypes.js';
+import { UI_STRINGS } from '../i18n/strings.js';
 
 // Store reference to the current notification
 let currentNotification: Thenable<string | undefined> | null = null;
@@ -23,25 +24,21 @@ export function handleAuthenticateUpdate(
 
   // Store reference to the current notification
   currentNotification = vscode.window.showInformationMessage(
-    `Moli Code needs authentication. Click an action below:`,
-    'Open in Browser',
-    'Copy Link',
-    'Dismiss',
+    UI_STRINGS.authNeedsAction,
+    UI_STRINGS.openInBrowser,
+    UI_STRINGS.copyLink,
+    UI_STRINGS.dismiss,
   );
 
   currentNotification.then((selection) => {
-    if (selection === 'Open in Browser') {
+    if (selection === UI_STRINGS.openInBrowser) {
       // Open the authentication URI in the default browser
       vscode.env.openExternal(vscode.Uri.parse(authUri));
-      vscode.window.showInformationMessage(
-        'Opening authentication page in your browser...',
-      );
-    } else if (selection === 'Copy Link') {
+      vscode.window.showInformationMessage(UI_STRINGS.openingAuthPage);
+    } else if (selection === UI_STRINGS.copyLink) {
       // Copy the authentication URI to clipboard
       vscode.env.clipboard.writeText(authUri);
-      vscode.window.showInformationMessage(
-        'Authentication link copied to clipboard!',
-      );
+      vscode.window.showInformationMessage(UI_STRINGS.copiedAuthLink);
     }
 
     // Clear the notification reference after user interaction

@@ -21,6 +21,12 @@ export interface ChatHeaderProps {
   onLoadSessions: () => void;
   /** Callback when user clicks to create new session */
   onNewSession: () => void;
+  /** Session button title */
+  sessionButtonTitle?: string;
+  /** New session button title */
+  newSessionTitle?: string;
+  /** New session aria-label */
+  newSessionAriaLabel?: string;
 }
 
 /**
@@ -44,6 +50,9 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
   currentSessionTitle,
   onLoadSessions,
   onNewSession,
+  sessionButtonTitle = 'Past conversations',
+  newSessionTitle = 'New Session',
+  newSessionAriaLabel = 'New session',
 }) => (
   <div
     className="chat-header flex items-center select-none w-full border-b border-[var(--app-primary-border-color)] bg-[var(--app-header-background)] py-1.5 px-2.5"
@@ -53,7 +62,7 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       type="button"
       className="flex items-center gap-1.5 py-0.5 px-2 bg-transparent border-none rounded cursor-pointer outline-none min-w-0 max-w-[300px] overflow-hidden text-[var(--vscode-chat-font-size,13px)] font-[var(--vscode-chat-font-family)] text-[var(--app-primary-foreground)] hover:bg-[var(--app-ghost-button-hover-background)] focus:bg-[var(--app-ghost-button-hover-background)]"
       onClick={onLoadSessions}
-      title="Past conversations"
+      title={sessionButtonTitle}
     >
       <span className="whitespace-nowrap overflow-hidden text-ellipsis min-w-0 font-medium text-[var(--app-primary-foreground)]">
         {currentSessionTitle}
@@ -67,8 +76,8 @@ export const ChatHeader: FC<ChatHeaderProps> = ({
       type="button"
       className="flex items-center justify-center p-1 bg-transparent border-none rounded cursor-pointer outline-none text-[var(--app-primary-foreground)] hover:bg-[var(--app-ghost-button-hover-background)]"
       onClick={onNewSession}
-      title="New Session"
-      aria-label="New session"
+      title={newSessionTitle}
+      aria-label={newSessionAriaLabel}
       style={{ padding: '4px' }}
     >
       <PlusIcon className="w-4 h-4 text-[var(--app-primary-foreground)]" />
