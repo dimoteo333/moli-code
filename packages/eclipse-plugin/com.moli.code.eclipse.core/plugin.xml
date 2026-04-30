@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<!-- 한국어 주석: core 번들의 기본 설정 초기화 확장입니다. -->
+<plugin>
+   <extension point="org.eclipse.core.runtime.preferences">
+      <initializer class="com.moli.code.eclipse.core.preferences.MoliPreferenceInitializer"/>
+   </extension>
+</plugin>

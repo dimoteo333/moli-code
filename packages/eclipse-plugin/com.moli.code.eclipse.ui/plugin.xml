@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.2"?>
+<!-- 한국어 주석: 채팅 뷰, 명령, 핸들러, 설정 페이지를 Eclipse에 등록합니다. -->
+<plugin>
+   <extension point="org.eclipse.ui.views">
+      <view
+            id="com.moli.code.eclipse.ui.views.MoliChatView"
+            name="Moli Code"
+            category="com.moli.code.eclipse.ui.category"
+            class="com.moli.code.eclipse.ui.views.MoliChatView"/>
+      <category
+            id="com.moli.code.eclipse.ui.category"
+            name="Moli Code"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.commands">
+      <category
+            id="com.moli.code.eclipse.ui.commands.category"
+            name="Moli Code"/>
+      <command
+            id="com.moli.code.eclipse.ui.commands.openChat"
+            name="Open Moli Code Chat"
+            categoryId="com.moli.code.eclipse.ui.commands.category"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.handlers">
+      <handler
+            commandId="com.moli.code.eclipse.ui.commands.openChat"
+            class="com.moli.code.eclipse.ui.handlers.OpenChatHandler"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.preferencePages">
+      <page
+            id="com.moli.code.eclipse.ui.preferences.MoliPreferencePage"
+            name="Moli Code"
+            class="com.moli.code.eclipse.ui.preferences.MoliPreferencePage"/>
+   </extension>
+
+   <extension point="org.eclipse.ui.bindings">
+      <key
+            commandId="com.moli.code.eclipse.ui.commands.openChat"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+M"/>
+   </extension>
+</plugin>

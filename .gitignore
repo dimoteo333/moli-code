@@ -93,4 +93,8 @@ dist-sea
 packages/cli/molimate.config.json
 
 # Slides src and html
-docs/slides
+docs/slideseclipse-test-env/
+
+# Build artifacts
+**/target/
+time.py

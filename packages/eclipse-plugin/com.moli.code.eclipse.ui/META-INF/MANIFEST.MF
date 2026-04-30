@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Moli Code Eclipse UI
+Bundle-SymbolicName: com.moli.code.eclipse.ui;singleton:=true
+Bundle-Version: 0.1.0.qualifier
+Bundle-Vendor: Moli Code
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: com.moli.code.eclipse.ui
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.ui,
+ org.eclipse.jface,
+ org.eclipse.swt,
+ org.eclipse.compare,
+ com.moli.code.eclipse.core;bundle-version="0.1.0"
+Bundle-ActivationPolicy: lazy

@@ -1,0 +1,25 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Moli Code Eclipse Core
+Bundle-SymbolicName: com.moli.code.eclipse.core;singleton:=true
+Bundle-Version: 0.1.0.qualifier
+Bundle-Activator: com.moli.code.eclipse.core.Activator
+Bundle-Vendor: Moli Code
+Bundle-RequiredExecutionEnvironment: JavaSE-1.8
+Automatic-Module-Name: com.moli.code.eclipse.core
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.ui,
+ org.eclipse.compare,
+ org.eclipse.jface,
+ org.eclipse.jface.text,
+ org.eclipse.text,
+ org.eclipse.ui.workbench.texteditor
+Import-Package: org.osgi.framework
+Bundle-ActivationPolicy: lazy
+Export-Package: com.moli.code.eclipse.core,
+ com.moli.code.eclipse.core.acp,
+ com.moli.code.eclipse.core.context,
+ com.moli.code.eclipse.core.diff,
+ com.moli.code.eclipse.core.mcp,
+ com.moli.code.eclipse.core.preferences
