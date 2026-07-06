@@ -897,6 +897,14 @@ export default {
   // ============================================================================
   // Commands - Directory
   // ============================================================================
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    'Legt ein Sitzungsziel fest, das der Agent erreichen muss, bevor er anhalten darf',
+  'Current session goal: {{goal}}': 'Aktuelles Sitzungsziel: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    'Kein Sitzungsziel gesetzt. Verwendung: /goal <Zieltext> zum Setzen, /goal clear zum Löschen.',
+  'No session goal is set.': 'Kein Sitzungsziel gesetzt.',
+  'Session goal cleared.': 'Sitzungsziel gelöscht.',
   'Configuration is not available.': 'Konfiguration ist nicht verfügbar.',
   'Please provide at least one path to add.':
     'Bitte geben Sie mindestens einen Pfad zum Hinzufügen an.',

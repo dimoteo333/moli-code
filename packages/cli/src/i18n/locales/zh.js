@@ -1004,6 +1004,14 @@ export default {
   // ============================================================================
   // Commands - Directory
   // ============================================================================
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    '设置代理在停止前必须完成的会话目标',
+  'Current session goal: {{goal}}': '当前会话目标: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    '尚未设置会话目标。用法: /goal <目标内容> 设置目标，/goal clear 清除目标。',
+  'No session goal is set.': '尚未设置会话目标。',
+  'Session goal cleared.': '会话目标已清除。',
   'Configuration is not available.': '配置不可用。',
   'Please provide at least one path to add.': '请提供至少一个要添加的路径。',
   'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.':

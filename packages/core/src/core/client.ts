@@ -66,6 +66,7 @@ import {
 import { reportError } from '../utils/errorReporting.js';
 import { getErrorMessage } from '../utils/errors.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
+import { checkGoalCompletion } from '../utils/goalChecker.js';
 import { flatMapTextParts } from '../utils/partUtils.js';
 import { retryWithBackoff } from '../utils/retry.js';
 
@@ -665,6 +666,56 @@ export class GeminiClient {
           boundedTurns - 1,
         );
       }
+    }
+
+    // Session goal (/goal): while a goal is active the agent may not stop.
+    // When a turn ends, ask the model whether the goal is met; if not,
+    // re-prompt it to keep working. Meeting the goal auto-clears it.
+    const sessionGoal = this.config.getSessionGoal();
+    if (
+      sessionGoal &&
+      !turn.pendingToolCalls.length &&
+      signal &&
+      !signal.aborted
+    ) {
+      const goalCheck = await checkGoalCompletion(
+        this.getChat(),
+        this.config,
+        signal,
+        prompt_id,
+        sessionGoal,
+      );
+      if (goalCheck && !goalCheck.goal_met) {
+        yield {
+          type: GeminiEventType.HookSystemMessage,
+          value: `🎯 Session goal not met yet — continuing: ${sessionGoal}`,
+        };
+        const continueRequest = [
+          {
+            text:
+              `<system-reminder>A session goal is active and has not been met yet: "${sessionGoal}"\n` +
+              `Evaluation of the work so far: ${goalCheck.reasoning}\n` +
+              `Continue working toward the goal now — do not stop or summarize until it is accomplished. ` +
+              `If you are genuinely blocked on input only the user can provide, state precisely what you need and why.</system-reminder>`,
+          },
+        ];
+        return yield* this.sendMessageStream(
+          continueRequest,
+          signal,
+          prompt_id,
+          { type: SendMessageType.Hook },
+          boundedTurns - 1,
+        );
+      }
+      if (goalCheck?.goal_met) {
+        this.config.setSessionGoal(undefined);
+        yield {
+          type: GeminiEventType.HookSystemMessage,
+          value: `🎯 Session goal achieved and cleared: ${sessionGoal}`,
+        };
+      }
+      // goalCheck === null (judge unavailable): fail open and allow stopping
+      // so a broken side-channel can never trap the agent in a loop.
     }
 
     if (!turn.pendingToolCalls.length && signal && !signal.aborted) {

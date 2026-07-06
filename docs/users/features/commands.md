@@ -18,13 +18,14 @@ Slash commands are used to manage Moli Code sessions, interface, and basic behav
 
 These commands help you save, restore, and summarize work progress.
 
-| Command     | Description                                               | Usage Examples                       |
-| ----------- | --------------------------------------------------------- | ------------------------------------ |
-| `/init`     | Analyze current directory and create initial context file | `/init`                              |
-| `/summary`  | Generate project summary based on conversation history    | `/summary`                           |
-| `/compress` | Replace chat history with summary to save Tokens          | `/compress`                          |
-| `/resume`   | Resume a previous conversation session                    | `/resume`                            |
-| `/restore`  | Restore files to state before tool execution              | `/restore` (list) or `/restore <ID>` |
+| Command     | Description                                                                                                                                                                     | Usage Examples                                     |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- |
+| `/init`     | Analyze current directory and create initial context file                                                                                                                       | `/init`                                            |
+| `/summary`  | Generate project summary based on conversation history                                                                                                                          | `/summary`                                         |
+| `/compress` | Replace chat history with summary to save Tokens                                                                                                                                | `/compress`                                        |
+| `/resume`   | Resume a previous conversation session                                                                                                                                          | `/resume`                                          |
+| `/restore`  | Restore files to state before tool execution                                                                                                                                    | `/restore` (list) or `/restore <ID>`               |
+| `/goal`     | Set a session goal the agent must accomplish before it can stop; goal completion is re-evaluated whenever the agent tries to finish, and the goal clears automatically once met | `/goal <goal text>`, `/goal` (show), `/goal clear` |
 
 ### 1.2 Interface and Workspace Control
 

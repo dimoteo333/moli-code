@@ -904,6 +904,14 @@ export default {
   // ============================================================================
   // Команды - Директория
   // ============================================================================
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    'Задаёт цель сеанса, которую агент должен выполнить, прежде чем сможет остановиться',
+  'Current session goal: {{goal}}': 'Текущая цель сеанса: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    'Цель сеанса не задана. Использование: /goal <текст цели> — задать, /goal clear — снять.',
+  'No session goal is set.': 'Цель сеанса не задана.',
+  'Session goal cleared.': 'Цель сеанса снята.',
   'Configuration is not available.': 'Конфигурация недоступна.',
   'Please provide at least one path to add.':
     'Пожалуйста, укажите хотя бы один путь для добавления.',

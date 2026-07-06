@@ -1059,6 +1059,14 @@ export default {
   // ============================================================================
   // Commands - Directory
   // ============================================================================
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    'Set a session goal the agent must accomplish before it can stop',
+  'Current session goal: {{goal}}': 'Current session goal: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.',
+  'No session goal is set.': 'No session goal is set.',
+  'Session goal cleared.': 'Session goal cleared.',
   'Configuration is not available.': 'Configuration is not available.',
   'Please provide at least one path to add.':
     'Please provide at least one path to add.',

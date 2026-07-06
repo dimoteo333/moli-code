@@ -463,6 +463,7 @@ export class Config {
   private geminiMdFileCount: number;
   private approvalMode: ApprovalMode;
   private prePlanMode?: ApprovalMode;
+  private sessionGoal?: string;
   private readonly accessibility: AccessibilitySettings;
   private readonly telemetrySettings: TelemetrySettings;
   private readonly gitCoAuthor: GitCoAuthorSettings;
@@ -1322,6 +1323,20 @@ export class Config {
 
   setGeminiMdFileCount(count: number): void {
     this.geminiMdFileCount = count;
+  }
+
+  /**
+   * The session goal set via /goal. While set, the agent is not allowed to
+   * stop: when a turn ends, goal completion is evaluated and the agent is
+   * re-prompted until the goal is met (which auto-clears it) or the user
+   * clears it with /goal clear.
+   */
+  getSessionGoal(): string | undefined {
+    return this.sessionGoal;
+  }
+
+  setSessionGoal(goal: string | undefined): void {
+    this.sessionGoal = goal?.trim() ? goal.trim() : undefined;
   }
 
   getApprovalMode(): ApprovalMode {

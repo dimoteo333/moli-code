@@ -644,6 +644,14 @@ export default {
     'トークンカウントエラーのため、チャット履歴を圧縮できませんでした',
   'Chat history is already compressed.': 'チャット履歴は既に圧縮されています',
   // Directory
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    'エージェントが停止する前に達成すべきセッションゴールを設定します',
+  'Current session goal: {{goal}}': '現在のセッションゴール: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    'セッションゴールは設定されていません。使い方: /goal <ゴール> で設定、/goal clear で解除。',
+  'No session goal is set.': 'セッションゴールは設定されていません。',
+  'Session goal cleared.': 'セッションゴールを解除しました。',
   'Configuration is not available.': '設定が利用できません',
   'Please provide at least one path to add.':
     '追加するパスを少なくとも1つ指定してください',

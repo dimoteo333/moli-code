@@ -96,6 +96,10 @@ vi.mock('../utils/errorReporting', () => ({ reportError: vi.fn() }));
 vi.mock('../utils/nextSpeakerChecker', () => ({
   checkNextSpeaker: vi.fn().mockResolvedValue(null),
 }));
+
+vi.mock('../utils/goalChecker', () => ({
+  checkGoalCompletion: vi.fn().mockResolvedValue(null),
+}));
 vi.mock('../utils/environmentContext', () => ({
   getEnvironmentContext: vi
     .fn()
@@ -337,6 +341,8 @@ describe('Gemini Client (client.ts)', () => {
       getCliVersion: vi.fn().mockReturnValue('1.0.0'),
       getChatCompression: vi.fn().mockReturnValue(undefined),
       getSkipNextSpeakerCheck: vi.fn().mockReturnValue(false),
+      getSessionGoal: vi.fn().mockReturnValue(undefined),
+      setSessionGoal: vi.fn(),
       getUseModelRouter: vi.fn().mockReturnValue(false),
       getProjectRoot: vi.fn().mockReturnValue('/test/project/root'),
       storage: {
@@ -1010,6 +1016,92 @@ describe('Gemini Client (client.ts)', () => {
 
       // Assert that the chat was reset
       expect(newChat).not.toBe(initialChat);
+    });
+  });
+
+  describe('session goal (/goal)', () => {
+    it('re-prompts the model while the goal is unmet and clears it once met', async () => {
+      const { checkGoalCompletion } = await import('../utils/goalChecker.js');
+      const mockCheckGoal = vi.mocked(checkGoalCompletion);
+      mockCheckGoal.mockReset();
+      mockCheckGoal
+        .mockResolvedValueOnce({
+          reasoning: 'Only a plan was stated so far.',
+          goal_met: false,
+        })
+        .mockResolvedValueOnce({
+          reasoning: 'The work is done and verified.',
+          goal_met: true,
+        });
+
+      client['config'].getSessionGoal = vi
+        .fn()
+        .mockReturnValue('ship feature X');
+      const setSessionGoal = vi.fn();
+      client['config'].setSessionGoal = setSessionGoal;
+
+      mockTurnRunFn.mockImplementation(() =>
+        (async function* () {
+          yield { type: 'content', value: 'working...' };
+        })(),
+      );
+
+      const events = await fromAsync(
+        client.sendMessageStream(
+          [{ text: 'Hi' }],
+          new AbortController().signal,
+          'prompt-goal-1',
+        ),
+      );
+
+      // Judge consulted once per completed turn: unmet, then met.
+      expect(mockCheckGoal).toHaveBeenCalledTimes(2);
+      // Unmet goal forced a second model turn.
+      expect(mockTurnRunFn).toHaveBeenCalledTimes(2);
+      // Both goal system messages surfaced to the UI.
+      const goalMessages = events.filter(
+        (e) => e.type === GeminiEventType.HookSystemMessage,
+      );
+      expect(
+        goalMessages.some((e) => String(e.value).includes('not met')),
+      ).toBe(true);
+      expect(
+        goalMessages.some((e) => String(e.value).includes('achieved')),
+      ).toBe(true);
+      // Meeting the goal auto-cleared it.
+      expect(setSessionGoal).toHaveBeenCalledWith(undefined);
+    });
+
+    it('fails open (allows stopping) when the goal judge is unavailable', async () => {
+      const { checkGoalCompletion } = await import('../utils/goalChecker.js');
+      const mockCheckGoal = vi.mocked(checkGoalCompletion);
+      mockCheckGoal.mockReset();
+      mockCheckGoal.mockResolvedValue(null);
+
+      client['config'].getSessionGoal = vi
+        .fn()
+        .mockReturnValue('ship feature X');
+      const setSessionGoal = vi.fn();
+      client['config'].setSessionGoal = setSessionGoal;
+
+      mockTurnRunFn.mockImplementation(() =>
+        (async function* () {
+          yield { type: 'content', value: 'done' };
+        })(),
+      );
+
+      await fromAsync(
+        client.sendMessageStream(
+          [{ text: 'Hi' }],
+          new AbortController().signal,
+          'prompt-goal-2',
+        ),
+      );
+
+      expect(mockCheckGoal).toHaveBeenCalledTimes(1);
+      // No re-prompt and the goal stays set.
+      expect(mockTurnRunFn).toHaveBeenCalledTimes(1);
+      expect(setSessionGoal).not.toHaveBeenCalled();
     });
   });
 

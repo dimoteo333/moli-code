@@ -1051,6 +1051,14 @@ export default {
   // ============================================================================
   // Commands - Directory
   // ============================================================================
+  // Commands - Goal
+  'Set a session goal the agent must accomplish before it can stop':
+    '에이전트가 중단하기 전에 반드시 달성해야 하는 세션 목표를 설정합니다',
+  'Current session goal: {{goal}}': '현재 세션 목표: {{goal}}',
+  'No session goal is set. Usage: /goal <goal text> to set one, /goal clear to clear.':
+    '설정된 세션 목표가 없어요. 사용법: /goal <목표 내용> 으로 설정, /goal clear 로 해제.',
+  'No session goal is set.': '설정된 세션 목표가 없어요.',
+  'Session goal cleared.': '세션 목표를 해제했어요.',
   'Configuration is not available.': '구성을 사용할 수 없어요.',
   'Please provide at least one path to add.':
     '추가할 경로를 하나 이상 제공하세요.',
