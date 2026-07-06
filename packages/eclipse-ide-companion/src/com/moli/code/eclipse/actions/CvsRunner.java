@@ -50,7 +50,7 @@ public final class CvsRunner {
                     System.arraycopy(cvsArgs, 0, command, 2, cvsArgs.length);
 
                     out.println("[" + workingDir.getAbsolutePath() + "] $ "
-                            + join(command));
+                            + CvsRunner.join(command));
 
                     Process process = Runtime.getRuntime().exec(command, null,
                             workingDir);
