@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: Moli Code Eclipse Companion
+Bundle-SymbolicName: com.moli.code.eclipse.companion; singleton:=true
+Bundle-Version: 0.1.0
+Bundle-Activator: com.moli.code.eclipse.MoliCodePlugin
+Bundle-Vendor: Moli
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.core.resources,
+ org.eclipse.jface.text,
+ org.eclipse.ui.workbench.texteditor,
+ org.eclipse.ui.console
+Bundle-RequiredExecutionEnvironment: J2SE-1.4
+Eclipse-LazyStart: true
+Bundle-ActivationPolicy: lazy

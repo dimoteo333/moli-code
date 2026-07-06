@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Standalone Ant build for the Moli Code Eclipse companion plugin.
+
+  Usage:
+    ant -Declipse.home=C:/eclipse jar
+
+  - eclipse.home must point at the Eclipse installation to compile against
+    (3.2.2 or 4.7.3 both work; the older the better for API safety).
+  - Compile with a JDK whose javac still accepts the configured source level.
+    JDK 8 or older accepts 1.4; on newer JDKs override:
+      ant -Declipse.home=... -Dsource.level=7 -Dtarget.level=7 jar
+    (the code itself uses only Java 1.4 syntax either way).
+-->
+<project name="moli-code-eclipse-companion" default="jar" basedir=".">
+
+  <property environment="env"/>
+  <property name="eclipse.home" value="${env.ECLIPSE_HOME}"/>
+  <property name="source.level" value="1.4"/>
+  <property name="target.level" value="1.4"/>
+  <property name="build.dir" value="bin"/>
+  <property name="dist.dir" value="dist"/>
+  <property name="plugin.version" value="0.1.0"/>
+  <property name="jar.name"
+            value="com.moli.code.eclipse.companion_${plugin.version}.jar"/>
+
+  <path id="eclipse.classpath">
+    <fileset dir="${eclipse.home}/plugins">
+      <include name="org.eclipse.ui_*.jar"/>
+      <include name="org.eclipse.ui.workbench_*.jar"/>
+      <include name="org.eclipse.ui.workbench.texteditor_*.jar"/>
+      <include name="org.eclipse.ui.console_*.jar"/>
+      <include name="org.eclipse.swt_*.jar"/>
+      <include name="org.eclipse.swt.*.jar"/>
+      <include name="org.eclipse.jface_*.jar"/>
+      <include name="org.eclipse.jface.text_*.jar"/>
+      <include name="org.eclipse.text_*.jar"/>
+      <include name="org.eclipse.core.runtime_*.jar"/>
+      <include name="org.eclipse.core.resources_*.jar"/>
+      <include name="org.eclipse.core.jobs_*.jar"/>
+      <include name="org.eclipse.equinox.common_*.jar"/>
+      <include name="org.eclipse.equinox.registry_*.jar"/>
+      <include name="org.eclipse.osgi_*.jar"/>
+    </fileset>
+  </path>
+
+  <target name="check">
+    <fail message="Set -Declipse.home=&lt;eclipse install dir&gt; (or ECLIPSE_HOME)"
+          unless="eclipse.home"/>
+  </target>
+
+  <target name="compile" depends="check">
+    <mkdir dir="${build.dir}"/>
+    <javac srcdir="src"
+           destdir="${build.dir}"
+           source="${source.level}"
+           target="${target.level}"
+           debug="true"
+           encoding="UTF-8"
+           includeantruntime="false">
+      <classpath refid="eclipse.classpath"/>
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <mkdir dir="${dist.dir}"/>
+    <jar destfile="${dist.dir}/${jar.name}"
+         manifest="META-INF/MANIFEST.MF">
+      <fileset dir="${build.dir}"/>
+      <fileset dir="." includes="plugin.xml"/>
+    </jar>
+    <echo message="Built ${dist.dir}/${jar.name}"/>
+    <echo message="Install: copy into &lt;eclipse&gt;/plugins (3.2) or &lt;eclipse&gt;/dropins (4.7) and restart with -clean"/>
+  </target>
+
+  <target name="clean">
+    <delete dir="${build.dir}"/>
+    <delete dir="${dist.dir}"/>
+  </target>
+
+</project>

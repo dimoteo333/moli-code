@@ -119,6 +119,14 @@ describe('detectIde with ideInfoFromFile', () => {
     expect(detectIde(ideProcessInfo, ideInfoFromFile)).toEqual(ideInfoFromFile);
   });
 
+  it('should detect Eclipse from the companion plugin lock file even outside a VS Code terminal', () => {
+    // TERM_PROGRAM deliberately not set: the Eclipse companion is discovered
+    // purely through the ideInfo written to its lock file.
+    expect(detectIde(ideProcessInfo, IDE_DEFINITIONS.eclipse)).toEqual(
+      IDE_DEFINITIONS.eclipse,
+    );
+  });
+
   it('should fall back to env detection if name is missing', () => {
     const ideInfoFromFile = { displayName: 'Custom IDE' };
     vi.stubEnv('TERM_PROGRAM', 'vscode');

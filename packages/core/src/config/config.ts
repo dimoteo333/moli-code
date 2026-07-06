@@ -47,6 +47,8 @@ import { ExitPlanModeTool } from '../tools/exitPlanMode.js';
 import { GlobTool } from '../tools/glob.js';
 import { GrepTool } from '../tools/grep.js';
 import { LSTool } from '../tools/ls.js';
+import { CvsTool } from '../tools/cvs.js';
+import { CvsService } from '../services/cvsService.js';
 import type { SendSdkMcpMessage } from '../tools/mcp-client.js';
 import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
 import { ReadFileTool } from '../tools/read-file.js';
@@ -1895,6 +1897,11 @@ export class Config {
     if (this.isLspEnabled() && this.getLspClient()) {
       // Register the unified LSP tool
       registerCoreTool(LspTool, this);
+    }
+    // CVS support for legacy (mainly Windows) workspaces: only expose the
+    // tool when the target directory is actually a CVS working copy.
+    if (CvsService.isCvsWorkspace(this.getTargetDir())) {
+      registerCoreTool(CvsTool, this);
     }
 
     await registry.discoverAllTools();

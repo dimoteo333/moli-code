@@ -71,6 +71,7 @@ export * from './tools/tool-registry.js';
 export * from './tools/tools.js';
 
 // Individual tools
+export * from './tools/cvs.js';
 export * from './tools/edit.js';
 export * from './tools/exitPlanMode.js';
 export * from './tools/glob.js';
@@ -97,6 +98,7 @@ export * from './tools/write-file.js';
 // ============================================================================
 
 export * from './services/chatRecordingService.js';
+export * from './services/cvsService.js';
 export * from './services/fileDiscoveryService.js';
 export * from './services/fileSystemService.js';
 export * from './services/gitService.js';

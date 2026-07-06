@@ -14,6 +14,9 @@ export const IDE_DEFINITIONS = {
   trae: { name: 'trae', displayName: 'Trae' },
   vscode: { name: 'vscode', displayName: 'VS Code' },
   vscodefork: { name: 'vscodefork', displayName: 'IDE' },
+  // Detected via the lock file written by the Eclipse companion plugin
+  // (packages/eclipse-ide-companion), not via environment variables.
+  eclipse: { name: 'eclipse', displayName: 'Eclipse' },
 } as const;
 
 export interface IdeInfo {
