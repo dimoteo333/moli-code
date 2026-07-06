@@ -125,6 +125,43 @@ export default {
   'List available skills.': '사용 가능한 스킬을 보여드려요.',
   'Available Moli Code CLI tools:': '사용 가능한 몰리코드 CLI 도구:',
   'No tools available': '사용 가능한 도구 없음',
+
+  // Core tool descriptions
+  'tool.description.task':
+    '복잡한 다단계 작업을 전문 서브에이전트에게 위임합니다. 사용 가능한 에이전트 유형 중 하나를 선택해 자율적으로 조사, 구현, 검토 등을 수행하게 할 수 있습니다.',
+  'tool.description.skill':
+    '현재 대화 안에서 사용 가능한 스킬을 실행합니다. 작업에 맞는 전문 기능이나 도메인 지식이 필요할 때 스킬 이름으로 호출합니다.',
+  'tool.description.list_directory':
+    '지정한 디렉터리 바로 아래의 파일과 하위 디렉터리 이름을 나열합니다. glob 패턴으로 특정 항목을 제외할 수 있습니다.',
+  'tool.description.read_file':
+    '지정한 파일의 내용을 읽어 반환합니다. 큰 텍스트 파일은 줄 범위(offset/limit)로 나눠 읽을 수 있고, 텍스트·이미지·PDF 파일을 지원합니다.',
+  'tool.description.grep_search':
+    '파일 내용에서 정규식 패턴을 검색합니다. glob으로 파일 범위를 좁힐 수 있으며, 여러 단계의 열린 검색은 Task 도구를 사용하세요.',
+  'tool.description.glob':
+    '코드베이스 크기와 관계없이 glob 패턴으로 파일 경로를 빠르게 찾습니다. 결과는 수정 시간 기준으로 정렬됩니다.',
+  'tool.description.edit':
+    '파일 안의 정확한 텍스트를 다른 텍스트로 치환합니다. 변경 전 파일 내용을 읽고, 고유하게 매칭되는 충분한 주변 문맥을 포함해야 합니다.',
+  'tool.description.write_file':
+    '로컬 파일 시스템의 지정한 파일에 내용을 씁니다. 기존 파일을 덮어쓰거나 새 파일을 만들 때 사용합니다.',
+  'tool.description.run_shell_command':
+    '지속 셸 세션에서 지정한 명령을 실행합니다. git, npm, docker 같은 터미널 작업에 사용하며 파일 읽기/쓰기/검색/편집은 전용 도구를 우선 사용하세요.',
+  'tool.description.save_memory':
+    '사용자가 기억해 달라고 요청했거나 향후 대화에 도움이 될 명확한 사실을 장기 메모리에 저장합니다.',
+  'tool.description.todo_write':
+    '현재 코딩 세션의 구조화된 작업 목록을 만들고 관리합니다. 복잡한 다단계 작업의 진행 상황을 추적하고 완료 상태를 갱신할 때 사용합니다.',
+  'tool.description.ask_user_question':
+    '작업 중 사용자에게 선택지형 질문을 묻습니다. 요구사항을 명확히 하거나 구현 방향, 선호도, 의사결정이 필요할 때 사용합니다.',
+  'tool.description.exit_plan_mode':
+    '계획 모드에서 구현 계획을 완성한 뒤 사용자 승인을 요청하고 계획 모드를 종료할 때 사용합니다.',
+  'tool.description.web_fetch':
+    '지정한 URL의 콘텐츠를 가져와 Markdown으로 변환하고 AI 모델로 요청한 정보를 분석합니다. 웹 페이지 내용을 확인해야 할 때 사용합니다.',
+  'tool.description.web_search':
+    '웹을 검색해 최신 정보, 현재 이벤트, 학습 컷오프 이후의 데이터를 응답에 활용합니다. 간결한 답변과 출처 링크를 반환합니다.',
+  'tool.description.lsp':
+    'Language Server Protocol을 사용해 정의, 참조, hover, 심볼, 호출 계층, 진단, 코드 액션 등 코드 인텔리전스 기능을 제공합니다.',
+  'tool.description.cvs':
+    'CVS 작업 사본과 상호작용합니다. diff, status, update, commit, log, add, remove 작업을 지원합니다.',
+
   'View or change the approval mode for tool usage':
     '도구 사용 승인 모드 보기 또는 변경',
   'Invalid approval mode "{{arg}}". Valid modes: {{modes}}':

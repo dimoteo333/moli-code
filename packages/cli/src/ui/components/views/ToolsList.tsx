@@ -17,6 +17,17 @@ interface ToolsListProps {
   contentWidth: number;
 }
 
+const getTranslatedToolDescription = (tool: ToolDefinition): string => {
+  const descriptionKey = `tool.description.${tool.name}`;
+  const translatedByName = t(descriptionKey);
+
+  if (translatedByName !== descriptionKey) {
+    return translatedByName;
+  }
+
+  return tool.description ? t(tool.description) : '';
+};
+
 export const ToolsList: React.FC<ToolsListProps> = ({
   tools,
   showDescriptions,
@@ -39,7 +50,7 @@ export const ToolsList: React.FC<ToolsListProps> = ({
             {showDescriptions && tool.description && (
               <MarkdownDisplay
                 contentWidth={contentWidth}
-                text={tool.description}
+                text={getTranslatedToolDescription(tool)}
                 isPending={false}
               />
             )}
