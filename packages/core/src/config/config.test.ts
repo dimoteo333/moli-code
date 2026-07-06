@@ -31,6 +31,7 @@ import { GitService } from '../services/gitService.js';
 import { ShellTool } from '../tools/shell.js';
 import { ReadFileTool } from '../tools/read-file.js';
 import { GrepTool } from '../tools/grep.js';
+import { CvsTool } from '../tools/cvs.js';
 import { canUseRipgrep } from '../utils/ripgrepUtils.js';
 import { RipGrepTool } from '../tools/ripGrep.js';
 import { logRipgrepFallback } from '../telemetry/loggers.js';
@@ -104,6 +105,9 @@ vi.mock('../tools/edit', () => ({
 }));
 vi.mock('../tools/shell', () => ({
   ShellTool: createToolMock('run_shell_command'),
+}));
+vi.mock('../tools/cvs', () => ({
+  CvsTool: createToolMock('cvs'),
 }));
 vi.mock('../tools/write-file', () => ({
   WriteFileTool: createToolMock('write_file'),
@@ -862,6 +866,39 @@ describe('Server Config (config.ts)', () => {
         (call) => call[0] instanceof vi.mocked(GrepTool),
       );
       expect(wasGrepToolRegistered).toBe(true);
+    });
+
+    it('should register the CVS tool only when explicitly enabled', async () => {
+      const disabledConfig = new Config({
+        ...baseParams,
+        enableCvsTool: false,
+      });
+      await disabledConfig.initialize();
+
+      const registerToolMock = (
+        (await vi.importMock('../tools/tool-registry')) as {
+          ToolRegistry: { prototype: { registerTool: Mock } };
+        }
+      ).ToolRegistry.prototype.registerTool;
+
+      const wasCvsToolRegisteredWhenDisabled = (
+        registerToolMock as Mock
+      ).mock.calls.some((call) => call[0] instanceof vi.mocked(CvsTool));
+      expect(wasCvsToolRegisteredWhenDisabled).toBe(false);
+
+      vi.clearAllMocks();
+      vi.mocked(canUseRipgrep).mockResolvedValue(true);
+
+      const enabledConfig = new Config({
+        ...baseParams,
+        enableCvsTool: true,
+      });
+      await enabledConfig.initialize();
+
+      const wasCvsToolRegisteredWhenEnabled = (
+        registerToolMock as Mock
+      ).mock.calls.some((call) => call[0] instanceof vi.mocked(CvsTool));
+      expect(wasCvsToolRegisteredWhenEnabled).toBe(true);
     });
 
     it('should not register a tool if excludeTools contains a legacy display name alias', async () => {

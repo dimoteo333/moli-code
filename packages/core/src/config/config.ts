@@ -48,7 +48,6 @@ import { GlobTool } from '../tools/glob.js';
 import { GrepTool } from '../tools/grep.js';
 import { LSTool } from '../tools/ls.js';
 import { CvsTool } from '../tools/cvs.js';
-import { CvsService } from '../services/cvsService.js';
 import type { SendSdkMcpMessage } from '../tools/mcp-client.js';
 import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
 import { ReadFileTool } from '../tools/read-file.js';
@@ -365,6 +364,7 @@ export interface ConfigParameters {
   defaultFileEncoding?: FileEncodingType;
   useRipgrep?: boolean;
   useBuiltinRipgrep?: boolean;
+  enableCvsTool?: boolean;
   shouldUseNodePtyShell?: boolean;
   skipNextSpeakerCheck?: boolean;
   shellExecutionConfig?: ShellExecutionConfig;
@@ -513,6 +513,7 @@ export class Config {
   private readonly trustedFolder: boolean | undefined;
   private readonly useRipgrep: boolean;
   private readonly useBuiltinRipgrep: boolean;
+  private readonly enableCvsTool: boolean;
   private readonly shouldUseNodePtyShell: boolean;
   private readonly skipNextSpeakerCheck: boolean;
   private shellExecutionConfig: ShellExecutionConfig;
@@ -629,6 +630,7 @@ export class Config {
     this.webSearch = params.webSearch;
     this.useRipgrep = params.useRipgrep ?? true;
     this.useBuiltinRipgrep = params.useBuiltinRipgrep ?? true;
+    this.enableCvsTool = params.enableCvsTool ?? false;
     this.shouldUseNodePtyShell =
       params.shouldUseNodePtyShell ?? shouldDefaultToNodePty();
     this.skipNextSpeakerCheck = params.skipNextSpeakerCheck ?? true;
@@ -1711,6 +1713,10 @@ export class Config {
     return this.useBuiltinRipgrep;
   }
 
+  getEnableCvsTool(): boolean {
+    return this.enableCvsTool;
+  }
+
   getShouldUseNodePtyShell(): boolean {
     return this.shouldUseNodePtyShell;
   }
@@ -1913,10 +1919,10 @@ export class Config {
       // Register the unified LSP tool
       registerCoreTool(LspTool, this);
     }
-    // CVS support for legacy (mainly Windows) workspaces: expose the tool
-    // when the target directory is a CVS working copy, or when it contains
-    // one or more CVS working copies in descendant directories.
-    if (CvsService.containsCvsWorkspace(this.getTargetDir())) {
+    // CVS support for legacy (mainly Windows) workspaces is opt-in because
+    // repositories can contain multiple independent CVS working copies, and
+    // directory auto-detection is too ambiguous in those layouts.
+    if (this.getEnableCvsTool()) {
       registerCoreTool(CvsTool, this);
     }
 

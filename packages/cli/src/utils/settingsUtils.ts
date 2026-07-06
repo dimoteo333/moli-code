@@ -285,6 +285,7 @@ const SETTINGS_DIALOG_ORDER: readonly string[] = [
   // Editor/Shell Experience
   'general.vimMode',
   'tools.shell.enableInteractiveShell',
+  'tools.cvs.enabled',
 
   // Display Preferences
   'general.preferredEditor',

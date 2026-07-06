@@ -455,6 +455,7 @@ export default {
   'Enable Recursive File Search': '재귀적 파일 검색 활성화',
   'Disable Fuzzy Search': '퍼지 검색 비활성화',
   'Interactive Shell (PTY)': '대화형 셸 (PTY)',
+  'Enable CVS Tool': 'CVS 도구 활성화',
   'Show Color': '색상 표시',
   'Auto Accept': '자동 승인',
   'Use Ripgrep': 'Ripgrep 사용',

@@ -923,6 +923,27 @@ const SETTINGS_SCHEMA = {
           },
         },
       },
+      cvs: {
+        type: 'object',
+        label: 'CVS',
+        category: 'Tools',
+        requiresRestart: true,
+        default: {},
+        description: 'Settings for CVS tool support.',
+        showInDialog: false,
+        properties: {
+          enabled: {
+            type: 'boolean',
+            label: 'Enable CVS Tool',
+            category: 'Tools',
+            requiresRestart: true,
+            default: false,
+            description:
+              'Enable the built-in CVS tool regardless of whether the current directory contains CVS/Root.',
+            showInDialog: true,
+          },
+        },
+      },
       core: {
         type: 'array',
         label: 'Core Tools',

@@ -260,6 +260,24 @@ describe('SettingsSchema', () => {
       ).toBe(false);
     });
 
+    it('should have CVS tool setting in schema', () => {
+      expect(getSettingsSchema().tools.properties.cvs).toBeDefined();
+      expect(getSettingsSchema().tools.properties.cvs.type).toBe('object');
+      expect(
+        getSettingsSchema().tools.properties.cvs.properties?.enabled,
+      ).toBeDefined();
+      expect(
+        getSettingsSchema().tools.properties.cvs.properties?.enabled.type,
+      ).toBe('boolean');
+      expect(
+        getSettingsSchema().tools.properties.cvs.properties?.enabled.default,
+      ).toBe(false);
+      expect(
+        getSettingsSchema().tools.properties.cvs.properties?.enabled
+          .showInDialog,
+      ).toBe(true);
+    });
+
     it('should have folderTrustFeature setting in schema', () => {
       expect(
         getSettingsSchema().security.properties.folderTrust.properties.enabled,

@@ -392,6 +392,17 @@
             }
           }
         },
+        "cvs": {
+          "description": "Settings for CVS tool support.",
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "description": "Enable the built-in CVS tool regardless of whether the current directory contains CVS/Root.",
+              "type": "boolean",
+              "default": false
+            }
+          }
+        },
         "core": {
           "description": "Paths to core tool definitions.",
           "type": "array",
