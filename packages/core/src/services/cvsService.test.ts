@@ -75,6 +75,36 @@ describe('CvsService', () => {
     });
   });
 
+  describe('containsCvsWorkspace', () => {
+    it('returns false when no CVS working copy exists under the directory', () => {
+      fs.mkdirSync(path.join(tmpDir, 'project-a'), { recursive: true });
+
+      expect(CvsService.containsCvsWorkspace(tmpDir)).toBe(false);
+    });
+
+    it('returns true when the directory itself is a CVS working copy', () => {
+      fs.mkdirSync(path.join(tmpDir, 'CVS'));
+      fs.writeFileSync(
+        path.join(tmpDir, 'CVS', 'Root'),
+        ':pserver:user@cvs.example.com:/cvsroot\n',
+      );
+
+      expect(CvsService.containsCvsWorkspace(tmpDir)).toBe(true);
+    });
+
+    it('returns true when a descendant directory is a CVS working copy', () => {
+      const childWorkspace = path.join(tmpDir, 'group', 'project-a');
+      fs.mkdirSync(path.join(childWorkspace, 'CVS'), { recursive: true });
+      fs.writeFileSync(
+        path.join(childWorkspace, 'CVS', 'Root'),
+        ':pserver:user@cvs.example.com:/cvsroot\n',
+      );
+
+      expect(CvsService.isCvsWorkspace(tmpDir)).toBe(false);
+      expect(CvsService.containsCvsWorkspace(tmpDir)).toBe(true);
+    });
+  });
+
   describe('getRepositoryInfo', () => {
     it('reads Root and Repository admin files', () => {
       fs.mkdirSync(path.join(tmpDir, 'CVS'));

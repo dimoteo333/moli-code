@@ -1913,9 +1913,10 @@ export class Config {
       // Register the unified LSP tool
       registerCoreTool(LspTool, this);
     }
-    // CVS support for legacy (mainly Windows) workspaces: only expose the
-    // tool when the target directory is actually a CVS working copy.
-    if (CvsService.isCvsWorkspace(this.getTargetDir())) {
+    // CVS support for legacy (mainly Windows) workspaces: expose the tool
+    // when the target directory is a CVS working copy, or when it contains
+    // one or more CVS working copies in descendant directories.
+    if (CvsService.containsCvsWorkspace(this.getTargetDir())) {
       registerCoreTool(CvsTool, this);
     }
 

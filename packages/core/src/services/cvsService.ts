@@ -120,6 +120,54 @@ export class CvsService {
     }
   }
 
+  /**
+   * Whether the given directory is itself a CVS working copy or contains at
+   * least one CVS working copy in a descendant directory.
+   */
+  static containsCvsWorkspace(dir: string): boolean {
+    const root = path.resolve(dir);
+    if (CvsService.isCvsWorkspace(root)) {
+      return true;
+    }
+
+    const ignoredDirectoryNames = new Set([
+      'CVS',
+      '.git',
+      '.hg',
+      '.svn',
+      'node_modules',
+    ]);
+    const stack = [root];
+    const maxScannedDirectories = 10_000;
+    let scannedDirectories = 0;
+
+    while (stack.length > 0 && scannedDirectories < maxScannedDirectories) {
+      const current = stack.pop()!;
+      scannedDirectories++;
+
+      let entries: fs.Dirent[];
+      try {
+        entries = fs.readdirSync(current, { withFileTypes: true });
+      } catch {
+        continue;
+      }
+
+      for (const entry of entries) {
+        if (!entry.isDirectory() || ignoredDirectoryNames.has(entry.name)) {
+          continue;
+        }
+
+        const child = path.join(current, entry.name);
+        if (CvsService.isCvsWorkspace(child)) {
+          return true;
+        }
+        stack.push(child);
+      }
+    }
+
+    return false;
+  }
+
   isWorkspace(): boolean {
     return CvsService.isCvsWorkspace(this.projectRoot);
   }
