@@ -2,7 +2,7 @@
   "main": "dist-sea/cli.cjs",
   "output": "dist-sea/sea-prep.blob",
   "disableExperimentalSEAWarning": true,
-  "useCodeCache": false,
+  "useCodeCache": true,
   "assets": {
     "bundled/review/SKILL.md": "dist-sea/assets/bundled/review/SKILL.md",
     "locales/de.js": "dist-sea/assets/locales/de.js",

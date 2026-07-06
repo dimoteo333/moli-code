@@ -181,15 +181,25 @@ const seaPreamble = `
   var _sea;
   try { _sea = require('node:sea'); } catch(_e) {}
   if (_sea && typeof _sea.isSea === 'function' && _sea.isSea()) {
+    // Base directory for extracted assets.
+    // Windows: prefer %LOCALAPPDATA% over %TEMP%. AV behavioral heuristics
+    // (notably Defender) heavily scrutinize %TEMP% and flag the pattern
+    // "unsigned parent drops an exe into TEMP and executes it" as suspicious.
+    // %LOCALAPPDATA% is a persistent, user-scoped location that avoids that
+    // heuristic and also survives reboots so assets aren't re-extracted.
     var _os = require('os');
     var _fs = require('fs');
     var _path = require('path');
     var _crypto = require('crypto');
 
-    // Stable temp dir based on exe path + mtime — invalidates when exe is rebuilt
+    var _appData = (process.platform === 'win32' && process.env.LOCALAPPDATA)
+      ? process.env.LOCALAPPDATA
+      : _os.tmpdir();
+
+    // Stable extraction dir based on exe path + mtime — invalidates when exe is rebuilt
     var _exeMtime = _fs.statSync(process.execPath).mtimeMs.toString();
     var _exeHash = _crypto.createHash('md5').update(process.execPath + '\\n' + _exeMtime).digest('hex').slice(0, 8);
-    var _tempBase = _path.join(_os.tmpdir(), 'moli-code-sea-' + _exeHash);
+    var _tempBase = _path.join(_appData, 'moli-code', 'sea-' + _exeHash);
 
     var _assetKeys = ${JSON.stringify(assetKeys)};
 

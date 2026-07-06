@@ -2,6 +2,14 @@
 .env
 .env~
 
+# Code signing certificates / keys (never commit)
+*.pfx
+*.p12
+*.pem
+*.key
+*.crt
+*.cer
+
 # gemini-cli settings
 # We want to keep the .gemini in the root of the repo and ignore any .gemini
 # in subdirectories. In our root .gemini we want to allow for version control

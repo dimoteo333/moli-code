@@ -92,7 +92,7 @@ const seaConfig = {
   main: 'dist-sea/cli.cjs',
   output: 'dist-sea/sea-prep.blob',
   disableExperimentalSEAWarning: true,
-  useCodeCache: false,
+  useCodeCache: true,
   assets,
 };
 
