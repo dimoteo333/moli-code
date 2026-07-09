@@ -1,0 +1,40 @@
+{
+  "name": "@dobby/moli-code-excel-addin",
+  "version": "0.4.0",
+  "description": "몰리 코드 Excel 추가 기능 - 폐쇄망용 Office.js 작업창 애드인",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "build": "node scripts/build.js",
+    "bundle:cli": "node scripts/bundle-cli.js",
+    "dev": "node scripts/dev.js",
+    "package:deploy": "node scripts/package-deploy.js",
+    "test": "vitest run",
+    "test:ci": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit -p tsconfig.sidecar.json && tsc --noEmit -p tsconfig.taskpane.json",
+    "clean": "rm -rf dist deploy"
+  },
+  "dependencies": {
+    "@dobby/moli-code-sdk": "file:../sdk-typescript",
+    "ws": "^8.18.0",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@microsoft/office-js": "^1.1.110",
+    "@swc/core": "^1.7.0",
+    "@types/node": "^20.14.0",
+    "@types/office-js": "^1.0.400",
+    "@types/ws": "^8.5.10",
+    "core-js": "^3.38.0",
+    "es-check": "^7.2.0",
+    "esbuild": "^0.25.12",
+    "office-ui-fabric-core": "^11.1.0",
+    "selfsigned": "^2.4.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

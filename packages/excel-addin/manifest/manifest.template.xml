@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <Id>51ef4b60-29f7-442c-99b4-93419c6e68e2</Id>
+  <Version>{{VERSION}}</Version>
+  <ProviderName>Moli Team</ProviderName>
+  <DefaultLocale>ko-KR</DefaultLocale>
+  <DisplayName DefaultValue="몰리 코드 for Excel"/>
+  <Description DefaultValue="폐쇄망에서 동작하는 Excel용 몰리 코드 AI 어시스턴트. 워크북을 읽고, 쓰고, 분석합니다."/>
+  <IconUrl DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/assets/icon-80.png"/>
+
+  <AppDomains>
+    <AppDomain>https://localhost:{{PORT}}</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Workbook"/>
+  </Hosts>
+
+  <Requirements>
+    <Sets DefaultMinVersion="1.1">
+      <Set Name="ExcelApi" MinVersion="1.1"/>
+    </Sets>
+  </Requirements>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>ReadWriteDocument</Permissions>
+
+  <!--
+    Ribbon button (add-in commands). Early Excel 2016 MSI builds ignore
+    VersionOverrides; the pane then opens via 삽입 > 내 추가 기능 instead.
+  -->
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Workbook">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="MoliCode.Group1">
+                <Label resid="MoliCode.GroupLabel"/>
+                <Icon>
+                  <bt:Image size="16" resid="MoliCode.Icon16"/>
+                  <bt:Image size="32" resid="MoliCode.Icon32"/>
+                  <bt:Image size="80" resid="MoliCode.Icon80"/>
+                </Icon>
+                <Control xsi:type="Button" id="MoliCode.TaskpaneButton">
+                  <Label resid="MoliCode.TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="MoliCode.TaskpaneButton.Label"/>
+                    <Description resid="MoliCode.TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="MoliCode.Icon16"/>
+                    <bt:Image size="32" resid="MoliCode.Icon32"/>
+                    <bt:Image size="80" resid="MoliCode.Icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>MoliCodeTaskpane</TaskpaneId>
+                    <SourceLocation resid="MoliCode.Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
+        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
+        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/assets/icon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="MoliCode.Taskpane.Url" DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="MoliCode.GroupLabel" DefaultValue="몰리 코드"/>
+        <bt:String id="MoliCode.TaskpaneButton.Label" DefaultValue="몰리 코드 열기"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="MoliCode.TaskpaneButton.Tooltip" DefaultValue="몰리 코드 AI 어시스턴트 작업창을 엽니다."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>
