@@ -1192,5 +1192,157 @@ describe('subagent.ts', () => {
         expect(readResult!.success).toBe(true);
       });
     });
+
+    describe('runNonInteractive - Circuit Breakers', () => {
+      const promptConfig: PromptConfig = { systemPrompt: 'Execute task.' };
+
+      const listFilesToolDef: FunctionDeclaration = {
+        name: 'list_files',
+        description: 'Lists files',
+        parameters: { type: Type.OBJECT, properties: {} },
+      };
+
+      function createCountingTool(executeFn: Mock) {
+        const invocationFactory = (params: Record<string, unknown>) => ({
+          params,
+          getDescription: vi.fn().mockReturnValue('List files'),
+          toolLocations: vi.fn().mockReturnValue([]),
+          shouldConfirmExecute: vi.fn().mockResolvedValue(false),
+          execute: executeFn,
+        });
+        return {
+          name: 'list_files',
+          displayName: 'List Files',
+          description: 'List files in directory',
+          kind: 'READ' as const,
+          schema: listFilesToolDef,
+          build: vi
+            .fn()
+            .mockImplementation((params: Record<string, unknown>) =>
+              invocationFactory(params),
+            ),
+          canUpdateOutput: false,
+          isOutputMarkdown: true,
+        } as unknown as AnyDeclarativeTool;
+      }
+
+      it('short-circuits repeated identical tool calls after the threshold', async () => {
+        const executeFn = vi.fn().mockResolvedValue({
+          llmContent: 'file1.txt',
+          returnDisplay: 'Listed files',
+        });
+        const listFilesTool = createCountingTool(executeFn);
+
+        const { config } = await createMockConfig({
+          getFunctionDeclarationsFiltered: vi
+            .fn()
+            .mockReturnValue([listFilesToolDef]),
+          getTool: vi.fn().mockReturnValue(listFilesTool),
+        });
+        const toolConfig: ToolConfig = { tools: ['list_files'] };
+
+        // The model repeats the exact same call for six rounds, then stops.
+        const identicalCall = (round: number) => [
+          {
+            id: `call_${round}`,
+            name: 'list_files',
+            args: { path: '/same' },
+          },
+        ];
+        mockSendMessageStream.mockImplementation(
+          createMockStream([
+            identicalCall(1),
+            identicalCall(2),
+            identicalCall(3),
+            identicalCall(4),
+            identicalCall(5),
+            identicalCall(6),
+            'stop',
+          ]),
+        );
+
+        const scope = await SubAgentScope.create(
+          'test-agent',
+          config,
+          promptConfig,
+          defaultModelConfig,
+          { ...defaultRunConfig, max_turns: 10 },
+          toolConfig,
+        );
+
+        await scope.runNonInteractive(new ContextState());
+
+        // Threshold is 5: rounds 1-4 execute, rounds 5-6 are short-circuited.
+        expect(executeFn).toHaveBeenCalledTimes(4);
+
+        // The blocked round's response tells the model to change approach.
+        const round5Message = mockSendMessageStream.mock.calls[5][1]
+          .message as Part[];
+        const round5Error = round5Message[0].functionResponse?.response?.[
+          'error'
+        ] as string;
+        expect(round5Error).toContain('identical arguments');
+
+        // The run still terminates normally once the model stops.
+        expect(scope.getTerminateMode()).toBe(SubagentTerminateMode.GOAL);
+      });
+
+      it('caps the number of tool calls executed from one model response', async () => {
+        const executeFn = vi.fn().mockResolvedValue({
+          llmContent: 'ok',
+          returnDisplay: 'ok',
+        });
+        const listFilesTool = createCountingTool(executeFn);
+
+        const { config } = await createMockConfig({
+          getFunctionDeclarationsFiltered: vi
+            .fn()
+            .mockReturnValue([listFilesToolDef]),
+          getTool: vi.fn().mockReturnValue(listFilesTool),
+        });
+        const toolConfig: ToolConfig = { tools: ['list_files'] };
+
+        // One round with five distinct calls, cap at three.
+        mockSendMessageStream.mockImplementation(
+          createMockStream([
+            [1, 2, 3, 4, 5].map((n) => ({
+              id: `call_${n}`,
+              name: 'list_files',
+              args: { path: `/dir-${n}` },
+            })),
+            'stop',
+          ]),
+        );
+
+        const scope = await SubAgentScope.create(
+          'test-agent',
+          config,
+          promptConfig,
+          defaultModelConfig,
+          { ...defaultRunConfig, max_tool_calls_per_turn: 3 },
+          toolConfig,
+        );
+
+        await scope.runNonInteractive(new ContextState());
+
+        expect(executeFn).toHaveBeenCalledTimes(3);
+
+        // All five calls get a functionResponse: three results, two errors.
+        const secondMessage = mockSendMessageStream.mock.calls[1][1]
+          .message as Part[];
+        const errors = secondMessage
+          .map((p) => p.functionResponse?.response?.['error'])
+          .filter(Boolean) as string[];
+        expect(errors).toHaveLength(2);
+        expect(errors[0]).toContain('Too many tool calls');
+
+        // Rejections are recorded in the statistics.
+        const stats = scope.getStatistics();
+        expect(stats.successfulToolCalls).toBe(3);
+        expect(stats.failedToolCalls).toBe(2);
+
+        expect(scope.getTerminateMode()).toBe(SubagentTerminateMode.GOAL);
+      });
+    });
   });
 });

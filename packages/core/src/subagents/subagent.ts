@@ -162,6 +162,20 @@ function templateString(template: string, context: ContextState): string {
  * This class orchestrates the subagent's lifecycle, managing its chat interactions,
  * runtime context, and the collection of its outputs.
  */
+/**
+ * Default cap on tool calls executed from one model response inside a
+ * subagent. Excess calls are rejected with a corrective error response.
+ */
+export const DEFAULT_SUBAGENT_MAX_TOOL_CALLS_PER_TURN = 15;
+
+/**
+ * Number of consecutive identical tool calls (same name and arguments)
+ * after which further identical calls are short-circuited with an error
+ * response instead of being executed. Matches the main loop's
+ * TOOL_CALL_LOOP_THRESHOLD in loopDetectionService.
+ */
+export const SUBAGENT_TOOL_CALL_LOOP_THRESHOLD = 5;
+
 export class SubAgentScope {
   executionStats: ExecutionStats = {
     startTimeMs: 0,
@@ -192,6 +206,9 @@ export class SubAgentScope {
   private readonly stats = new SubagentStatistics();
   private hooks?: SubagentHooks;
   private readonly subagentId: string;
+  // Circuit breaker state: consecutive identical tool calls across rounds.
+  private lastToolCallSignature: string | null = null;
+  private identicalToolCallCount = 0;
 
   /**
    * Constructs a new SubAgentScope instance.
@@ -610,57 +627,110 @@ export class SubAgentScope {
     // Build allowed tool names set for filtering
     const allowedToolNames = new Set(toolsList.map((t) => t.name));
 
+    // Rejects a tool call before scheduling: emits TOOL_CALL/TOOL_RESULT
+    // events for UI visibility, records stats, and appends an error
+    // functionResponse so the model can re-evaluate.
+    const rejectFunctionCall = (
+      fc: FunctionCall,
+      errorMessage: string,
+      description?: string,
+    ) => {
+      const callId = fc.id ?? `${fc.name}-${Date.now()}`;
+      const toolName = String(fc.name);
+
+      this.eventEmitter?.emit(SubAgentEventType.TOOL_CALL, {
+        subagentId: this.subagentId,
+        round: currentRound,
+        callId,
+        name: toolName,
+        args: fc.args ?? {},
+        description: description ?? errorMessage,
+        timestamp: Date.now(),
+      } as SubAgentToolCallEvent);
+
+      // Build function response part (used for both event and LLM)
+      const functionResponsePart = {
+        functionResponse: {
+          id: callId,
+          name: toolName,
+          response: { error: errorMessage },
+        },
+      };
+
+      this.eventEmitter?.emit(SubAgentEventType.TOOL_RESULT, {
+        subagentId: this.subagentId,
+        round: currentRound,
+        callId,
+        name: toolName,
+        success: false,
+        error: errorMessage,
+        responseParts: [functionResponsePart],
+        resultDisplay: errorMessage,
+        durationMs: 0,
+        timestamp: Date.now(),
+      } as SubAgentToolResultEvent);
+
+      this.recordToolCallStats(toolName, false, 0, errorMessage);
+      toolResponseParts.push(functionResponsePart);
+    };
+
     // Filter unauthorized tool calls before scheduling
     const authorizedCalls: FunctionCall[] = [];
     for (const fc of functionCalls) {
-      const callId = fc.id ?? `${fc.name}-${Date.now()}`;
-
       if (!allowedToolNames.has(fc.name)) {
         const toolName = String(fc.name);
-        const errorMessage = `Tool "${toolName}" not found. Tools must use the exact names provided.`;
-
-        // Emit TOOL_CALL event for visibility
-        this.eventEmitter?.emit(SubAgentEventType.TOOL_CALL, {
-          subagentId: this.subagentId,
-          round: currentRound,
-          callId,
-          name: toolName,
-          args: fc.args ?? {},
-          description: `Tool "${toolName}" not found`,
-          timestamp: Date.now(),
-        } as SubAgentToolCallEvent);
-
-        // Build function response part (used for both event and LLM)
-        const functionResponsePart = {
-          functionResponse: {
-            id: callId,
-            name: toolName,
-            response: { error: errorMessage },
-          },
-        };
-
-        // Emit TOOL_RESULT event with error (include responseParts for UI rendering)
-        this.eventEmitter?.emit(SubAgentEventType.TOOL_RESULT, {
-          subagentId: this.subagentId,
-          round: currentRound,
-          callId,
-          name: toolName,
-          success: false,
-          error: errorMessage,
-          responseParts: [functionResponsePart],
-          resultDisplay: errorMessage,
-          durationMs: 0,
-          timestamp: Date.now(),
-        } as SubAgentToolResultEvent);
-
-        // Record blocked tool call in stats
-        this.recordToolCallStats(toolName, false, 0, errorMessage);
-
-        // Add function response for LLM
-        toolResponseParts.push(functionResponsePart);
+        rejectFunctionCall(
+          fc,
+          `Tool "${toolName}" not found. Tools must use the exact names provided.`,
+          `Tool "${toolName}" not found`,
+        );
         continue;
       }
       authorizedCalls.push(fc);
+    }
+
+    // Circuit breakers: short-circuit repeated identical calls and cap the
+    // number of calls executed from a single model response.
+    const maxCallsPerTurn = Math.max(
+      1,
+      this.runConfig.max_tool_calls_per_turn ??
+        DEFAULT_SUBAGENT_MAX_TOOL_CALLS_PER_TURN,
+    );
+    const callsToSchedule: FunctionCall[] = [];
+    for (const fc of authorizedCalls) {
+      const signature = `${fc.name}:${JSON.stringify(fc.args ?? {})}`;
+      if (signature === this.lastToolCallSignature) {
+        this.identicalToolCallCount++;
+      } else {
+        this.lastToolCallSignature = signature;
+        this.identicalToolCallCount = 1;
+      }
+
+      if (this.identicalToolCallCount >= SUBAGENT_TOOL_CALL_LOOP_THRESHOLD) {
+        rejectFunctionCall(
+          fc,
+          `Tool "${fc.name}" has been called with identical arguments ` +
+            `${this.identicalToolCallCount} times in a row and was not ` +
+            `executed again. Repeating the same call will not produce a ` +
+            `different result. Change your approach or provide the final ` +
+            `result now.`,
+          `Repeated identical call to "${fc.name}" blocked`,
+        );
+        continue;
+      }
+
+      if (callsToSchedule.length >= maxCallsPerTurn) {
+        rejectFunctionCall(
+          fc,
+          `Too many tool calls in a single response (max ${maxCallsPerTurn}). ` +
+            `This call was not executed. Re-plan with fewer, more targeted ` +
+            `tool calls per response.`,
+          'Per-turn tool call limit exceeded',
+        );
+        continue;
+      }
+
+      callsToSchedule.push(fc);
     }
 
     // Build scheduler
@@ -771,7 +841,7 @@ export class SubAgentScope {
     });
 
     // Prepare requests and emit TOOL_CALL events
-    const requests: ToolCallRequestInfo[] = authorizedCalls.map((fc) => {
+    const requests: ToolCallRequestInfo[] = callsToSchedule.map((fc) => {
       const toolName = String(fc.name || 'unknown');
       const callId = fc.id ?? `${fc.name}-${Date.now()}`;
       const args = (fc.args ?? {}) as Record<string, unknown>;

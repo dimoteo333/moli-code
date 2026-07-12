@@ -269,4 +269,10 @@ export interface RunConfig {
    * before the execution is terminated. Helps prevent infinite loops.
    */
   max_turns?: number;
+  /**
+   * The maximum number of tool calls executed from a single model response.
+   * Calls beyond the cap are rejected with an error response asking the
+   * model to re-plan. Guards against runaway tool-call fan-out.
+   */
+  max_tool_calls_per_turn?: number;
 }
