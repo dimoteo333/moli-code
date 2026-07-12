@@ -1028,6 +1028,26 @@ const SETTINGS_SCHEMA = {
         description: 'Command to run for tool calls.',
         showInDialog: false,
       },
+      parallelToolCalls: {
+        type: 'boolean',
+        label: 'Parallel Tool Calls',
+        category: 'Tools',
+        requiresRestart: false,
+        default: true,
+        description:
+          'Execute independent tool calls (read-only tools and task subagents) from a single model message concurrently. Set to false to force serial execution.',
+        showInDialog: false,
+      },
+      maxConcurrency: {
+        type: 'number',
+        label: 'Tool Max Concurrency',
+        category: 'Tools',
+        requiresRestart: false,
+        default: 8,
+        description:
+          'Maximum number of tool calls executed concurrently when parallelToolCalls is enabled.',
+        showInDialog: false,
+      },
       useRipgrep: {
         type: 'boolean',
         label: 'Use Ripgrep',

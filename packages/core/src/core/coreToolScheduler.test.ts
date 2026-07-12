@@ -2583,3 +2583,406 @@ describe('CoreToolScheduler plan mode with ask_user_question', () => {
     expect(completedCalls[0].status).toBe('cancelled');
   });
 });
+
+describe('CoreToolScheduler parallel execution', () => {
+  class KindToolInvocation extends BaseToolInvocation<
+    Record<string, unknown>,
+    ToolResult
+  > {
+    constructor(
+      private readonly executeFn: (
+        params: Record<string, unknown>,
+        signal: AbortSignal,
+      ) => Promise<ToolResult>,
+      params: Record<string, unknown>,
+    ) {
+      super(params);
+    }
+
+    getDescription(): string {
+      return 'kind tool invocation';
+    }
+
+    execute(signal: AbortSignal): Promise<ToolResult> {
+      return this.executeFn(this.params, signal);
+    }
+  }
+
+  class KindTool extends BaseDeclarativeTool<
+    Record<string, unknown>,
+    ToolResult
+  > {
+    constructor(
+      name: string,
+      kind: Kind,
+      private readonly executeFn: (
+        params: Record<string, unknown>,
+        signal: AbortSignal,
+      ) => Promise<ToolResult>,
+    ) {
+      super(name, name, `mock ${name}`, kind, {
+        type: 'object',
+        properties: {},
+      });
+    }
+
+    protected createInvocation(
+      params: Record<string, unknown>,
+    ): ToolInvocation<Record<string, unknown>, ToolResult> {
+      return new KindToolInvocation(this.executeFn, params);
+    }
+  }
+
+  function createParallelScheduler(
+    tools: Array<KindTool | MockTool>,
+    configOverrides: Record<string, unknown> = {},
+  ) {
+    const byName = new Map(tools.map((t) => [t.name, t]));
+    const mockToolRegistry = {
+      getTool: (name: string) => byName.get(name),
+      getToolByName: (name: string) => byName.get(name),
+      getFunctionDeclarations: () => [],
+      tools: byName,
+      discovery: {},
+      registerTool: () => {},
+      getToolByDisplayName: (name: string) => byName.get(name),
+      getTools: () => [...byName.values()],
+      discoverTools: async () => {},
+      getAllTools: () => [...byName.values()],
+      getToolsByServer: () => [],
+    } as unknown as ToolRegistry;
+
+    const onAllToolCallsComplete = vi.fn();
+    const onToolCallsUpdate = vi.fn();
+
+    const mockConfig = {
+      getSessionId: () => 'test-session-id',
+      getUsageStatisticsEnabled: () => true,
+      getDebugMode: () => false,
+      getApprovalMode: () => ApprovalMode.YOLO,
+      getAllowedTools: () => [],
+      getContentGeneratorConfig: () => ({
+        model: 'test-model',
+        authType: 'gemini',
+      }),
+      getShellExecutionConfig: () => ({
+        terminalWidth: 90,
+        terminalHeight: 30,
+      }),
+      storage: {
+        getProjectTempDir: () => '/tmp',
+      },
+      getTruncateToolOutputThreshold: () =>
+        DEFAULT_TRUNCATE_TOOL_OUTPUT_THRESHOLD,
+      getTruncateToolOutputLines: () => DEFAULT_TRUNCATE_TOOL_OUTPUT_LINES,
+      getToolRegistry: () => mockToolRegistry,
+      getUseModelRouter: () => false,
+      getGeminiClient: () => null,
+      getChatRecordingService: () => undefined,
+      getParallelToolCallsEnabled: () => true,
+      getToolMaxConcurrency: () => 8,
+      ...configOverrides,
+    } as unknown as Config;
+
+    const scheduler = new CoreToolScheduler({
+      config: mockConfig,
+      onAllToolCallsComplete,
+      onToolCallsUpdate,
+      getPreferredEditor: () => 'vscode',
+      onEditorClose: vi.fn(),
+    });
+
+    return { scheduler, onAllToolCallsComplete, onToolCallsUpdate };
+  }
+
+  const makeRequest = (
+    callId: string,
+    name: string,
+    args: Record<string, unknown> = {},
+  ) => ({
+    callId,
+    name,
+    args,
+    isClientInitiated: false,
+    prompt_id: 'prompt-parallel',
+  });
+
+  it('executes parallel-safe calls concurrently and reports results in request order', async () => {
+    const started: string[] = [];
+    const resolvers = new Map<string, () => void>();
+    const readTool = new KindTool(
+      'readTool',
+      Kind.Read,
+      (params) =>
+        new Promise<ToolResult>((resolve) => {
+          const id = params['id'] as string;
+          started.push(id);
+          resolvers.set(id, () =>
+            resolve({ llmContent: `done ${id}`, returnDisplay: `done ${id}` }),
+          );
+        }),
+    );
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler([
+      readTool,
+    ]);
+
+    const schedulePromise = scheduler.schedule(
+      [
+        makeRequest('1', 'readTool', { id: 'a' }),
+        makeRequest('2', 'readTool', { id: 'b' }),
+      ],
+      new AbortController().signal,
+    );
+
+    // Both calls must start before either resolves — i.e. they overlap.
+    await vi.waitFor(() => {
+      expect(started).toEqual(['a', 'b']);
+    });
+
+    // Resolve out of order: the second call finishes first.
+    resolvers.get('b')!();
+    resolvers.get('a')!();
+    await schedulePromise;
+
+    await vi.waitFor(() => {
+      expect(onAllToolCallsComplete).toHaveBeenCalled();
+    });
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed.map((c) => c.request.callId)).toEqual(['1', '2']);
+    expect(completed.every((c) => c.status === 'success')).toBe(true);
+  });
+
+  it('treats mutating calls as barriers between parallel batches', async () => {
+    const started: string[] = [];
+    const resolvers = new Map<string, () => void>();
+    const deferredExecute = (params: Record<string, unknown>) =>
+      new Promise<ToolResult>((resolve) => {
+        const id = params['id'] as string;
+        started.push(id);
+        resolvers.set(id, () =>
+          resolve({ llmContent: `done ${id}`, returnDisplay: `done ${id}` }),
+        );
+      });
+    const readTool = new KindTool('readTool', Kind.Read, deferredExecute);
+    const editTool = new KindTool('editTool', Kind.Edit, deferredExecute);
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler([
+      readTool,
+      editTool,
+    ]);
+
+    const schedulePromise = scheduler.schedule(
+      [
+        makeRequest('1', 'readTool', { id: 'read-a' }),
+        makeRequest('2', 'editTool', { id: 'edit-b' }),
+        makeRequest('3', 'readTool', { id: 'read-c' }),
+      ],
+      new AbortController().signal,
+    );
+
+    // Only the first read starts; the edit must wait for it.
+    await vi.waitFor(() => {
+      expect(started).toEqual(['read-a']);
+    });
+    resolvers.get('read-a')!();
+
+    // The edit runs alone; the trailing read must wait for it.
+    await vi.waitFor(() => {
+      expect(started).toEqual(['read-a', 'edit-b']);
+    });
+    resolvers.get('edit-b')!();
+
+    await vi.waitFor(() => {
+      expect(started).toEqual(['read-a', 'edit-b', 'read-c']);
+    });
+    resolvers.get('read-c')!();
+    await schedulePromise;
+
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed.map((c) => c.request.callId)).toEqual(['1', '2', '3']);
+    expect(completed.every((c) => c.status === 'success')).toBe(true);
+  });
+
+  it('isolates a failing call from its parallel siblings', async () => {
+    const readTool = new KindTool('readTool', Kind.Read, async (params) => {
+      if (params['id'] === 'bad') {
+        throw new Error('boom');
+      }
+      return { llmContent: 'ok', returnDisplay: 'ok' };
+    });
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler([
+      readTool,
+    ]);
+
+    await scheduler.schedule(
+      [
+        makeRequest('1', 'readTool', { id: 'bad' }),
+        makeRequest('2', 'readTool', { id: 'good' }),
+      ],
+      new AbortController().signal,
+    );
+
+    await vi.waitFor(() => {
+      expect(onAllToolCallsComplete).toHaveBeenCalled();
+    });
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed).toHaveLength(2);
+    const byId = new Map(completed.map((c) => [c.request.callId, c]));
+    expect(byId.get('1')!.status).toBe('error');
+    expect(byId.get('2')!.status).toBe('success');
+  });
+
+  it('cancels all in-flight parallel calls on abort and completes exactly once', async () => {
+    const started: string[] = [];
+    const readTool = new KindTool(
+      'readTool',
+      Kind.Read,
+      (params, signal) =>
+        new Promise<ToolResult>((resolve) => {
+          started.push(params['id'] as string);
+          signal.addEventListener('abort', () =>
+            resolve({ llmContent: 'late', returnDisplay: 'late' }),
+          );
+        }),
+    );
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler([
+      readTool,
+    ]);
+
+    const abortController = new AbortController();
+    const schedulePromise = scheduler.schedule(
+      [
+        makeRequest('1', 'readTool', { id: 'a' }),
+        makeRequest('2', 'readTool', { id: 'b' }),
+      ],
+      abortController.signal,
+    );
+
+    await vi.waitFor(() => {
+      expect(started).toEqual(['a', 'b']);
+    });
+    abortController.abort();
+    await schedulePromise;
+
+    await vi.waitFor(() => {
+      expect(onAllToolCallsComplete).toHaveBeenCalled();
+    });
+    expect(onAllToolCallsComplete).toHaveBeenCalledTimes(1);
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed.map((c) => c.status)).toEqual(['cancelled', 'cancelled']);
+  });
+
+  it('respects the configured max concurrency', async () => {
+    let inFlight = 0;
+    let maxInFlight = 0;
+    const readTool = new KindTool('readTool', Kind.Read, async () => {
+      inFlight++;
+      maxInFlight = Math.max(maxInFlight, inFlight);
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      inFlight--;
+      return { llmContent: 'ok', returnDisplay: 'ok' };
+    });
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler(
+      [readTool],
+      { getToolMaxConcurrency: () => 2 },
+    );
+
+    await scheduler.schedule(
+      ['1', '2', '3', '4', '5'].map((id) => makeRequest(id, 'readTool')),
+      new AbortController().signal,
+    );
+
+    await vi.waitFor(() => {
+      expect(onAllToolCallsComplete).toHaveBeenCalled();
+    });
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed).toHaveLength(5);
+    expect(completed.every((c) => c.status === 'success')).toBe(true);
+    expect(maxInFlight).toBeLessThanOrEqual(2);
+    expect(maxInFlight).toBeGreaterThan(1);
+  });
+
+  it('falls back to serial execution when parallelToolCalls is disabled', async () => {
+    const started: string[] = [];
+    const resolvers = new Map<string, () => void>();
+    const readTool = new KindTool(
+      'readTool',
+      Kind.Read,
+      (params) =>
+        new Promise<ToolResult>((resolve) => {
+          const id = params['id'] as string;
+          started.push(id);
+          resolvers.set(id, () =>
+            resolve({ llmContent: `done ${id}`, returnDisplay: `done ${id}` }),
+          );
+        }),
+    );
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler(
+      [readTool],
+      { getParallelToolCallsEnabled: () => false },
+    );
+
+    const schedulePromise = scheduler.schedule(
+      [
+        makeRequest('1', 'readTool', { id: 'a' }),
+        makeRequest('2', 'readTool', { id: 'b' }),
+      ],
+      new AbortController().signal,
+    );
+
+    await vi.waitFor(() => {
+      expect(started).toEqual(['a']);
+    });
+    resolvers.get('a')!();
+    await vi.waitFor(() => {
+      expect(started).toEqual(['a', 'b']);
+    });
+    resolvers.get('b')!();
+    await schedulePromise;
+
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed.every((c) => c.status === 'success')).toBe(true);
+  });
+
+  it('runs task tool calls concurrently even though their kind is Other', async () => {
+    const started: string[] = [];
+    const resolvers = new Map<string, () => void>();
+    // MockTool has Kind.Other; the scheduler special-cases the `task` name.
+    const taskTool = new MockTool({
+      name: 'task',
+      execute: (params) =>
+        new Promise<ToolResult>((resolve) => {
+          const id = params['id'] as string;
+          started.push(id);
+          resolvers.set(id, () =>
+            resolve({
+              llmContent: `agent ${id}`,
+              returnDisplay: `agent ${id}`,
+            }),
+          );
+        }),
+    });
+    const { scheduler, onAllToolCallsComplete } = createParallelScheduler([
+      taskTool,
+    ]);
+
+    const schedulePromise = scheduler.schedule(
+      [
+        makeRequest('1', 'task', { id: 'agent-a' }),
+        makeRequest('2', 'task', { id: 'agent-b' }),
+      ],
+      new AbortController().signal,
+    );
+
+    // Both subagents must be in flight at the same time.
+    await vi.waitFor(() => {
+      expect(started).toEqual(['agent-a', 'agent-b']);
+    });
+    resolvers.get('agent-b')!();
+    resolvers.get('agent-a')!();
+    await schedulePromise;
+
+    const completed = onAllToolCallsComplete.mock.calls[0][0] as ToolCall[];
+    expect(completed.map((c) => c.request.callId)).toEqual(['1', '2']);
+    expect(completed.every((c) => c.status === 'success')).toBe(true);
+  });
+});

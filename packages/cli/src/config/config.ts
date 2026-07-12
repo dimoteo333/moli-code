@@ -1019,6 +1019,8 @@ export async function loadCliConfig(
     trustedFolder,
     useRipgrep: settings.tools?.useRipgrep,
     useBuiltinRipgrep: settings.tools?.useBuiltinRipgrep,
+    parallelToolCalls: settings.tools?.parallelToolCalls,
+    toolMaxConcurrency: settings.tools?.maxConcurrency,
     enableCvsTool: settings.tools?.cvs?.enabled,
     shouldUseNodePtyShell: settings.tools?.shell?.enableInteractiveShell,
     skipNextSpeakerCheck: settings.model?.skipNextSpeakerCheck,

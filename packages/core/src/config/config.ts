@@ -370,6 +370,8 @@ export interface ConfigParameters {
   skipNextSpeakerCheck?: boolean;
   shellExecutionConfig?: ShellExecutionConfig;
   skipLoopDetection?: boolean;
+  parallelToolCalls?: boolean;
+  toolMaxConcurrency?: number;
   truncateToolOutputThreshold?: number;
   truncateToolOutputLines?: number;
   eventEmitter?: EventEmitter;
@@ -520,6 +522,8 @@ export class Config {
   private readonly skipNextSpeakerCheck: boolean;
   private shellExecutionConfig: ShellExecutionConfig;
   private readonly skipLoopDetection: boolean;
+  private readonly parallelToolCalls: boolean;
+  private readonly toolMaxConcurrency: number;
   private readonly skipStartupContext: boolean;
   private readonly warnings: string[];
   private initialized: boolean = false;
@@ -626,6 +630,8 @@ export class Config {
     this.interactive = params.interactive ?? false;
     this.trustedFolder = params.trustedFolder;
     this.skipLoopDetection = params.skipLoopDetection ?? false;
+    this.parallelToolCalls = params.parallelToolCalls ?? true;
+    this.toolMaxConcurrency = Math.max(1, params.toolMaxConcurrency ?? 8);
     this.skipStartupContext = params.skipStartupContext ?? false;
     this.warnings = params.warnings ?? [];
 
@@ -1715,6 +1721,14 @@ export class Config {
 
   isInteractive(): boolean {
     return this.interactive;
+  }
+
+  getParallelToolCallsEnabled(): boolean {
+    return this.parallelToolCalls;
+  }
+
+  getToolMaxConcurrency(): number {
+    return this.toolMaxConcurrency;
   }
 
   getUseRipgrep(): boolean {

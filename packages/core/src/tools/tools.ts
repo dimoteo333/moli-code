@@ -655,6 +655,16 @@ export const MUTATOR_KINDS: Kind[] = [
   Kind.Execute,
 ] as const;
 
+// Function kinds that are safe to execute concurrently with each other.
+// Kind.Other is deliberately excluded: tools with unknown semantics (lsp,
+// non-read-only MCP tools) must stay serial.
+export const PARALLEL_SAFE_KINDS: Kind[] = [
+  Kind.Read,
+  Kind.Search,
+  Kind.Fetch,
+  Kind.Think,
+] as const;
+
 export interface ToolLocation {
   // Absolute path to the file
   path: string;

@@ -49,6 +49,7 @@ import { doesToolInvocationMatch } from '../utils/tool-utils.js';
 import levenshtein from 'fast-levenshtein';
 import { getPlanModeSystemReminder } from './prompts.js';
 import { ShellToolInvocation } from '../tools/shell.js';
+import { PARALLEL_SAFE_KINDS } from '../tools/tools.js';
 
 const TRUNCATION_PARAM_GUIDANCE =
   'Note: Your previous response was truncated due to max_tokens limit, ' +
@@ -1065,6 +1066,75 @@ export class CoreToolScheduler {
     });
   }
 
+  /**
+   * A tool call may run concurrently with its neighbors when it has no side
+   * effects (read-only kinds) or is a `task` subagent, which spawns an
+   * isolated agent with no shared mutable state. Mutating tools and tools
+   * with unknown semantics (Kind.Other) act as barriers and run alone.
+   */
+  private isParallelSafe(call: ScheduledToolCall): boolean {
+    if (!(this.config.getParallelToolCallsEnabled?.() ?? true)) {
+      return false;
+    }
+    if (call.request.name === ToolNames.TASK) {
+      return true;
+    }
+    return PARALLEL_SAFE_KINDS.includes(call.tool.kind);
+  }
+
+  private async executeParallelBatch(
+    calls: ScheduledToolCall[],
+    signal: AbortSignal,
+  ): Promise<void> {
+    const maxConcurrency = Math.max(
+      1,
+      this.config.getToolMaxConcurrency?.() ?? 8,
+    );
+    let nextIndex = 0;
+    const worker = async (): Promise<void> => {
+      while (nextIndex < calls.length) {
+        const call = calls[nextIndex++];
+        await this.executeSingleToolCall(call, signal);
+      }
+    };
+    const workers = Array.from(
+      { length: Math.min(maxConcurrency, calls.length) },
+      () => worker(),
+    );
+    const results = await Promise.allSettled(workers);
+    for (const result of results) {
+      if (result.status === 'rejected') {
+        // executeSingleToolCall never rejects by contract; if it ever does,
+        // surface the failure and force any stuck call to a terminal state
+        // so checkAndNotifyCompletion cannot deadlock.
+        debugLogger.error(
+          () => `Unexpected rejection in parallel tool batch: ${result.reason}`,
+        );
+        for (const call of calls) {
+          const current = this.toolCalls.find(
+            (tc) => tc.request.callId === call.request.callId,
+          );
+          if (
+            current &&
+            (current.status === 'scheduled' || current.status === 'executing')
+          ) {
+            this.setStatusInternal(
+              call.request.callId,
+              'error',
+              createErrorResponse(
+                call.request,
+                result.reason instanceof Error
+                  ? result.reason
+                  : new Error(String(result.reason)),
+                ToolErrorType.UNHANDLED_EXCEPTION,
+              ),
+            );
+          }
+        }
+      }
+    }
+  }
+
   private async attemptExecutionOfScheduledCalls(
     signal: AbortSignal,
   ): Promise<void> {
@@ -1081,9 +1151,32 @@ export class CoreToolScheduler {
         (call) => call.status === 'scheduled',
       );
 
+      // Consecutive parallel-safe calls run concurrently as one batch; any
+      // other call flushes the batch and runs alone (a barrier), preserving
+      // the model's implicit ordering around side effects. Response order to
+      // the model is unaffected: checkAndNotifyCompletion emits results in
+      // original request order regardless of completion order.
+      let batch: ScheduledToolCall[] = [];
+      const flushBatch = async (): Promise<void> => {
+        if (batch.length === 0) return;
+        const toRun = batch;
+        batch = [];
+        if (toRun.length === 1) {
+          await this.executeSingleToolCall(toRun[0], signal);
+        } else {
+          await this.executeParallelBatch(toRun, signal);
+        }
+      };
+
       for (const toolCall of callsToExecute) {
-        await this.executeSingleToolCall(toolCall, signal);
+        if (this.isParallelSafe(toolCall)) {
+          batch.push(toolCall);
+        } else {
+          await flushBatch();
+          await this.executeSingleToolCall(toolCall, signal);
+        }
       }
+      await flushBatch();
     }
   }
 
