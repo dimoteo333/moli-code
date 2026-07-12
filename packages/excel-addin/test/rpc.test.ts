@@ -63,11 +63,11 @@ describe('RpcManager', () => {
     try {
       const rpc = new RpcManager(() => {});
       const promise = rpc.call('get_selection', {}, 1_000);
-      const assertion = await expect(promise).rejects.toMatchObject({
+      // Fire the timeout before awaiting, so the assertion can settle.
+      vi.advanceTimersByTime(1_001);
+      await expect(promise).rejects.toMatchObject({
         code: 'RPC_TIMEOUT',
       });
-      vi.advanceTimersByTime(1_001);
-      await assertion;
       expect(rpc.pendingCount).toBe(0);
     } finally {
       vi.useRealTimers();
