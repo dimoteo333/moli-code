@@ -43,6 +43,11 @@ export function createChatUi(
   root.innerHTML = '';
 
   const header = el('div', 'mc-header', root);
+  const logo = document.createElement('img');
+  logo.className = 'mc-logo';
+  logo.src = 'assets/icon-64.png';
+  logo.alt = '';
+  header.appendChild(logo);
   const titleBox = el('div', 'mc-title-box', header);
   el('div', 'mc-title', titleBox).textContent = STRINGS.appTitle;
   el('div', 'mc-subtitle', titleBox).textContent = STRINGS.appSubtitle;

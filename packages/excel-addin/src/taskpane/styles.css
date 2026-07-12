@@ -25,15 +25,24 @@ html, body {
   text-align: center;
 }
 
-/* Header */
+/* Header — moli logo gradient (violet #743DEC → blue #3B58EB) */
 .mc-header {
   display: -ms-flexbox;
   display: flex;
   -ms-flex-align: center;
   align-items: center;
   padding: 10px 12px;
-  background: #1b4c8c;
+  background: #6445ec;
+  background: linear-gradient(135deg, #743dec 0%, #3b58eb 100%);
   color: #ffffff;
+}
+
+.mc-logo {
+  width: 28px;
+  height: 28px;
+  margin-right: 9px;
+  -ms-flex: 0 0 auto;
+  flex: 0 0 auto;
 }
 
 .mc-title-box {
@@ -88,8 +97,8 @@ html, body {
 
 .mc-msg.user {
   margin-left: auto;
-  background: #deecf9;
-  border: 1px solid #c7e0f4;
+  background: #ece7fd;
+  border: 1px solid #d9cffa;
 }
 
 .mc-msg.assistant {
@@ -133,8 +142,8 @@ html, body {
   -ms-flex-align: center;
   align-items: center;
   padding: 6px 12px;
-  background: #fff4ce;
-  border-top: 1px solid #f0e6b3;
+  background: #f3f0fe;
+  border-top: 1px solid #e2dafb;
   font-size: 12px;
 }
 
@@ -144,7 +153,7 @@ html, body {
   height: 12px;
   margin-right: 8px;
   border: 2px solid #c8c6c4;
-  border-top-color: #1b4c8c;
+  border-top-color: #6445ec;
   border-radius: 50%;
   -webkit-animation: mc-spin 0.9s linear infinite;
   animation: mc-spin 0.9s linear infinite;
@@ -189,13 +198,13 @@ html, body {
 }
 
 .mc-input:focus {
-  border-color: #1b4c8c;
+  border-color: #6445ec;
 }
 
 .mc-send-btn {
   margin-left: 8px;
   border: none;
-  background: #1b4c8c;
+  background: #6445ec;
   color: #ffffff;
   padding: 0 16px;
   border-radius: 4px;
@@ -285,8 +294,8 @@ html, body {
 }
 
 .mc-modal-btn.primary {
-  background: #1b4c8c;
-  border-color: #1b4c8c;
+  background: #6445ec;
+  border-color: #6445ec;
   color: #ffffff;
 }
 

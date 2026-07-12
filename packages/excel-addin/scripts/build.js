@@ -25,9 +25,12 @@ const webRoot = path.join(dist, 'web');
 
 /** npm hoists bins to the monorepo root; look in both places. */
 function findBin(name) {
+  // On Windows npm bin stubs are .cmd files; the extensionless file is a
+  // POSIX shell script that spawnSync cannot execute.
+  const fileName = process.platform === 'win32' ? `${name}.cmd` : name;
   const candidates = [
-    path.join(pkgRoot, 'node_modules', '.bin', name),
-    path.resolve(pkgRoot, '..', '..', 'node_modules', '.bin', name),
+    path.join(pkgRoot, 'node_modules', '.bin', fileName),
+    path.resolve(pkgRoot, '..', '..', 'node_modules', '.bin', fileName),
   ];
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) {
@@ -54,14 +57,15 @@ const skipTypecheck = process.argv.includes('--skip-typecheck');
 if (!skipTypecheck) {
   await run('typecheck', () => {
     const tsc = findBin('tsc');
-    execFileSync(tsc, ['--noEmit', '-p', 'tsconfig.sidecar.json'], {
+    // .cmd bin stubs on Windows must run through a shell (Node >=20.12
+    // rejects spawning them directly).
+    const spawnOpts = {
       cwd: pkgRoot,
       stdio: 'inherit',
-    });
-    execFileSync(tsc, ['--noEmit', '-p', 'tsconfig.taskpane.json'], {
-      cwd: pkgRoot,
-      stdio: 'inherit',
-    });
+      shell: process.platform === 'win32',
+    };
+    execFileSync(tsc, ['--noEmit', '-p', 'tsconfig.sidecar.json'], spawnOpts);
+    execFileSync(tsc, ['--noEmit', '-p', 'tsconfig.taskpane.json'], spawnOpts);
   });
 }
 

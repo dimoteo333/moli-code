@@ -143,12 +143,14 @@ function serveStatic(
   res: import('node:http').ServerResponse,
   logger: Logger,
 ): void {
+  // Drop query string / fragment (e.g. cache-busting ?v=... on icon URLs).
+  const pathname = url.split(/[?#]/, 1)[0];
   const rel =
-    url === '/'
+    pathname === '/'
       ? 'taskpane.html'
-      : url === '/favicon.ico'
+      : pathname === '/favicon.ico'
         ? 'assets/icon-32.png'
-        : url.replace(/^\/+/, '');
+        : pathname.replace(/^\/+/, '');
   const resolved = path.resolve(webRoot, rel);
   // Path-traversal guard: the resolved path must stay inside webRoot.
   if (resolved !== webRoot && !resolved.startsWith(webRoot + path.sep)) {

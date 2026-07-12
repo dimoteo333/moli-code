@@ -1,4 +1,4 @@
-# 몰리 코드 Excel 추가 기능 제거 스크립트
+﻿# 몰리 코드 Excel 추가 기능 제거 스크립트
 #
 #   powershell -ExecutionPolicy Bypass -File .\uninstall.ps1
 #   -KeepCert : 인증서는 남겨둠

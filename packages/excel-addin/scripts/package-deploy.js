@@ -99,10 +99,19 @@ step('zip');
 const zipName = `moli-excel-addin-${version}-offline.zip`;
 const zipPath = path.join(pkgRoot, zipName);
 fs.rmSync(zipPath, { force: true });
-const zipRes = spawnSync('zip', ['-qr', zipPath, 'deploy'], {
+let zipRes = spawnSync('zip', ['-qr', zipPath, 'deploy'], {
   cwd: pkgRoot,
   stdio: 'inherit',
 });
+if (zipRes.status !== 0 && process.platform === 'win32') {
+  // Windows has no zip CLI, but bsdtar (bundled since Windows 10 1803)
+  // infers zip format from the -a flag and the .zip extension.
+  // Relative archive path: bsdtar parses "C:\..." as a remote host.
+  zipRes = spawnSync('tar', ['-a', '-c', '-f', zipName, 'deploy'], {
+    cwd: pkgRoot,
+    stdio: 'inherit',
+  });
+}
 if (zipRes.status !== 0) {
   console.warn(
     '[package] zip failed or unavailable; deploy/ folder is still complete',

@@ -1,4 +1,4 @@
-# 몰리 코드 Excel 추가 기능 설치 스크립트 (폐쇄망용)
+﻿# 몰리 코드 Excel 추가 기능 설치 스크립트 (폐쇄망용)
 #
 # 기본 실행(관리자 권한 불필요):
 #   powershell -ExecutionPolicy Bypass -File .\install.ps1
@@ -23,7 +23,7 @@ $ErrorActionPreference = 'Stop'
 $AddinId = '51ef4b60-29f7-442c-99b4-93419c6e68e2'
 $TaskName = 'MoliExcelSidecar'
 $CertFriendlyName = 'MoliCode Excel Sidecar'
-$Version = '0.4.0'
+$Version = '0.4.2'
 
 # deploy 루트 = installer\ 의 상위 폴더
 $Payload = Split-Path -Parent $PSScriptRoot
@@ -43,7 +43,17 @@ if (-not (Test-Path (Join-Path $Payload 'sidecar\node.exe'))) {
 }
 
 # ---------------------------------------------------------------- 1. 파일 복사
-Write-Host '[1/6] 파일 복사...'
+# 재설치/업그레이드: 실행 중인 사이드카가 node.exe를 잠그고 있으면 복사가
+# 실패하므로 먼저 종료한다.
+$running = Get-CimInstance Win32_Process -Filter "Name='node.exe'" -ErrorAction SilentlyContinue |
+    Where-Object { $_.CommandLine -like '*sidecar\index.cjs*' }
+if ($running) {
+    Write-Host '[1/6] 기존 사이드카 중지 후 파일 복사...'
+    $running | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
+    Start-Sleep -Milliseconds 800
+} else {
+    Write-Host '[1/6] 파일 복사...'
+}
 foreach ($dir in @($InstallDir, "$InstallDir\certs", "$InstallDir\logs", "$InstallDir\workspace", "$InstallDir\manifest")) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
@@ -158,6 +168,8 @@ if (-not (Test-Path $nodeExe)) {
 $vbsPath = "$InstallDir\start-sidecar.vbs"
 $vbs = @"
 Set sh = CreateObject("Wscript.Shell")
+' 실행 위치(배포 폴더 등)를 잠그지 않도록 작업 디렉터리를 설치 폴더로 고정
+sh.CurrentDirectory = "$InstallDir"
 sh.Run """$nodeExe"" ""$InstallDir\sidecar\index.cjs"" --config ""$InstallDir\config.json""", 0, False
 "@
 Set-Content -Path $vbsPath -Value $vbs -Encoding ASCII
@@ -174,6 +186,9 @@ Start-Process -FilePath 'wscript.exe' -ArgumentList "`"$vbsPath`"" -WindowStyle 
 Write-Host '  사이드카 응답 대기 중...'
 $oldCallback = [Net.ServicePointManager]::ServerCertificateValidationCallback
 [Net.ServicePointManager]::ServerCertificateValidationCallback = { $true }
+# Windows PowerShell 5.1 기본값은 TLS 1.2를 포함하지 않아 Node HTTPS와 협상이
+# 실패할 수 있다 (사이드카가 정상이어도 경고가 뜨는 원인).
+[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12
 $healthy = $false
 foreach ($i in 1..20) {
     Start-Sleep -Milliseconds 500

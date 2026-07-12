@@ -34,17 +34,26 @@ export async function downlevelFile(filePath) {
 }
 
 export function esCheck(files) {
+  // On Windows npm bin stubs are .cmd files; the extensionless file is a
+  // POSIX shell script that execFileSync cannot execute.
+  const binName = process.platform === 'win32' ? 'es-check.cmd' : 'es-check';
   const candidates = [
-    path.join(pkgRoot, 'node_modules', '.bin', 'es-check'),
-    path.resolve(pkgRoot, '..', '..', 'node_modules', '.bin', 'es-check'),
+    path.join(pkgRoot, 'node_modules', '.bin', binName),
+    path.resolve(pkgRoot, '..', '..', 'node_modules', '.bin', binName),
   ];
   const esCheckBin = candidates.find((c) => fs.existsSync(c));
   if (!esCheckBin) {
     throw new Error('es-check binary not found');
   }
-  execFileSync(esCheckBin, ['es5', ...files], {
+  // es-check treats file arguments as globs; backslashes in Windows paths
+  // are glob escapes, so hand it forward-slash paths relative to pkgRoot.
+  const globArgs = files.map((f) =>
+    path.relative(pkgRoot, f).split(path.sep).join('/'),
+  );
+  execFileSync(esCheckBin, ['es5', ...globArgs], {
     stdio: 'inherit',
     cwd: pkgRoot,
+    shell: process.platform === 'win32',
   });
 }
 

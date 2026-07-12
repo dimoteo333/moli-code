@@ -90,7 +90,13 @@ function isSeaBinary(): boolean {
 export function loadConfig(configPath: string): SidecarConfig {
   let raw: RawConfig = {};
   if (fs.existsSync(configPath)) {
-    raw = JSON.parse(fs.readFileSync(configPath, 'utf8')) as RawConfig;
+    // Strip a UTF-8 BOM (U+FEFF): Windows PowerShell 5.1 (installer) and
+    // Notepad both write one, and JSON.parse rejects it.
+    let text = fs.readFileSync(configPath, 'utf8');
+    if (text.charCodeAt(0) === 0xfeff) {
+      text = text.slice(1);
+    }
+    raw = JSON.parse(text) as RawConfig;
   }
   const root = path.dirname(configPath);
   const workDir = raw.workDir ?? 'workspace';

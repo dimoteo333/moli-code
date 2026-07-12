@@ -12,8 +12,8 @@
   <DefaultLocale>ko-KR</DefaultLocale>
   <DisplayName DefaultValue="몰리 코드 for Excel"/>
   <Description DefaultValue="폐쇄망에서 동작하는 Excel용 몰리 코드 AI 어시스턴트. 워크북을 읽고, 쓰고, 분석합니다."/>
-  <IconUrl DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/assets/icon-80.png"/>
+  <IconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
 
   <AppDomains>
     <AppDomain>https://localhost:{{PORT}}</AppDomain>
@@ -76,16 +76,16 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
-        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/assets/icon-32.png"/>
-        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/assets/icon-80.png"/>
+        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-16.png"/>
+        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
+        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="MoliCode.Taskpane.Url" DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
       </bt:Urls>
       <bt:ShortStrings>
         <bt:String id="MoliCode.GroupLabel" DefaultValue="몰리 코드"/>
-        <bt:String id="MoliCode.TaskpaneButton.Label" DefaultValue="몰리 코드 열기"/>
+        <bt:String id="MoliCode.TaskpaneButton.Label" DefaultValue="몰리코드"/>
       </bt:ShortStrings>
       <bt:LongStrings>
         <bt:String id="MoliCode.TaskpaneButton.Tooltip" DefaultValue="몰리 코드 AI 어시스턴트 작업창을 엽니다."/>
