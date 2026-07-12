@@ -324,6 +324,75 @@ describe('<ToolGroupMessage />', () => {
     });
   });
 
+  describe('Parallel Agent Summary', () => {
+    const createAgentCall = (
+      callId: string,
+      status: ToolCallStatus,
+    ): IndividualToolCallDisplay =>
+      createToolCall({
+        callId,
+        name: 'Task',
+        description: `Agent ${callId}`,
+        status,
+        resultDisplay: {
+          type: 'task_execution',
+          subagentName: 'general-purpose',
+          taskDescription: `Agent ${callId}`,
+          taskPrompt: 'do something',
+          status: status === ToolCallStatus.Executing ? 'running' : 'completed',
+        },
+      });
+
+    it('shows a summary line when two or more agents are executing', () => {
+      const toolCalls = [
+        createAgentCall('agent-1', ToolCallStatus.Executing),
+        createAgentCall('agent-2', ToolCallStatus.Executing),
+      ];
+      const { lastFrame } = renderWithProviders(
+        <ToolGroupMessage {...baseProps} toolCalls={toolCalls} />,
+      );
+      expect(lastFrame()).toContain('Running 2 agents in parallel');
+      expect(lastFrame()).toMatchSnapshot();
+    });
+
+    it('includes finished-agent count once some agents complete', () => {
+      const toolCalls = [
+        createAgentCall('agent-1', ToolCallStatus.Executing),
+        createAgentCall('agent-2', ToolCallStatus.Executing),
+        createAgentCall('agent-3', ToolCallStatus.Success),
+      ];
+      const { lastFrame } = renderWithProviders(
+        <ToolGroupMessage {...baseProps} toolCalls={toolCalls} />,
+      );
+      expect(lastFrame()).toContain('Running 2 agents in parallel (1 done)');
+    });
+
+    it('does not show a summary line for a single executing agent', () => {
+      const toolCalls = [createAgentCall('agent-1', ToolCallStatus.Executing)];
+      const { lastFrame } = renderWithProviders(
+        <ToolGroupMessage {...baseProps} toolCalls={toolCalls} />,
+      );
+      expect(lastFrame()).not.toContain('agents in parallel');
+    });
+
+    it('does not show a summary line for non-agent tool calls', () => {
+      const toolCalls = [
+        createToolCall({
+          callId: 'tool-1',
+          status: ToolCallStatus.Executing,
+        }),
+        createToolCall({
+          callId: 'tool-2',
+          status: ToolCallStatus.Executing,
+        }),
+      ];
+      const { lastFrame } = renderWithProviders(
+        <ToolGroupMessage {...baseProps} toolCalls={toolCalls} />,
+      );
+      expect(lastFrame()).not.toContain('agents in parallel');
+    });
+  });
+
   describe('Confirmation Handling', () => {
     it('shows confirmation dialog for first confirming tool only', () => {
       const toolCalls = [

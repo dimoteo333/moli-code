@@ -106,3 +106,13 @@ exports[`<ToolGroupMessage /> > Height Calculation > calculates available height
 │MockTool[tool-3]: ✓ test-tool - A tool for testing (medium)                   │
 ╰──────────────────────────────────────────────────────────────────────────────╯"
 `;
+
+exports[`<ToolGroupMessage /> > Parallel Agent Summary > shows a summary line when two or more agents are executing 1`] = `
+"╭──────────────────────────────────────────────────────────────────────────────╮
+│ Running 2 agents in parallel                                                 │
+│                                                                              │
+│MockTool[agent-1]: ⊷ Task - Agent agent-1 (medium)                            │
+│                                                                              │
+│MockTool[agent-2]: ⊷ Task - Agent agent-2 (medium)                            │
+╰──────────────────────────────────────────────────────────────────────────────╯"
+`;

@@ -6,7 +6,7 @@
 
 import type React from 'react';
 import { useMemo } from 'react';
-import { Box } from 'ink';
+import { Box, Text } from 'ink';
 import type { IndividualToolCallDisplay } from '../../types.js';
 import { ToolCallStatus } from '../../types.js';
 import { ToolMessage } from './ToolMessage.js';
@@ -68,6 +68,21 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
     [toolCalls],
   );
 
+  // Aggregate progress line for parallel subagents: shown while two or more
+  // task executions in this group are running concurrently.
+  const agentCalls = toolCalls.filter(
+    (t) =>
+      typeof t.resultDisplay === 'object' &&
+      t.resultDisplay !== null &&
+      'type' in t.resultDisplay &&
+      t.resultDisplay.type === 'task_execution',
+  );
+  const executingAgentCount = agentCalls.filter(
+    (t) => t.status === ToolCallStatus.Executing,
+  ).length;
+  const doneAgentCount = agentCalls.length - executingAgentCount;
+  const showParallelAgentSummary = executingAgentCount >= 2;
+
   let countToolCallsWithResults = 0;
   for (const tool of toolCalls) {
     if (tool.resultDisplay !== undefined && tool.resultDisplay !== '') {
@@ -102,6 +117,14 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
       borderColor={borderColor}
       gap={1}
     >
+      {showParallelAgentSummary && (
+        <Box paddingX={1}>
+          <Text color={theme.status.warning}>
+            Running {executingAgentCount} agents in parallel
+            {doneAgentCount > 0 ? ` (${doneAgentCount} done)` : ''}
+          </Text>
+        </Box>
+      )}
       {toolCalls.map((tool) => {
         const isConfirming = toolAwaitingApproval?.callId === tool.callId;
         return (
