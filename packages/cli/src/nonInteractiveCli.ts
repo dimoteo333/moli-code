@@ -8,7 +8,7 @@ import type { Config, ToolCallRequestInfo } from '@dobby/moli-code-core';
 import { isSlashCommand } from './ui/utils/commandUtils.js';
 import type { LoadedSettings } from './config/settings.js';
 import {
-  executeToolCall,
+  executeToolCalls,
   shutdownTelemetry,
   isTelemetrySdkInitialized,
   GeminiEventType,
@@ -307,45 +307,56 @@ export async function runNonInteractive(
         if (toolCallRequests.length > 0) {
           const toolResponseParts: Part[] = [];
 
-          for (const requestInfo of toolCallRequests) {
-            const finalRequestInfo = requestInfo;
+          const inputFormat =
+            typeof config.getInputFormat === 'function'
+              ? config.getInputFormat()
+              : InputFormat.TEXT;
+          const toolCallUpdateCallback =
+            inputFormat === InputFormat.STREAM_JSON && options.controlService
+              ? options.controlService.permission.getToolCallUpdateCallback()
+              : undefined;
 
-            const inputFormat =
-              typeof config.getInputFormat === 'function'
-                ? config.getInputFormat()
-                : InputFormat.TEXT;
-            const toolCallUpdateCallback =
-              inputFormat === InputFormat.STREAM_JSON && options.controlService
-                ? options.controlService.permission.getToolCallUpdateCallback()
-                : undefined;
+          // Build a per-call outputUpdateHandler up front and dispatch by
+          // callId, so calls executed in parallel stream progress to the
+          // right handler. Task tool has its own complex handler (subagent
+          // messages); all other tools with canUpdateOutput=true (e.g., MCP
+          // tools) get a generic handler that emits progress via the adapter.
+          const outputHandlers = new Map(
+            toolCallRequests.map((requestInfo) => {
+              const { handler } =
+                requestInfo.name === 'task'
+                  ? createTaskToolProgressHandler(
+                      config,
+                      requestInfo.callId,
+                      adapter,
+                    )
+                  : createToolProgressHandler(requestInfo, adapter);
+              return [requestInfo.callId, handler] as const;
+            }),
+          );
 
-            // Build outputUpdateHandler for this tool call.
-            // Task tool has its own complex handler (subagent messages).
-            // All other tools with canUpdateOutput=true (e.g., MCP tools)
-            // get a generic handler that emits progress via the adapter.
-            const isTaskTool = finalRequestInfo.name === 'task';
-            const { handler: outputUpdateHandler } = isTaskTool
-              ? createTaskToolProgressHandler(
-                  config,
-                  finalRequestInfo.callId,
-                  adapter,
-                )
-              : createToolProgressHandler(finalRequestInfo, adapter);
-
-            const toolResponse = await executeToolCall(
-              config,
-              finalRequestInfo,
-              abortController.signal,
-              {
-                outputUpdateHandler,
-                ...(toolCallUpdateCallback && {
-                  onToolCallsUpdate: toolCallUpdateCallback,
-                }),
+          // One batch: independent calls may execute in parallel; responses
+          // come back in request order.
+          const toolResponses = await executeToolCalls(
+            config,
+            toolCallRequests,
+            abortController.signal,
+            {
+              outputUpdateHandler: (toolCallId, outputChunk) => {
+                outputHandlers.get(toolCallId)?.(toolCallId, outputChunk);
               },
-            );
+              ...(toolCallUpdateCallback && {
+                onToolCallsUpdate: toolCallUpdateCallback,
+              }),
+            },
+          );
 
-            // Note: In JSON mode, subagent messages are automatically added to the main
-            // adapter's messages array and will be output together on emitResult()
+          // Note: In JSON mode, subagent messages are automatically added to the main
+          // adapter's messages array and will be output together on emitResult()
+
+          for (let i = 0; i < toolCallRequests.length; i++) {
+            const requestInfo = toolCallRequests[i];
+            const toolResponse = toolResponses[i];
 
             if (toolResponse.error) {
               // In JSON/STREAM_JSON mode, tool errors are tolerated and formatted
@@ -353,7 +364,7 @@ export async function runNonInteractive(
               // from config and allow the session to continue so the LLM can decide what to do next.
               // In text mode, we still log the error.
               handleToolError(
-                finalRequestInfo.name,
+                requestInfo.name,
                 toolResponse.error,
                 config,
                 toolResponse.errorType || 'TOOL_EXECUTION_ERROR',
@@ -363,7 +374,7 @@ export async function runNonInteractive(
               );
             }
 
-            adapter.emitToolResult(finalRequestInfo, toolResponse);
+            adapter.emitToolResult(requestInfo, toolResponse);
 
             if (toolResponse.responseParts) {
               toolResponseParts.push(...toolResponse.responseParts);

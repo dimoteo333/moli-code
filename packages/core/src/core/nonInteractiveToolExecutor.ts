@@ -23,15 +23,20 @@ export interface ExecuteToolCallOptions {
 }
 
 /**
- * Executes a single tool call non-interactively by leveraging the CoreToolScheduler.
+ * Executes a batch of tool calls non-interactively with a single
+ * CoreToolScheduler, so independent calls (read-only tools, task subagents)
+ * can run in parallel. Responses are returned in request order.
  */
-export async function executeToolCall(
+export async function executeToolCalls(
   config: Config,
-  toolCallRequest: ToolCallRequestInfo,
+  toolCallRequests: ToolCallRequestInfo[],
   abortSignal: AbortSignal,
   options: ExecuteToolCallOptions = {},
-): Promise<ToolCallResponseInfo> {
-  return new Promise<ToolCallResponseInfo>((resolve, reject) => {
+): Promise<ToolCallResponseInfo[]> {
+  if (toolCallRequests.length === 0) {
+    return [];
+  }
+  return new Promise<ToolCallResponseInfo[]>((resolve, reject) => {
     new CoreToolScheduler({
       config,
       chatRecordingService: config.getChatRecordingService(),
@@ -40,13 +45,31 @@ export async function executeToolCall(
         if (options.onAllToolCallsComplete) {
           await options.onAllToolCallsComplete(completedToolCalls);
         }
-        resolve(completedToolCalls[0].response);
+        resolve(completedToolCalls.map((call) => call.response));
       },
       onToolCallsUpdate: options.onToolCallsUpdate,
       getPreferredEditor: () => undefined,
       onEditorClose: () => {},
     })
-      .schedule(toolCallRequest, abortSignal)
+      .schedule(toolCallRequests, abortSignal)
       .catch(reject);
   });
+}
+
+/**
+ * Executes a single tool call non-interactively by leveraging the CoreToolScheduler.
+ */
+export async function executeToolCall(
+  config: Config,
+  toolCallRequest: ToolCallRequestInfo,
+  abortSignal: AbortSignal,
+  options: ExecuteToolCallOptions = {},
+): Promise<ToolCallResponseInfo> {
+  const responses = await executeToolCalls(
+    config,
+    [toolCallRequest],
+    abortSignal,
+    options,
+  );
+  return responses[0];
 }

@@ -13,6 +13,7 @@ import type {
 import type { CLIUserMessage } from './nonInteractive/types.js';
 import {
   executeToolCall,
+  executeToolCalls,
   ToolErrorType,
   shutdownTelemetry,
   GeminiEventType,
@@ -44,6 +45,7 @@ vi.mock('@dobby/moli-code-core', async (importOriginal) => {
   return {
     ...original,
     executeToolCall: vi.fn(),
+    executeToolCalls: vi.fn(),
     shutdownTelemetry: vi.fn(),
     isTelemetrySdkInitialized: vi.fn().mockReturnValue(true),
     ChatRecordingService: MockChatRecordingService,
@@ -78,6 +80,16 @@ describe('runNonInteractive', () => {
 
   beforeEach(async () => {
     mockCoreExecuteToolCall = vi.mocked(executeToolCall);
+    // The CLI executes tool batches via executeToolCalls; delegate to the
+    // per-call mock so tests keep configuring mockCoreExecuteToolCall.
+    vi.mocked(executeToolCalls).mockImplementation(
+      async (config, requests, signal, options) =>
+        Promise.all(
+          requests.map((request) =>
+            mockCoreExecuteToolCall(config, request, signal, options),
+          ),
+        ),
+    );
     mockShutdownTelemetry = vi.mocked(shutdownTelemetry);
     mockCommandServiceCreate.mockResolvedValue({
       getCommands: mockGetCommands,

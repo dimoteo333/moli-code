@@ -6,7 +6,10 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Mock } from 'vitest';
-import { executeToolCall } from './nonInteractiveToolExecutor.js';
+import {
+  executeToolCall,
+  executeToolCalls,
+} from './nonInteractiveToolExecutor.js';
 import type {
   ToolRegistry,
   ToolCallRequestInfo,
@@ -367,5 +370,94 @@ describe('executeToolCall', () => {
     );
 
     expect(response.contentLength).toBeUndefined();
+  });
+
+  describe('executeToolCalls (batch)', () => {
+    it('returns an empty array for an empty batch', async () => {
+      const responses = await executeToolCalls(
+        mockConfig,
+        [],
+        abortController.signal,
+      );
+      expect(responses).toEqual([]);
+    });
+
+    it('executes a batch and returns responses in request order', async () => {
+      vi.mocked(mockToolRegistry.getTool).mockReturnValue(mockTool);
+      executeFn.mockImplementation(async (args: { id: string }) => ({
+        llmContent: `done ${args.id}`,
+        returnDisplay: `done ${args.id}`,
+      }));
+
+      const requests: ToolCallRequestInfo[] = [
+        {
+          callId: 'batch1',
+          name: 'testTool',
+          args: { id: 'first' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-batch',
+        },
+        {
+          callId: 'batch2',
+          name: 'testTool',
+          args: { id: 'second' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-batch',
+        },
+      ];
+
+      const responses = await executeToolCalls(
+        mockConfig,
+        requests,
+        abortController.signal,
+      );
+
+      expect(responses).toHaveLength(2);
+      expect(responses.map((r) => r.callId)).toEqual(['batch1', 'batch2']);
+      expect(responses[0].resultDisplay).toBe('done first');
+      expect(responses[1].resultDisplay).toBe('done second');
+    });
+
+    it('isolates a failing call from its batch siblings', async () => {
+      vi.mocked(mockToolRegistry.getTool).mockReturnValue(mockTool);
+      executeFn.mockImplementation(async (args: { id: string }) => {
+        if (args.id === 'bad') {
+          throw new Error('batch boom');
+        }
+        return { llmContent: 'ok', returnDisplay: 'ok' };
+      });
+
+      const requests: ToolCallRequestInfo[] = [
+        {
+          callId: 'batch-bad',
+          name: 'testTool',
+          args: { id: 'bad' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-batch',
+        },
+        {
+          callId: 'batch-good',
+          name: 'testTool',
+          args: { id: 'good' },
+          isClientInitiated: false,
+          prompt_id: 'prompt-batch',
+        },
+      ];
+
+      const responses = await executeToolCalls(
+        mockConfig,
+        requests,
+        abortController.signal,
+      );
+
+      expect(responses.map((r) => r.callId)).toEqual([
+        'batch-bad',
+        'batch-good',
+      ]);
+      expect(responses[0].error).toEqual(new Error('batch boom'));
+      expect(responses[0].errorType).toBe(ToolErrorType.UNHANDLED_EXCEPTION);
+      expect(responses[1].error).toBeUndefined();
+      expect(responses[1].resultDisplay).toBe('ok');
+    });
   });
 });
