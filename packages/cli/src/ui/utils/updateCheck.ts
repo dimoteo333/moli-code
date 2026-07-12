@@ -48,6 +48,13 @@ export async function checkForUpdates(): Promise<UpdateObject | null> {
     if (process.env['DEV'] === 'true') {
       return null;
     }
+    // Skip the npm registry check when running as a SEA executable: it cannot
+    // be updated via npm, and on isolated networks the registry request only
+    // adds startup network churn. SEA builds use the remote version check
+    // (remoteVersionCheck.ts) against the configured internal server instead.
+    if ((globalThis as Record<string, unknown>)['__SEA_ASSETS_DIR']) {
+      return null;
+    }
     const packageJson = await getPackageJson();
     if (!packageJson || !packageJson.name || !packageJson.version) {
       return null;

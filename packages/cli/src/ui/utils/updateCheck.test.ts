@@ -30,6 +30,27 @@ describe('checkForUpdates', () => {
     vi.restoreAllMocks();
   });
 
+  it('should return null when running as a SEA executable', async () => {
+    (globalThis as Record<string, unknown>)['__SEA_ASSETS_DIR'] =
+      'C:\\Users\\test\\AppData\\Local\\moli-code\\sea-12345678';
+    try {
+      getPackageJson.mockResolvedValue({
+        name: 'test-package',
+        version: '1.0.0',
+      });
+      updateNotifier.mockReturnValue({
+        fetchInfo: vi
+          .fn()
+          .mockResolvedValue({ current: '1.0.0', latest: '1.1.0' }),
+      });
+      const result = await checkForUpdates();
+      expect(result).toBeNull();
+      expect(updateNotifier).not.toHaveBeenCalled();
+    } finally {
+      delete (globalThis as Record<string, unknown>)['__SEA_ASSETS_DIR'];
+    }
+  });
+
   it('should return null when running from source (DEV=true)', async () => {
     process.env['DEV'] = 'true';
     getPackageJson.mockResolvedValue({

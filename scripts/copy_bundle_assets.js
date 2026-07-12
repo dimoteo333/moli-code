@@ -17,7 +17,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { copyFileSync, existsSync, mkdirSync, statSync } from 'node:fs';
+import { copyFileSync, existsSync, mkdirSync, rmSync, statSync } from 'node:fs';
 import { dirname, join, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { glob } from 'glob';
@@ -55,6 +55,9 @@ console.log('Copied sandbox profiles to dist/');
 console.log('Copying vendor directory...');
 if (existsSync(coreVendorDir)) {
   const destVendorDir = join(distDir, 'vendor');
+  // Remove first so files deleted from packages/core/vendor (e.g. the old
+  // tree-sitter wasm) don't linger in dist/ and get embedded into SEA builds.
+  rmSync(destVendorDir, { recursive: true, force: true });
   copyRecursiveSync(coreVendorDir, destVendorDir);
   console.log('Copied vendor directory to dist/');
 } else {
@@ -83,6 +86,8 @@ const bundledSkillsDir = join(
 );
 if (existsSync(bundledSkillsDir)) {
   const destBundledDir = join(distDir, 'bundled');
+  // Remove first so skills deleted from the source tree don't linger in dist/.
+  rmSync(destBundledDir, { recursive: true, force: true });
   copyRecursiveSync(bundledSkillsDir, destBundledDir);
   console.log('Copied bundled skills to dist/bundled/');
 } else {

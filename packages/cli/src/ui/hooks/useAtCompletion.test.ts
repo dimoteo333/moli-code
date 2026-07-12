@@ -50,6 +50,7 @@ describe('useAtCompletion', () => {
       })),
       getEnableRecursiveFileSearch: () => true,
       getFileFilteringEnableFuzzySearch: () => true,
+      getFileFilteringCrawlCacheTtlSeconds: () => 30,
     } as unknown as Config;
     vi.clearAllMocks();
   });
@@ -480,6 +481,7 @@ describe('useAtCompletion', () => {
           respectMoliIgnore: true,
         })),
         getFileFilteringEnableFuzzySearch: () => true,
+        getFileFilteringCrawlCacheTtlSeconds: () => 30,
       } as unknown as Config;
 
       const { result } = renderHook(() =>

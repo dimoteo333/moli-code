@@ -318,6 +318,7 @@ export interface ConfigParameters {
     respectMoliIgnore?: boolean;
     enableRecursiveFileSearch?: boolean;
     enableFuzzySearch?: boolean;
+    crawlCacheTtlSeconds?: number;
   };
   checkpointing?: boolean;
   proxy?: string;
@@ -475,6 +476,7 @@ export class Config {
     respectMoliIgnore: boolean;
     enableRecursiveFileSearch: boolean;
     enableFuzzySearch: boolean;
+    crawlCacheTtlSeconds: number;
   };
   private fileDiscoveryService: FileDiscoveryService | null = null;
   private gitService: GitService | undefined = undefined;
@@ -595,6 +597,7 @@ export class Config {
       enableRecursiveFileSearch:
         params.fileFiltering?.enableRecursiveFileSearch ?? true,
       enableFuzzySearch: params.fileFiltering?.enableFuzzySearch ?? true,
+      crawlCacheTtlSeconds: params.fileFiltering?.crawlCacheTtlSeconds ?? 300,
     };
     this.checkpointing = params.checkpointing ?? false;
     this.proxy = params.proxy;
@@ -1425,6 +1428,15 @@ export class Config {
 
   getFileFilteringEnableFuzzySearch(): boolean {
     return this.fileFiltering.enableFuzzySearch;
+  }
+
+  /**
+   * TTL (seconds) for the in-memory workspace crawl cache used by `@` file
+   * completion. Longer values avoid repeated full-workspace crawls, which are
+   * expensive under antivirus real-time scanning.
+   */
+  getFileFilteringCrawlCacheTtlSeconds(): number {
+    return this.fileFiltering.crawlCacheTtlSeconds;
   }
 
   getFileFilteringRespectGitIgnore(): boolean {

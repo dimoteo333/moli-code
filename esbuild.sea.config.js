@@ -214,6 +214,28 @@ const seaPreamble = `
         _fs.writeFileSync(_dest, new Uint8Array(_sea.getRawAsset(_key)));
       }
       _fs.writeFileSync(_sentinel, Date.now().toString());
+
+      // First run of a new build: best-effort cleanup of extraction dirs left
+      // behind by previous builds. Stale dirs keep old rg.exe copies around,
+      // which AV real-time scanners keep re-scanning, and waste disk. Errors
+      // (e.g. a dir locked by a still-running old version) are ignored.
+      try {
+        var _seaRoot = _path.dirname(_tempBase);
+        var _current = _path.basename(_tempBase);
+        var _siblings = _fs.readdirSync(_seaRoot);
+        for (var _j = 0; _j < _siblings.length; _j++) {
+          if (_siblings[_j].indexOf('sea-') === 0 && _siblings[_j] !== _current) {
+            try { _fs.rmSync(_path.join(_seaRoot, _siblings[_j]), { recursive: true, force: true }); } catch(_e) {}
+          }
+        }
+        // Legacy (< v0.4.0) extraction dirs lived directly in the temp dir.
+        var _tmpEntries = _fs.readdirSync(_os.tmpdir());
+        for (var _k = 0; _k < _tmpEntries.length; _k++) {
+          if (_tmpEntries[_k].indexOf('moli-code-sea-') === 0) {
+            try { _fs.rmSync(_path.join(_os.tmpdir(), _tmpEntries[_k]), { recursive: true, force: true }); } catch(_e) {}
+          }
+        }
+      } catch(_e) {}
     }
 
     globalThis.__SEA_ASSETS_DIR = _tempBase;

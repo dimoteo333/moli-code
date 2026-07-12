@@ -859,6 +859,17 @@ const SETTINGS_SCHEMA = {
             description: 'Enable fuzzy search when searching for files.',
             showInDialog: true,
           },
+          crawlCacheTtlSeconds: {
+            type: 'number',
+            label: 'File Search Cache TTL (seconds)',
+            category: 'Context',
+            requiresRestart: false,
+            default: 300,
+            description:
+              'How long (seconds) the @-completion workspace crawl is cached. ' +
+              'Raise this on machines where directory scanning is slow (e.g. antivirus real-time scanning).',
+            showInDialog: false,
+          },
         },
       },
     },

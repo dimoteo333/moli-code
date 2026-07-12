@@ -357,6 +357,11 @@
               "description": "Enable fuzzy search when searching for files.",
               "type": "boolean",
               "default": true
+            },
+            "crawlCacheTtlSeconds": {
+              "description": "How long (seconds) the @-completion workspace crawl is cached. Raise this on machines where directory scanning is slow (e.g. antivirus real-time scanning).",
+              "type": "number",
+              "default": 300
             }
           }
         }

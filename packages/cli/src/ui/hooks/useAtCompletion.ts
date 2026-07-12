@@ -163,7 +163,10 @@ export function useAtCompletion(props: UseAtCompletionProps): void {
           useMoliignore:
             config?.getFileFilteringOptions()?.respectMoliIgnore ?? true,
           cache: true,
-          cacheTtl: 30, // 30 seconds
+          // Full-workspace crawls are expensive under AV real-time scanning,
+          // so keep results for a while (configurable via
+          // context.fileFiltering.crawlCacheTtlSeconds).
+          cacheTtl: config?.getFileFilteringCrawlCacheTtlSeconds() ?? 300,
           enableRecursiveFileSearch:
             config?.getEnableRecursiveFileSearch() ?? true,
           // Use enableFuzzySearch with !== false to default to true when undefined.
