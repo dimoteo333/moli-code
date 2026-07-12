@@ -1,6 +1,6 @@
 {
   "name": "@dobby/moli-code-excel-addin",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "몰리 코드 Excel 추가 기능 - 폐쇄망용 Office.js 작업창 애드인",
   "private": true,
   "type": "module",
