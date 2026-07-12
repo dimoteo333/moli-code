@@ -452,6 +452,16 @@
           "description": "Command to run for tool calls.",
           "type": "string"
         },
+        "parallelToolCalls": {
+          "description": "Execute independent tool calls (read-only tools and task subagents) from a single model message concurrently. Set to false to force serial execution.",
+          "type": "boolean",
+          "default": true
+        },
+        "maxConcurrency": {
+          "description": "Maximum number of tool calls executed concurrently when parallelToolCalls is enabled.",
+          "type": "number",
+          "default": 8
+        },
         "useRipgrep": {
           "description": "Use ripgrep for file content search instead of the fallback implementation. Provides faster search performance.",
           "type": "boolean",
