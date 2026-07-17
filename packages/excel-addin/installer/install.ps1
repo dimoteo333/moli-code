@@ -23,7 +23,7 @@ $ErrorActionPreference = 'Stop'
 $AddinId = '51ef4b60-29f7-442c-99b4-93419c6e68e2'
 $TaskName = 'MoliExcelSidecar'
 $CertFriendlyName = 'MoliCode Excel Sidecar'
-$Version = '0.4.2'
+$Version = '0.5.0'
 
 # deploy 루트 = installer\ 의 상위 폴더
 $Payload = Split-Path -Parent $PSScriptRoot

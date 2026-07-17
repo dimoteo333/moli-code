@@ -1,6 +1,11 @@
 /**
  * Permission modal: shows the tool the agent wants to run and its input,
  * with [허용] / [이 세션에서 항상 허용] / [거부].
+ *
+ * Requests are queued and shown one at a time. When the user picks
+ * "항상 허용", the tool is remembered for the session and every queued or
+ * future request for the same tool is answered automatically — no more
+ * repeated pop-ups.
  */
 
 import { STRINGS, toolLabel } from './strings.ko.js';
@@ -9,6 +14,72 @@ export interface PermissionDecision {
   behavior: 'allow' | 'deny';
   alwaysAllow?: boolean;
   message?: string;
+}
+
+export interface PermissionRequest {
+  id: string;
+  toolName: string;
+  inputPreview: string;
+}
+
+export interface PermissionQueue {
+  enqueue(request: PermissionRequest): void;
+}
+
+/** Bare tool name without an MCP prefix ("mcp__excel__excel_find" → "excel_find"). */
+function baseToolName(toolName: string): string {
+  const idx = toolName.lastIndexOf('__');
+  return idx >= 0 ? toolName.slice(idx + 2) : toolName;
+}
+
+/**
+ * One-at-a-time permission dialog queue with per-session always-allow
+ * memory. `respond` delivers the user's decision for a request id.
+ */
+export function createPermissionQueue(
+  respond: (id: string, decision: PermissionDecision) => void,
+): PermissionQueue {
+  const queue: PermissionRequest[] = [];
+  const alwaysAllowed: { [base: string]: boolean } = {};
+  let showing = false;
+
+  function pump(): void {
+    if (showing) {
+      return;
+    }
+    while (queue.length > 0) {
+      const request = queue.shift() as PermissionRequest;
+      if (alwaysAllowed[baseToolName(request.toolName)]) {
+        respond(request.id, { behavior: 'allow', alwaysAllow: true });
+        continue;
+      }
+      showing = true;
+      showPermissionDialog(
+        request.toolName,
+        request.inputPreview,
+        (decision) => {
+          if (decision.behavior === 'allow' && decision.alwaysAllow) {
+            alwaysAllowed[baseToolName(request.toolName)] = true;
+          }
+          respond(request.id, decision);
+          showing = false;
+          pump();
+        },
+      );
+      return;
+    }
+  }
+
+  return {
+    enqueue(request: PermissionRequest): void {
+      if (alwaysAllowed[baseToolName(request.toolName)]) {
+        respond(request.id, { behavior: 'allow', alwaysAllow: true });
+        return;
+      }
+      queue.push(request);
+      pump();
+    },
+  };
 }
 
 export function showPermissionDialog(

@@ -17,7 +17,7 @@ import { createHttpsServer } from './https-server.js';
 import { attachWsServer } from './ws-server.js';
 import { Logger } from './logger.js';
 
-const VERSION = '0.4.0';
+const VERSION = '0.5.0';
 
 function parseArgs(argv: string[]): {
   configPath?: string;

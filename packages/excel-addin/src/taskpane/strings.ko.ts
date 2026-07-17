@@ -11,6 +11,14 @@ export const STRINGS = {
   send: '보내기',
   stop: '중지',
   working: '몰리가 작업 중입니다...',
+  thinking: '몰리가 생각하고 있습니다...',
+  secondsSuffix: '초',
+  attachSelection: '선택 영역 첨부',
+  attachTooLarge: '선택 영역이 너무 큽니다. 값 없이 주소만 첨부합니다.',
+  attachFailed:
+    '선택 영역을 읽을 수 없습니다. 워크북에서 범위를 선택해 주세요.',
+  attachedRange: '선택 영역',
+  removeAttachment: '첨부 제거',
   welcome:
     '안녕하세요! 몰리 코드입니다.\n현재 워크북을 읽고, 수정하고, 분석할 수 있습니다.\n무엇을 도와드릴까요?',
   permissionTitle: '작업 승인 요청',

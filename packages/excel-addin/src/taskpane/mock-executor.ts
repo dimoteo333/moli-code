@@ -28,7 +28,10 @@ export function createMockExecutor(): ExcelExecutor {
     },
   };
   let activeSheet = 'Sheet1';
-  const selection = 'A1';
+  const selection = 'A1:B2';
+  // get_selection rotates so multi-attachment flows are testable in mock mode.
+  const selectionRotation = ['A1:B2', 'B1:B2', 'A2:B2'];
+  let selectionCalls = 0;
 
   function sheetOf(args: { sheet?: string }): {
     name: string;
@@ -158,7 +161,11 @@ export function createMockExecutor(): ExcelExecutor {
         return { written: a.range, rows: grid.length, cols: grid[0].length };
       }
       case 'get_selection':
-        return { address: selection, values: [[]], formulas: [[]] };
+        // Same shape as the Office executor: address + current cell data.
+        return exec('read_range', {
+          sheet: activeSheet,
+          range: selectionRotation[selectionCalls++ % selectionRotation.length],
+        });
       case 'clear_range': {
         const t3 = sheetOf(a);
         const p3 = parseRange(String(a.range));

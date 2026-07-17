@@ -119,6 +119,17 @@ export interface AssistantMessageFrame {
   blocks: PaneContentBlock[];
 }
 
+/**
+ * Streamed extended-thinking text. The pane shows a live "thinking" hint
+ * while the model reasons before producing visible output.
+ */
+export interface ThinkingFrame {
+  v: number;
+  type: 'thinking';
+  turnId: number;
+  text: string;
+}
+
 export interface ToolActivityFrame {
   v: number;
   type: 'tool_activity';
@@ -171,6 +182,7 @@ export type SidecarToPaneFrame =
   | HelloErrFrame
   | AssistantDeltaFrame
   | AssistantMessageFrame
+  | ThinkingFrame
   | ToolActivityFrame
   | PermissionRequestFrame
   | ExcelExecFrame

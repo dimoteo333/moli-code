@@ -296,6 +296,77 @@ describe('PaneSession', () => {
     expect(ws.framesOfType('permission_request')).toHaveLength(1);
   });
 
+  it('forwards thinking deltas as thinking frames', async () => {
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(frame({ type: 'user_message', text: 'go' }));
+    const q = captured[0];
+
+    q.emit({
+      type: 'stream_event',
+      uuid: 'u1',
+      session_id: 's',
+      parent_tool_use_id: null,
+      event: {
+        type: 'content_block_delta',
+        index: 0,
+        delta: { type: 'thinking_delta', thinking: '시트 구조를 먼저 파악…' },
+      },
+    } as never);
+    await tick();
+
+    expect(ws.framesOfType('thinking')).toMatchObject([
+      { text: '시트 구조를 먼저 파악…' },
+    ]);
+  });
+
+  it('alwaysAllow settles queued permission requests for the same tool', async () => {
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(frame({ type: 'user_message', text: 'go' }));
+    const canUseTool = captured[0].options['canUseTool'] as (
+      toolName: string,
+      input: Record<string, unknown>,
+      opts: { signal: AbortSignal },
+    ) => Promise<{ behavior: string }>;
+
+    // Two parallel write requests: both prompt before any response arrives.
+    const first = canUseTool(
+      'mcp__excel__excel_write_range',
+      { range: 'A1', values: [[1]] },
+      { signal: new AbortController().signal },
+    );
+    const second = canUseTool(
+      'mcp__excel__excel_write_range',
+      { range: 'B1', values: [[2]] },
+      { signal: new AbortController().signal },
+    );
+    await tick();
+    const requests = ws.framesOfType('permission_request');
+    expect(requests).toHaveLength(2);
+
+    // Always-allow on the first settles the second too.
+    session.onFrame(
+      frame({
+        type: 'permission_response',
+        id: requests[0].id,
+        behavior: 'allow',
+        alwaysAllow: true,
+      }),
+    );
+    await expect(first).resolves.toMatchObject({ behavior: 'allow' });
+    await expect(second).resolves.toMatchObject({ behavior: 'allow' });
+
+    // A late response for the already-settled second request is ignored.
+    session.onFrame(
+      frame({
+        type: 'permission_response',
+        id: requests[1].id,
+        behavior: 'deny',
+      }),
+    );
+  });
+
   it('denies pending permissions and rejects rpc calls on dispose', async () => {
     const ws = new FakeWs();
     const session = makeSession(ws);

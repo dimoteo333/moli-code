@@ -146,7 +146,19 @@ export class PaneSession {
         // settle() removes the map entry itself (dedup vs abort/dispose).
         if (frame.behavior === 'allow') {
           if (frame.alwaysAllow) {
-            this.sessionAllowedTools.add(excelToolBaseName(pending.toolName));
+            const baseName = excelToolBaseName(pending.toolName);
+            this.sessionAllowedTools.add(baseName);
+            // Requests for the same tool queued behind this one were created
+            // before the always-allow registered — settle them too so the
+            // pane doesn't keep prompting.
+            for (const other of Array.from(this.pendingPermissions.values())) {
+              if (
+                other !== pending &&
+                excelToolBaseName(other.toolName) === baseName
+              ) {
+                other.settle({ allowed: true });
+              }
+            }
           }
           pending.settle({ allowed: true });
         } else {
@@ -297,6 +309,19 @@ export class PaneSession {
             turnId: this.turnId,
             text: event.delta.text,
           });
+        } else if (
+          event.type === 'content_block_delta' &&
+          (event.delta as { type?: string }).type === 'thinking_delta'
+        ) {
+          const thinking = (event.delta as { thinking?: string }).thinking;
+          if (thinking) {
+            this.send({
+              v: PROTOCOL_VERSION,
+              type: 'thinking',
+              turnId: this.turnId,
+              text: thinking,
+            });
+          }
         }
         break;
       }

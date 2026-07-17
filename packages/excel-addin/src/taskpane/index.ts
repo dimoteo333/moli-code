@@ -8,8 +8,12 @@ import {
   type SidecarToPaneFrame,
 } from '../shared/messages.js';
 import { createWsClient, type WsClient } from './ws-client.js';
-import { createChatUi, type ChatUi } from './chat-ui.js';
-import { showPermissionDialog } from './permission-ui.js';
+import {
+  createChatUi,
+  type ChatUi,
+  type SelectionAttachment,
+} from './chat-ui.js';
+import { createPermissionQueue } from './permission-ui.js';
 import { createOfficeExecutor, type ExcelExecutor } from './excel-executor.js';
 import { createMockExecutor } from './mock-executor.js';
 import { STRINGS } from './strings.ko.js';
@@ -61,8 +65,6 @@ function start(
 
   const chat: ChatUi = createChatUi(root, {
     onSend(text) {
-      chat.addUserMessage(text);
-      chat.setBusy(true);
       if (client) {
         client.send({ v: PROTOCOL_VERSION, type: 'user_message', text });
       }
@@ -72,6 +74,24 @@ function start(
         client.send({ v: PROTOCOL_VERSION, type: 'interrupt' });
       }
     },
+    onGetSelection() {
+      return executor
+        .exec('get_selection', {})
+        .then((result) => result as SelectionAttachment);
+    },
+  });
+
+  const permissions = createPermissionQueue((id, decision) => {
+    if (client) {
+      client.send({
+        v: PROTOCOL_VERSION,
+        type: 'permission_response',
+        id,
+        behavior: decision.behavior,
+        alwaysAllow: decision.alwaysAllow,
+        message: decision.message,
+      });
+    }
   });
 
   function handleFrame(frame: SidecarToPaneFrame): void {
@@ -97,30 +117,25 @@ function start(
         }
         break;
       }
+      case 'thinking':
+        chat.showThinking(frame.turnId, frame.text);
+        break;
       case 'tool_activity':
         chat.addToolChip(
           frame.turnId,
           frame.toolName,
           frame.status,
           frame.isError,
+          frame.summary,
         );
         break;
-      case 'permission_request': {
-        const requestId = frame.id;
-        showPermissionDialog(frame.toolName, frame.inputPreview, (decision) => {
-          if (client) {
-            client.send({
-              v: PROTOCOL_VERSION,
-              type: 'permission_response',
-              id: requestId,
-              behavior: decision.behavior,
-              alwaysAllow: decision.alwaysAllow,
-              message: decision.message,
-            });
-          }
+      case 'permission_request':
+        permissions.enqueue({
+          id: frame.id,
+          toolName: frame.toolName,
+          inputPreview: frame.inputPreview,
         });
         break;
-      }
       case 'excel_exec': {
         const execId = frame.id;
         executor.exec(frame.op, frame.args).then(
