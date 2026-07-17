@@ -198,6 +198,38 @@ html, body {
   color: #5b45c9;
 }
 
+/* GFM tables */
+.mc-table-wrap {
+  overflow-x: auto;
+  margin: 0 0 8px 0;
+}
+
+.mc-table-wrap:last-child {
+  margin-bottom: 0;
+}
+
+.mc-msg.assistant table {
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.mc-msg.assistant th,
+.mc-msg.assistant td {
+  border: 1px solid #e1dfdd;
+  padding: 4px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.mc-msg.assistant th {
+  background: #f3f2f1;
+  font-weight: 600;
+}
+
+.mc-msg.assistant tr:nth-child(even) td {
+  background: #faf9f8;
+}
+
 .mc-msg.system {
   margin: 0 auto 8px auto;
   background: #f3f2f1;
@@ -224,6 +256,35 @@ html, body {
 .mc-msg.tool.error {
   color: #a80000;
   border-color: #f1bbc0;
+}
+
+/* Live thinking box */
+.mc-msg.thinking {
+  margin-right: auto;
+  background: #f7f5ff;
+  border: 1px dashed #d9cffa;
+  color: #605e5c;
+  font-size: 12px;
+  padding: 6px 10px;
+}
+
+.mc-thinking-header {
+  cursor: pointer;
+  font-weight: 600;
+  color: #5b45c9;
+}
+
+.mc-msg.thinking.done .mc-thinking-header {
+  font-weight: normal;
+  opacity: 0.85;
+}
+
+.mc-thinking-body {
+  margin-top: 4px;
+  max-height: 120px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 
 /* Busy bar */

@@ -56,6 +56,53 @@ interface ListState {
   html: string[];
 }
 
+/** Split a GFM table row into trimmed cells (outer pipes optional). */
+function splitTableRow(line: string): string[] {
+  let s = line.replace(/^\s+|\s+$/g, '');
+  if (s.charAt(0) === '|') {
+    s = s.slice(1);
+  }
+  if (s.charAt(s.length - 1) === '|') {
+    s = s.slice(0, s.length - 1);
+  }
+  const raw = s.split('|');
+  const cells: string[] = [];
+  for (let i = 0; i < raw.length; i++) {
+    cells.push(raw[i].replace(/^\s+|\s+$/g, ''));
+  }
+  return cells;
+}
+
+/** True if `line` is a |---|:---:| style separator matching the header. */
+function isTableSeparator(line: string, headerCols: number): boolean {
+  if (line.indexOf('-') < 0 || line.indexOf('|') < 0) {
+    return false;
+  }
+  const cells = splitTableRow(line);
+  if (cells.length !== headerCols) {
+    return false;
+  }
+  for (let i = 0; i < cells.length; i++) {
+    if (!/^:?-+:?$/.test(cells[i])) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/** text-align from a separator cell (":---:" center, "---:" right). */
+function cellAlign(sep: string): string {
+  const left = sep.charAt(0) === ':';
+  const right = sep.charAt(sep.length - 1) === ':';
+  if (left && right) {
+    return ' style="text-align:center"';
+  }
+  if (right) {
+    return ' style="text-align:right"';
+  }
+  return '';
+}
+
 /** Render a full markdown document to an HTML string. */
 export function renderMarkdown(markdown: string): string {
   const lines = markdown.replace(/\r\n?/g, '\n').split('\n');
@@ -123,6 +170,54 @@ export function renderMarkdown(markdown: string): string {
       flushAll();
       inCode = true;
       continue;
+    }
+
+    // GFM table: header row followed by a |---| separator row.
+    if (line.indexOf('|') >= 0 && i + 1 < lines.length) {
+      const headerCells = splitTableRow(line);
+      if (
+        headerCells.length > 1 &&
+        isTableSeparator(lines[i + 1], headerCells.length)
+      ) {
+        flushAll();
+        const sepCells = splitTableRow(lines[i + 1]);
+        const aligns: string[] = [];
+        for (let c = 0; c < sepCells.length; c++) {
+          aligns.push(cellAlign(sepCells[c]));
+        }
+        let table = '<div class="mc-table-wrap"><table><thead><tr>';
+        for (let c = 0; c < headerCells.length; c++) {
+          table +=
+            '<th' +
+            aligns[c] +
+            '>' +
+            renderInline(escapeHtml(headerCells[c])) +
+            '</th>';
+        }
+        table += '</tr></thead><tbody>';
+        i += 1; // consume the separator row
+        while (
+          i + 1 < lines.length &&
+          lines[i + 1].indexOf('|') >= 0 &&
+          /\S/.test(lines[i + 1])
+        ) {
+          const rowCells = splitTableRow(lines[i + 1]);
+          i += 1;
+          table += '<tr>';
+          for (let c = 0; c < headerCells.length; c++) {
+            table +=
+              '<td' +
+              aligns[c] +
+              '>' +
+              renderInline(escapeHtml(c < rowCells.length ? rowCells[c] : '')) +
+              '</td>';
+          }
+          table += '</tr>';
+        }
+        table += '</tbody></table></div>';
+        out.push(table);
+        continue;
+      }
     }
 
     const heading = /^(#{1,6})\s+(.*)$/.exec(line);

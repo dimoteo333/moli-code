@@ -12,6 +12,8 @@ export const STRINGS = {
   stop: '중지',
   working: '몰리가 작업 중입니다...',
   thinking: '몰리가 생각하고 있습니다...',
+  thinkingLive: '생각 중...',
+  thinkingDone: '생각 과정',
   secondsSuffix: '초',
   attachSelection: '선택 영역 첨부',
   attachTooLarge: '선택 영역이 너무 큽니다. 값 없이 주소만 첨부합니다.',

@@ -42,7 +42,6 @@ export interface ChatUi {
 const STREAM_RENDER_DELAY_MS = 80;
 const MAX_ATTACH_CELLS = 400;
 const MAX_ATTACH_CHARS = 4000;
-const THINKING_TAIL_CHARS = 60;
 
 function el(tag: string, className: string, parent?: HTMLElement): HTMLElement {
   const node = document.createElement(tag);
@@ -157,7 +156,10 @@ export function createChatUi(
   let busy = false;
   let busyStart = 0;
   let busyTimer: number | null = null;
-  let thinkingTail = '';
+  // Live thinking box (one per contiguous thinking segment).
+  let thinkingNode: HTMLElement | null = null;
+  let thinkingBody: HTMLElement | null = null;
+  let thinkingTurnId = -1;
   // One streaming bubble per turn.
   let streamTurnId = -1;
   let streamNode: HTMLElement | null = null;
@@ -362,15 +364,39 @@ export function createChatUi(
     streamRaw = '';
   }
 
+  function makeThinkingToggle(body: HTMLElement): () => void {
+    return function () {
+      body.style.display = body.style.display === 'none' ? '' : 'none';
+    };
+  }
+
+  /** Collapse the live thinking box once real output takes over. */
+  function closeThinkingBox(): void {
+    if (!thinkingNode) {
+      return;
+    }
+    const headers = thinkingNode.getElementsByClassName('mc-thinking-header');
+    if (headers.length > 0) {
+      (headers[0] as HTMLElement).textContent = '💭 ' + STRINGS.thinkingDone;
+    }
+    if (thinkingBody) {
+      thinkingBody.style.display = 'none';
+    }
+    thinkingNode.className += ' done';
+    thinkingNode = null;
+    thinkingBody = null;
+    thinkingTurnId = -1;
+  }
+
   const api: ChatUi = {
     addUserMessage(text) {
       bubble('user').textContent = text;
       scrollDown();
     },
     appendAssistantDelta(turnId, text) {
+      closeThinkingBox();
       getStreamNode(turnId);
       streamRaw += text;
-      thinkingTail = '';
       setBusyLabel(STRINGS.working);
       scheduleStreamRender();
     },
@@ -385,19 +411,26 @@ export function createChatUi(
       streamRaw = '';
       scrollDown();
     },
-    showThinking(_turnId, text) {
-      thinkingTail = (thinkingTail + text).replace(/\s+/g, ' ');
-      if (thinkingTail.length > THINKING_TAIL_CHARS) {
-        thinkingTail = thinkingTail.slice(
-          thinkingTail.length - THINKING_TAIL_CHARS,
-        );
+    showThinking(turnId, text) {
+      if (!thinkingNode || thinkingTurnId !== turnId) {
+        closeThinkingBox();
+        thinkingTurnId = turnId;
+        thinkingNode = bubble('thinking');
+        const header = el('div', 'mc-thinking-header', thinkingNode);
+        header.textContent = '💭 ' + STRINGS.thinkingLive;
+        thinkingBody = el('div', 'mc-thinking-body', thinkingNode);
+        header.onclick = makeThinkingToggle(thinkingBody);
       }
-      setBusyLabel(
-        STRINGS.thinking + (thinkingTail ? ' 💭 …' + thinkingTail : ''),
-      );
+      if (thinkingBody) {
+        thinkingBody.textContent = (thinkingBody.textContent || '') + text;
+        thinkingBody.scrollTop = thinkingBody.scrollHeight;
+      }
+      setBusyLabel(STRINGS.thinking);
+      scrollDown();
     },
     addToolChip(turnId, toolName, status, isError, summary) {
       closeStream();
+      closeThinkingBox();
       const label = toolLabel(toolName);
       if (status === 'start') {
         const chip = bubble('tool');
@@ -412,7 +445,6 @@ export function createChatUi(
           (detail ? ' (' + detail + ')' : '') +
           ' — ' +
           STRINGS.toolRunning;
-        thinkingTail = '';
         setBusyLabel(label + ' ' + STRINGS.toolRunning);
       } else {
         // Update the most recent open chip for this tool.
@@ -443,6 +475,7 @@ export function createChatUi(
     },
     turnComplete(isError, errorMessage) {
       closeStream();
+      closeThinkingBox();
       if (isError) {
         bubble('system error').textContent =
           STRINGS.turnError + (errorMessage ? ': ' + errorMessage : '');
@@ -461,7 +494,6 @@ export function createChatUi(
       sendBtn.disabled = value;
       if (value) {
         busyStart = new Date().getTime();
-        thinkingTail = '';
         setBusyLabel(STRINGS.working);
         busyElapsed.textContent = '';
         if (busyTimer === null) {
