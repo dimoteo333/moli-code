@@ -97,8 +97,11 @@ download_node_binary() {
       echo "   Downloading $url ..." >&2
       curl -L -o "${cached}.tar.gz" "$url"
       tar xzf "${cached}.tar.gz" -C "$cache_dir" "node-${NODE_DL_VERSION}-${platform}/bin/node"
-      mv "$cache_dir/node-${NODE_DL_VERSION}-${platform}/bin/node" "$cached"
+      # The extraction dir has the same name as $cached, so move the binary
+      # out under a temp name before deleting the dir, then rename.
+      mv "$cache_dir/node-${NODE_DL_VERSION}-${platform}/bin/node" "${cached}.tmp"
       rm -rf "$cache_dir/node-${NODE_DL_VERSION}-${platform}" "${cached}.tar.gz"
+      mv "${cached}.tmp" "$cached"
     else
       echo "   Using cached $cached" >&2
     fi
