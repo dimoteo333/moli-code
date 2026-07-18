@@ -1395,6 +1395,8 @@ export default {
     '공식 사용자 문서를 참고하여 Moli Code 사용법, 기능, 설정, 문제 해결에 관한 질문에 답합니다. settings.json 확인이나 수정도 도와줍니다. `/qc-helper` 뒤에 질문을 붙여 실행하세요. 예: `/qc-helper how do I configure MCP servers?`, `/qc-helper change approval mode to yolo`.',
   'Review changed code for correctness, security, code quality, and performance. Use when the user asks to review code changes, a PR, or specific files. Invoke with `/review`, `/review <pr-number>`, or `/review <file-path>`.':
     '변경된 코드를 정확성, 보안, 코드 품질, 성능 관점에서 검토합니다. 코드 변경, PR, 특정 파일 리뷰 요청에 사용하세요. `/review`, `/review <pr-number>`, `/review <file-path>`로 실행합니다.',
+  'Convert a draft into a Shinhan Bank branded Korean report as an editable .pptx. Usage - /report <draft text or path to a draft file>.':
+    '초안을 신한은행 브랜드가 적용된 한국어 보고서로 변환해 편집 가능한 .pptx로 만듭니다. 사용법: /report <초안 텍스트 또는 초안 파일 경로>.',
 
   // ============================================================================
   // Exit Screen / Stats
