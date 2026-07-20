@@ -1,7 +1,7 @@
 # Office Add-in Performance and PPTX Reliability Design
 
 **Date:** 2026-07-20  
-**Status:** Design approved; written-spec review pending  
+**Status:** Written specification approved  
 **Scope:** Moli Code Excel and PowerPoint Add-ins on Windows
 
 ## 1. Purpose
