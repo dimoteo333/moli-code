@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SpreadsheetFile, Workbook } from '@oai/artifact-tool';
+import { FileBlob, SpreadsheetFile, Workbook } from '@oai/artifact-tool';
 import { buildExpenseDemoData } from './excel-demo-data.mjs';
 
 const SOURCE_SHEET = '원천자료';
@@ -9,42 +9,68 @@ const DASHBOARD_SHEET = '자동화결과';
 const SOURCE_RANGE = 'A1:J37';
 const DASHBOARD_RANGE = 'A1:L16';
 
-function blankMatrix(rowCount, columnCount) {
-  return Array.from({ length: rowCount }, () => Array(columnCount).fill(''));
+function normalizeMatrix(matrix) {
+  return matrix.map((row) => row.map((value) => value ?? ''));
 }
 
-function buildDashboardValues() {
-  const values = blankMatrix(16, 12);
-  values[0][0] = '법인카드 자동 점검 결과';
-  values[2][0] = '총 사용액';
-  values[3][0] = '정상 건수';
-  values[4][0] = '예외 건수';
-  values[5][0] = '예외 금액';
-  values[8] = ['부서', '사용액', '예외 건수', ...Array(9).fill('')];
-  values[9][0] = '프로덕트운영팀';
-  values[10][0] = '영업기획부';
-  values[11][0] = '고객지원팀';
-  values[12][0] = '경영지원팀';
-  return values;
-}
-
-function makeSnapshot(demo) {
-  const sourceValues = [demo.headers, ...demo.rows];
-  const dashboardValues = buildDashboardValues();
+function inspectSheet(sheet) {
+  const usedRange = sheet.getUsedRange().address;
+  const range = sheet.getRange(usedRange);
   return {
-    worksheetNames: [SOURCE_SHEET, DASHBOARD_SHEET],
+    usedRange,
+    values: normalizeMatrix(range.values),
+    formulas: normalizeMatrix(range.formulas),
+  };
+}
+
+async function makeSnapshot(workbook) {
+  const source = workbook.worksheets.getItem(SOURCE_SHEET);
+  const dashboard = workbook.worksheets.getItem(DASHBOARD_SHEET);
+  const drawingInspection = await workbook.inspect({
+    kind: 'drawing',
+    sheetId: DASHBOARD_SHEET,
+  });
+  const drawings = drawingInspection.ndjson
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => JSON.parse(line))
+    .map(({ drawingType, anchor }) => ({ drawingType, anchor }));
+
+  return {
+    worksheetNames: [
+      workbook.worksheets.getItemAt(0).name,
+      workbook.worksheets.getItemAt(1).name,
+    ],
     sheets: {
-      [SOURCE_SHEET]: {
-        usedRange: SOURCE_RANGE,
-        values: sourceValues,
-        formulas: blankMatrix(37, 10),
-      },
+      [SOURCE_SHEET]: inspectSheet(source),
       [DASHBOARD_SHEET]: {
-        usedRange: DASHBOARD_RANGE,
-        values: dashboardValues,
-        formulas: blankMatrix(16, 12),
+        ...inspectSheet(dashboard),
+        charts: dashboard.charts.items.map((chart) => ({
+          type: chart.type,
+          title: chart.title?.text ?? '',
+          series: chart.series.items.map((series) => ({
+            name: series.name,
+            formula: series.formula,
+            categoryFormula: series.categoryFormula,
+          })),
+        })),
+        drawings,
       },
     },
+  };
+}
+
+function resolveOutputPaths(outputPath) {
+  if (
+    typeof outputPath !== 'string' ||
+    path.extname(outputPath).toLowerCase() !== '.xlsx'
+  ) {
+    throw new Error('Excel demo workbook output path must end with .xlsx');
+  }
+  const resolvedOutputPath = path.resolve(outputPath);
+  return {
+    resolvedOutputPath,
+    snapshotPath: `${resolvedOutputPath.slice(0, -'.xlsx'.length)}.snapshot.json`,
   };
 }
 
@@ -234,6 +260,7 @@ async function writeQaOutputs(workbook, outputPath) {
 }
 
 export async function buildExcelDemoWorkbook(outputPath, options = {}) {
+  const { resolvedOutputPath, snapshotPath } = resolveOutputPaths(outputPath);
   const demo = buildExpenseDemoData();
   const workbook = Workbook.create();
   const source = workbook.worksheets.add(SOURCE_SHEET);
@@ -243,9 +270,6 @@ export async function buildExcelDemoWorkbook(outputPath, options = {}) {
   styleSourceSheet(source);
   styleDashboardSheet(dashboard);
 
-  const snapshot = makeSnapshot(demo);
-  const resolvedOutputPath = path.resolve(outputPath);
-  const snapshotPath = resolvedOutputPath.replace(/\.xlsx$/i, '.snapshot.json');
   await fs.mkdir(path.dirname(resolvedOutputPath), { recursive: true });
 
   if (options.renderQa === true) {
@@ -254,6 +278,10 @@ export async function buildExcelDemoWorkbook(outputPath, options = {}) {
 
   const output = await SpreadsheetFile.exportXlsx(workbook);
   await output.save(resolvedOutputPath);
+  const exportedWorkbook = await SpreadsheetFile.importXlsx(
+    await FileBlob.load(resolvedOutputPath),
+  );
+  const snapshot = await makeSnapshot(exportedWorkbook);
   await fs.writeFile(
     snapshotPath,
     `${JSON.stringify(snapshot, null, 2)}\n`,
