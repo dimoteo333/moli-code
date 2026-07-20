@@ -16,6 +16,23 @@ import {
 } from './lib.mjs';
 
 const PROTOCOL_VERSION = 1;
+const PPTX_MIME_TYPE =
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation';
+
+export function buildTemplateAttachment(templateBytes, templateName) {
+  const bytes = Buffer.from(templateBytes);
+  return {
+    name: templateName,
+    content: bytes.toString('base64'),
+    size: bytes.length,
+    mimeType: PPTX_MIME_TYPE,
+    encoding: 'base64',
+  };
+}
+
+export function buildPowerPointBenchmarkInput(prompt, prose) {
+  return [prompt.trimEnd(), prose.trim()].filter(Boolean).join('\n\n');
+}
 
 function columnToNumber(column) {
   let value = 0;
@@ -583,6 +600,9 @@ export async function runSidecarBenchmark(options) {
   if (options.app === 'powerpoint' && options.excelFixture) {
     throw new Error('--excel-fixture is only supported for Excel benchmarks');
   }
+  if (options.app !== 'powerpoint' && options.templatePath) {
+    throw new Error('--template is only supported for PowerPoint benchmarks');
+  }
   const tokenBody = await getJson(options.port, '/token');
   if (typeof tokenBody.token !== 'string') {
     throw new Error('Sidecar /token response did not contain a token');
@@ -591,7 +611,18 @@ export async function runSidecarBenchmark(options) {
   const prompt = await fs.readFile(options.promptPath, 'utf8');
   let attachment;
   let excelPrompt = prompt;
-  if (options.attachmentPath) {
+  let powerpointPrompt = prompt;
+  if (options.templatePath) {
+    const templateBytes = await fs.readFile(options.templatePath);
+    attachment = buildTemplateAttachment(
+      templateBytes,
+      path.basename(options.templatePath),
+    );
+    const prose = options.attachmentPath
+      ? await fs.readFile(options.attachmentPath, 'utf8')
+      : '';
+    powerpointPrompt = buildPowerPointBenchmarkInput(prompt, prose);
+  } else if (options.attachmentPath) {
     const content = await fs.readFile(options.attachmentPath, 'utf8');
     if (options.app === 'powerpoint') {
       attachment = {
@@ -657,7 +688,7 @@ export async function runSidecarBenchmark(options) {
         mark('user_message_sent');
         sendJson(socket, {
           type: 'user_message',
-          text: options.app === 'excel' ? excelPrompt : prompt,
+          text: options.app === 'excel' ? excelPrompt : powerpointPrompt,
           ...(attachment ? { attachments: [attachment] } : {}),
         });
         nextRunIndex += 1;
@@ -834,7 +865,10 @@ export async function runSidecarBenchmark(options) {
       excelHarness.runOperations,
     );
   }
-  await writeTextWithHash(path.join(options.outputDir, 'prompt.txt'), prompt);
+  await writeTextWithHash(
+    path.join(options.outputDir, 'prompt.txt'),
+    options.app === 'powerpoint' ? powerpointPrompt : prompt,
+  );
   if (failure) {
     const error = new Error(
       `${failure.message}; partial evidence saved to ${options.outputDir}`,
@@ -857,6 +891,9 @@ if (invokedPath === import.meta.url) {
   if (app === 'powerpoint' && args['excel-fixture']) {
     throw new Error('--excel-fixture is only supported for Excel benchmarks');
   }
+  if (app === 'excel' && args.template) {
+    throw new Error('--template is only supported for PowerPoint benchmarks');
+  }
   const excelFixture = args['excel-fixture']
     ? JSON.parse(await fs.readFile(path.resolve(args['excel-fixture']), 'utf8'))
     : undefined;
@@ -866,6 +903,7 @@ if (invokedPath === import.meta.url) {
     port: Number(args.port ?? (app === 'excel' ? 39215 : 39216)),
     promptPath: path.resolve(args.prompt),
     attachmentPath: args.attachment ? path.resolve(args.attachment) : undefined,
+    templatePath: args.template ? path.resolve(args.template) : undefined,
     outputDir: path.resolve(args.output),
     runs: Number(args.runs ?? 4),
     timeoutMs: Number(args.timeout ?? 600000),

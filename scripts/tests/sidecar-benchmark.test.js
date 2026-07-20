@@ -8,6 +8,8 @@ import { describe, expect, it } from 'vitest';
 import {
   ExcelHarness,
   buildBenchmarkManifest,
+  buildPowerPointBenchmarkInput,
+  buildTemplateAttachment,
 } from '../addin-performance/run-sidecar-benchmark.mjs';
 
 describe('ExcelHarness', () => {
@@ -345,5 +347,29 @@ describe('buildBenchmarkManifest', () => {
       },
       runs: [{ assistantText: 'partial' }],
     });
+  });
+});
+
+describe('PowerPoint template benchmark input', () => {
+  it('builds a byte-accurate base64 PPTX attachment', () => {
+    const templateBytes = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0xff, 0x00]);
+
+    expect(buildTemplateAttachment(templateBytes, 'template.pptx')).toEqual({
+      name: 'template.pptx',
+      content: templateBytes.toString('base64'),
+      size: templateBytes.length,
+      mimeType:
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+      encoding: 'base64',
+    });
+  });
+
+  it('concatenates the selected prose after the command prompt', () => {
+    expect(
+      buildPowerPointBenchmarkInput(
+        '/template-report\n\n요청 문장\n',
+        '회의 본문',
+      ),
+    ).toBe('/template-report\n\n요청 문장\n\n회의 본문');
   });
 });
