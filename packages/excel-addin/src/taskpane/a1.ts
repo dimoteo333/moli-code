@@ -118,8 +118,18 @@ export function shiftFormulaRows(formula: string, rowOffset: number): string {
     );
     if (match) {
       const previous = index > 0 ? formula.charAt(index - 1) : '';
-      const next = formula.charAt(index + match[0].length);
-      if (!/[A-Za-z0-9_.]/.test(previous) && !/[A-Za-z0-9_!]/.test(next)) {
+      const afterMatch = index + match[0].length;
+      const next = formula.charAt(afterMatch);
+      let nextNonSpaceIndex = afterMatch;
+      while (/\s/.test(formula.charAt(nextNonSpaceIndex))) {
+        nextNonSpaceIndex++;
+      }
+      const isFunctionCall = formula.charAt(nextNonSpaceIndex) === '(';
+      if (
+        !isFunctionCall &&
+        !/[A-Za-z0-9_.]/.test(previous) &&
+        !/[A-Za-z0-9_!]/.test(next)
+      ) {
         result +=
           match[1] +
           match[2] +

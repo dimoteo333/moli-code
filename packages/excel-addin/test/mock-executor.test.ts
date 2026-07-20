@@ -41,6 +41,20 @@ describe('mock excel_set_formulas fillDown', () => {
     });
   });
 
+  it('preserves function names ending in digits', async () => {
+    const executor = createMockExecutor();
+    await executor.exec('set_formulas', {
+      range: 'A2:A3',
+      formulas: [['=LOG10(B2)+LOG10   (C2)']],
+      fillDown: true,
+    });
+    await expect(
+      executor.exec('read_range', { range: 'A2:A3' }),
+    ).resolves.toMatchObject({
+      formulas: [['=LOG10(B2)+LOG10   (C2)'], ['=LOG10(B3)+LOG10   (C3)']],
+    });
+  });
+
   it('rejects invalid dimensions before writing any cell', async () => {
     const executor = createMockExecutor();
     await expect(

@@ -83,6 +83,22 @@ describe('ExcelHarness', () => {
     ]);
   });
 
+  it('preserves function names ending in digits while filling formulas', () => {
+    const harness = new ExcelHarness({
+      sheets: { Sheet1: {} },
+      activeSheet: 'Sheet1',
+    });
+    harness.execute('set_formulas', {
+      range: 'A2:A3',
+      formulas: [['=LOG10(B2)+LOG10   (C2)']],
+      fillDown: true,
+    });
+    expect(harness.execute('read_range', { range: 'A2:A3' }).formulas).toEqual([
+      ['=LOG10(B2)+LOG10   (C2)'],
+      ['=LOG10(B3)+LOG10   (C3)'],
+    ]);
+  });
+
   it('rejects invalid fillDown dimensions without mutating the seed', () => {
     const harness = new ExcelHarness({
       sheets: { Sheet1: { values: [['kept']] } },
