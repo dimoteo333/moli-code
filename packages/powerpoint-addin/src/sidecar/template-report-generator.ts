@@ -288,6 +288,10 @@ export async function generateTemplateReport(
   let succeeded = false;
   try {
     preexistingPids = await listPowerPointPids();
+    args.push(
+      '-PreexistingPowerPointPids',
+      [...preexistingPids].sort((left, right) => left - right).join(','),
+    );
     await execute('powershell.exe', args, {
       windowsHide: true,
       timeout: REPORT_TIMEOUT_MS,

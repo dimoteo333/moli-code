@@ -153,6 +153,8 @@ describe('template report generator wrapper', () => {
         'Bypass',
         '-AllowedRoot',
         path.resolve(workRoot),
+        '-PreexistingPowerPointPids',
+        '101',
       ]),
     );
     expect(options).toMatchObject({

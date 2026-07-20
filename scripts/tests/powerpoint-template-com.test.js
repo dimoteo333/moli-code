@@ -77,6 +77,21 @@ async function probePowerPoint() {
 const comAvailable = await probePowerPoint();
 const comIt = comAvailable ? it : it.skip;
 
+async function preexistingPowerPointPidCsv() {
+  const { stdout } = await execFileAsync('tasklist.exe', [
+    '/FI',
+    'IMAGENAME eq POWERPNT.EXE',
+    '/FO',
+    'CSV',
+    '/NH',
+  ]);
+  return stdout
+    .split(/\r?\n/)
+    .map((line) => line.match(/^"POWERPNT\.EXE","([0-9]+)"/i)?.[1])
+    .filter(Boolean)
+    .join(',');
+}
+
 function quotePowerShell(value) {
   return `'${value.replaceAll("'", "''")}'`;
 }
@@ -120,6 +135,7 @@ async function runGenerator(scratchRoot, templatePath, spec, label) {
   const specPath = path.join(scratchRoot, 'specs', `${label}.json`);
   const outputPath = path.join(scratchRoot, 'reports', `${label}.pptx`);
   await writeFile(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+  const preexistingPids = await preexistingPowerPointPidCsv();
   return execFileAsync(
     'powershell.exe',
     [
@@ -137,6 +153,8 @@ async function runGenerator(scratchRoot, templatePath, spec, label) {
       specPath,
       '-OutputPath',
       outputPath,
+      '-PreexistingPowerPointPids',
+      preexistingPids,
     ],
     { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 },
   );
@@ -188,6 +206,7 @@ describe('PowerPoint template COM generator', () => {
           `report-${count}.pptx`,
         );
         await writeFile(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+        const preexistingPids = await preexistingPowerPointPidCsv();
         const { stdout } = await execFileAsync(
           'powershell.exe',
           [
@@ -205,6 +224,8 @@ describe('PowerPoint template COM generator', () => {
             specPath,
             '-OutputPath',
             outputPath,
+            '-PreexistingPowerPointPids',
+            preexistingPids,
           ],
           { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 },
         );
@@ -264,6 +285,36 @@ describe('PowerPoint template COM generator', () => {
     180_000,
   );
 
+  it('quits only a newly created PowerPoint PID on both success and failure cleanup', async () => {
+    const source = await readFile(scriptPath, 'utf8');
+    const ownershipFunction = source.match(
+      /function Test-GeneratorOwnsPowerPointProcess[\s\S]*?\r?\n}/,
+    )?.[0];
+    expect(ownershipFunction).toBeTruthy();
+    const { stdout } = await execFileAsync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-Command',
+        [
+          ownershipFunction,
+          "if(Test-GeneratorOwnsPowerPointProcess 202 @(101,202)){'QUIT'}else{'KEEP'}",
+          "if(Test-GeneratorOwnsPowerPointProcess 303 @(101,202)){'QUIT'}else{'KEEP'}",
+        ].join(';'),
+      ],
+      { windowsHide: true, timeout: 15_000 },
+    );
+    expect(stdout.trim().split(/\r?\n/)).toEqual(['KEEP', 'QUIT']);
+    expect(source).toContain(
+      '$powerPointOwned = Test-GeneratorOwnsPowerPointProcess',
+    );
+    expect(source).toMatch(
+      /if \(\$ppt -and \$powerPointOwned\) \{ try \{ \$ppt\.Quit\(\) \}/,
+    );
+    expect(source).not.toMatch(/if \(\$ppt\) \{ try \{ \$ppt\.Quit\(\) \}/);
+  });
+
   comIt(
     'rejects body text that exceeds the template bounds instead of shrinking the font',
     async () => {
@@ -275,6 +326,7 @@ describe('PowerPoint template COM generator', () => {
       const specPath = path.join(scratchRoot, 'specs', 'overflow.json');
       const outputPath = path.join(scratchRoot, 'reports', 'overflow.pptx');
       await writeFile(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+      const preexistingPids = await preexistingPowerPointPidCsv();
       await expect(
         execFileAsync(
           'powershell.exe',
@@ -293,6 +345,8 @@ describe('PowerPoint template COM generator', () => {
             specPath,
             '-OutputPath',
             outputPath,
+            '-PreexistingPowerPointPids',
+            preexistingPids,
           ],
           { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 },
         ),

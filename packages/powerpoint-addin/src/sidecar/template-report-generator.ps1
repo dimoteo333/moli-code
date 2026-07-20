@@ -4,7 +4,8 @@ param(
     [Parameter(Mandatory=$true)][string]$SpecPath,
     [Parameter(Mandatory=$true)][string]$OutputPath,
     [string]$RunToken = '',
-    [string]$ProcessMarkerPath = ''
+    [string]$ProcessMarkerPath = '',
+    [string]$PreexistingPowerPointPids = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -14,6 +15,7 @@ $presentation = $null
 $verify = $null
 $tempPath = $null
 $markerPath = $null
+$powerPointOwned = $false
 
 Add-Type @'
 using System;
@@ -26,6 +28,10 @@ public static class MoliPowerPointWindow {
 
 function Get-FullPath([string]$Path) {
     return [IO.Path]::GetFullPath($Path)
+}
+
+function Test-GeneratorOwnsPowerPointProcess([uint32]$ProcessId, [uint32[]]$PreexistingPids) {
+    return -not ($PreexistingPids -contains $ProcessId)
 }
 
 function Assert-UnderRoot([string]$Path, [string]$Root) {
@@ -267,6 +273,16 @@ $tempPath = Join-Path $outputDirectory (([IO.Path]::GetFileNameWithoutExtension(
 $spec = Get-Content -LiteralPath $specFile -Raw -Encoding UTF8 | ConvertFrom-Json
 $pages = @($spec.pages)
 if ($pages.Count -lt 1 -or $pages.Count -gt 3) { throw 'REPORT_SPEC_INVALID:pages' }
+$preexistingPids = @()
+if ($PreexistingPowerPointPids) {
+    foreach ($pidText in $PreexistingPowerPointPids.Split(',')) {
+        [uint32]$parsedPid = 0
+        if (-not [uint32]::TryParse($pidText, [ref]$parsedPid) -or $parsedPid -le 0) {
+            throw 'REPORT_PREEXISTING_PID_INVALID'
+        }
+        $preexistingPids += $parsedPid
+    }
+}
 
 try {
     try {
@@ -274,6 +290,7 @@ try {
         [uint32]$powerPointProcessId = 0
         [void][MoliPowerPointWindow]::GetWindowThreadProcessId([IntPtr]([int64]$ppt.HWND), [ref]$powerPointProcessId)
         if ($powerPointProcessId -le 0) { throw 'REPORT_PROCESS_ATTRIBUTION_FAILED' }
+        $powerPointOwned = Test-GeneratorOwnsPowerPointProcess $powerPointProcessId $preexistingPids
         [IO.File]::WriteAllText($markerPath, [string]$powerPointProcessId, [Text.Encoding]::ASCII)
         $source = $ppt.Presentations.Open($template, -1, 0, 0)
     } catch { throw "TEMPLATE_OPEN_FAILED:$($_.Exception.Message)" }
@@ -386,7 +403,7 @@ finally {
     if ($verify) { try { $verify.Close() } catch {} }
     if ($presentation) { try { $presentation.Close() } catch {} }
     if ($source) { try { $source.Close() } catch {} }
-    if ($ppt) { try { $ppt.Quit() } catch {} }
+    if ($ppt -and $powerPointOwned) { try { $ppt.Quit() } catch {} }
     foreach ($object in @($verify, $presentation, $source, $ppt)) {
         if ($object) { try { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($object) } catch {} }
     }
