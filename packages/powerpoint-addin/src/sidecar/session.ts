@@ -129,6 +129,7 @@ export class PaneSession {
   private readonly toolUseNames = new Map<string, string>();
   private queryInstance: Query | null = null;
   private queryGeneration = 1;
+  private readonly terminatedQueryGenerations = new Set<number>();
   private activeModelTurn: ActiveModelTurn | null = null;
   private permissionSeq = 0;
   private turnId = 0;
@@ -503,7 +504,7 @@ export class PaneSession {
       '보고서 구조화가 45초를 초과해 중단되었습니다.',
       '템플릿 보고서 시간 초과',
     );
-    this.replaceQueryAfterTimeout();
+    this.replaceCurrentQuery(true);
   }
 
   private async handleReportCommand(frame: UserMessageFrame): Promise<void> {
@@ -624,16 +625,18 @@ export class PaneSession {
     return this.queryInstance;
   }
 
-  private replaceQueryAfterTimeout(): void {
+  private replaceCurrentQuery(interruptStale: boolean): void {
     const staleQuery = this.queryInstance;
     this.inputQueue.end();
     this.queryInstance = null;
     this.inputQueue = new PushQueue<SDKUserMessage>();
     this.sdkSessionId = randomUUID();
     this.queryGeneration += 1;
-    staleQuery?.interrupt().catch((error) => {
-      this.logger.error('Template report timeout interrupt failed', error);
-    });
+    if (interruptStale) {
+      staleQuery?.interrupt().catch((error) => {
+        this.logger.error('Template report timeout interrupt failed', error);
+      });
+    }
     try {
       const replacement = this.ensureQuery();
       const generation = this.queryGeneration;
@@ -662,23 +665,91 @@ export class PaneSession {
   }
 
   private async pumpMessages(q: Query, generation: number): Promise<void> {
+    let failure: unknown;
     try {
       for await (const message of q) {
         if (generation !== this.queryGeneration) return;
         await this.handleSdkMessage(message, generation);
       }
     } catch (err) {
-      if (!this.disposed && generation === this.queryGeneration) {
-        this.logger.error('SDK message pump failed', err);
-        this.send({
-          v: PROTOCOL_VERSION,
-          type: 'error',
-          code: 'AGENT_ERROR',
-          messageKo:
-            '에이전트 세션이 종료되었습니다. 작업창을 새로고침해 주세요.',
-        });
-      }
+      failure = err;
+    } finally {
+      await this.handlePumpTermination(generation, failure);
     }
+  }
+
+  private async handlePumpTermination(
+    generation: number,
+    failure: unknown,
+  ): Promise<void> {
+    if (
+      this.disposed ||
+      generation !== this.queryGeneration ||
+      this.terminatedQueryGenerations.has(generation)
+    ) {
+      return;
+    }
+    this.terminatedQueryGenerations.add(generation);
+    if (failure) this.logger.error('SDK message pump failed', failure);
+    else this.logger.warn('SDK message pump ended unexpectedly');
+
+    const activeTemplate = this.activeTemplateTurn;
+    if (
+      activeTemplate &&
+      !activeTemplate.completed &&
+      activeTemplate.generation === generation
+    ) {
+      if (activeTemplate.phase === 'model') {
+        if (activeTemplate.timeout) {
+          clearTimeout(activeTemplate.timeout);
+          activeTemplate.timeout = null;
+        }
+        if (
+          this.activeModelTurn?.kind === 'template' &&
+          this.activeModelTurn.generation === generation
+        ) {
+          this.activeModelTurn = null;
+        }
+        activeTemplate.phase = 'generating';
+        this.replaceCurrentQuery(false);
+        await this.finishTemplateTurn(activeTemplate, true);
+        return;
+      }
+      if (activeTemplate.phase === 'saving') {
+        activeTemplate.completed = true;
+        this.activeTemplateTurn = null;
+        this.activeModelTurn = null;
+        this.sendTemplateError(
+          activeTemplate.turnId,
+          'AGENT_ERROR',
+          '보고서 추출 모델 세션이 예기치 않게 종료되었습니다.',
+          '모델 세션 종료',
+        );
+        this.replaceCurrentQuery(false);
+        return;
+      }
+      // The COM generation path owns exactly-once completion.
+      this.replaceCurrentQuery(false);
+      return;
+    }
+
+    const activeModel = this.activeModelTurn;
+    if (
+      activeModel?.kind === 'ordinary' &&
+      activeModel.generation === generation
+    ) {
+      this.activeModelTurn = null;
+      this.sendTemplateError(
+        activeModel.turnId,
+        'AGENT_ERROR',
+        '모델 세션이 예기치 않게 종료되었습니다. 요청을 다시 보내 주세요.',
+        '모델 세션 종료',
+      );
+      this.replaceCurrentQuery(false);
+      return;
+    }
+
+    this.replaceCurrentQuery(false);
   }
 
   private async handleSdkMessage(

@@ -13,6 +13,8 @@ interface CapturedQuery {
   options: Record<string, unknown>;
   interrupt: ReturnType<typeof vi.fn>;
   emit: (message: SDKMessage) => void;
+  end: () => void;
+  fail: (error: Error) => void;
 }
 
 const captured: CapturedQuery[] = [];
@@ -77,13 +79,30 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
     }) => {
       const interrupt = vi.fn().mockResolvedValue(undefined);
       const items: SDKMessage[] = [];
-      const waiters: Array<(result: IteratorResult<SDKMessage>) => void> = [];
+      const waiters: Array<{
+        resolve: (result: IteratorResult<SDKMessage>) => void;
+        reject: (error: Error) => void;
+      }> = [];
+      let terminal: { error?: Error } | null = null;
       const emit = (message: SDKMessage): void => {
         const waiter = waiters.shift();
-        if (waiter) waiter({ value: message, done: false });
+        if (terminal) return;
+        if (waiter) waiter.resolve({ value: message, done: false });
         else items.push(message);
       };
-      captured.push({ prompt, options, interrupt, emit });
+      const end = (): void => {
+        if (terminal) return;
+        terminal = {};
+        for (const waiter of waiters.splice(0)) {
+          waiter.resolve({ value: undefined, done: true });
+        }
+      };
+      const fail = (error: Error): void => {
+        if (terminal) return;
+        terminal = { error };
+        for (const waiter of waiters.splice(0)) waiter.reject(error);
+      };
+      captured.push({ prompt, options, interrupt, emit, end, fail });
       return {
         initialized: Promise.resolve(),
         interrupt,
@@ -92,7 +111,13 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
             next(): Promise<IteratorResult<SDKMessage>> {
               const item = items.shift();
               if (item) return Promise.resolve({ value: item, done: false });
-              return new Promise((resolve) => waiters.push(resolve));
+              if (terminal?.error) return Promise.reject(terminal.error);
+              if (terminal) {
+                return Promise.resolve({ value: undefined, done: true });
+              }
+              return new Promise((resolve, reject) =>
+                waiters.push({ resolve, reject }),
+              );
             },
           };
         },
@@ -693,6 +718,114 @@ describe('PowerPoint PaneSession', () => {
         '{"title":"new"}',
         '새 회의록',
       );
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(ws.framesOfType('turn_complete')).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it.each(['throw', 'eof'] as const)(
+    'finishes an ordinary turn exactly once when the query ends by %s',
+    async (termination) => {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      session.onFrame(frame({ type: 'user_message', text: '일반 모델 요청' }));
+
+      if (termination === 'throw') {
+        captured[0].fail(new Error('query failed'));
+        captured[0].fail(new Error('duplicate failure'));
+      } else {
+        captured[0].end();
+        captured[0].end();
+      }
+      await tick();
+      await tick();
+
+      expect(ws.framesOfType('error')).toEqual([
+        expect.objectContaining({ code: 'AGENT_ERROR' }),
+      ]);
+      expect(ws.framesOfType('turn_complete')).toEqual([
+        expect.objectContaining({ turnId: 1, isError: true }),
+      ]);
+      expect(captured).toHaveLength(2);
+
+      session.onFrame(frame({ type: 'user_message', text: '복구 후 요청' }));
+      const iterator = captured[1].prompt[Symbol.asyncIterator]();
+      await expect(iterator.next()).resolves.toMatchObject({
+        value: { message: { content: '복구 후 요청' } },
+      });
+    },
+  );
+
+  it.each(['throw', 'eof'] as const)(
+    'falls back and finishes a template turn exactly once when the query ends by %s',
+    async (termination) => {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 회의 본문',
+          attachments: [templateAttachment],
+        }),
+      );
+      await tick();
+
+      if (termination === 'throw') {
+        captured[0].fail(new Error('query failed'));
+        captured[0].fail(new Error('duplicate failure'));
+      } else {
+        captured[0].end();
+        captured[0].end();
+      }
+      await tick();
+      await tick();
+
+      expect(fallbackTemplateReport).toHaveBeenCalledOnce();
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(ws.framesOfType('error')).toHaveLength(0);
+      expect(ws.framesOfType('turn_complete')).toEqual([
+        expect.objectContaining({ turnId: 1, isError: false }),
+      ]);
+      expect(captured).toHaveLength(2);
+    },
+  );
+
+  it('ignores stale pump termination after a new generation starts', async () => {
+    vi.useFakeTimers();
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 첫 회의록',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      await vi.advanceTimersByTimeAsync(45_000);
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 새 회의록',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+
+      captured[0].fail(new Error('stale query failed'));
+      await vi.advanceTimersByTimeAsync(0);
+      expect(
+        ws.framesOfType('error').filter((item) => item.code === 'AGENT_ERROR'),
+      ).toHaveLength(0);
+      expect(generateTemplateReport).not.toHaveBeenCalled();
+
+      captured[1].emit(assistantText('{"title":"new"}'));
+      captured[1].emit(resultMessage());
+      await vi.advanceTimersByTimeAsync(0);
       expect(generateTemplateReport).toHaveBeenCalledOnce();
       expect(ws.framesOfType('turn_complete')).toHaveLength(2);
     } finally {
