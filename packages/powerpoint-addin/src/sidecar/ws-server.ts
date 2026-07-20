@@ -9,6 +9,7 @@ import type * as https from 'node:https';
 import type { WebSocket } from 'ws';
 import { WebSocketServer } from 'ws';
 import { WS_PATH, parseFrame } from '../shared/messages.js';
+import { MAX_WEBSOCKET_PAYLOAD_BYTES } from '../shared/attachment-limits.js';
 import type { HelloFrame } from '../shared/messages.js';
 import { PaneSession, type SessionEnv } from './session.js';
 import type { Logger } from './logger.js';
@@ -21,7 +22,10 @@ export function attachWsServer(
   env: SessionEnv,
   logger: Logger,
 ): WebSocketServer {
-  const wss = new WebSocketServer({ noServer: true });
+  const wss = new WebSocketServer({
+    noServer: true,
+    maxPayload: MAX_WEBSOCKET_PAYLOAD_BYTES,
+  });
 
   server.on('upgrade', (req, socket, head) => {
     const url = (req.url ?? '').split('?')[0];
