@@ -168,11 +168,14 @@ function Get-SlotMap($Slide, [double]$SlideWidth, [double]$SlideHeight) {
     $body3 = Require-One @($bodyCandidates | Where-Object {
         $_.Top -gt $headings[2].Top -and $_.Top -lt ($SlideHeight * 0.90)
     } | Sort-Object Top) 'section3_body'
+    $middleBodies = @($bodyCandidates | Where-Object {
+        $_.Top -gt $headings[1].Top -and $_.Top -lt $headings[2].Top
+    } | Sort-Object Top)
 
     return [PSCustomObject]@{
         Title = $title; Date = $date; Department = $department; Table = $table
         Heading1 = $headings[0]; Heading2 = $headings[1]; Heading3 = $headings[2]
-        Body1 = $body1; Body3 = $body3; PageNumber = $pageNumber
+        Body1 = $body1; Body3 = $body3; MiddleBodies = $middleBodies; PageNumber = $pageNumber
     }
 }
 
@@ -329,6 +332,7 @@ try {
         Set-PreservedText $slots.Heading3 ([string]$page.section3.heading)
         Set-PreservedText $slots.Body1 (Join-Bullets $page.section1.bullets)
         Set-PreservedText $slots.Body3 (Join-Bullets $page.section3.bullets)
+        foreach ($middleBody in @($slots.MiddleBodies)) { Set-PreservedText $middleBody '' }
         if ($null -ne $slots.PageNumber) { Set-PreservedText $slots.PageNumber ([string]$index) }
         Set-Table $slots.Table $page.section2
     }
