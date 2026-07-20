@@ -77,6 +77,71 @@ async function probePowerPoint() {
 const comAvailable = await probePowerPoint();
 const comIt = comAvailable ? it : it.skip;
 
+function quotePowerShell(value) {
+  return `'${value.replaceAll("'", "''")}'`;
+}
+
+async function createTemplateVariant(source, destination, kind) {
+  await copyFile(source, destination);
+  const command = [
+    "$ErrorActionPreference='Stop'",
+    '$ppt=New-Object -ComObject PowerPoint.Application',
+    '$presentation=$null',
+    'try {',
+    `  $presentation=$ppt.Presentations.Open(${quotePowerShell(destination)},0,0,0)`,
+    '  $slide=$presentation.Slides.Item(1)',
+    `  $kind=${quotePowerShell(kind)}`,
+    "  if($kind -eq 'heading-ambiguity'){",
+    "    $target=@($slide.Shapes|Where-Object{$_.HasTextFrame -eq -1 -and $_.TextFrame.HasText -eq -1 -and $_.Top -gt 140 -and $_.Top -lt 170 -and [string]$_.TextFrame.TextRange.Text -notmatch '^[0-9]+$' -and [string]$_.TextFrame.TextRange.Font.Name -match 'Bold'})[0]",
+    '    $copy=$target.Duplicate();$copy.Left=$target.Left+1;$copy.Top=$target.Top+1',
+    "  } elseif($kind -eq 'body-ambiguity'){",
+    "    $target=@($slide.Shapes|Where-Object{$_.HasTextFrame -eq -1 -and $_.TextFrame.HasText -eq -1 -and $_.Top -gt 170 -and $_.Top -lt 215 -and [string]$_.TextFrame.TextRange.Font.Name -notmatch 'Bold'})[0]",
+    '    $copy=$target.Duplicate();$copy.Left=$target.Left+1;$copy.Top=$target.Top+1',
+    "  } elseif($kind -eq 'margin-clip'){",
+    "    $target=@($slide.Shapes|Where-Object{$_.HasTextFrame -eq -1 -and $_.TextFrame.HasText -eq -1 -and $_.Top -gt 170 -and $_.Top -lt 215 -and [string]$_.TextFrame.TextRange.Font.Name -notmatch 'Bold'})[0]",
+    '    $target.TextFrame.AutoSize=0;$target.TextFrame2.AutoSize=0',
+    '    $target.TextFrame.MarginTop=12;$target.TextFrame.MarginBottom=12',
+    '    $target.TextFrame2.MarginTop=12;$target.TextFrame2.MarginBottom=12',
+    '  }',
+    '  $presentation.Save()',
+    '} finally {',
+    '  if($presentation){$presentation.Close()}',
+    '  if($ppt){$ppt.Quit()}',
+    '}',
+  ].join(';');
+  await execFileAsync(
+    'powershell.exe',
+    ['-NoProfile', '-NonInteractive', '-Command', command],
+    { windowsHide: true, timeout: 30_000 },
+  );
+}
+
+async function runGenerator(scratchRoot, templatePath, spec, label) {
+  const specPath = path.join(scratchRoot, 'specs', `${label}.json`);
+  const outputPath = path.join(scratchRoot, 'reports', `${label}.pptx`);
+  await writeFile(specPath, `${JSON.stringify(spec, null, 2)}\n`, 'utf8');
+  return execFileAsync(
+    'powershell.exe',
+    [
+      '-NoProfile',
+      '-NonInteractive',
+      '-ExecutionPolicy',
+      'Bypass',
+      '-File',
+      scriptPath,
+      '-AllowedRoot',
+      scratchRoot,
+      '-TemplatePath',
+      templatePath,
+      '-SpecPath',
+      specPath,
+      '-OutputPath',
+      outputPath,
+    ],
+    { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 },
+  );
+}
+
 describe('PowerPoint template COM generator', () => {
   let scratchRoot;
   let templatePath;
@@ -231,6 +296,37 @@ describe('PowerPoint template COM generator', () => {
           ],
           { windowsHide: true, timeout: 60_000, maxBuffer: 1024 * 1024 },
         ),
+      ).rejects.toMatchObject({
+        stderr: expect.stringContaining('REPORT_OVERFLOW'),
+      });
+    },
+    60_000,
+  );
+
+  comIt(
+    'rejects ambiguous semantic heading and body variants',
+    async () => {
+      for (const [kind, code] of [
+        ['heading-ambiguity', 'TEMPLATE_SLOT_AMBIGUOUS:section1_heading'],
+        ['body-ambiguity', 'TEMPLATE_SLOT_AMBIGUOUS:section1_body'],
+      ]) {
+        const variant = path.join(scratchRoot, 'templates', `${kind}.pptx`);
+        await createTemplateVariant(templatePath, variant, kind);
+        await expect(
+          runGenerator(scratchRoot, variant, buildSpec(1), kind),
+        ).rejects.toMatchObject({ stderr: expect.stringContaining(code) });
+      }
+    },
+    60_000,
+  );
+
+  comIt(
+    'rejects text clipped by the template top and bottom margins',
+    async () => {
+      const variant = path.join(scratchRoot, 'templates', 'margin-clip.pptx');
+      await createTemplateVariant(templatePath, variant, 'margin-clip');
+      await expect(
+        runGenerator(scratchRoot, variant, buildSpec(1), 'margin-clip'),
       ).rejects.toMatchObject({
         stderr: expect.stringContaining('REPORT_OVERFLOW'),
       });

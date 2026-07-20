@@ -57,7 +57,9 @@ function mapProcessError(error: unknown): Error {
     return new Error('REPORT_GENERATION_TIMEOUT');
   }
   const details = `${String(failure.stderr ?? '')}\n${failure.message ?? ''}`;
-  const slot = details.match(/TEMPLATE_SLOT_NOT_FOUND:[A-Za-z0-9_-]+/i)?.[0];
+  const slot = details.match(
+    /TEMPLATE_SLOT_(?:NOT_FOUND|AMBIGUOUS):[A-Za-z0-9_-]+/i,
+  )?.[0];
   if (slot) return new Error(slot);
   if (/FONT_(?:MISMATCH|NOT_FOUND)/i.test(details)) {
     return new Error('REPORT_FONT_MISMATCH');
@@ -72,6 +74,134 @@ function mapProcessError(error: unknown): Error {
   }
   if (/REPORT_OVERFLOW/i.test(details)) return new Error('REPORT_OVERFLOW');
   return new Error('REPORT_GENERATION_FAILED');
+}
+
+async function assertNoReparseComponents(
+  realRoot: string,
+  lexicalCandidate: string,
+): Promise<void> {
+  const relative = path.relative(realRoot, lexicalCandidate);
+  if (!isInside(realRoot, lexicalCandidate)) {
+    throw new Error('REPORT_PATH_OUTSIDE_WORKDIR');
+  }
+  let current = realRoot;
+  for (const part of relative.split(path.sep).filter(Boolean)) {
+    current = path.join(current, part);
+    try {
+      const info = await fs.lstat(current);
+      if (info.isSymbolicLink()) {
+        throw new Error('REPORT_PATH_OUTSIDE_WORKDIR');
+      }
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === 'ENOENT') return;
+      throw error;
+    }
+  }
+}
+
+async function nearestExistingAncestor(candidate: string): Promise<string> {
+  let current = candidate;
+  for (;;) {
+    try {
+      await fs.lstat(current);
+      return current;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+      const parent = path.dirname(current);
+      if (parent === current) throw error;
+      current = parent;
+    }
+  }
+}
+
+async function prepareOutputDirectory(
+  root: string,
+  realRoot: string,
+  outputDir: string,
+): Promise<string> {
+  const lexicalReports = requireInside(root, outputDir);
+  const ancestor = await nearestExistingAncestor(lexicalReports);
+  await assertNoReparseComponents(realRoot, ancestor);
+  const realAncestor = await fs.realpath(ancestor);
+  if (!isInside(realRoot, realAncestor)) {
+    throw new Error('REPORT_PATH_OUTSIDE_WORKDIR');
+  }
+
+  await fs.mkdir(lexicalReports, { recursive: true });
+  await assertNoReparseComponents(realRoot, lexicalReports);
+  const [revalidatedRoot, realReports] = await Promise.all([
+    fs.realpath(root),
+    fs.realpath(lexicalReports),
+  ]);
+  if (
+    revalidatedRoot !== realRoot ||
+    !isInside(realRoot, realReports) ||
+    (await fs.lstat(lexicalReports)).isSymbolicLink()
+  ) {
+    throw new Error('REPORT_PATH_OUTSIDE_WORKDIR');
+  }
+  return realReports;
+}
+
+function parsePowerPointPids(stdout: string): Set<number> {
+  const pids = new Set<number>();
+  for (const line of stdout.split(/\r?\n/)) {
+    const match = line.match(/^"POWERPNT\.EXE","([0-9]+)"/i);
+    if (match) pids.add(Number(match[1]));
+  }
+  return pids;
+}
+
+async function listPowerPointPids(): Promise<Set<number>> {
+  const { stdout } = await execute(
+    'tasklist.exe',
+    ['/FI', 'IMAGENAME eq POWERPNT.EXE', '/FO', 'CSV', '/NH'],
+    { windowsHide: true, timeout: 5_000, maxBuffer: MAX_BUFFER_BYTES },
+  );
+  return parsePowerPointPids(stdout);
+}
+
+async function terminateAttributedPowerPoint(
+  markerPath: string,
+  preexistingPids: Set<number>,
+): Promise<void> {
+  let pid: number;
+  try {
+    pid = Number((await fs.readFile(markerPath, 'ascii')).trim());
+  } catch (_error) {
+    return;
+  }
+  if (!Number.isSafeInteger(pid) || pid <= 0 || preexistingPids.has(pid))
+    return;
+  const currentPids = await listPowerPointPids();
+  if (!currentPids.has(pid)) return;
+  await execute('taskkill.exe', ['/PID', String(pid), '/T', '/F'], {
+    windowsHide: true,
+    timeout: 5_000,
+    maxBuffer: MAX_BUFFER_BYTES,
+  });
+}
+
+async function removeRunFiles(
+  reports: string,
+  runToken: string,
+  preservedOutput: string | null,
+): Promise<void> {
+  let names: string[];
+  try {
+    names = await fs.readdir(reports);
+  } catch (_error) {
+    return;
+  }
+  await Promise.all(
+    names
+      .filter((name) => name.includes(runToken))
+      .map(async (name) => {
+        const candidate = requireInside(reports, path.join(reports, name));
+        if (preservedOutput && candidate === preservedOutput) return;
+        await fs.rm(candidate, { force: true });
+      }),
+  );
 }
 
 function scriptPath(): string {
@@ -104,21 +234,19 @@ export async function generateTemplateReport(
 ): Promise<string> {
   const root = path.resolve(allowedRoot);
   const template = requireInside(root, templatePath);
-  const reports = requireInside(root, outputDir);
   if (path.extname(template).toLowerCase() !== '.pptx') {
     throw new Error('REPORT_TEMPLATE_INVALID');
   }
-  await fs.mkdir(reports, { recursive: true });
-  const [realRoot, realTemplate, realReports] = await Promise.all([
+  const [realRoot, realTemplate] = await Promise.all([
     fs.realpath(root),
     fs.realpath(template),
-    fs.realpath(reports),
   ]);
-  if (!isInside(realRoot, realTemplate) || !isInside(realRoot, realReports)) {
+  if (!isInside(realRoot, realTemplate)) {
     throw new Error('REPORT_PATH_OUTSIDE_WORKDIR');
   }
+  const realReports = await prepareOutputDirectory(root, realRoot, outputDir);
 
-  const unique = `${Date.now()}-${randomUUID()}`;
+  const unique = randomUUID();
   const specFile = requireInside(
     realRoot,
     path.join(realReports, `${unique}.json`),
@@ -126,6 +254,10 @@ export async function generateTemplateReport(
   const outputPath = requireInside(
     realRoot,
     path.join(realReports, `template-report-${unique}.pptx`),
+  );
+  const markerPath = requireInside(
+    realRoot,
+    path.join(realReports, `${unique}.powerpoint.pid`),
   );
   await fs.writeFile(specFile, `${JSON.stringify(spec, null, 2)}\n`, {
     encoding: 'utf8',
@@ -147,16 +279,31 @@ export async function generateTemplateReport(
     specFile,
     '-OutputPath',
     outputPath,
+    '-RunToken',
+    unique,
+    '-ProcessMarkerPath',
+    markerPath,
   ];
+  let preexistingPids = new Set<number>();
+  let succeeded = false;
   try {
+    preexistingPids = await listPowerPointPids();
     await execute('powershell.exe', args, {
       windowsHide: true,
       timeout: REPORT_TIMEOUT_MS,
       maxBuffer: MAX_BUFFER_BYTES,
     });
     await fs.access(outputPath);
+    succeeded = true;
     return outputPath;
   } catch (error) {
+    try {
+      await terminateAttributedPowerPoint(markerPath, preexistingPids);
+    } catch (_cleanupError) {
+      // Never replace the original stable generation failure with cleanup noise.
+    }
     throw mapProcessError(error);
+  } finally {
+    await removeRunFiles(realReports, unique, succeeded ? outputPath : null);
   }
 }

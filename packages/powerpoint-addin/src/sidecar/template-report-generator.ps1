@@ -2,7 +2,9 @@ param(
     [Parameter(Mandatory=$true)][string]$AllowedRoot,
     [Parameter(Mandatory=$true)][string]$TemplatePath,
     [Parameter(Mandatory=$true)][string]$SpecPath,
-    [Parameter(Mandatory=$true)][string]$OutputPath
+    [Parameter(Mandatory=$true)][string]$OutputPath,
+    [string]$RunToken = '',
+    [string]$ProcessMarkerPath = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -11,6 +13,16 @@ $source = $null
 $presentation = $null
 $verify = $null
 $tempPath = $null
+$markerPath = $null
+
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class MoliPowerPointWindow {
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+}
+'@
 
 function Get-FullPath([string]$Path) {
     return [IO.Path]::GetFullPath($Path)
@@ -75,7 +87,8 @@ function Get-ShapeDescriptor($Shape) {
 
 function Require-One($Candidates, [string]$Slot) {
     $items = @($Candidates)
-    if ($items.Count -ne 1) { throw "TEMPLATE_SLOT_NOT_FOUND:$Slot" }
+    if ($items.Count -eq 0) { throw "TEMPLATE_SLOT_NOT_FOUND:$Slot" }
+    if ($items.Count -gt 1) { throw "TEMPLATE_SLOT_AMBIGUOUS:$Slot" }
     return $items[0]
 }
 
@@ -110,10 +123,25 @@ function Get-SlotMap($Slide, [double]$SlideWidth, [double]$SlideHeight) {
         $_.Id -ne $title.Id -and $_.Id -ne $date.Id -and $_.Id -ne $department.Id -and
         ($_.Bold -or $_.Text -match $headingPattern)
     } | Sort-Object Top)
-    $preferred = @($headingCandidates | Where-Object { $_.Text -match $headingPattern })
-    if ($preferred.Count -ge 3) { $headings = @($preferred | Select-Object -First 3) }
-    else { $headings = @($headingCandidates | Select-Object -First 3) }
-    if ($headings.Count -ne 3) { throw 'TEMPLATE_SLOT_NOT_FOUND:section_headings' }
+    $numberAnchors = @($textItems | Where-Object {
+        $_.Text -match '^[123]$' -and $_.Top -gt ($SlideHeight * 0.14) -and $_.Top -lt ($SlideHeight * 0.80)
+    } | Sort-Object Top)
+    $headings = @()
+    if ($numberAnchors.Count -eq 3) {
+        for ($headingIndex = 0; $headingIndex -lt 3; $headingIndex++) {
+            $anchor = $numberAnchors[$headingIndex]
+            $verticalTolerance = [Math]::Max(20.0, [double]$anchor.Height)
+            $slotCandidates = @($headingCandidates | Where-Object {
+                $_.Left -ge ($anchor.Left + $anchor.Width - 2) -and
+                [Math]::Abs(($_.Top + ($_.Height / 2)) - ($anchor.Top + ($anchor.Height / 2))) -le $verticalTolerance
+            })
+            $headings += Require-One $slotCandidates ("section{0}_heading" -f ($headingIndex + 1))
+        }
+    } else {
+        if ($headingCandidates.Count -eq 0) { throw 'TEMPLATE_SLOT_NOT_FOUND:section_headings' }
+        if ($headingCandidates.Count -ne 3) { throw 'TEMPLATE_SLOT_AMBIGUOUS:section_headings' }
+        $headings = @($headingCandidates | Sort-Object Top)
+    }
 
     $pageNumbers = @($textItems | Where-Object {
         $_.Top -ge ($SlideHeight * 0.90) -and $_.Text.Length -le 8 -and
@@ -130,10 +158,10 @@ function Get-SlotMap($Slide, [double]$SlideWidth, [double]$SlideHeight) {
     })
     $body1 = Require-One @($bodyCandidates | Where-Object {
         $_.Top -gt $headings[0].Top -and $_.Top -lt $headings[1].Top
-    } | Sort-Object Top | Select-Object -First 1) 'section1_body'
+    } | Sort-Object Top) 'section1_body'
     $body3 = Require-One @($bodyCandidates | Where-Object {
         $_.Top -gt $headings[2].Top -and $_.Top -lt ($SlideHeight * 0.90)
-    } | Sort-Object Top | Select-Object -First 1) 'section3_body'
+    } | Sort-Object Top) 'section3_body'
 
     return [PSCustomObject]@{
         Title = $title; Date = $date; Department = $department; Table = $table
@@ -227,7 +255,13 @@ $outputDirectory = [string](Resolve-Path -LiteralPath $outputDirectory).Provider
 if ([IO.Path]::GetExtension($template) -ne '.pptx') { throw 'REPORT_TEMPLATE_INVALID' }
 if ([IO.Path]::GetExtension($output) -ne '.pptx') { throw 'REPORT_OUTPUT_INVALID' }
 if (Test-Path -LiteralPath $output) { throw 'REPORT_OUTPUT_ALREADY_EXISTS' }
-$tempPath = Join-Path $outputDirectory (([IO.Path]::GetFileNameWithoutExtension($output)) + '.' + [Guid]::NewGuid().ToString('N') + '.tmp.pptx')
+if (-not $RunToken) { $RunToken = [Guid]::NewGuid().ToString('N') }
+if ($RunToken -notmatch '^[A-Za-z0-9-]{1,80}$') { throw 'REPORT_RUN_TOKEN_INVALID' }
+if (-not $ProcessMarkerPath) { $ProcessMarkerPath = Join-Path $outputDirectory ($RunToken + '.powerpoint.pid') }
+$markerPath = Assert-UnderRoot $ProcessMarkerPath $root
+if ([IO.Path]::GetDirectoryName($markerPath) -ne $outputDirectory) { throw 'REPORT_PATH_OUTSIDE_WORKDIR' }
+if (Test-Path -LiteralPath $markerPath) { throw 'REPORT_PROCESS_MARKER_EXISTS' }
+$tempPath = Join-Path $outputDirectory (([IO.Path]::GetFileNameWithoutExtension($output)) + '.' + $RunToken + '.tmp.pptx')
 [void](Assert-UnderRoot $tempPath $root)
 
 $spec = Get-Content -LiteralPath $specFile -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -237,6 +271,10 @@ if ($pages.Count -lt 1 -or $pages.Count -gt 3) { throw 'REPORT_SPEC_INVALID:page
 try {
     try {
         $ppt = New-Object -ComObject PowerPoint.Application
+        [uint32]$powerPointProcessId = 0
+        [void][MoliPowerPointWindow]::GetWindowThreadProcessId([IntPtr]([int64]$ppt.HWND), [ref]$powerPointProcessId)
+        if ($powerPointProcessId -le 0) { throw 'REPORT_PROCESS_ATTRIBUTION_FAILED' }
+        [IO.File]::WriteAllText($markerPath, [string]$powerPointProcessId, [Text.Encoding]::ASCII)
         $source = $ppt.Presentations.Open($template, -1, 0, 0)
     } catch { throw "TEMPLATE_OPEN_FAILED:$($_.Exception.Message)" }
     if ($source.Slides.Count -ne 1) { throw 'TEMPLATE_SLOT_NOT_FOUND:single_source_slide' }
@@ -316,13 +354,19 @@ try {
                 ([double]$shape.Left + [double]$shape.Width) -gt ([double]$verify.PageSetup.SlideWidth + 0.5) -or
                 ([double]$shape.Top + [double]$shape.Height) -gt ([double]$verify.PageSetup.SlideHeight + 0.5)) { $offSlide++ }
             if ($shape.HasTextFrame -eq -1 -and $shape.TextFrame.HasText -eq -1) {
-                try { if ([double]$shape.TextFrame2.TextRange.BoundHeight -gt ([double]$shape.Height + 0.5)) { $overflow++ } } catch {}
+                try {
+                    $usableHeight = [Math]::Max(0, [double]$shape.Height - [double]$shape.TextFrame2.MarginTop - [double]$shape.TextFrame2.MarginBottom)
+                    if ([double]$shape.TextFrame2.TextRange.BoundHeight -gt ($usableHeight + 0.5)) { $overflow++ }
+                } catch {}
             }
             if ($shape.HasTable -eq -1) {
                 for ($rowIndex = 1; $rowIndex -le $shape.Table.Rows.Count; $rowIndex++) {
                     for ($columnIndex = 1; $columnIndex -le $shape.Table.Columns.Count; $columnIndex++) {
                         $cell = $shape.Table.Cell($rowIndex, $columnIndex).Shape
-                        try { if ([double]$cell.TextFrame2.TextRange.BoundHeight -gt ([double]$cell.Height + 0.5)) { $overflow++ } } catch {}
+                        try {
+                            $cellUsableHeight = [Math]::Max(0, [double]$cell.Height - [double]$cell.TextFrame2.MarginTop - [double]$cell.TextFrame2.MarginBottom)
+                            if ([double]$cell.TextFrame2.TextRange.BoundHeight -gt ($cellUsableHeight + 0.5)) { $overflow++ }
+                        } catch {}
                     }
                 }
             }
@@ -348,4 +392,5 @@ finally {
     }
     [GC]::Collect(); [GC]::WaitForPendingFinalizers()
     if ($tempPath -and (Test-Path -LiteralPath $tempPath)) { Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue }
+    if ($markerPath -and (Test-Path -LiteralPath $markerPath)) { Remove-Item -LiteralPath $markerPath -Force -ErrorAction SilentlyContinue }
 }
