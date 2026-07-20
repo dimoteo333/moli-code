@@ -46,4 +46,24 @@ describe('buildBenchmarkManifest', () => {
       measurementPath: 'full-path-harness',
     });
   });
+
+  it('reports pane-to-ready from connection lifecycle events', () => {
+    const manifest = buildBenchmarkManifest({
+      app: 'powerpoint',
+      stage: 'stage-01-observability',
+      runs: [],
+      connectionEvents: [
+        { name: 'taskpane_connected', atMs: 10 },
+        { name: 'query_spawn_started', atMs: 20 },
+        { name: 'cli_initialized', atMs: 410 },
+        { name: 'hello_ok_received', atMs: 412 },
+      ],
+    });
+    expect(manifest.connection).toMatchObject({
+      paneToQuerySpawnMs: 10,
+      querySpawnToCliReadyMs: 390,
+      paneToReadyMs: 400,
+      paneToHelloOkMs: 402,
+    });
+  });
 });

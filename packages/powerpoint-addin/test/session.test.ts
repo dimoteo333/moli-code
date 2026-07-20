@@ -109,12 +109,30 @@ async function tick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function performanceNames(ws: FakeWs): string[] {
+  return (ws.sent as unknown as Array<{ type: string; name?: string }>)
+    .filter((item) => item.type === 'performance_event')
+    .map((item) => item.name ?? '');
+}
+
 beforeEach(() => {
   captured.length = 0;
   generatePowerPointReport.mockClear();
 });
 
 describe('PowerPoint PaneSession', () => {
+  it('emits query spawn and CLI readiness before hello_ok', async () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(performanceNames(ws)).toEqual(['query_spawn_started']);
+    await tick();
+    expect(performanceNames(ws)).toEqual([
+      'query_spawn_started',
+      'cli_initialized',
+    ]);
+    expect(ws.sent.at(-1)).toMatchObject({ type: 'hello_ok' });
+  });
+
   it('generates /report locally without sending the Markdown to the model', async () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
@@ -135,6 +153,7 @@ describe('PowerPoint PaneSession', () => {
     await tick();
     await tick();
     expect(generatePowerPointReport).toHaveBeenCalledOnce();
+    expect(performanceNames(ws)).toContain('artifact_saved');
     expect(ws.framesOfType('assistant_message')[0].blocks[0].text).toContain(
       'meeting-report.pptx',
     );

@@ -165,6 +165,23 @@ export interface PongFrame {
   type: 'pong';
 }
 
+export type PerformanceEventName =
+  | 'query_spawn_started'
+  | 'cli_initialized'
+  | 'query_prewarm_failed'
+  | 'user_message_enqueued'
+  | 'first_delta_received'
+  | 'artifact_saved';
+
+export interface PerformanceEventFrame {
+  v: number;
+  type: 'performance_event';
+  name: PerformanceEventName;
+  elapsedMs: number;
+  turnId?: number;
+  detail?: string;
+}
+
 export type SidecarToPaneFrame =
   | HelloOkFrame
   | HelloErrFrame
@@ -176,6 +193,7 @@ export type SidecarToPaneFrame =
   | QuestionRequestFrame
   | TurnCompleteFrame
   | ErrorFrame
+  | PerformanceEventFrame
   | PongFrame;
 
 export type AnyFrame = PaneToSidecarFrame | SidecarToPaneFrame;

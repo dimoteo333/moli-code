@@ -106,7 +106,13 @@ function metricMedian(runs, key) {
   return median(values);
 }
 
-export function buildBenchmarkManifest({ app, stage, runs }) {
+function connectionInterval(events, from, to) {
+  const fromMs = events.find((event) => event.name === from)?.atMs;
+  const toMs = events.find((event) => event.name === to)?.atMs;
+  return Number.isFinite(fromMs) && Number.isFinite(toMs) ? toMs - fromMs : undefined;
+}
+
+export function buildBenchmarkManifest({ app, stage, runs, connectionEvents = [] }) {
   const metricKeys = [
     'paneToReadyMs',
     'sendToApiMs',
@@ -121,6 +127,36 @@ export function buildBenchmarkManifest({ app, stage, runs }) {
     stage,
     measurementPath: 'full-path-harness',
     createdAt: new Date().toISOString(),
+    connection: {
+      paneToQuerySpawnMs: connectionInterval(
+        connectionEvents,
+        'taskpane_connected',
+        'query_spawn_started',
+      ),
+      querySpawnToCliReadyMs: connectionInterval(
+        connectionEvents,
+        'query_spawn_started',
+        'cli_initialized',
+      ),
+      paneToReadyMs: connectionInterval(
+        connectionEvents,
+        'taskpane_connected',
+        'cli_initialized',
+      ),
+      paneToHelloOkMs: connectionInterval(
+        connectionEvents,
+        'taskpane_connected',
+        'hello_ok_received',
+      ),
+      events: connectionEvents,
+    },
+    unavailableMetrics: [
+      {
+        name: 'api_request_started',
+        reason:
+          'Not exposed by the Add-in protocol; SDK/CLI instrumentation is excluded by user scope.',
+      },
+    ],
     runCount: runs.length,
     warmMedian: Object.fromEntries(metricKeys.map((key) => [key, metricMedian(runs, key)])),
     runs,
@@ -207,6 +243,7 @@ export async function runSidecarBenchmark(options) {
 
   const excelHarness = new ExcelHarness();
   const rawFrames = [];
+  const connectionEvents = [];
   const runs = [];
   const startedAt = performance.now();
   let activeRun = null;
@@ -252,7 +289,9 @@ export async function runSidecarBenchmark(options) {
     };
 
     socket.on('open', () => {
-      rawFrames.push({ direction: 'local', type: 'taskpane_connected', atMs: now() });
+      const atMs = now();
+      rawFrames.push({ direction: 'local', type: 'taskpane_connected', atMs });
+      connectionEvents.push({ name: 'taskpane_connected', atMs });
       sendJson(socket, {
         type: 'hello',
         token: tokenBody.token,
@@ -270,6 +309,7 @@ export async function runSidecarBenchmark(options) {
       const frame = JSON.parse(String(data));
       rawFrames.push({ direction: 'sidecar', atMs: now(), frame });
       if (frame.type === 'hello_ok') {
+        connectionEvents.push({ name: 'hello_ok_received', atMs: now() });
         sendNext();
         return;
       }
@@ -324,7 +364,18 @@ export async function runSidecarBenchmark(options) {
         return;
       }
       if (frame.type === 'performance_event') {
-        mark(frame.name, { sidecarElapsedMs: frame.elapsedMs });
+        const event = {
+          name: frame.name,
+          atMs: now(),
+          sidecarElapsedMs: frame.elapsedMs,
+          ...(frame.turnId === undefined ? {} : { turnId: frame.turnId }),
+          ...(frame.detail === undefined ? {} : { detail: frame.detail }),
+        };
+        if (activeRun) {
+          activeRun.events.push(event);
+        } else {
+          connectionEvents.push(event);
+        }
         return;
       }
       if (frame.type === 'turn_complete' && activeRun) {
@@ -343,7 +394,12 @@ export async function runSidecarBenchmark(options) {
     });
   });
 
-  const manifest = buildBenchmarkManifest({ app: options.app, stage: options.stage, runs });
+  const manifest = buildBenchmarkManifest({
+    app: options.app,
+    stage: options.stage,
+    runs,
+    connectionEvents,
+  });
   await writeJsonWithHash(path.join(options.outputDir, 'metrics.json'), manifest);
   await writeJsonWithHash(path.join(options.outputDir, 'raw-frames.json'), rawFrames);
   if (options.app === 'excel') {

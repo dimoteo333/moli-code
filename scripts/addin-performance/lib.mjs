@@ -80,6 +80,88 @@ export function generateReceipts(seed = 20260719) {
   };
 }
 
+export function buildExcelReplayPlan(operations, fixture) {
+  const allowedOps = new Set([
+    'get_workbook_overview',
+    'read_range',
+    'write_range',
+    'set_formulas',
+    'get_selection',
+    'clear_range',
+    'add_worksheet',
+    'format_range',
+    'find',
+  ]);
+  if (!Array.isArray(operations) || !operations.length) {
+    throw new Error('Excel operation log is empty');
+  }
+  for (const operation of operations) {
+    if (!operation || !allowedOps.has(operation.op)) {
+      throw new Error(`Unsupported Excel operation: ${String(operation?.op)}`);
+    }
+    if (!operation.args || typeof operation.args !== 'object') {
+      throw new Error(`Excel operation '${operation.op}' has invalid args`);
+    }
+  }
+
+  const writes = operations.filter((operation) => operation.op === 'write_range');
+  const lastWrite = (predicate) => [...writes].reverse().find(predicate);
+  const raw = lastWrite(
+    (operation) =>
+      operation.args.sheet === '수납원장' &&
+      Array.isArray(operation.args.values) &&
+      operation.args.values.length === fixture.rows.length + 1,
+  );
+  const weekly = lastWrite(
+    (operation) =>
+      operation.args.sheet === '주별집계' &&
+      String(operation.args.range).startsWith('A1:') &&
+      Array.isArray(operation.args.values) &&
+      operation.args.values.length >= fixture.weeks.length + 1,
+  );
+  const monthly = lastWrite(
+    (operation) =>
+      operation.args.sheet === '월별집계' &&
+      Array.isArray(operation.args.values) &&
+      operation.args.values.length >= 2,
+  );
+  if (!raw || !weekly || !monthly) {
+    throw new Error('Recorded operations do not contain all required Excel tables');
+  }
+
+  const expectedRows = fixture.rows.map((row) => [
+    row.receiptId,
+    row.date,
+    row.payer,
+    row.category,
+    row.amount,
+    row.method,
+    row.note,
+  ]);
+  if (JSON.stringify(raw.args.values.slice(1)) !== JSON.stringify(expectedRows)) {
+    throw new Error('Recorded receipt rows do not match the fixture');
+  }
+  const weeklyTotals = weekly.args.values
+    .slice(1, fixture.weeks.length + 1)
+    .map((row) => Number(row[3]));
+  const expectedWeekly = fixture.weeks.map((week) => week.total);
+  if (JSON.stringify(weeklyTotals) !== JSON.stringify(expectedWeekly)) {
+    throw new Error('Recorded weekly totals do not match the fixture oracle');
+  }
+  const monthTotal = Number(monthly.args.values[1][1]);
+  if (monthTotal !== fixture.monthTotal) {
+    throw new Error('Recorded monthly total does not match the fixture oracle');
+  }
+
+  return {
+    operationCount: operations.length,
+    receiptCount: expectedRows.length,
+    weeklyTotals,
+    monthTotal,
+    operations,
+  };
+}
+
 export function median(values) {
   if (!Array.isArray(values) || values.length === 0) {
     return undefined;

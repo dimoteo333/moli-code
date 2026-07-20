@@ -138,6 +138,12 @@ async function tick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function performanceNames(ws: FakeWs): string[] {
+  return (ws.sent as unknown as Array<{ type: string; name?: string }>)
+    .filter((item) => item.type === 'performance_event')
+    .map((item) => item.name ?? '');
+}
+
 beforeEach(() => {
   captured.length = 0;
 });
@@ -145,12 +151,27 @@ beforeEach(() => {
 // --- tests ------------------------------------------------------------------
 
 describe('PaneSession', () => {
+  it('emits query spawn and CLI readiness before hello_ok', async () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(performanceNames(ws)).toEqual(['query_spawn_started']);
+    await tick();
+    expect(performanceNames(ws)).toEqual([
+      'query_spawn_started',
+      'cli_initialized',
+    ]);
+    expect(ws.sent.at(-1)).toMatchObject({ type: 'hello_ok' });
+  });
+
   it('sends hello_ok after query prewarm is ready', async () => {
     const ws = new FakeWs();
     makeSession(ws);
     expect(ws.framesOfType('hello_ok')).toHaveLength(0);
     await tick();
-    expect(ws.sent[0]).toMatchObject({ type: 'hello_ok', version: 'test' });
+    expect(ws.framesOfType('hello_ok')[0]).toMatchObject({
+      type: 'hello_ok',
+      version: 'test',
+    });
   });
 
   it('prewarms one query and feeds user messages into its streaming input', async () => {

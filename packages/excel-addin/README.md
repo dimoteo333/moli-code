@@ -15,6 +15,10 @@ moli-code CLI  ←→  사내 LLM 게이트웨이
 - 에이전트의 워크북 조작은 SDK 내장 MCP 서버(`excel_*` 도구 9종)가
   WebSocket으로 작업창에 전달하고, 작업창이 `Excel.run()`으로 실행해 응답합니다.
 - 쓰기 도구는 작업창의 승인 모달(허용/항상 허용/거부)을 거칩니다.
+- 작업창 연결 시 CLI 세션을 미리 시작하고 초기화가 끝난 뒤 준비 상태를 알립니다.
+  `query_spawn_started`, `cli_initialized`, `user_message_enqueued`,
+  `first_delta_received` 이벤트로 작업창 연결부터 첫 응답까지 구간을 분리 측정할 수
+  있습니다. 성능 측정 원시 프레임과 해시는 `artifacts/addin-performance/`에 보존됩니다.
 
 ## 개발 (macOS)
 

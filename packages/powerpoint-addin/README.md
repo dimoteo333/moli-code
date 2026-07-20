@@ -25,6 +25,24 @@ moli-code CLI  ←→  사내 LLM 게이트웨이
 - `ask_user_question`은 전용 선택/직접입력 대화상자로 표시되며 답변이 에이전트
   도구 실행으로 반환됩니다.
 
+## 책임자 제출용 PPTX
+
+Markdown 회의록을 첨부하고 `/report @회의록.md`를 보내면 A4 세로형 PPTX를
+생성합니다. 이 경로는 LLM 응답에 의존하지 않고 고정 Markdown 파서와 Windows
+PowerPoint COM을 사용하므로 소형 모델에서도 보고서 구조가 달라지지 않습니다.
+
+- 3쪽 구성: 회의 개요, 결정/실행 과제, 위험/다음 일정
+- 모든 텍스트에 `원신한` 적용(미설치 시 생성 전에 명시적으로 실패)
+- 생성 경로를 Add-in 작업 폴더 아래로 제한하고, 저장 후 PowerPoint로 재열어 검증
+- 결과물은 `workspace\reports\*.pptx`에 저장
+
+대상 PC에는 PowerPoint와 Windows PowerShell 5.1만 필요합니다. Python이나 시스템
+Node.js를 추가 설치할 필요가 없으며, Node.js 런타임은 오프라인 ZIP에 포함됩니다.
+
+세션 연결 시 CLI를 미리 시작하며 `query_spawn_started`, `cli_initialized`,
+`user_message_enqueued`, `first_delta_received`, `artifact_saved` 성능 이벤트를
+sidecar 프로토콜로 기록할 수 있습니다.
+
 ## 개발
 
 ```bash

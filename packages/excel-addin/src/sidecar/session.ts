@@ -10,6 +10,7 @@
 
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import { performance } from 'node:perf_hooks';
 import type { WebSocket } from 'ws';
 import {
   query,
@@ -27,6 +28,7 @@ import {
   type PaneToSidecarFrame,
   type SidecarToPaneFrame,
   type PaneContentBlock,
+  type PerformanceEventName,
 } from '../shared/messages.js';
 import type { SidecarConfig } from './config.js';
 import { RpcManager } from './rpc.js';
@@ -109,7 +111,9 @@ export class PaneSession {
   private queryInstance: Query | null = null;
   private permissionSeq = 0;
   private turnId = 0;
+  private firstDeltaTurn = 0;
   private disposed = false;
+  private readonly sessionStartedAt = performance.now();
 
   constructor(
     private readonly ws: WebSocket,
@@ -131,14 +135,19 @@ export class PaneSession {
     try {
       const q = this.ensureQuery();
       void q.initialized.then(
-        () => this.sendHello(),
+        () => {
+          this.emitPerformance('cli_initialized');
+          this.sendHello();
+        },
         (err) => {
           this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+          this.emitPerformance('query_prewarm_failed', undefined, String(err));
           this.sendHello();
         },
       );
     } catch (err) {
       this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+      this.emitPerformance('query_prewarm_failed', undefined, String(err));
       this.sendHello();
     }
   }
@@ -252,6 +261,7 @@ export class PaneSession {
       message: { role: 'user', content: text },
       parent_tool_use_id: null,
     });
+    this.emitPerformance('user_message_enqueued', this.turnId);
   }
 
   private ensureQuery(): Query {
@@ -289,6 +299,7 @@ export class PaneSession {
     this.logger.info(
       `Starting agent session ${this.sessionId} (cli=${config.cliPath ?? '<auto>'} cwd=${config.workDir})`,
     );
+    this.emitPerformance('query_spawn_started');
     this.queryInstance = query({ prompt: this.inputQueue, options });
     void this.pumpMessages(this.queryInstance);
     return this.queryInstance;
@@ -324,6 +335,10 @@ export class PaneSession {
           event.type === 'content_block_delta' &&
           event.delta.type === 'text_delta'
         ) {
+          if (this.firstDeltaTurn !== this.turnId) {
+            this.firstDeltaTurn = this.turnId;
+            this.emitPerformance('first_delta_received', this.turnId);
+          }
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_delta',
@@ -482,6 +497,22 @@ export class PaneSession {
     } catch (err) {
       this.logger.error('WS send failed', err);
     }
+  }
+
+  private emitPerformance(
+    name: PerformanceEventName,
+    turnId?: number,
+    detail?: string,
+  ): void {
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'performance_event',
+      name,
+      elapsedMs:
+        Math.round((performance.now() - this.sessionStartedAt) * 1000) / 1000,
+      ...(turnId === undefined ? {} : { turnId }),
+      ...(detail === undefined ? {} : { detail }),
+    });
   }
 }
 

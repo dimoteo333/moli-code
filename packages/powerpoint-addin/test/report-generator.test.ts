@@ -1,8 +1,8 @@
+import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
-import {
-  isReportCommand,
-  parseMeetingMarkdown,
-} from '../src/sidecar/report-generator.js';
+import * as report from '../src/sidecar/report-generator.js';
+
+const { isReportCommand, parseMeetingMarkdown } = report;
 
 describe('deterministic PowerPoint report generator', () => {
   it('parses the fixed report schema from meeting Markdown', () => {
@@ -35,5 +35,22 @@ describe('deterministic PowerPoint report generator', () => {
   it('recognizes only the explicit report command', () => {
     expect(isReportCommand('/report @minutes.md')).toBe(true);
     expect(isReportCommand('report this')).toBe(false);
+  });
+
+  it('rejects report output directories outside the configured work root', () => {
+    expect(report.assertReportOutputDir).toBeTypeOf('function');
+    expect(() =>
+      report.assertReportOutputDir('C:\\safe\\reports', 'C:\\safe'),
+    ).not.toThrow();
+    expect(() =>
+      report.assertReportOutputDir('C:\\escape', 'C:\\safe'),
+    ).toThrow(/outside/i);
+  });
+
+  it('fails explicitly when the required font is not registered', async () => {
+    const source = await readFile('src/sidecar/report-generator.ps1', 'utf8');
+    expect(source).toContain('FONT_NOT_FOUND');
+    expect(source).toContain('CurrentUser');
+    expect(source).toContain('LocalMachine');
   });
 });

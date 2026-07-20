@@ -13,6 +13,22 @@ $dark = 0x333333
 $spec = Get-Content -LiteralPath $SpecPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $tempPath = [IO.Path]::Combine([IO.Path]::GetDirectoryName($OutputPath), ([IO.Path]::GetFileNameWithoutExtension($OutputPath) + '.tmp.pptx'))
 
+$fontLocations = @(
+    @{ Scope = 'CurrentUser'; Path = 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\Fonts' },
+    @{ Scope = 'LocalMachine'; Path = 'Registry::HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' }
+)
+$fontInstalled = $false
+foreach ($location in $fontLocations) {
+    if (Test-Path $location.Path) {
+        $properties = (Get-ItemProperty -LiteralPath $location.Path).PSObject.Properties
+        if ($properties | Where-Object { $_.Name -like "$font*" }) {
+            $fontInstalled = $true
+            break
+        }
+    }
+}
+if (-not $fontInstalled) { throw "FONT_NOT_FOUND: $font" }
+
 function Add-Text($slide, [string]$text, [double]$left, [double]$top, [double]$width, [double]$height, [double]$size, [int]$color, [bool]$bold=$false) {
     $shape = $slide.Shapes.AddTextbox(1, $left, $top, $width, $height)
     $shape.TextFrame.TextRange.Text = $text
@@ -110,6 +126,21 @@ try {
     $verify = $ppt.Presentations.Open($tempPath, -1, 0, 0)
     if ($verify.Slides.Count -ne 3) { throw '재열기 검증 실패: 슬라이드 수가 3이 아닙니다.' }
     if ([Math]::Abs($verify.PageSetup.SlideWidth - 595.28) -gt 1 -or [Math]::Abs($verify.PageSetup.SlideHeight - 841.89) -gt 1) { throw '재열기 검증 실패: A4 세로 크기가 아닙니다.' }
+    foreach ($slide in $verify.Slides) {
+        foreach ($shape in $slide.Shapes) {
+            if ($shape.HasTextFrame -and $shape.TextFrame.HasText -and [string]$shape.TextFrame.TextRange.Font.Name -ne $font) {
+                throw "FONT_MISMATCH: $($shape.TextFrame.TextRange.Font.Name)"
+            }
+            if ($shape.HasTable) {
+                for ($rowIndex=1; $rowIndex -le $shape.Table.Rows.Count; $rowIndex++) {
+                    for ($columnIndex=1; $columnIndex -le $shape.Table.Columns.Count; $columnIndex++) {
+                        $cellFont = [string]$shape.Table.Cell($rowIndex,$columnIndex).Shape.TextFrame.TextRange.Font.Name
+                        if ($cellFont -ne $font) { throw "FONT_MISMATCH: $cellFont" }
+                    }
+                }
+            }
+        }
+    }
     $verify.Close()
     $verify = $null
     Move-Item -LiteralPath $tempPath -Destination $OutputPath -Force

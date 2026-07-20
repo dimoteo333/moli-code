@@ -84,6 +84,25 @@ export function isReportCommand(text: string): boolean {
   return /^\/report(?:\s|$)/i.test(text.trim());
 }
 
+export function assertReportOutputDir(
+  outputDir: string,
+  allowedRoot: string,
+): string {
+  const resolvedOutput = path.resolve(outputDir);
+  const resolvedRoot = path.resolve(allowedRoot);
+  const relative = path.relative(resolvedRoot, resolvedOutput);
+  if (
+    relative === '..' ||
+    relative.startsWith(`..${path.sep}`) ||
+    path.isAbsolute(relative)
+  ) {
+    throw new Error(
+      'Report output directory is outside the configured work root',
+    );
+  }
+  return resolvedOutput;
+}
+
 function safeBaseName(name: string): string {
   const base = path.basename(name, path.extname(name));
   return (
@@ -95,13 +114,15 @@ function safeBaseName(name: string): string {
 export async function generatePowerPointReport(
   attachment: LocalFileAttachment,
   outputDir: string,
+  allowedRoot: string = outputDir,
 ): Promise<string> {
   const spec = parseMeetingMarkdown(attachment.content);
-  await fs.mkdir(outputDir, { recursive: true });
+  const safeOutputDir = assertReportOutputDir(outputDir, allowedRoot);
+  await fs.mkdir(safeOutputDir, { recursive: true });
   const stamp = new Date().toISOString().replace(/[:.]/g, '-');
   const base = safeBaseName(attachment.name);
-  const specPath = path.join(outputDir, `${base}-${stamp}.json`);
-  const outputPath = path.join(outputDir, `${base}-${stamp}.pptx`);
+  const specPath = path.join(safeOutputDir, `${base}-${stamp}.json`);
+  const outputPath = path.join(safeOutputDir, `${base}-${stamp}.pptx`);
   await fs.writeFile(specPath, JSON.stringify(spec, null, 2), 'utf8');
 
   const scriptPath = path.join(
