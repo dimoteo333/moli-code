@@ -1,5 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { lstat, mkdir, realpath, writeFile } from 'node:fs/promises';
+import type { Stats } from 'node:fs';
+import {
+  lstat,
+  mkdir,
+  open,
+  realpath,
+  stat,
+  unlink,
+  type FileHandle,
+} from 'node:fs/promises';
 import {
   basename,
   extname,
@@ -41,6 +50,43 @@ function isContained(parent: string, candidate: string): boolean {
       !pathFromParent.startsWith(`..${sep}`) &&
       !pathFromParent.startsWith('../'))
   );
+}
+
+function sameCanonicalPath(first: string, second: string): boolean {
+  return process.platform === 'win32'
+    ? first.toLocaleLowerCase('en-US') === second.toLocaleLowerCase('en-US')
+    : first === second;
+}
+
+function sameFileIdentity(first: Stats, second: Stats): boolean {
+  return (
+    first.ino !== 0 &&
+    second.ino !== 0 &&
+    first.dev === second.dev &&
+    first.ino === second.ino
+  );
+}
+
+async function cleanVerifiedFile(
+  handle: FileHandle,
+  destination: string,
+  handleStats: Stats | undefined,
+): Promise<void> {
+  // The handle always refers to the file created by this function, even if a
+  // parent path is replaced. Never unlink a path unless it still has that
+  // exact filesystem identity.
+  const verifiedHandleStats =
+    handleStats ?? (await handle.stat().catch(() => undefined));
+  await handle.truncate(0).catch(() => undefined);
+  if (!verifiedHandleStats) return;
+  try {
+    const destinationStats = await stat(destination);
+    if (sameFileIdentity(verifiedHandleStats, destinationStats)) {
+      await unlink(destination);
+    }
+  } catch (_error) {
+    // Best-effort cleanup must not touch an unverified replacement path.
+  }
 }
 
 function validateName(name: unknown): asserts name is string {
@@ -154,17 +200,19 @@ export async function saveTemplateAttachment(
     );
   }
 
+  let canonicalWorkDir = '';
+  let canonicalTemplatesDir = '';
   try {
     await mkdir(templatesDir, { recursive: true });
     const templatesStat = await lstat(templatesDir);
     if (!templatesStat.isDirectory() || templatesStat.isSymbolicLink()) {
       fail('TEMPLATE_PATH_INVALID', '템플릿 저장 폴더가 안전하지 않습니다.');
     }
-    const [realWorkDir, realTemplatesDir] = await Promise.all([
+    [canonicalWorkDir, canonicalTemplatesDir] = await Promise.all([
       realpath(resolvedWorkDir),
       realpath(templatesDir),
     ]);
-    if (!isContained(realWorkDir, realTemplatesDir)) {
+    if (!isContained(canonicalWorkDir, canonicalTemplatesDir)) {
       fail(
         'TEMPLATE_PATH_INVALID',
         '템플릿 저장 경로가 작업 폴더 밖에 있습니다.',
@@ -183,13 +231,56 @@ export async function saveTemplateAttachment(
       '템플릿 저장 경로가 작업 폴더 밖에 있습니다.',
     );
   }
+  let handle: FileHandle | undefined;
+  let handleStats: Stats | undefined;
   try {
-    await writeFile(destination, bytes, { flag: 'wx' });
-  } catch (_error) {
+    handle = await open(destination, 'wx');
+    await handle.writeFile(bytes);
+    await handle.sync();
+    handleStats = await handle.stat();
+
+    const [
+      currentWorkDir,
+      currentTemplatesDir,
+      currentDestination,
+      currentPathStats,
+      templatesStat,
+    ] = await Promise.all([
+      realpath(resolvedWorkDir),
+      realpath(templatesDir),
+      realpath(destination),
+      stat(destination),
+      lstat(templatesDir),
+    ]);
+    if (
+      !templatesStat.isDirectory() ||
+      templatesStat.isSymbolicLink() ||
+      !sameCanonicalPath(canonicalWorkDir, currentWorkDir) ||
+      !sameCanonicalPath(canonicalTemplatesDir, currentTemplatesDir) ||
+      !isContained(currentWorkDir, currentTemplatesDir) ||
+      !isContained(currentTemplatesDir, currentDestination) ||
+      !sameFileIdentity(handleStats, currentPathStats)
+    ) {
+      fail(
+        'TEMPLATE_PATH_RACE',
+        '템플릿 저장 중 작업 폴더 경로가 변경되었습니다.',
+      );
+    }
+  } catch (error) {
+    if (handle) await cleanVerifiedFile(handle, destination, handleStats);
+    if (error instanceof TemplateAttachmentError) throw error;
+    if (handleStats) {
+      fail(
+        'TEMPLATE_PATH_RACE',
+        '템플릿 저장 중 작업 폴더 경로가 변경되었습니다.',
+      );
+    }
     fail(
       'TEMPLATE_WRITE_FAILED',
       'PPTX 템플릿을 안전하게 저장하지 못했습니다.',
     );
+  } finally {
+    await handle?.close().catch(() => undefined);
   }
   return destination;
 }

@@ -1,10 +1,32 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, relative, resolve } from 'node:path';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MAX_TEMPLATE_BYTES } from '../src/shared/attachment-limits.js';
 import type { LocalFileAttachment } from '../src/shared/messages.js';
 import { saveTemplateAttachment } from '../src/sidecar/template-attachment.js';
+
+const fileSystemRace = vi.hoisted(() => ({ destinationRealpath: '' }));
+
+vi.mock('node:fs/promises', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('node:fs/promises')>();
+  return {
+    ...actual,
+    realpath: vi.fn(async (path: Parameters<typeof actual.realpath>[0]) => {
+      if (fileSystemRace.destinationRealpath && /\.pptx$/i.test(String(path))) {
+        return fileSystemRace.destinationRealpath;
+      }
+      return actual.realpath(path);
+    }),
+  };
+});
 
 const pptxBytes = Buffer.from([0x50, 0x4b, 0x03, 0x04, 0x14, 0, 0, 0]);
 
@@ -64,6 +86,7 @@ describe('saveTemplateAttachment', () => {
   const cleanup: string[] = [];
 
   afterEach(async () => {
+    fileSystemRace.destinationRealpath = '';
     await Promise.all(
       cleanup
         .splice(0)
@@ -115,5 +138,20 @@ describe('saveTemplateAttachment', () => {
     ).rejects.toMatchObject({
       code: 'TEMPLATE_PATH_INVALID',
     });
+  });
+
+  it('rejects and cleans its own file when the destination resolves outside after writing', async () => {
+    const workDir = await temporaryWorkDir();
+    fileSystemRace.destinationRealpath = resolve(
+      workDir,
+      '..',
+      'replaced',
+      'template.pptx',
+    );
+
+    await expect(
+      saveTemplateAttachment(attachment(), workDir),
+    ).rejects.toMatchObject({ code: 'TEMPLATE_PATH_RACE' });
+    await expect(readdir(resolve(workDir, 'templates'))).resolves.toEqual([]);
   });
 });
