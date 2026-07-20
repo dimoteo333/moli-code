@@ -158,6 +158,20 @@ async function tick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function deferred<T>(): {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+} {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((resolvePromise, rejectPromise) => {
+    resolve = resolvePromise;
+    reject = rejectPromise;
+  });
+  return { promise, resolve, reject };
+}
+
 function performanceNames(ws: FakeWs): string[] {
   return (ws.sent as unknown as Array<{ type: string; name?: string }>)
     .filter((item) => item.type === 'performance_event')
@@ -500,6 +514,190 @@ describe('PowerPoint PaneSession', () => {
       expect.objectContaining({ code: 'TEMPLATE_REPORT_BUSY' }),
     );
     expect(saveTemplateAttachment).toHaveBeenCalledOnce();
+  });
+
+  it('waits for an ordinary model result before accepting a template report', async () => {
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(frame({ type: 'user_message', text: '일반 모델 요청' }));
+    session.onFrame(
+      frame({
+        type: 'user_message',
+        text: '/template-report @template.pptx 회의 본문',
+        attachments: [templateAttachment],
+      }),
+    );
+    await tick();
+
+    expect(saveTemplateAttachment).not.toHaveBeenCalled();
+    expect(ws.framesOfType('error')).toContainEqual(
+      expect.objectContaining({ code: 'MODEL_TURN_BUSY' }),
+    );
+
+    captured[0].emit(resultMessage());
+    await tick();
+    session.onFrame(
+      frame({
+        type: 'user_message',
+        text: '/template-report @template.pptx 회의 본문',
+        attachments: [templateAttachment],
+      }),
+    );
+    await tick();
+    expect(saveTemplateAttachment).toHaveBeenCalledOnce();
+  });
+
+  it('keeps template report busy state while COM generation is pending', async () => {
+    const generation = deferred<string>();
+    generateTemplateReport.mockReturnValueOnce(generation.promise);
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(
+      frame({
+        type: 'user_message',
+        text: '/template-report @template.pptx 회의 본문',
+        attachments: [templateAttachment],
+      }),
+    );
+    await tick();
+    captured[0].emit(assistantText('{"title":"final"}'));
+    captured[0].emit(resultMessage());
+    await tick();
+    expect(generateTemplateReport).toHaveBeenCalledOnce();
+
+    session.onFrame(frame({ type: 'user_message', text: '생성 중 새 요청' }));
+    expect(ws.framesOfType('error')).toContainEqual(
+      expect.objectContaining({ code: 'TEMPLATE_REPORT_BUSY' }),
+    );
+
+    generation.resolve('C:\\work\\reports\\template-report.pptx');
+    await tick();
+    expect(ws.framesOfType('turn_complete').at(-1)).toMatchObject({
+      isError: false,
+    });
+  });
+
+  it('starts the model watchdog only after a slow template save and queue push', async () => {
+    vi.useFakeTimers();
+    const saved = deferred<string>();
+    saveTemplateAttachment.mockReturnValueOnce(saved.promise);
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 회의 본문',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(60_000);
+      expect(captured[0].interrupt).not.toHaveBeenCalled();
+      expect(ws.framesOfType('turn_complete')).toHaveLength(0);
+
+      saved.resolve('C:\\work\\templates\\template-saved.pptx');
+      await vi.runAllTicks();
+      await vi.advanceTimersByTimeAsync(44_999);
+      expect(captured[0].interrupt).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(captured[0].interrupt).toHaveBeenCalledOnce();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('accepts a new model request after timeout without waiting for a terminal result', async () => {
+    vi.useFakeTimers();
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 회의 본문',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.runAllTicks();
+      await vi.advanceTimersByTimeAsync(45_000);
+      expect(captured).toHaveLength(2);
+
+      const staleCanUseTool = captured[0].options['canUseTool'] as (
+        toolName: string,
+        input: Record<string, unknown>,
+        opts: { signal: AbortSignal },
+      ) => Promise<{ behavior: string; message?: string }>;
+      const staleSignal = new AbortController();
+      const stalePermission = staleCanUseTool(
+        'write_file',
+        { path: 'late' },
+        { signal: staleSignal.signal },
+      );
+      staleSignal.abort();
+      await expect(stalePermission).resolves.toMatchObject({
+        behavior: 'deny',
+        message: 'STALE_QUERY',
+      });
+      expect(ws.framesOfType('permission_request')).toHaveLength(0);
+
+      session.onFrame(frame({ type: 'user_message', text: 'timeout 뒤 요청' }));
+      const iterator = captured[1].prompt[Symbol.asyncIterator]();
+      const next = await iterator.next();
+      expect(next.value.message.content).toBe('timeout 뒤 요청');
+      expect(ws.framesOfType('error').at(-1)?.code).toBe(
+        'TEMPLATE_REPORT_TIMEOUT',
+      );
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('ignores a late result from the replaced query without finishing a new turn', async () => {
+    vi.useFakeTimers();
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 첫 회의록',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.runAllTicks();
+      await vi.advanceTimersByTimeAsync(45_000);
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx 새 회의록',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.advanceTimersByTimeAsync(0);
+      expect(buildTemplateExtractionPrompt).toHaveBeenLastCalledWith(
+        '새 회의록',
+      );
+
+      captured[0].emit(assistantText('{"title":"late"}'));
+      captured[0].emit(resultMessage());
+      await vi.advanceTimersByTimeAsync(0);
+      expect(generateTemplateReport).not.toHaveBeenCalled();
+
+      captured[1].emit(assistantText('{"title":"new"}'));
+      captured[1].emit(resultMessage());
+      await vi.advanceTimersByTimeAsync(0);
+      expect(parseTemplateReportOutput).toHaveBeenCalledWith(
+        '{"title":"new"}',
+        '새 회의록',
+      );
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(ws.framesOfType('turn_complete')).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('interrupts after 45 seconds and ignores the late result', async () => {

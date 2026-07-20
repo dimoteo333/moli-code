@@ -58,11 +58,12 @@ class PushQueue<T> implements AsyncIterable<T> {
   private readonly waiters: Array<(r: IteratorResult<T>) => void> = [];
   private closed = false;
 
-  push(item: T): void {
-    if (this.closed) return;
+  push(item: T): boolean {
+    if (this.closed) return false;
     const waiter = this.waiters.shift();
     if (waiter) waiter({ value: item, done: false });
     else this.items.push(item);
+    return true;
   }
 
   end(): void {
@@ -102,28 +103,38 @@ interface PendingPermission {
 
 interface ActiveTemplateTurn {
   turnId: number;
+  generation: number;
   templatePath: string;
   minutes: string;
   streamedText: string;
   finalText: string;
-  timeout: ReturnType<typeof setTimeout>;
+  timeout: ReturnType<typeof setTimeout> | null;
+  phase: 'saving' | 'model' | 'generating';
   completed: boolean;
+}
+
+interface ActiveModelTurn {
+  turnId: number;
+  generation: number;
+  kind: 'ordinary' | 'template';
 }
 
 export class PaneSession {
   private readonly sessionId = randomUUID();
-  private readonly inputQueue = new PushQueue<SDKUserMessage>();
+  private sdkSessionId = randomUUID();
+  private inputQueue = new PushQueue<SDKUserMessage>();
   private readonly abortController = new AbortController();
   private readonly pendingPermissions = new Map<string, PendingPermission>();
   private readonly sessionAllowedTools = new Set<string>();
   private readonly toolUseNames = new Map<string, string>();
   private queryInstance: Query | null = null;
+  private queryGeneration = 1;
+  private activeModelTurn: ActiveModelTurn | null = null;
   private permissionSeq = 0;
   private turnId = 0;
   private firstDeltaTurn = 0;
   private disposed = false;
   private activeTemplateTurn: ActiveTemplateTurn | null = null;
-  private ignoredTemplateResults = 0;
   private readonly sessionStartedAt = performance.now();
 
   constructor(
@@ -141,12 +152,15 @@ export class PaneSession {
   private prewarmQuery(): void {
     try {
       const q = this.ensureQuery();
+      const generation = this.queryGeneration;
       void q.initialized.then(
         () => {
+          if (generation !== this.queryGeneration) return;
           this.emitPerformance('cli_initialized');
           this.sendHello();
         },
         (err) => {
+          if (generation !== this.queryGeneration) return;
           this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
           this.emitPerformance('query_prewarm_failed', undefined, String(err));
           this.sendHello();
@@ -244,10 +258,13 @@ export class PaneSession {
     }
     this.pendingPermissions.clear();
     if (this.activeTemplateTurn) {
-      clearTimeout(this.activeTemplateTurn.timeout);
+      if (this.activeTemplateTurn.timeout) {
+        clearTimeout(this.activeTemplateTurn.timeout);
+      }
       this.activeTemplateTurn.completed = true;
       this.activeTemplateTurn = null;
     }
+    this.activeModelTurn = null;
     this.abortController.abort();
   }
 
@@ -255,15 +272,21 @@ export class PaneSession {
     if (!frame.text || !frame.text.trim()) return;
     this.turnId += 1;
 
-    if (
-      (this.activeTemplateTurn && !this.activeTemplateTurn.completed) ||
-      this.ignoredTemplateResults > 0
-    ) {
+    if (this.activeTemplateTurn) {
       this.sendTemplateError(
         this.turnId,
         'TEMPLATE_REPORT_BUSY',
         '템플릿 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
         '템플릿 보고서 생성 중',
+      );
+      return;
+    }
+    if (this.activeModelTurn) {
+      this.sendTemplateError(
+        this.turnId,
+        'MODEL_TURN_BUSY',
+        '이전 모델 요청을 처리하는 중입니다. 완료 후 다시 요청해 주세요.',
+        '모델 요청 처리 중',
       );
       return;
     }
@@ -339,12 +362,27 @@ export class PaneSession {
       return;
     }
 
-    this.inputQueue.push({
+    this.activeModelTurn = {
+      turnId: this.turnId,
+      generation: this.queryGeneration,
+      kind: 'ordinary',
+    };
+    const pushed = this.inputQueue.push({
       type: 'user',
-      session_id: this.sessionId,
+      session_id: this.sdkSessionId,
       message: { role: 'user', content: prompt },
       parent_tool_use_id: null,
     });
+    if (!pushed) {
+      this.activeModelTurn = null;
+      this.sendTemplateError(
+        this.turnId,
+        'AGENT_INPUT_CLOSED',
+        '모델 입력 세션이 종료되었습니다.',
+        '모델 입력 실패',
+      );
+      return;
+    }
     this.emitPerformance('user_message_enqueued', this.turnId);
   }
 
@@ -382,16 +420,15 @@ export class PaneSession {
       return;
     }
 
-    const timeout = setTimeout(() => {
-      void this.timeoutTemplateTurn(turnId);
-    }, TEMPLATE_REPORT_TIMEOUT_MS);
     const active: ActiveTemplateTurn = {
       turnId,
+      generation: this.queryGeneration,
       templatePath: '',
       minutes,
       streamedText: '',
       finalText: '',
-      timeout,
+      timeout: null,
+      phase: 'saving',
       completed: false,
     };
     this.activeTemplateTurn = active;
@@ -402,20 +439,34 @@ export class PaneSession {
         this.env.config.workDir,
       );
       if (active.completed || this.activeTemplateTurn !== active) return;
-      this.inputQueue.push({
+      active.phase = 'model';
+      active.generation = this.queryGeneration;
+      this.activeModelTurn = {
+        turnId,
+        generation: this.queryGeneration,
+        kind: 'template',
+      };
+      const pushed = this.inputQueue.push({
         type: 'user',
-        session_id: this.sessionId,
+        session_id: this.sdkSessionId,
         message: {
           role: 'user',
           content: buildTemplateExtractionPrompt(minutes),
         },
         parent_tool_use_id: null,
       });
+      if (!pushed) throw new Error('AGENT_INPUT_CLOSED');
+      active.timeout = setTimeout(() => {
+        this.timeoutTemplateTurn(turnId, active.generation);
+      }, TEMPLATE_REPORT_TIMEOUT_MS);
       this.emitPerformance('user_message_enqueued', turnId);
     } catch (error) {
       if (active.completed || this.activeTemplateTurn !== active) return;
       active.completed = true;
-      clearTimeout(active.timeout);
+      if (active.timeout) clearTimeout(active.timeout);
+      if (this.activeModelTurn?.turnId === turnId) {
+        this.activeModelTurn = null;
+      }
       this.logger.error('Template attachment storage failed', error);
       this.sendTemplateError(
         turnId,
@@ -427,16 +478,24 @@ export class PaneSession {
     }
   }
 
-  private async timeoutTemplateTurn(turnId: number): Promise<void> {
+  private timeoutTemplateTurn(turnId: number, generation: number): void {
     const active = this.activeTemplateTurn;
-    if (!active || active.turnId !== turnId || active.completed) return;
+    if (
+      !active ||
+      active.turnId !== turnId ||
+      active.generation !== generation ||
+      active.phase !== 'model' ||
+      active.completed
+    ) {
+      return;
+    }
     active.completed = true;
-    this.ignoredTemplateResults += 1;
     this.activeTemplateTurn = null;
-    try {
-      await this.queryInstance?.interrupt();
-    } catch (error) {
-      this.logger.error('Template report timeout interrupt failed', error);
+    if (
+      this.activeModelTurn?.turnId === turnId &&
+      this.activeModelTurn.generation === generation
+    ) {
+      this.activeModelTurn = null;
     }
     this.sendTemplateError(
       turnId,
@@ -444,6 +503,7 @@ export class PaneSession {
       '보고서 구조화가 45초를 초과해 중단되었습니다.',
       '템플릿 보고서 시간 초과',
     );
+    this.replaceQueryAfterTimeout();
   }
 
   private async handleReportCommand(frame: UserMessageFrame): Promise<void> {
@@ -537,6 +597,7 @@ export class PaneSession {
   private ensureQuery(): Query {
     if (this.queryInstance) return this.queryInstance;
     const config = this.env.config;
+    const generation = this.queryGeneration;
     fs.mkdirSync(config.workDir, { recursive: true });
     const options: QueryOptions = {
       cwd: config.workDir,
@@ -545,10 +606,12 @@ export class PaneSession {
       permissionMode: 'default',
       excludeTools: config.excludeTools,
       includePartialMessages: true,
-      sessionId: this.sessionId,
+      sessionId: this.sdkSessionId,
       abortController: this.abortController,
       canUseTool: (toolName, input, { signal }) =>
-        this.handleCanUseTool(toolName, input, signal),
+        generation === this.queryGeneration
+          ? this.handleCanUseTool(toolName, input, signal)
+          : Promise.resolve({ behavior: 'deny', message: 'STALE_QUERY' }),
       timeout: { canUseTool: PERMISSION_TIMEOUT_MS },
       stderr: (message) => this.logger.debug(`cli stderr: ${message}`),
     };
@@ -557,15 +620,55 @@ export class PaneSession {
     );
     this.emitPerformance('query_spawn_started');
     this.queryInstance = query({ prompt: this.inputQueue, options });
-    void this.pumpMessages(this.queryInstance);
+    void this.pumpMessages(this.queryInstance, this.queryGeneration);
     return this.queryInstance;
   }
 
-  private async pumpMessages(q: Query): Promise<void> {
+  private replaceQueryAfterTimeout(): void {
+    const staleQuery = this.queryInstance;
+    this.inputQueue.end();
+    this.queryInstance = null;
+    this.inputQueue = new PushQueue<SDKUserMessage>();
+    this.sdkSessionId = randomUUID();
+    this.queryGeneration += 1;
+    staleQuery?.interrupt().catch((error) => {
+      this.logger.error('Template report timeout interrupt failed', error);
+    });
     try {
-      for await (const message of q) await this.handleSdkMessage(message);
+      const replacement = this.ensureQuery();
+      const generation = this.queryGeneration;
+      void replacement.initialized.then(
+        () => {
+          if (generation === this.queryGeneration) {
+            this.emitPerformance('cli_initialized');
+          }
+        },
+        (error) => {
+          if (generation === this.queryGeneration) {
+            this.logger.warn(
+              `Replacement session prewarm failed: ${String(error)}`,
+            );
+            this.emitPerformance(
+              'query_prewarm_failed',
+              undefined,
+              String(error),
+            );
+          }
+        },
+      );
+    } catch (error) {
+      this.logger.error('Failed to replace timed-out agent session', error);
+    }
+  }
+
+  private async pumpMessages(q: Query, generation: number): Promise<void> {
+    try {
+      for await (const message of q) {
+        if (generation !== this.queryGeneration) return;
+        await this.handleSdkMessage(message, generation);
+      }
     } catch (err) {
-      if (!this.disposed) {
+      if (!this.disposed && generation === this.queryGeneration) {
         this.logger.error('SDK message pump failed', err);
         this.send({
           v: PROTOCOL_VERSION,
@@ -578,16 +681,22 @@ export class PaneSession {
     }
   }
 
-  private async handleSdkMessage(message: SDKMessage): Promise<void> {
-    if (this.ignoredTemplateResults > 0 && message.type !== 'system') {
-      if (message.type === 'result') this.ignoredTemplateResults -= 1;
-      return;
-    }
+  private async handleSdkMessage(
+    message: SDKMessage,
+    generation: number,
+  ): Promise<void> {
+    if (generation !== this.queryGeneration) return;
     const active = this.activeTemplateTurn;
-    if (active && !active.completed) {
+    if (
+      active &&
+      !active.completed &&
+      active.phase === 'model' &&
+      active.generation === generation
+    ) {
       const consumed = await this.handleTemplateSdkMessage(message, active);
       if (consumed) return;
     }
+    const responseTurnId = this.activeModelTurn?.turnId ?? this.turnId;
     switch (message.type) {
       case 'stream_event': {
         if (message.parent_tool_use_id) return;
@@ -596,14 +705,14 @@ export class PaneSession {
           event.type === 'content_block_delta' &&
           event.delta.type === 'text_delta'
         ) {
-          if (this.firstDeltaTurn !== this.turnId) {
-            this.firstDeltaTurn = this.turnId;
-            this.emitPerformance('first_delta_received', this.turnId);
+          if (this.firstDeltaTurn !== responseTurnId) {
+            this.firstDeltaTurn = responseTurnId;
+            this.emitPerformance('first_delta_received', responseTurnId);
           }
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_delta',
-            turnId: this.turnId,
+            turnId: responseTurnId,
             text: event.delta.text,
           });
         } else if (
@@ -615,7 +724,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'thinking',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               text: thinking,
             });
           }
@@ -633,7 +742,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'tool_activity',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               toolName: block.name,
               status: 'start',
               summary: previewJson(block.input),
@@ -644,7 +753,7 @@ export class PaneSession {
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_message',
-            turnId: this.turnId,
+            turnId: responseTurnId,
             blocks,
           });
         }
@@ -660,7 +769,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'tool_activity',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               toolName,
               status: 'end',
               isError: block.is_error === true,
@@ -669,11 +778,14 @@ export class PaneSession {
         }
         break;
       }
-      case 'result':
+      case 'result': {
+        const completedTurn = this.activeModelTurn;
+        if (!completedTurn || completedTurn.generation !== generation) return;
+        this.activeModelTurn = null;
         this.send({
           v: PROTOCOL_VERSION,
           type: 'turn_complete',
-          turnId: this.turnId,
+          turnId: completedTurn.turnId,
           isError: message.is_error,
           errorMessage: message.is_error
             ? ((message as { error?: { message?: string } }).error?.message ??
@@ -681,6 +793,7 @@ export class PaneSession {
             : undefined,
         });
         break;
+      }
       case 'system':
         this.logger.debug(`system message: ${message.subtype}`);
         break;
@@ -724,6 +837,14 @@ export class PaneSession {
       case 'user':
         return true;
       case 'result':
+        if (
+          this.activeModelTurn?.kind === 'template' &&
+          this.activeModelTurn.turnId === active.turnId &&
+          this.activeModelTurn.generation === active.generation
+        ) {
+          this.activeModelTurn = null;
+        }
+        active.phase = 'generating';
         await this.finishTemplateTurn(active, message.is_error);
         return true;
       case 'system':
@@ -738,8 +859,11 @@ export class PaneSession {
     modelFailed: boolean,
   ): Promise<void> {
     if (active.completed || this.activeTemplateTurn !== active) return;
-    active.completed = true;
-    clearTimeout(active.timeout);
+    active.phase = 'generating';
+    if (active.timeout) {
+      clearTimeout(active.timeout);
+      active.timeout = null;
+    }
     try {
       const raw = active.finalText || active.streamedText;
       const spec = modelFailed
@@ -778,6 +902,7 @@ export class PaneSession {
         String(error),
       );
     } finally {
+      active.completed = true;
       if (this.activeTemplateTurn === active) this.activeTemplateTurn = null;
     }
   }
@@ -837,10 +962,7 @@ export class PaneSession {
     input: Record<string, unknown>,
     signal: AbortSignal,
   ): Promise<PermissionResult> {
-    if (
-      (this.activeTemplateTurn && !this.activeTemplateTurn.completed) ||
-      this.ignoredTemplateResults > 0
-    ) {
+    if (this.activeTemplateTurn) {
       return Promise.resolve({
         behavior: 'deny',
         message: 'TEMPLATE_REPORT_TOOL_DISABLED',
