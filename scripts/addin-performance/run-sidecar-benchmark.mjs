@@ -149,6 +149,23 @@ function expandUsedRange(sheet, endRow, endCol) {
     rows > 0 && cols > 0 ? `A1:${numberToColumn(cols)}${rows}` : undefined;
 }
 
+function shiftFormulaRows(formula, rowOffset) {
+  return String(formula)
+    .split('"')
+    .map((part, index) =>
+      index % 2 === 1
+        ? part
+        : part.replace(
+            /(^|[^A-Za-z0-9_.])(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)(?![A-Za-z0-9_])/g,
+            (_match, prefix, absoluteColumn, column, absoluteRow, row) =>
+              `${prefix}${absoluteColumn}${column}${absoluteRow}${
+                absoluteRow ? row : Number(row) + rowOffset
+              }`,
+          ),
+    )
+    .join('"');
+}
+
 export class ExcelHarness {
   constructor(seed) {
     const fallbackSeed = {
@@ -242,7 +259,35 @@ export class ExcelHarness {
         const formulas = Array.isArray(args.formulas) ? args.formulas : [];
         const rows = formulas.length;
         const cols = Array.isArray(formulas[0]) ? formulas[0].length : 0;
-        const range = expandedRange(String(args.range ?? 'A1'), rows, cols);
+        const requestedRange = String(args.range ?? 'A1');
+        const requestedBounds = parseRange(requestedRange);
+        let formulasToWrite = formulas;
+        if (args.fillDown === true) {
+          const targetRows =
+            requestedBounds.endRow - requestedBounds.startRow + 1;
+          const targetCols =
+            requestedBounds.endCol - requestedBounds.startCol + 1;
+          if (targetRows <= 1) {
+            throw new Error(
+              "'fillDown' requires an explicit multi-row target range",
+            );
+          }
+          if (rows !== 1) {
+            throw new Error("'fillDown' formulas must contain exactly one row");
+          }
+          if (cols !== targetCols) {
+            throw new Error(
+              "'fillDown' formula column count must match the target range column count",
+            );
+          }
+          formulasToWrite = Array.from({ length: targetRows }, (_, rowOffset) =>
+            formulas[0].map((formula) => shiftFormulaRows(formula, rowOffset)),
+          );
+        }
+        const range =
+          args.fillDown === true
+            ? requestedRange
+            : expandedRange(requestedRange, rows, cols);
         const bounds = parseRange(range);
         const sheet = this.getSheet(sheetName);
         writeMatrix(
@@ -250,7 +295,7 @@ export class ExcelHarness {
           'formulas',
           bounds.startRow,
           bounds.startCol,
-          formulas,
+          formulasToWrite,
           true,
         );
         expandUsedRange(sheet, bounds.endRow, bounds.endCol);
@@ -353,7 +398,7 @@ export class ExcelHarness {
 function metricMedian(runs, key) {
   const values = runs
     .filter((run) => run.kind === 'warm')
-    .map((run) => run.summary[key])
+    .map((run) => run.summary?.[key])
     .filter(Number.isFinite);
   return median(values);
 }
@@ -371,6 +416,7 @@ export function buildBenchmarkManifest({
   stage,
   runs,
   connectionEvents = [],
+  failure,
 }) {
   const metricKeys = [
     'paneToReadyMs',
@@ -417,6 +463,7 @@ export function buildBenchmarkManifest({
       },
     ],
     runCount: runs.length,
+    ...(failure ? { failure } : {}),
     warmMedian: Object.fromEntries(
       metricKeys.map((key) => [key, metricMedian(runs, key)]),
     ),
@@ -523,173 +570,208 @@ export async function runSidecarBenchmark(options) {
   let activeRun = null;
   let nextRunIndex = 0;
 
-  await new Promise((resolve, reject) => {
-    const socket = new WebSocket(`wss://localhost:${options.port}/ws`, {
-      rejectUnauthorized: false,
-    });
-    const timeout = setTimeout(() => {
-      socket.close();
-      reject(new Error(`Benchmark timed out after ${options.timeoutMs}ms`));
-    }, options.timeoutMs);
-
-    const now = () => Math.round((performance.now() - startedAt) * 1000) / 1000;
-    const mark = (name, fields = {}) => {
-      if (activeRun) {
-        activeRun.events.push({ name, atMs: now(), ...fields });
-      }
-    };
-    const sendNext = () => {
-      if (nextRunIndex >= options.runs) {
-        clearTimeout(timeout);
+  let failure;
+  try {
+    await new Promise((resolve, reject) => {
+      const socket = new WebSocket(`wss://localhost:${options.port}/ws`, {
+        rejectUnauthorized: false,
+      });
+      let runTimeout;
+      const timeout = setTimeout(() => {
         socket.close();
-        resolve();
-        return;
-      }
-      activeRun = {
-        index: nextRunIndex + 1,
-        kind: nextRunIndex === 0 ? 'cold' : 'warm',
-        events: [],
-        assistantText: '',
-        errors: [],
+        reject(new Error(`Benchmark timed out after ${options.timeoutMs}ms`));
+      }, options.timeoutMs);
+      const clearTimers = () => {
+        clearTimeout(timeout);
+        clearTimeout(runTimeout);
       };
-      runs.push(activeRun);
-      if (options.app === 'excel') {
-        excelHarness.startRun(activeRun.index, activeRun.kind);
-      }
-      mark('user_message_sent');
-      sendJson(socket, {
-        type: 'user_message',
-        text: options.app === 'excel' ? excelPrompt : prompt,
-        ...(attachment ? { attachments: [attachment] } : {}),
-      });
-      nextRunIndex += 1;
-    };
 
-    socket.on('open', () => {
-      const atMs = now();
-      rawFrames.push({ direction: 'local', type: 'taskpane_connected', atMs });
-      connectionEvents.push({ name: 'taskpane_connected', atMs });
-      sendJson(socket, {
-        type: 'hello',
-        token: tokenBody.token,
-        requirementSets:
-          options.app === 'excel'
-            ? { 'ExcelApi 1.1': true, 'ExcelApi 1.4': true }
-            : { 'PowerPointApi 1.1': true },
-        host: options.app === 'excel' ? 'Excel' : 'PowerPoint',
-        platform: 'PC',
-        uiLocale: 'ko-KR',
-      });
-    });
-
-    socket.on('message', (data) => {
-      const frame = JSON.parse(String(data));
-      rawFrames.push({ direction: 'sidecar', atMs: now(), frame });
-      if (frame.type === 'hello_ok') {
-        connectionEvents.push({ name: 'hello_ok_received', atMs: now() });
-        sendNext();
-        return;
-      }
-      if (frame.type === 'assistant_delta' && activeRun) {
-        if (
-          !activeRun.events.some(
-            (event) => event.name === 'first_delta_received',
-          )
-        ) {
-          mark('first_delta_received');
-        }
-        activeRun.assistantText += frame.text ?? '';
-        return;
-      }
-      if (frame.type === 'assistant_message' && activeRun) {
-        for (const block of frame.blocks ?? []) {
-          if (block.type === 'text' && typeof block.text === 'string') {
-            activeRun.assistantText += block.text;
-          }
-        }
-        return;
-      }
-      if (frame.type === 'tool_activity') {
-        mark(
-          frame.status === 'start'
-            ? 'office_tool_started'
-            : 'office_tool_finished',
-          {
-            toolName: frame.toolName,
-            isError: frame.isError === true,
-          },
-        );
-        return;
-      }
-      if (frame.type === 'permission_request') {
-        sendJson(socket, {
-          type: 'permission_response',
-          id: frame.id,
-          behavior: 'allow',
-          alwaysAllow: true,
-        });
-        return;
-      }
-      if (frame.type === 'excel_exec') {
-        try {
-          const result = excelHarness.execute(frame.op, frame.args);
-          sendJson(socket, {
-            type: 'excel_result',
-            id: frame.id,
-            ok: true,
-            result,
-          });
-        } catch (error) {
-          sendJson(socket, {
-            type: 'excel_result',
-            id: frame.id,
-            ok: false,
-            error: error.message,
-            errorCode: 'HARNESS_OPERATION_FAILED',
-          });
-        }
-        return;
-      }
-      if (frame.type === 'error' && activeRun) {
-        activeRun.errors.push({ code: frame.code, message: frame.messageKo });
-        return;
-      }
-      if (frame.type === 'performance_event') {
-        const event = {
-          name: frame.name,
-          atMs: now(),
-          sidecarElapsedMs: frame.elapsedMs,
-          ...(frame.turnId === undefined ? {} : { turnId: frame.turnId }),
-          ...(frame.detail === undefined ? {} : { detail: frame.detail }),
-        };
+      const now = () =>
+        Math.round((performance.now() - startedAt) * 1000) / 1000;
+      const mark = (name, fields = {}) => {
         if (activeRun) {
-          activeRun.events.push(event);
-        } else {
-          connectionEvents.push(event);
+          activeRun.events.push({ name, atMs: now(), ...fields });
         }
-        return;
-      }
-      if (frame.type === 'turn_complete' && activeRun) {
-        mark('turn_completed', { isError: frame.isError === true });
-        activeRun.isError = frame.isError === true;
-        activeRun.errorMessage = frame.errorMessage;
-        activeRun.summary = summarizeRun(activeRun.events);
-        activeRun = null;
-        setTimeout(sendNext, 100);
-      }
-    });
+      };
+      const sendNext = () => {
+        if (nextRunIndex >= options.runs) {
+          clearTimers();
+          socket.close();
+          resolve();
+          return;
+        }
+        activeRun = {
+          index: nextRunIndex + 1,
+          kind: nextRunIndex === 0 ? 'cold' : 'warm',
+          events: [],
+          assistantText: '',
+          errors: [],
+        };
+        runs.push(activeRun);
+        if (options.app === 'excel') {
+          excelHarness.startRun(activeRun.index, activeRun.kind);
+        }
+        mark('user_message_sent');
+        sendJson(socket, {
+          type: 'user_message',
+          text: options.app === 'excel' ? excelPrompt : prompt,
+          ...(attachment ? { attachments: [attachment] } : {}),
+        });
+        nextRunIndex += 1;
+        if (Number.isFinite(options.runTimeoutMs)) {
+          clearTimeout(runTimeout);
+          runTimeout = setTimeout(() => {
+            const timedOutRun = activeRun;
+            socket.close();
+            reject(
+              new Error(
+                `Run ${timedOutRun?.index ?? '?'} (${timedOutRun?.kind ?? '?'}) timed out after ${options.runTimeoutMs}ms`,
+              ),
+            );
+          }, options.runTimeoutMs);
+        }
+      };
 
-    socket.on('error', (error) => {
-      clearTimeout(timeout);
-      reject(error);
+      socket.on('open', () => {
+        const atMs = now();
+        rawFrames.push({
+          direction: 'local',
+          type: 'taskpane_connected',
+          atMs,
+        });
+        connectionEvents.push({ name: 'taskpane_connected', atMs });
+        sendJson(socket, {
+          type: 'hello',
+          token: tokenBody.token,
+          requirementSets:
+            options.app === 'excel'
+              ? { 'ExcelApi 1.1': true, 'ExcelApi 1.4': true }
+              : { 'PowerPointApi 1.1': true },
+          host: options.app === 'excel' ? 'Excel' : 'PowerPoint',
+          platform: 'PC',
+          uiLocale: 'ko-KR',
+        });
+      });
+
+      socket.on('message', (data) => {
+        const frame = JSON.parse(String(data));
+        rawFrames.push({ direction: 'sidecar', atMs: now(), frame });
+        if (frame.type === 'hello_ok') {
+          connectionEvents.push({ name: 'hello_ok_received', atMs: now() });
+          sendNext();
+          return;
+        }
+        if (frame.type === 'assistant_delta' && activeRun) {
+          if (
+            !activeRun.events.some(
+              (event) => event.name === 'first_delta_received',
+            )
+          ) {
+            mark('first_delta_received');
+          }
+          activeRun.assistantText += frame.text ?? '';
+          return;
+        }
+        if (frame.type === 'assistant_message' && activeRun) {
+          for (const block of frame.blocks ?? []) {
+            if (block.type === 'text' && typeof block.text === 'string') {
+              activeRun.assistantText += block.text;
+            }
+          }
+          return;
+        }
+        if (frame.type === 'tool_activity') {
+          mark(
+            frame.status === 'start'
+              ? 'office_tool_started'
+              : 'office_tool_finished',
+            {
+              toolName: frame.toolName,
+              isError: frame.isError === true,
+            },
+          );
+          return;
+        }
+        if (frame.type === 'permission_request') {
+          sendJson(socket, {
+            type: 'permission_response',
+            id: frame.id,
+            behavior: 'allow',
+            alwaysAllow: true,
+          });
+          return;
+        }
+        if (frame.type === 'excel_exec') {
+          try {
+            const result = excelHarness.execute(frame.op, frame.args);
+            sendJson(socket, {
+              type: 'excel_result',
+              id: frame.id,
+              ok: true,
+              result,
+            });
+          } catch (error) {
+            sendJson(socket, {
+              type: 'excel_result',
+              id: frame.id,
+              ok: false,
+              error: error.message,
+              errorCode: 'HARNESS_OPERATION_FAILED',
+            });
+          }
+          return;
+        }
+        if (frame.type === 'error' && activeRun) {
+          activeRun.errors.push({ code: frame.code, message: frame.messageKo });
+          return;
+        }
+        if (frame.type === 'performance_event') {
+          const event = {
+            name: frame.name,
+            atMs: now(),
+            sidecarElapsedMs: frame.elapsedMs,
+            ...(frame.turnId === undefined ? {} : { turnId: frame.turnId }),
+            ...(frame.detail === undefined ? {} : { detail: frame.detail }),
+          };
+          if (activeRun) {
+            activeRun.events.push(event);
+          } else {
+            connectionEvents.push(event);
+          }
+          return;
+        }
+        if (frame.type === 'turn_complete' && activeRun) {
+          clearTimeout(runTimeout);
+          mark('turn_completed', { isError: frame.isError === true });
+          activeRun.isError = frame.isError === true;
+          activeRun.errorMessage = frame.errorMessage;
+          activeRun.summary = summarizeRun(activeRun.events);
+          activeRun = null;
+          setTimeout(sendNext, 100);
+        }
+      });
+
+      socket.on('error', (error) => {
+        clearTimers();
+        reject(error);
+      });
     });
-  });
+  } catch (error) {
+    failure = {
+      code: /timed out/i.test(error.message)
+        ? 'BENCHMARK_TIMEOUT'
+        : 'BENCHMARK_FAILED',
+      message: error.message,
+      atMs: Math.round((performance.now() - startedAt) * 1000) / 1000,
+    };
+  }
 
   const manifest = buildBenchmarkManifest({
     app: options.app,
     stage: options.stage,
     runs,
     connectionEvents,
+    failure,
   });
   await writeJsonWithHash(
     path.join(options.outputDir, 'metrics.json'),
@@ -706,6 +788,13 @@ export async function runSidecarBenchmark(options) {
     );
   }
   await writeTextWithHash(path.join(options.outputDir, 'prompt.txt'), prompt);
+  if (failure) {
+    const error = new Error(
+      `${failure.message}; partial evidence saved to ${options.outputDir}`,
+    );
+    error.code = failure.code;
+    throw error;
+  }
   return manifest;
 }
 
@@ -733,6 +822,7 @@ if (invokedPath === import.meta.url) {
     outputDir: path.resolve(args.output),
     runs: Number(args.runs ?? 4),
     timeoutMs: Number(args.timeout ?? 600000),
+    runTimeoutMs: Number(args['run-timeout'] ?? 50000),
     excelFixture,
   });
   process.stdout.write(

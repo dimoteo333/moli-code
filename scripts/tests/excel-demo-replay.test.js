@@ -47,13 +47,6 @@ function buildOperations() {
       `=IF(H${row}="미제출","영수증 누락",IF(G${row}>I${row},"한도 초과",IF(COUNTIFS($A$2:A${row},A${row},$D$2:D${row},D${row},$E$2:E${row},E${row},$G$2:G${row},G${row})>1,"중복 의심","정상")))`,
     ];
   });
-  const departments = [
-    '프로덕트운영팀',
-    '영업기획부',
-    '고객지원팀',
-    '경영지원팀',
-  ];
-
   return [
     {
       runIndex: 1,
@@ -64,7 +57,8 @@ function buildOperations() {
           args: {
             sheet: '원천자료',
             range: 'J2:J37',
-            formulas: resultFormulas,
+            formulas: [resultFormulas[0]],
+            fillDown: true,
           },
         },
         {
@@ -85,13 +79,13 @@ function buildOperations() {
           args: {
             sheet: '자동화결과',
             range: 'B10:C13',
-            formulas: departments.map((_, index) => {
-              const row = index + 10;
-              return [
-                `=SUMIF('원천자료'!$C$2:$C$37,A${row},'원천자료'!$G$2:$G$37)`,
-                `=COUNTIFS('원천자료'!$C$2:$C$37,A${row},'원천자료'!$J$2:$J$37,"<>정상")`,
-              ];
-            }),
+            formulas: [
+              [
+                "=SUMIF('원천자료'!$C$2:$C$37,A10,'원천자료'!$G$2:$G$37)",
+                "=COUNTIFS('원천자료'!$C$2:$C$37,A10,'원천자료'!$J$2:$J$37,\"<>정상\")",
+              ],
+            ],
+            fillDown: true,
           },
         },
       ],
@@ -421,6 +415,26 @@ windowsDescribe('Excel demo operation replay', () => {
       stderr: expect.stringContaining(
         'INVALID_OPERATION_LOG:top_level_array_required',
       ),
+    });
+  });
+
+  it('rejects invalid fillDown dimensions during validation', async () => {
+    const operations = buildOperations();
+    operations[0].operations[0].args.formulas = [['=A2', '=B2']];
+    await writeFile(
+      paths.operationsPath,
+      `${JSON.stringify(operations, null, 2)}\n`,
+      'utf8',
+    );
+
+    await expect(
+      execFileAsync(
+        'powershell.exe',
+        [...replayArguments(paths), '-ValidationOnly'],
+        { windowsHide: true },
+      ),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('FILL_DOWN_COLUMN_COUNT_MISMATCH'),
     });
   });
 

@@ -111,6 +111,42 @@ $allowedOperations = @(
     'read_range', 'get_workbook_overview', 'write_range', 'set_formulas',
     'format_range', 'clear_range', 'add_worksheet', 'find', 'get_selection'
 )
+
+function Convert-ColumnLettersToNumber([string]$letters) {
+    $number = 0
+    foreach ($character in $letters.ToUpperInvariant().ToCharArray()) {
+        $number = ($number * 26) + ([int]$character - [int][char]'A' + 1)
+    }
+    return $number
+}
+
+function Assert-FillDownArguments($operationArgs) {
+    if ($operationArgs.fillDown -ne $true) { return }
+    $match = [regex]::Match(
+        [string]$operationArgs.range,
+        '^\$?([A-Za-z]+)\$?([0-9]+):\$?([A-Za-z]+)\$?([0-9]+)$'
+    )
+    if (-not $match.Success) {
+        throw 'FILL_DOWN_EXPLICIT_MULTI_ROW_RANGE_REQUIRED'
+    }
+    $startRow = [int]$match.Groups[2].Value
+    $endRow = [int]$match.Groups[4].Value
+    if ($startRow -eq $endRow) {
+        throw 'FILL_DOWN_EXPLICIT_MULTI_ROW_RANGE_REQUIRED'
+    }
+    $rows = @($operationArgs.formulas)
+    if ($rows.Count -ne 1) {
+        throw 'FILL_DOWN_ONE_FORMULA_ROW_REQUIRED'
+    }
+    $formulaRow = @($rows[0])
+    $startColumn = Convert-ColumnLettersToNumber $match.Groups[1].Value
+    $endColumn = Convert-ColumnLettersToNumber $match.Groups[3].Value
+    $targetColumnCount = [Math]::Abs($endColumn - $startColumn) + 1
+    if ($formulaRow.Count -ne $targetColumnCount) {
+        throw 'FILL_DOWN_COLUMN_COUNT_MISMATCH'
+    }
+}
+
 foreach ($run in $runs) {
     if (-not (($run.runIndex -is [int]) -or ($run.runIndex -is [long])) -or [long]$run.runIndex -lt 1) {
         throw 'INVALID_OPERATION_LOG:invalid_run_index'
@@ -139,6 +175,11 @@ else {
     $selectedRun = $runs[$runs.Count - 1]
 }
 $operations = @($selectedRun.operations | ForEach-Object { $_ })
+foreach ($operation in $operations) {
+    if ([string]$operation.op -eq 'set_formulas') {
+        Assert-FillDownArguments $operation.args
+    }
+}
 $oracle = Get-Content -LiteralPath $oracleFull -Raw -Encoding UTF8 | ConvertFrom-Json
 $sourceFormulaOperation = $operations | Where-Object { $_.op -eq 'set_formulas' -and [string]$_.args.range -eq 'J2:J37' } | Select-Object -First 1
 $dashboardFormulaOperation = $operations | Where-Object { $_.op -eq 'set_formulas' -and [string]$_.args.range -eq 'B3:B6' } | Select-Object -First 1
@@ -196,6 +237,21 @@ function Set-Grid($operationArgs, [string]$property) {
     $range = Get-OperationRange $operationArgs
     $target = $null
     try {
+        if ($property -eq 'formulas' -and $operationArgs.fillDown -eq $true) {
+            $target = $range.Rows.Item(1)
+            for ($columnIndex = 0; $columnIndex -lt $firstRow.Count; $columnIndex++) {
+                $cell = $null
+                try {
+                    $cell = $target.Cells.Item(1, $columnIndex + 1)
+                    $cell.Formula = [string]$firstRow[$columnIndex]
+                }
+                finally {
+                    Release-ComObject $cell
+                }
+            }
+            $range.FillDown() | Out-Null
+            return
+        }
         $target = $range.Resize($rows.Count, $firstRow.Count)
         for ($rowIndex = 0; $rowIndex -lt $rows.Count; $rowIndex++) {
             $row = @($rows[$rowIndex])

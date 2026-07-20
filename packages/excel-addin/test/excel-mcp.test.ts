@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildExcelMcpServer,
+  excelSetFormulasDescription,
+  excelSetFormulasInput,
   excelToolBaseName,
   gatedExec,
   isReadOnlyExcelTool,
@@ -35,6 +37,19 @@ describe('buildExcelMcpServer', () => {
     expect(server.type).toBe('sdk');
     expect(server.name).toBe('excel');
     expect(server.instance).toBeDefined();
+  });
+});
+
+describe('excel_set_formulas contract', () => {
+  it('advertises and validates optional fillDown without changing legacy calls', () => {
+    expect(excelSetFormulasDescription).toContain('fillDown');
+    expect(excelSetFormulasInput.fillDown.safeParse(true).success).toBe(true);
+    expect(excelSetFormulasInput.fillDown.safeParse(undefined).success).toBe(
+      true,
+    );
+    expect(excelSetFormulasInput.fillDown.safeParse('true').success).toBe(
+      false,
+    );
   });
 });
 

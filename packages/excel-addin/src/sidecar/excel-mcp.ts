@@ -108,6 +108,25 @@ const rangeParam = z
 
 const cellValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
+export const excelSetFormulasDescription =
+  "Set formulas in a range. The 2D array dimensions must match the range. Formulas start with '=', e.g. '=SUM(A1:A10)'. Non-formula strings are written as literal values. To fill a repeated multi-row range efficiently, set fillDown=true and provide exactly one formula row matching the target column count; Excel writes the first row and fills it down natively.";
+
+export const excelSetFormulasInput = {
+  sheet: sheetParam,
+  range: rangeParam,
+  formulas: z
+    .array(z.array(z.string()))
+    .describe(
+      '2D array of formula strings; exactly one row when fillDown=true.',
+    ),
+  fillDown: z
+    .boolean()
+    .optional()
+    .describe(
+      'Fill the first formula row down an explicit multi-row target range.',
+    ),
+};
+
 export function buildExcelMcpServer(
   rpc: RpcManager,
   gate: PermissionGate,
@@ -156,14 +175,8 @@ export function buildExcelMcpServer(
       ),
       tool(
         'excel_set_formulas',
-        "Set formulas in a range. The 2D array dimensions must match the range. Formulas start with '=', e.g. '=SUM(A1:A10)'. Non-formula strings are written as literal values.",
-        {
-          sheet: sheetParam,
-          range: rangeParam,
-          formulas: z
-            .array(z.array(z.string()))
-            .describe('2D array of formula strings.'),
-        },
+        excelSetFormulasDescription,
+        excelSetFormulasInput,
         async (args) =>
           gatedExec(rpc, gate, 'excel_set_formulas', 'set_formulas', args),
       ),

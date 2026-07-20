@@ -46,6 +46,40 @@ describe('ExcelHarness', () => {
     ).toEqual([['=SUM(원천자료!B2:B2)']]);
   });
 
+  it('fills a one-row formula seed down an explicit multi-row range', () => {
+    const harness = new ExcelHarness({
+      sheets: { Sheet1: {} },
+      activeSheet: 'Sheet1',
+    });
+    harness.execute('set_formulas', {
+      range: 'C2:D4',
+      formulas: [['=A2+$B2', '=C$1+$D$1']],
+      fillDown: true,
+    });
+    expect(harness.execute('read_range', { range: 'C2:D4' }).formulas).toEqual([
+      ['=A2+$B2', '=C$1+$D$1'],
+      ['=A3+$B3', '=C$1+$D$1'],
+      ['=A4+$B4', '=C$1+$D$1'],
+    ]);
+  });
+
+  it('rejects invalid fillDown dimensions without mutating the seed', () => {
+    const harness = new ExcelHarness({
+      sheets: { Sheet1: { values: [['kept']] } },
+      activeSheet: 'Sheet1',
+    });
+    expect(() =>
+      harness.execute('set_formulas', {
+        range: 'A1:B3',
+        formulas: [['=A1']],
+        fillDown: true,
+      }),
+    ).toThrow('column count');
+    expect(harness.execute('read_range', { range: 'A1:B3' }).values[0][0]).toBe(
+      'kept',
+    );
+  });
+
   it('resets the immutable seed and groups operations for each run', () => {
     const harness = new ExcelHarness({
       sheets: { 결과: { values: [['기준값']] } },
@@ -252,6 +286,28 @@ describe('buildBenchmarkManifest', () => {
       querySpawnToCliReadyMs: 390,
       paneToReadyMs: 400,
       paneToHelloOkMs: 402,
+    });
+  });
+
+  it('retains timeout metadata with partial run evidence', () => {
+    expect(
+      buildBenchmarkManifest({
+        app: 'excel',
+        stage: 'fill-down-remeasure',
+        runs: [{ index: 1, kind: 'cold', assistantText: 'partial' }],
+        failure: {
+          code: 'BENCHMARK_TIMEOUT',
+          message: 'Benchmark timed out after 50000ms',
+          atMs: 50001,
+        },
+      }),
+    ).toMatchObject({
+      runCount: 1,
+      failure: {
+        code: 'BENCHMARK_TIMEOUT',
+        atMs: 50001,
+      },
+      runs: [{ assistantText: 'partial' }],
     });
   });
 });
