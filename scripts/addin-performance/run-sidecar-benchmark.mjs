@@ -205,7 +205,17 @@ export class ExcelHarness {
           selection: `${this.activeSheet}!A1`,
         };
       case 'add_worksheet': {
-        const name = String(args.name ?? 'Sheet');
+        const name = String(args.name ?? '');
+        if (!name.trim()) {
+          throw new Error("'name' argument is required");
+        }
+        if (
+          [...this.sheets.keys()].some(
+            (existing) => existing.toLowerCase() === name.toLowerCase(),
+          )
+        ) {
+          throw new Error(`Worksheet already exists: ${name}`);
+        }
         this.sheets.set(name, makeSheet());
         this.activeSheet = name;
         return { added: name };
@@ -300,8 +310,40 @@ export class ExcelHarness {
           numberFormat,
         };
       }
-      case 'find':
-        return { matches: [], truncated: false };
+      case 'find': {
+        const query = String(args.query ?? '').toLowerCase();
+        if (!query) {
+          throw new Error("'query' argument is required");
+        }
+        const sheet = this.getSheet(sheetName);
+        const used = usedRangeForSheet(sheet);
+        if (!used.usedRange) {
+          return { matches: [], truncated: false };
+        }
+        const bounds = parseRange(used.usedRange);
+        const matches = [];
+        let truncated = false;
+        outer: for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+          for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
+            const value = sheet.values[row]?.[col] ?? '';
+            if (
+              value !== null &&
+              value !== '' &&
+              String(value).toLowerCase().includes(query)
+            ) {
+              if (matches.length === 100) {
+                truncated = true;
+                break outer;
+              }
+              matches.push({
+                address: `${numberToColumn(col + 1)}${row + 1}`,
+                value,
+              });
+            }
+          }
+        }
+        return { matches, truncated };
+      }
       default:
         throw new Error(`Unsupported Excel harness operation: ${op}`);
     }

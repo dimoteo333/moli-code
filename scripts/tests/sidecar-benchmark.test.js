@@ -151,6 +151,54 @@ describe('ExcelHarness', () => {
     });
   });
 
+  it('finds seeded values case-insensitively and caps results at 100', () => {
+    const harness = new ExcelHarness({
+      sheets: {
+        원천자료: {
+          usedRange: 'A1:A102',
+          values: [
+            ['헤더'],
+            ...Array.from({ length: 101 }, (_, index) => [`Match-${index}`]),
+          ],
+        },
+      },
+      activeSheet: '원천자료',
+    });
+
+    const result = harness.execute('find', {
+      sheet: '원천자료',
+      query: 'mAtCh-',
+    });
+
+    expect(result.matches).toHaveLength(100);
+    expect(result.matches[0]).toEqual({ address: 'A2', value: 'Match-0' });
+    expect(result.matches.at(-1)).toEqual({
+      address: 'A101',
+      value: 'Match-99',
+    });
+    expect(result.truncated).toBe(true);
+  });
+
+  it('rejects missing, blank, and duplicate worksheet names', () => {
+    const harness = new ExcelHarness({
+      sheets: { 기존: { values: [['보존']] } },
+      activeSheet: '기존',
+    });
+
+    expect(() => harness.execute('add_worksheet')).toThrow(
+      "'name' argument is required",
+    );
+    expect(() => harness.execute('add_worksheet', { name: '   ' })).toThrow(
+      "'name' argument is required",
+    );
+    expect(() => harness.execute('add_worksheet', { name: '기존' })).toThrow(
+      'Worksheet already exists: 기존',
+    );
+    expect(
+      harness.execute('read_range', { sheet: '기존', range: 'A1' }).values,
+    ).toEqual([['보존']]);
+  });
+
   it('records worksheet writes and returns deterministic RPC results', () => {
     const harness = new ExcelHarness();
 
