@@ -10,6 +10,7 @@ import {
   buildBenchmarkManifest,
   buildPowerPointBenchmarkInput,
   buildTemplateAttachment,
+  classifyBenchmarkRun,
 } from '../addin-performance/run-sidecar-benchmark.mjs';
 
 describe('ExcelHarness', () => {
@@ -293,6 +294,12 @@ describe('ExcelHarness', () => {
 });
 
 describe('buildBenchmarkManifest', () => {
+  it('classifies the first turn and post-replacement turns as non-warm', () => {
+    expect(classifyBenchmarkRun(0, false)).toBe('cold');
+    expect(classifyBenchmarkRun(1, false)).toBe('warm');
+    expect(classifyBenchmarkRun(1, true)).toBe('recovery');
+  });
+
   it('never labels a sidecar harness as an actual task pane run', () => {
     expect(
       buildBenchmarkManifest({
@@ -347,6 +354,62 @@ describe('buildBenchmarkManifest', () => {
       },
       runs: [{ assistantText: 'partial' }],
     });
+  });
+
+  it('publishes warm medians only from successful artifact-producing runs', () => {
+    const manifest = buildBenchmarkManifest({
+      app: 'powerpoint',
+      stage: 'final',
+      runs: [
+        {
+          index: 1,
+          kind: 'warm',
+          isError: true,
+          events: [
+            { name: 'artifact_saved', atMs: 30 },
+            { name: 'turn_completed', atMs: 40 },
+          ],
+          summary: { sendToCompleteMs: 40 },
+        },
+        {
+          index: 2,
+          kind: 'warm',
+          isError: false,
+          events: [{ name: 'turn_completed', atMs: 25 }],
+          summary: { sendToCompleteMs: 25 },
+        },
+        {
+          index: 3,
+          kind: 'warm',
+          isError: false,
+          events: [
+            { name: 'artifact_saved', atMs: 18 },
+            { name: 'turn_completed', atMs: 20 },
+          ],
+          summary: { sendToCompleteMs: 20 },
+        },
+      ],
+    });
+
+    expect(manifest.warmMedian.sendToCompleteMs).toBe(20);
+  });
+
+  it('omits warm medians when no successful warm artifact run exists', () => {
+    const manifest = buildBenchmarkManifest({
+      app: 'powerpoint',
+      stage: 'final',
+      runs: [
+        {
+          index: 1,
+          kind: 'warm',
+          isError: true,
+          events: [{ name: 'turn_completed', atMs: 20 }],
+          summary: { sendToCompleteMs: 20 },
+        },
+      ],
+    });
+
+    expect(manifest.warmMedian).toBeUndefined();
   });
 });
 

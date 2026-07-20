@@ -457,10 +457,20 @@ export class ExcelHarness {
 
 function metricMedian(runs, key) {
   const values = runs
-    .filter((run) => run.kind === 'warm')
+    .filter(
+      (run) =>
+        run.kind === 'warm' &&
+        run.isError === false &&
+        run.events?.some((event) => event.name === 'artifact_saved'),
+    )
     .map((run) => run.summary?.[key])
     .filter(Number.isFinite);
   return median(values);
+}
+
+export function classifyBenchmarkRun(runIndex, recoveryPending) {
+  if (runIndex === 0) return 'cold';
+  return recoveryPending ? 'recovery' : 'warm';
 }
 
 function connectionInterval(events, from, to) {
@@ -486,6 +496,11 @@ export function buildBenchmarkManifest({
     'sendToArtifactMs',
     'sendToCompleteMs',
   ];
+  const warmMedian = Object.fromEntries(
+    metricKeys
+      .map((key) => [key, metricMedian(runs, key)])
+      .filter(([, value]) => Number.isFinite(value)),
+  );
   return {
     schemaVersion: 1,
     app,
@@ -524,9 +539,7 @@ export function buildBenchmarkManifest({
     ],
     runCount: runs.length,
     ...(failure ? { failure } : {}),
-    warmMedian: Object.fromEntries(
-      metricKeys.map((key) => [key, metricMedian(runs, key)]),
-    ),
+    ...(Object.keys(warmMedian).length > 0 ? { warmMedian } : {}),
     runs,
   };
 }
@@ -651,6 +664,7 @@ export async function runSidecarBenchmark(options) {
         rejectUnauthorized: false,
       });
       let runTimeout;
+      let recoveryPending = false;
       const timeout = setTimeout(() => {
         socket.close();
         reject(new Error(`Benchmark timed out after ${options.timeoutMs}ms`));
@@ -676,12 +690,13 @@ export async function runSidecarBenchmark(options) {
         }
         activeRun = {
           index: nextRunIndex + 1,
-          kind: nextRunIndex === 0 ? 'cold' : 'warm',
+          kind: classifyBenchmarkRun(nextRunIndex, recoveryPending),
           events: [],
           assistantText: '',
           errors: [],
         };
         runs.push(activeRun);
+        recoveryPending = false;
         if (options.app === 'excel') {
           excelHarness.startRun(activeRun.index, activeRun.kind);
         }
@@ -813,6 +828,9 @@ export async function runSidecarBenchmark(options) {
           };
           if (activeRun) {
             activeRun.events.push(event);
+            if (frame.name === 'query_spawn_started') {
+              recoveryPending = true;
+            }
           } else {
             connectionEvents.push(event);
           }

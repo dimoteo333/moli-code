@@ -1,10 +1,66 @@
 import { execFile } from 'node:child_process';
+import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import * as path from 'node:path';
-import { promisify } from 'node:util';
 import type { LocalFileAttachment } from '../shared/messages.js';
 
-const execFileAsync = promisify(execFile);
+const MAX_BUFFER_BYTES = 1024 * 1024;
+
+function execute(
+  executable: string,
+  args: string[],
+  timeout: number,
+): Promise<{ stdout: string; stderr: string }> {
+  return new Promise((resolve, reject) => {
+    execFile(
+      executable,
+      args,
+      { timeout, windowsHide: true, maxBuffer: MAX_BUFFER_BYTES },
+      (error, stdout, stderr) => {
+        if (error) {
+          reject(Object.assign(error, { stdout, stderr }));
+          return;
+        }
+        resolve({ stdout, stderr });
+      },
+    );
+  });
+}
+
+function parsePowerPointPids(stdout: string): Set<number> {
+  const pids = new Set<number>();
+  for (const line of stdout.split(/\r?\n/)) {
+    const match = line.match(/^"POWERPNT\.EXE","([0-9]+)"/i);
+    if (match) pids.add(Number(match[1]));
+  }
+  return pids;
+}
+
+async function listPowerPointPids(): Promise<Set<number>> {
+  const { stdout } = await execute(
+    'tasklist.exe',
+    ['/FI', 'IMAGENAME eq POWERPNT.EXE', '/FO', 'CSV', '/NH'],
+    5_000,
+  );
+  return parsePowerPointPids(stdout);
+}
+
+async function terminateAttributedPowerPoint(
+  markerPath: string,
+  preexistingPids: Set<number>,
+): Promise<void> {
+  let pid: number;
+  try {
+    pid = Number((await fs.readFile(markerPath, 'ascii')).trim());
+  } catch (_error) {
+    return;
+  }
+  if (!Number.isSafeInteger(pid) || pid <= 0 || preexistingPids.has(pid)) {
+    return;
+  }
+  if (!(await listPowerPointPids()).has(pid)) return;
+  await execute('taskkill.exe', ['/PID', String(pid), '/T', '/F'], 5_000);
+}
 
 export interface ReportAction {
   task: string;
@@ -123,27 +179,51 @@ export async function generatePowerPointReport(
   const base = safeBaseName(attachment.name);
   const specPath = path.join(safeOutputDir, `${base}-${stamp}.json`);
   const outputPath = path.join(safeOutputDir, `${base}-${stamp}.pptx`);
+  const runToken = randomUUID();
+  const markerPath = path.join(safeOutputDir, `${runToken}.powerpoint.pid`);
   await fs.writeFile(specPath, JSON.stringify(spec, null, 2), 'utf8');
 
   const scriptPath = path.join(
     path.dirname(process.argv[1]),
     'report-generator.ps1',
   );
-  await execFileAsync(
-    'powershell.exe',
-    [
-      '-NoProfile',
-      '-NonInteractive',
-      '-ExecutionPolicy',
-      'Bypass',
-      '-File',
-      scriptPath,
-      '-SpecPath',
-      specPath,
-      '-OutputPath',
-      outputPath,
-    ],
-    { timeout: 120_000, windowsHide: true },
-  );
-  return outputPath;
+  const args = [
+    '-NoProfile',
+    '-NonInteractive',
+    '-ExecutionPolicy',
+    'Bypass',
+    '-File',
+    scriptPath,
+    '-SpecPath',
+    specPath,
+    '-OutputPath',
+    outputPath,
+    '-ProcessMarkerPath',
+    markerPath,
+    '-RunToken',
+    runToken,
+  ];
+  let preexistingPids = new Set<number>();
+  try {
+    preexistingPids = await listPowerPointPids();
+    args.push(
+      '-PreexistingPowerPointPids',
+      [...preexistingPids].sort((left, right) => left - right).join(','),
+    );
+    await execute('powershell.exe', args, 120_000);
+    await fs.access(outputPath);
+    return outputPath;
+  } catch (error) {
+    try {
+      await terminateAttributedPowerPoint(markerPath, preexistingPids);
+    } catch (_cleanupError) {
+      // Preserve the original generation error.
+    }
+    throw error;
+  } finally {
+    await Promise.all([
+      fs.rm(specPath, { force: true }),
+      fs.rm(markerPath, { force: true }),
+    ]);
+  }
 }

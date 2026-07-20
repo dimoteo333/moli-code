@@ -1,6 +1,9 @@
 param(
     [Parameter(Mandatory=$true)][string]$SpecPath,
-    [Parameter(Mandatory=$true)][string]$OutputPath
+    [Parameter(Mandatory=$true)][string]$OutputPath,
+    [string]$RunToken = '',
+    [string]$ProcessMarkerPath = '',
+    [string]$PreexistingPowerPointPids = ''
 )
 
 $ErrorActionPreference = 'Stop'
@@ -12,6 +15,20 @@ $white = 0xFFFFFF
 $dark = 0x333333
 $spec = Get-Content -LiteralPath $SpecPath -Raw -Encoding UTF8 | ConvertFrom-Json
 $tempPath = [IO.Path]::Combine([IO.Path]::GetDirectoryName($OutputPath), ([IO.Path]::GetFileNameWithoutExtension($OutputPath) + '.tmp.pptx'))
+$powerPointOwned = $false
+
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class MoliLegacyPowerPointWindow {
+    [DllImport("user32.dll")]
+    public static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+}
+'@
+
+function Test-GeneratorOwnsPowerPointProcess([uint32]$ProcessId, [uint32[]]$PreexistingPids) {
+    return -not ($PreexistingPids -contains $ProcessId)
+}
 
 $fontLocations = @(
     @{ Scope = 'CurrentUser'; Path = 'Registry::HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\Fonts' },
@@ -62,8 +79,18 @@ $ppt = $null
 $presentation = $null
 $verify = $null
 try {
+    $preexistingPids = @()
+    foreach ($pidText in ($PreexistingPowerPointPids -split ',')) {
+        $parsedPid = 0
+        if ([UInt32]::TryParse($pidText.Trim(), [ref]$parsedPid)) { $preexistingPids += $parsedPid }
+    }
     $ppt = New-Object -ComObject PowerPoint.Application
     $ppt.Visible = -1
+    $powerPointProcessId = [uint32]0
+    [void][MoliLegacyPowerPointWindow]::GetWindowThreadProcessId([IntPtr]([int64]$ppt.HWND), [ref]$powerPointProcessId)
+    if ($powerPointProcessId -le 0) { throw 'POWERPOINT_PROCESS_ID_UNAVAILABLE' }
+    $powerPointOwned = Test-GeneratorOwnsPowerPointProcess $powerPointProcessId $preexistingPids
+    if ($ProcessMarkerPath) { [IO.File]::WriteAllText($ProcessMarkerPath, [string]$powerPointProcessId, [Text.Encoding]::ASCII) }
     $presentation = $ppt.Presentations.Add()
     $presentation.PageSetup.SlideWidth = 595.28
     $presentation.PageSetup.SlideHeight = 841.89
@@ -149,7 +176,7 @@ try {
 finally {
     if ($verify) { try { $verify.Close() } catch {} }
     if ($presentation) { try { $presentation.Close() } catch {} }
-    if ($ppt) { try { $ppt.Quit() } catch {} }
+    if ($ppt -and $powerPointOwned) { try { $ppt.Quit() } catch {} }
     foreach ($obj in @($verify,$presentation,$ppt)) { if ($obj) { [void][Runtime.InteropServices.Marshal]::FinalReleaseComObject($obj) } }
     [GC]::Collect(); [GC]::WaitForPendingFinalizers()
     if (Test-Path -LiteralPath $tempPath) { Remove-Item -LiteralPath $tempPath -Force -ErrorAction SilentlyContinue }

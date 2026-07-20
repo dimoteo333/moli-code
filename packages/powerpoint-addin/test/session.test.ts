@@ -312,6 +312,42 @@ describe('PowerPoint PaneSession', () => {
     expect(captured).toHaveLength(1);
   });
 
+  it('serializes legacy /report generation against every other turn', async () => {
+    const report = deferred<string>();
+    generatePowerPointReport.mockReturnValueOnce(report.promise);
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(
+      frame({
+        type: 'user_message',
+        text: '/report @minutes.md',
+        attachments: [
+          {
+            name: 'minutes.md',
+            content: '# minutes',
+            size: 9,
+            mimeType: 'text/markdown',
+          },
+        ],
+      }),
+    );
+    session.onFrame(frame({ type: 'user_message', text: 'overlapping turn' }));
+
+    expect(ws.framesOfType('error')).toContainEqual(
+      expect.objectContaining({ code: 'REPORT_BUSY' }),
+    );
+    expect(
+      captured[0].prompt[Symbol.asyncIterator]().next(),
+    ).not.toBeUndefined();
+
+    report.resolve('C:\\reports\\meeting-report.pptx');
+    await tick();
+    expect(ws.framesOfType('turn_complete').at(-1)).toMatchObject({
+      turnId: 1,
+      isError: false,
+    });
+  });
+
   it('sends hello_ok after query prewarm is ready', async () => {
     const ws = new FakeWs();
     makeSession(ws);
@@ -602,7 +638,7 @@ describe('PowerPoint PaneSession', () => {
     });
   });
 
-  it('starts the model watchdog only after a slow template save and queue push', async () => {
+  it('shrinks the model budget after a slow save to preserve COM time', async () => {
     vi.useFakeTimers();
     const saved = deferred<string>();
     saveTemplateAttachment.mockReturnValueOnce(saved.promise);
@@ -617,22 +653,87 @@ describe('PowerPoint PaneSession', () => {
           attachments: [templateAttachment],
         }),
       );
-      await vi.advanceTimersByTimeAsync(60_000);
+      await vi.advanceTimersByTimeAsync(10_000);
       expect(captured[0].interrupt).not.toHaveBeenCalled();
       expect(ws.framesOfType('turn_complete')).toHaveLength(0);
 
       saved.resolve('C:\\work\\templates\\template-saved.pptx');
       await vi.runAllTicks();
-      await vi.advanceTimersByTimeAsync(44_999);
+      await vi.advanceTimersByTimeAsync(24_999);
       expect(captured[0].interrupt).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(1);
       expect(captured[0].interrupt).toHaveBeenCalledOnce();
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('accepts a new model request after timeout without waiting for a terminal result', async () => {
+  it('starts the total template deadline at Send and times out a slow save exactly once', async () => {
+    vi.useFakeTimers();
+    const saved = deferred<string>();
+    saveTemplateAttachment.mockReturnValueOnce(saved.promise);
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx minutes',
+          attachments: [templateAttachment],
+        }),
+      );
+
+      await vi.advanceTimersByTimeAsync(45_000);
+      expect(ws.framesOfType('error')).toEqual([
+        expect.objectContaining({ code: 'TEMPLATE_REPORT_TIMEOUT' }),
+      ]);
+      expect(ws.framesOfType('turn_complete')).toEqual([
+        expect.objectContaining({ turnId: 1, isError: true }),
+      ]);
+
+      saved.resolve('C:\\work\\templates\\late.pptx');
+      await vi.runAllTicks();
+      expect(buildTemplateExtractionPrompt).not.toHaveBeenCalled();
+      expect(ws.framesOfType('turn_complete')).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('interrupts a slow model at its reserved budget and generates a local fallback before the total deadline', async () => {
+    vi.useFakeTimers();
+    try {
+      const ws = new FakeWs();
+      const session = makeSession(ws);
+      await vi.runAllTicks();
+      session.onFrame(
+        frame({
+          type: 'user_message',
+          text: '/template-report @template.pptx minutes',
+          attachments: [templateAttachment],
+        }),
+      );
+      await vi.runAllTicks();
+
+      await vi.advanceTimersByTimeAsync(35_000);
+      expect(captured[0].interrupt).toHaveBeenCalledOnce();
+      expect(fallbackTemplateReport).toHaveBeenCalledWith('minutes');
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(generateTemplateReport.mock.calls[0][4]).toBeGreaterThan(0);
+      expect(generateTemplateReport.mock.calls[0][4]).toBeLessThanOrEqual(
+        13_000,
+      );
+      expect(ws.framesOfType('turn_complete')).toEqual([
+        expect.objectContaining({ turnId: 1, isError: false }),
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('accepts a new model request after slow-model fallback without waiting for a terminal result', async () => {
     vi.useFakeTimers();
     try {
       const ws = new FakeWs();
@@ -671,9 +772,8 @@ describe('PowerPoint PaneSession', () => {
       const iterator = captured[1].prompt[Symbol.asyncIterator]();
       const next = await iterator.next();
       expect(next.value.message.content).toBe('timeout 뒤 요청');
-      expect(ws.framesOfType('error').at(-1)?.code).toBe(
-        'TEMPLATE_REPORT_TIMEOUT',
-      );
+      expect(ws.framesOfType('error')).toHaveLength(0);
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
     } finally {
       vi.useRealTimers();
     }
@@ -709,7 +809,7 @@ describe('PowerPoint PaneSession', () => {
       captured[0].emit(assistantText('{"title":"late"}'));
       captured[0].emit(resultMessage());
       await vi.advanceTimersByTimeAsync(0);
-      expect(generateTemplateReport).not.toHaveBeenCalled();
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
 
       captured[1].emit(assistantText('{"title":"new"}'));
       captured[1].emit(resultMessage());
@@ -718,7 +818,7 @@ describe('PowerPoint PaneSession', () => {
         '{"title":"new"}',
         '새 회의록',
       );
-      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(generateTemplateReport).toHaveBeenCalledTimes(2);
       expect(ws.framesOfType('turn_complete')).toHaveLength(2);
     } finally {
       vi.useRealTimers();
@@ -821,19 +921,19 @@ describe('PowerPoint PaneSession', () => {
       expect(
         ws.framesOfType('error').filter((item) => item.code === 'AGENT_ERROR'),
       ).toHaveLength(0);
-      expect(generateTemplateReport).not.toHaveBeenCalled();
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
 
       captured[1].emit(assistantText('{"title":"new"}'));
       captured[1].emit(resultMessage());
       await vi.advanceTimersByTimeAsync(0);
-      expect(generateTemplateReport).toHaveBeenCalledOnce();
+      expect(generateTemplateReport).toHaveBeenCalledTimes(2);
       expect(ws.framesOfType('turn_complete')).toHaveLength(2);
     } finally {
       vi.useRealTimers();
     }
   });
 
-  it('interrupts after 45 seconds and ignores the late result', async () => {
+  it('interrupts at the model budget, saves fallback, and ignores the late result', async () => {
     vi.useFakeTimers();
     try {
       const ws = new FakeWs();
@@ -849,15 +949,14 @@ describe('PowerPoint PaneSession', () => {
       await vi.advanceTimersByTimeAsync(45_000);
 
       expect(captured[0].interrupt).toHaveBeenCalledOnce();
-      expect(ws.framesOfType('error')).toContainEqual(
-        expect.objectContaining({ code: 'TEMPLATE_REPORT_TIMEOUT' }),
-      );
+      expect(ws.framesOfType('error')).toHaveLength(0);
       expect(ws.framesOfType('turn_complete')).toHaveLength(1);
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
 
       captured[0].emit(streamText('{"late":true}'));
       captured[0].emit(resultMessage());
       await vi.runAllTicks();
-      expect(generateTemplateReport).not.toHaveBeenCalled();
+      expect(generateTemplateReport).toHaveBeenCalledOnce();
       expect(ws.framesOfType('assistant_delta')).toHaveLength(0);
       expect(ws.framesOfType('turn_complete')).toHaveLength(1);
     } finally {

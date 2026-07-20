@@ -231,7 +231,12 @@ export async function generateTemplateReport(
   spec: TemplateReportSpec,
   outputDir: string,
   allowedRoot: string,
+  timeoutMs: number = REPORT_TIMEOUT_MS,
 ): Promise<string> {
+  const processTimeoutMs = Math.max(
+    1,
+    Math.min(REPORT_TIMEOUT_MS, Math.floor(timeoutMs)),
+  );
   const root = path.resolve(allowedRoot);
   const template = requireInside(root, templatePath);
   if (path.extname(template).toLowerCase() !== '.pptx') {
@@ -294,7 +299,7 @@ export async function generateTemplateReport(
     );
     await execute('powershell.exe', args, {
       windowsHide: true,
-      timeout: REPORT_TIMEOUT_MS,
+      timeout: processTimeoutMs,
       maxBuffer: MAX_BUFFER_BYTES,
     });
     await fs.access(outputPath);

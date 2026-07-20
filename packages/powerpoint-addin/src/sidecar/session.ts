@@ -52,6 +52,8 @@ export interface SessionEnv {
 const PERMISSION_TIMEOUT_MS = 300_000;
 const INPUT_PREVIEW_MAX_CHARS = 2_000;
 const TEMPLATE_REPORT_TIMEOUT_MS = 45_000;
+const TEMPLATE_MODEL_BUDGET_MS = 32_000;
+const TEMPLATE_COM_RESERVE_MS = 10_000;
 
 class PushQueue<T> implements AsyncIterable<T> {
   private readonly items: T[] = [];
@@ -108,7 +110,9 @@ interface ActiveTemplateTurn {
   minutes: string;
   streamedText: string;
   finalText: string;
-  timeout: ReturnType<typeof setTimeout> | null;
+  modelTimeout: ReturnType<typeof setTimeout> | null;
+  deadlineTimeout: ReturnType<typeof setTimeout> | null;
+  deadlineAtMs: number;
   phase: 'saving' | 'model' | 'generating';
   completed: boolean;
 }
@@ -136,6 +140,7 @@ export class PaneSession {
   private firstDeltaTurn = 0;
   private disposed = false;
   private activeTemplateTurn: ActiveTemplateTurn | null = null;
+  private activeReportTurn: number | null = null;
   private readonly sessionStartedAt = performance.now();
 
   constructor(
@@ -259,9 +264,7 @@ export class PaneSession {
     }
     this.pendingPermissions.clear();
     if (this.activeTemplateTurn) {
-      if (this.activeTemplateTurn.timeout) {
-        clearTimeout(this.activeTemplateTurn.timeout);
-      }
+      this.clearTemplateTimers(this.activeTemplateTurn);
       this.activeTemplateTurn.completed = true;
       this.activeTemplateTurn = null;
     }
@@ -279,6 +282,15 @@ export class PaneSession {
         'TEMPLATE_REPORT_BUSY',
         '템플릿 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
         '템플릿 보고서 생성 중',
+      );
+      return;
+    }
+    if (this.activeReportTurn !== null) {
+      this.sendTemplateError(
+        this.turnId,
+        'REPORT_BUSY',
+        'PowerPoint 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
+        'PowerPoint 보고서 생성 중',
       );
       return;
     }
@@ -338,7 +350,8 @@ export class PaneSession {
     }
 
     if (isReportCommand(frame.text)) {
-      void this.handleReportCommand(frame);
+      this.activeReportTurn = this.turnId;
+      void this.handleReportCommand(frame, this.turnId);
       return;
     }
 
@@ -428,11 +441,17 @@ export class PaneSession {
       minutes,
       streamedText: '',
       finalText: '',
-      timeout: null,
+      modelTimeout: null,
+      deadlineTimeout: null,
+      deadlineAtMs: Date.now() + TEMPLATE_REPORT_TIMEOUT_MS,
       phase: 'saving',
       completed: false,
     };
     this.activeTemplateTurn = active;
+    active.deadlineTimeout = setTimeout(
+      () => this.deadlineTemplateTurn(active),
+      TEMPLATE_REPORT_TIMEOUT_MS,
+    );
 
     try {
       active.templatePath = await saveTemplateAttachment(
@@ -457,14 +476,23 @@ export class PaneSession {
         parent_tool_use_id: null,
       });
       if (!pushed) throw new Error('AGENT_INPUT_CLOSED');
-      active.timeout = setTimeout(() => {
-        this.timeoutTemplateTurn(turnId, active.generation);
-      }, TEMPLATE_REPORT_TIMEOUT_MS);
+      const modelBudget = Math.min(
+        TEMPLATE_MODEL_BUDGET_MS,
+        this.remainingTemplateMs(active) - TEMPLATE_COM_RESERVE_MS,
+      );
+      if (modelBudget <= 0) {
+        this.fallbackSlowTemplateModel(active);
+        return;
+      }
+      active.modelTimeout = setTimeout(
+        () => this.fallbackSlowTemplateModel(active),
+        modelBudget,
+      );
       this.emitPerformance('user_message_enqueued', turnId);
     } catch (error) {
       if (active.completed || this.activeTemplateTurn !== active) return;
       active.completed = true;
-      if (active.timeout) clearTimeout(active.timeout);
+      this.clearTemplateTimers(active);
       if (this.activeModelTurn?.turnId === turnId) {
         this.activeModelTurn = null;
       }
@@ -479,35 +507,64 @@ export class PaneSession {
     }
   }
 
-  private timeoutTemplateTurn(turnId: number, generation: number): void {
-    const active = this.activeTemplateTurn;
-    if (
-      !active ||
-      active.turnId !== turnId ||
-      active.generation !== generation ||
-      active.phase !== 'model' ||
-      active.completed
-    ) {
+  private deadlineTemplateTurn(active: ActiveTemplateTurn): void {
+    if (this.activeTemplateTurn !== active || active.completed) {
       return;
     }
+    this.clearTemplateTimers(active);
     active.completed = true;
     this.activeTemplateTurn = null;
     if (
-      this.activeModelTurn?.turnId === turnId &&
-      this.activeModelTurn.generation === generation
+      this.activeModelTurn?.turnId === active.turnId &&
+      this.activeModelTurn.generation === active.generation
     ) {
       this.activeModelTurn = null;
     }
     this.sendTemplateError(
-      turnId,
+      active.turnId,
       'TEMPLATE_REPORT_TIMEOUT',
       '보고서 구조화가 45초를 초과해 중단되었습니다.',
       '템플릿 보고서 시간 초과',
     );
-    this.replaceCurrentQuery(true);
+    if (active.phase === 'model') this.replaceCurrentQuery(true);
   }
 
-  private async handleReportCommand(frame: UserMessageFrame): Promise<void> {
+  private remainingTemplateMs(active: ActiveTemplateTurn): number {
+    return Math.max(0, active.deadlineAtMs - Date.now());
+  }
+
+  private clearTemplateTimers(active: ActiveTemplateTurn): void {
+    if (active.modelTimeout) clearTimeout(active.modelTimeout);
+    if (active.deadlineTimeout) clearTimeout(active.deadlineTimeout);
+    active.modelTimeout = null;
+    active.deadlineTimeout = null;
+  }
+
+  private fallbackSlowTemplateModel(active: ActiveTemplateTurn): void {
+    if (
+      this.activeTemplateTurn !== active ||
+      active.completed ||
+      active.phase !== 'model'
+    ) {
+      return;
+    }
+    if (active.modelTimeout) clearTimeout(active.modelTimeout);
+    active.modelTimeout = null;
+    if (
+      this.activeModelTurn?.turnId === active.turnId &&
+      this.activeModelTurn.generation === active.generation
+    ) {
+      this.activeModelTurn = null;
+    }
+    active.phase = 'generating';
+    this.replaceCurrentQuery(true);
+    void this.finishTemplateTurn(active, true);
+  }
+
+  private async handleReportCommand(
+    frame: UserMessageFrame,
+    currentTurn: number,
+  ): Promise<void> {
     const attachment = frame.attachments?.find(
       (item) => /\.md$/i.test(item.name) || item.mimeType === 'text/markdown',
     );
@@ -525,10 +582,10 @@ export class PaneSession {
         isError: true,
         errorMessage: 'Markdown 회의록이 없습니다.',
       });
+      if (this.activeReportTurn === currentTurn) this.activeReportTurn = null;
       return;
     }
 
-    const currentTurn = this.turnId;
     this.send({
       v: PROTOCOL_VERSION,
       type: 'tool_activity',
@@ -592,6 +649,8 @@ export class PaneSession {
         isError: true,
         errorMessage: String(err),
       });
+    } finally {
+      if (this.activeReportTurn === currentTurn) this.activeReportTurn = null;
     }
   }
 
@@ -700,9 +759,9 @@ export class PaneSession {
       activeTemplate.generation === generation
     ) {
       if (activeTemplate.phase === 'model') {
-        if (activeTemplate.timeout) {
-          clearTimeout(activeTemplate.timeout);
-          activeTemplate.timeout = null;
+        if (activeTemplate.modelTimeout) {
+          clearTimeout(activeTemplate.modelTimeout);
+          activeTemplate.modelTimeout = null;
         }
         if (
           this.activeModelTurn?.kind === 'template' &&
@@ -931,9 +990,9 @@ export class PaneSession {
   ): Promise<void> {
     if (active.completed || this.activeTemplateTurn !== active) return;
     active.phase = 'generating';
-    if (active.timeout) {
-      clearTimeout(active.timeout);
-      active.timeout = null;
+    if (active.modelTimeout) {
+      clearTimeout(active.modelTimeout);
+      active.modelTimeout = null;
     }
     try {
       const raw = active.finalText || active.streamedText;
@@ -945,7 +1004,9 @@ export class PaneSession {
         spec,
         `${this.env.config.workDir}/reports`,
         this.env.config.workDir,
+        this.remainingTemplateMs(active),
       );
+      if (active.completed || this.activeTemplateTurn !== active) return;
       this.emitPerformance('artifact_saved', active.turnId, outputPath);
       this.send({
         v: PROTOCOL_VERSION,
@@ -965,6 +1026,11 @@ export class PaneSession {
         isError: false,
       });
     } catch (error) {
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      if (/REPORT_GENERATION_TIMEOUT/.test(String(error))) {
+        this.deadlineTemplateTurn(active);
+        return;
+      }
       this.logger.error('Template report generation failed', error);
       this.sendTemplateError(
         active.turnId,
@@ -973,8 +1039,11 @@ export class PaneSession {
         String(error),
       );
     } finally {
-      active.completed = true;
-      if (this.activeTemplateTurn === active) this.activeTemplateTurn = null;
+      if (this.activeTemplateTurn === active) {
+        this.clearTemplateTimers(active);
+        active.completed = true;
+        this.activeTemplateTurn = null;
+      }
     }
   }
 

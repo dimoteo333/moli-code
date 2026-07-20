@@ -195,6 +195,24 @@ describe('parseTemplateReportOutput', () => {
       fallbackTemplateReport(minutes),
     );
   });
+
+  it.each([
+    ['short prose', 900, 2],
+    ['medium prose', 901, 1],
+    ['long prose', 1801, 2],
+  ])(
+    'replaces valid model JSON with the deterministic page count for %s',
+    (_label, length, modelPages) => {
+      const minutes = proseOfLength(length);
+      const page = validSpec().pages[0];
+      const parsed = parseTemplateReportOutput(
+        JSON.stringify(validSpec({ pages: Array(modelPages).fill(page) })),
+        minutes,
+      );
+
+      expect(parsed).toEqual(fallbackTemplateReport(minutes));
+    },
+  );
 });
 
 describe('fallbackTemplateReport', () => {

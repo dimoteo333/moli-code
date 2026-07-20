@@ -323,5 +323,14 @@ export function parseTemplateReportOutput(
   raw: string,
   minutes: string,
 ): TemplateReportSpec {
-  return parseValidatedSpec(raw) ?? fallbackTemplateReport(minutes);
+  const parsed = parseValidatedSpec(raw);
+  const expectedPages =
+    codePointLength(minutes) <= 900
+      ? 1
+      : codePointLength(minutes) <= 1800
+        ? 2
+        : 3;
+  return parsed?.pages.length === expectedPages
+    ? parsed
+    : fallbackTemplateReport(minutes);
 }

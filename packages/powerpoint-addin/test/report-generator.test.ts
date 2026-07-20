@@ -53,4 +53,16 @@ describe('deterministic PowerPoint report generator', () => {
     expect(source).toContain('CurrentUser');
     expect(source).toContain('LocalMachine');
   });
+
+  it('closes every opened presentation and quits only an owned PowerPoint process', async () => {
+    const source = await readFile('src/sidecar/report-generator.ps1', 'utf8');
+    expect(source).toContain('PreexistingPowerPointPids');
+    expect(source).toContain('ProcessMarkerPath');
+    expect(source).toContain('GetWindowThreadProcessId');
+    expect(source).toMatch(
+      /if \(\$ppt -and \$powerPointOwned\).*\$ppt\.Quit\(\)/s,
+    );
+    expect(source).toMatch(/if \(\$presentation\).*\$presentation\.Close\(\)/s);
+    expect(source).toMatch(/if \(\$verify\).*\$verify\.Close\(\)/s);
+  });
 });
