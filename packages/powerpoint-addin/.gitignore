@@ -1,0 +1,5 @@
+dist/
+deploy/
+certs/
+.node-cache/
+moli-powerpoint-addin-*-offline.zip

@@ -476,6 +476,7 @@ export class Query implements AsyncIterable<SDKMessage> {
         return {
           behavior: 'allow',
           updatedInput: result.updatedInput ?? toolInput,
+          ...(result.answers ? { answers: result.answers } : {}),
         };
       } else {
         return {

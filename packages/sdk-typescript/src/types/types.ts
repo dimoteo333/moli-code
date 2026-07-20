@@ -61,6 +61,8 @@ export type PermissionResult =
   | {
       behavior: 'allow';
       updatedInput: ToolInput;
+      /** Answers collected for the built-in ask_user_question tool. */
+      answers?: Record<string, string>;
     }
   | {
       behavior: 'deny';

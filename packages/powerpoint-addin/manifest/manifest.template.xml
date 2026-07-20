@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<OfficeApp
+  xmlns="http://schemas.microsoft.com/office/appforoffice/1.1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xmlns:bt="http://schemas.microsoft.com/office/officeappbasictypes/1.0"
+  xmlns:ov="http://schemas.microsoft.com/office/taskpaneappversionoverrides"
+  xsi:type="TaskPaneApp">
+
+  <Id>793cb7e1-b614-4694-80ec-78bde900e066</Id>
+  <Version>{{VERSION}}</Version>
+  <ProviderName>Moli Team</ProviderName>
+  <DefaultLocale>ko-KR</DefaultLocale>
+  <DisplayName DefaultValue="몰리 코드 for PowerPoint"/>
+  <Description DefaultValue="폐쇄망에서 동작하는 PowerPoint용 몰리 코드 AI 어시스턴트. 로컬 문서를 첨부해 대화할 수 있습니다."/>
+  <IconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
+  <SupportUrl DefaultValue="https://localhost:{{PORT}}/support.html"/>
+
+  <AppDomains>
+    <AppDomain>https://localhost:{{PORT}}</AppDomain>
+  </AppDomains>
+
+  <Hosts>
+    <Host Name="Presentation"/>
+  </Hosts>
+
+  <DefaultSettings>
+    <SourceLocation DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
+  </DefaultSettings>
+
+  <Permissions>Restricted</Permissions>
+
+  <VersionOverrides xmlns="http://schemas.microsoft.com/office/taskpaneappversionoverrides" xsi:type="VersionOverridesV1_0">
+    <Hosts>
+      <Host xsi:type="Presentation">
+        <DesktopFormFactor>
+          <ExtensionPoint xsi:type="PrimaryCommandSurface">
+            <OfficeTab id="TabHome">
+              <Group id="MoliCode.Group1">
+                <Label resid="MoliCode.GroupLabel"/>
+                <Icon>
+                  <bt:Image size="16" resid="MoliCode.Icon16"/>
+                  <bt:Image size="32" resid="MoliCode.Icon32"/>
+                  <bt:Image size="80" resid="MoliCode.Icon80"/>
+                </Icon>
+                <Control xsi:type="Button" id="MoliCode.TaskpaneButton">
+                  <Label resid="MoliCode.TaskpaneButton.Label"/>
+                  <Supertip>
+                    <Title resid="MoliCode.TaskpaneButton.Label"/>
+                    <Description resid="MoliCode.TaskpaneButton.Tooltip"/>
+                  </Supertip>
+                  <Icon>
+                    <bt:Image size="16" resid="MoliCode.Icon16"/>
+                    <bt:Image size="32" resid="MoliCode.Icon32"/>
+                    <bt:Image size="80" resid="MoliCode.Icon80"/>
+                  </Icon>
+                  <Action xsi:type="ShowTaskpane">
+                    <TaskpaneId>MoliCodePowerPointTaskpane</TaskpaneId>
+                    <SourceLocation resid="MoliCode.Taskpane.Url"/>
+                  </Action>
+                </Control>
+              </Group>
+            </OfficeTab>
+          </ExtensionPoint>
+        </DesktopFormFactor>
+      </Host>
+    </Hosts>
+    <Resources>
+      <bt:Images>
+        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-16.png"/>
+        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
+        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
+      </bt:Images>
+      <bt:Urls>
+        <bt:Url id="MoliCode.Taskpane.Url" DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
+      </bt:Urls>
+      <bt:ShortStrings>
+        <bt:String id="MoliCode.GroupLabel" DefaultValue="몰리 코드"/>
+        <bt:String id="MoliCode.TaskpaneButton.Label" DefaultValue="몰리코드"/>
+      </bt:ShortStrings>
+      <bt:LongStrings>
+        <bt:String id="MoliCode.TaskpaneButton.Tooltip" DefaultValue="몰리 코드 AI 어시스턴트 작업창을 엽니다."/>
+      </bt:LongStrings>
+    </Resources>
+  </VersionOverrides>
+</OfficeApp>

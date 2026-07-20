@@ -27,6 +27,8 @@
     "build:vscode": "node scripts/build_vscode_companion.js",
     "build:excel-addin": "npm run build --workspace=packages/excel-addin",
     "package:excel-addin": "npm run package:deploy --workspace=packages/excel-addin",
+    "build:powerpoint-addin": "npm run build --workspace=packages/powerpoint-addin",
+    "package:powerpoint-addin": "npm run package:deploy --workspace=packages/powerpoint-addin",
     "build:all": "npm run build && npm run build:sandbox && npm run build:vscode",
     "build:packages": "npm run build --workspaces",
     "build:sandbox": "node scripts/build_sandbox.js",

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ES5", "DOM", "ES2015.Promise", "ES2015.Core"],
+    "types": ["office-js"]
+  },
+  "include": ["src/taskpane/**/*.ts", "src/shared/**/*.ts"]
+}

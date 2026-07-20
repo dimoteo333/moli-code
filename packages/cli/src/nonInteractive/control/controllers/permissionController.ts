@@ -31,7 +31,13 @@ import type {
 import { BaseController } from './baseController.js';
 
 // Import ToolCallConfirmationDetails types for type alignment
-type ToolConfirmationType = 'edit' | 'exec' | 'mcp' | 'info' | 'plan';
+type ToolConfirmationType =
+  | 'edit'
+  | 'exec'
+  | 'mcp'
+  | 'info'
+  | 'plan'
+  | 'ask_user_question';
 
 export class PermissionController extends BaseController {
   private pendingOutgoingRequests = new Set<string>();
@@ -442,8 +448,17 @@ export class PermissionController extends BaseController {
         if (updatedInput && typeof updatedInput === 'object') {
           toolCall.request.args = updatedInput as Record<string, unknown>;
         }
+        const rawAnswers =
+          toolCall.confirmationDetails.type === 'ask_user_question'
+            ? payload['answers']
+            : undefined;
+        const answers =
+          rawAnswers && typeof rawAnswers === 'object'
+            ? (rawAnswers as Record<string, string>)
+            : undefined;
         await toolCall.confirmationDetails.onConfirm(
           ToolConfirmationOutcome.ProceedOnce,
+          answers ? { answers } : undefined,
         );
       } else {
         // Extract cancel message from response if available

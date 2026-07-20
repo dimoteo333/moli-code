@@ -690,6 +690,34 @@ describe('Query', () => {
       await query.close();
     });
 
+    it('should forward ask_user_question answers in permission responses', async () => {
+      const canUseTool = vi.fn().mockResolvedValue({
+        behavior: 'allow',
+        updatedInput: { questions: [] },
+        answers: { '0': 'Brief', '1': 'Summary, Risks' },
+      });
+      const query = new Query(transport, { cwd: '/test', canUseTool });
+      await respondToInitialize(transport, query);
+
+      const controlReq = createControlRequest('can_use_tool', 'perm-answers');
+      transport.simulateMessage(controlReq);
+
+      await vi.waitFor(() => {
+        const response = findControlResponse(
+          transport.getAllWrittenMessages(),
+          'perm-answers',
+        );
+        expect(response).toBeDefined();
+        if (response?.response.subtype === 'success') {
+          expect(response.response.response).toMatchObject({
+            behavior: 'allow',
+            answers: { '0': 'Brief', '1': 'Summary, Risks' },
+          });
+        }
+      });
+      await query.close();
+    });
+
     it('should handle permission denial with interrupt flag', async () => {
       const canUseTool = vi.fn().mockResolvedValue({
         behavior: 'deny',
