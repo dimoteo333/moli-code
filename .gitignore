@@ -34,6 +34,7 @@ package-lock.json
 .qoder
 .claude
 CLAUDE.md
+.worktrees/
 
 # OS metadata
 .DS_Store
