@@ -20,6 +20,7 @@ import {
   type PaneToSidecarFrame,
   type SidecarToPaneFrame,
   type PaneContentBlock,
+  type LocalFileAttachment,
   type UserMessageFrame,
   type QuestionSpec,
   type PerformanceEventName,
@@ -33,6 +34,13 @@ import {
   generatePowerPointReport,
   isReportCommand,
 } from './report-generator.js';
+import { saveTemplateAttachment } from './template-attachment.js';
+import {
+  buildTemplateExtractionPrompt,
+  fallbackTemplateReport,
+  parseTemplateReportOutput,
+} from './template-report-spec.js';
+import { generateTemplateReport } from './template-report-generator.js';
 import type { Logger } from './logger.js';
 
 export interface SessionEnv {
@@ -43,6 +51,7 @@ export interface SessionEnv {
 
 const PERMISSION_TIMEOUT_MS = 300_000;
 const INPUT_PREVIEW_MAX_CHARS = 2_000;
+const TEMPLATE_REPORT_TIMEOUT_MS = 45_000;
 
 class PushQueue<T> implements AsyncIterable<T> {
   private readonly items: T[] = [];
@@ -91,6 +100,16 @@ interface PendingPermission {
   questionCount?: number;
 }
 
+interface ActiveTemplateTurn {
+  turnId: number;
+  templatePath: string;
+  minutes: string;
+  streamedText: string;
+  finalText: string;
+  timeout: ReturnType<typeof setTimeout>;
+  completed: boolean;
+}
+
 export class PaneSession {
   private readonly sessionId = randomUUID();
   private readonly inputQueue = new PushQueue<SDKUserMessage>();
@@ -103,6 +122,8 @@ export class PaneSession {
   private turnId = 0;
   private firstDeltaTurn = 0;
   private disposed = false;
+  private activeTemplateTurn: ActiveTemplateTurn | null = null;
+  private ignoredTemplateResults = 0;
   private readonly sessionStartedAt = performance.now();
 
   constructor(
@@ -222,12 +243,50 @@ export class PaneSession {
       pending.settle({ allowed: false, message: reason });
     }
     this.pendingPermissions.clear();
+    if (this.activeTemplateTurn) {
+      clearTimeout(this.activeTemplateTurn.timeout);
+      this.activeTemplateTurn.completed = true;
+      this.activeTemplateTurn = null;
+    }
     this.abortController.abort();
   }
 
   private handleUserMessage(frame: UserMessageFrame): void {
     if (!frame.text || !frame.text.trim()) return;
     this.turnId += 1;
+
+    if (
+      (this.activeTemplateTurn && !this.activeTemplateTurn.completed) ||
+      this.ignoredTemplateResults > 0
+    ) {
+      this.sendTemplateError(
+        this.turnId,
+        'TEMPLATE_REPORT_BUSY',
+        '템플릿 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
+        '템플릿 보고서 생성 중',
+      );
+      return;
+    }
+
+    if (isTemplateReportCommand(frame.text)) {
+      const attachment = onlyPptxAttachment(frame.attachments);
+      const minutes = stripTemplateReportInput(frame.text, attachment?.name);
+      if (!attachment || !minutes) {
+        this.sendTemplateError(
+          this.turnId,
+          !attachment
+            ? 'TEMPLATE_REPORT_PPTX_REQUIRED'
+            : 'TEMPLATE_REPORT_MINUTES_REQUIRED',
+          !attachment
+            ? '/template-report 명령에는 PPTX 템플릿 하나만 첨부해야 합니다.'
+            : '/template-report 명령에는 줄글 회의록을 입력해야 합니다.',
+          !attachment ? 'PPTX 템플릿이 없습니다.' : '회의록 본문이 없습니다.',
+        );
+        return;
+      }
+      void this.handleTemplateReportCommand(this.turnId, attachment, minutes);
+      return;
+    }
 
     let prompt: string;
     try {
@@ -287,6 +346,104 @@ export class PaneSession {
       parent_tool_use_id: null,
     });
     this.emitPerformance('user_message_enqueued', this.turnId);
+  }
+
+  private sendTemplateError(
+    turnId: number,
+    code: string,
+    messageKo: string,
+    errorMessage: string,
+  ): void {
+    this.send({ v: PROTOCOL_VERSION, type: 'error', code, messageKo });
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'turn_complete',
+      turnId,
+      isError: true,
+      errorMessage,
+    });
+  }
+
+  private async handleTemplateReportCommand(
+    turnId: number,
+    attachment: LocalFileAttachment,
+    minutes: string,
+  ): Promise<void> {
+    try {
+      this.ensureQuery();
+    } catch (error) {
+      this.logger.error('Failed to start template report session', error);
+      this.sendTemplateError(
+        turnId,
+        'AGENT_START_FAILED',
+        '보고서 추출 모델을 시작하지 못했습니다.',
+        '에이전트 시작 실패',
+      );
+      return;
+    }
+
+    const timeout = setTimeout(() => {
+      void this.timeoutTemplateTurn(turnId);
+    }, TEMPLATE_REPORT_TIMEOUT_MS);
+    const active: ActiveTemplateTurn = {
+      turnId,
+      templatePath: '',
+      minutes,
+      streamedText: '',
+      finalText: '',
+      timeout,
+      completed: false,
+    };
+    this.activeTemplateTurn = active;
+
+    try {
+      active.templatePath = await saveTemplateAttachment(
+        attachment,
+        this.env.config.workDir,
+      );
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      this.inputQueue.push({
+        type: 'user',
+        session_id: this.sessionId,
+        message: {
+          role: 'user',
+          content: buildTemplateExtractionPrompt(minutes),
+        },
+        parent_tool_use_id: null,
+      });
+      this.emitPerformance('user_message_enqueued', turnId);
+    } catch (error) {
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      active.completed = true;
+      clearTimeout(active.timeout);
+      this.logger.error('Template attachment storage failed', error);
+      this.sendTemplateError(
+        turnId,
+        (error as { code?: string }).code ?? 'TEMPLATE_REPORT_INPUT_FAILED',
+        'PPTX 템플릿을 안전하게 저장하지 못했습니다.',
+        String(error),
+      );
+      if (this.activeTemplateTurn === active) this.activeTemplateTurn = null;
+    }
+  }
+
+  private async timeoutTemplateTurn(turnId: number): Promise<void> {
+    const active = this.activeTemplateTurn;
+    if (!active || active.turnId !== turnId || active.completed) return;
+    active.completed = true;
+    this.ignoredTemplateResults += 1;
+    this.activeTemplateTurn = null;
+    try {
+      await this.queryInstance?.interrupt();
+    } catch (error) {
+      this.logger.error('Template report timeout interrupt failed', error);
+    }
+    this.sendTemplateError(
+      turnId,
+      'TEMPLATE_REPORT_TIMEOUT',
+      '보고서 구조화가 45초를 초과해 중단되었습니다.',
+      '템플릿 보고서 시간 초과',
+    );
   }
 
   private async handleReportCommand(frame: UserMessageFrame): Promise<void> {
@@ -406,7 +563,7 @@ export class PaneSession {
 
   private async pumpMessages(q: Query): Promise<void> {
     try {
-      for await (const message of q) this.handleSdkMessage(message);
+      for await (const message of q) await this.handleSdkMessage(message);
     } catch (err) {
       if (!this.disposed) {
         this.logger.error('SDK message pump failed', err);
@@ -421,7 +578,16 @@ export class PaneSession {
     }
   }
 
-  private handleSdkMessage(message: SDKMessage): void {
+  private async handleSdkMessage(message: SDKMessage): Promise<void> {
+    if (this.ignoredTemplateResults > 0 && message.type !== 'system') {
+      if (message.type === 'result') this.ignoredTemplateResults -= 1;
+      return;
+    }
+    const active = this.activeTemplateTurn;
+    if (active && !active.completed) {
+      const consumed = await this.handleTemplateSdkMessage(message, active);
+      if (consumed) return;
+    }
     switch (message.type) {
       case 'stream_event': {
         if (message.parent_tool_use_id) return;
@@ -523,6 +689,99 @@ export class PaneSession {
     }
   }
 
+  private async handleTemplateSdkMessage(
+    message: SDKMessage,
+    active: ActiveTemplateTurn,
+  ): Promise<boolean> {
+    switch (message.type) {
+      case 'stream_event': {
+        if (message.parent_tool_use_id) return true;
+        const event = message.event;
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          active.streamedText += event.delta.text;
+          if (this.firstDeltaTurn !== active.turnId) {
+            this.firstDeltaTurn = active.turnId;
+            this.emitPerformance('first_delta_received', active.turnId);
+          }
+        }
+        return true;
+      }
+      case 'assistant': {
+        if (message.parent_tool_use_id) return true;
+        const text = message.message.content
+          .filter(
+            (block): block is Extract<typeof block, { type: 'text' }> =>
+              block.type === 'text',
+          )
+          .map((block) => block.text)
+          .join('\n');
+        if (text) active.finalText = text;
+        return true;
+      }
+      case 'user':
+        return true;
+      case 'result':
+        await this.finishTemplateTurn(active, message.is_error);
+        return true;
+      case 'system':
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  private async finishTemplateTurn(
+    active: ActiveTemplateTurn,
+    modelFailed: boolean,
+  ): Promise<void> {
+    if (active.completed || this.activeTemplateTurn !== active) return;
+    active.completed = true;
+    clearTimeout(active.timeout);
+    try {
+      const raw = active.finalText || active.streamedText;
+      const spec = modelFailed
+        ? fallbackTemplateReport(active.minutes)
+        : parseTemplateReportOutput(raw, active.minutes);
+      const outputPath = await generateTemplateReport(
+        active.templatePath,
+        spec,
+        `${this.env.config.workDir}/reports`,
+        this.env.config.workDir,
+      );
+      this.emitPerformance('artifact_saved', active.turnId, outputPath);
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'assistant_message',
+        turnId: active.turnId,
+        blocks: [
+          {
+            type: 'text',
+            text: `템플릿 양식을 적용한 PPTX 보고서를 만들었습니다.\n${outputPath}`,
+          },
+        ],
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: active.turnId,
+        isError: false,
+      });
+    } catch (error) {
+      this.logger.error('Template report generation failed', error);
+      this.sendTemplateError(
+        active.turnId,
+        'TEMPLATE_REPORT_GENERATION_FAILED',
+        '템플릿 PPTX 보고서를 생성하거나 검증하지 못했습니다.',
+        String(error),
+      );
+    } finally {
+      if (this.activeTemplateTurn === active) this.activeTemplateTurn = null;
+    }
+  }
+
   private requestPanePermission(
     toolName: string,
     input: Record<string, unknown>,
@@ -578,6 +837,15 @@ export class PaneSession {
     input: Record<string, unknown>,
     signal: AbortSignal,
   ): Promise<PermissionResult> {
+    if (
+      (this.activeTemplateTurn && !this.activeTemplateTurn.completed) ||
+      this.ignoredTemplateResults > 0
+    ) {
+      return Promise.resolve({
+        behavior: 'deny',
+        message: 'TEMPLATE_REPORT_TOOL_DISABLED',
+      });
+    }
     return this.requestPanePermission(toolName, input, signal).then(
       (decision) =>
         decision.allowed
@@ -622,6 +890,37 @@ export class PaneSession {
 function baseToolName(toolName: string): string {
   const idx = toolName.lastIndexOf('__');
   return idx >= 0 ? toolName.slice(idx + 2) : toolName;
+}
+
+function isTemplateReportCommand(text: string): boolean {
+  return /^\/template-report(?:\s|$)/i.test(text.trim());
+}
+
+function onlyPptxAttachment(
+  attachments: LocalFileAttachment[] | undefined,
+): LocalFileAttachment | undefined {
+  if (attachments?.length !== 1) return undefined;
+  const attachment = attachments[0];
+  return /\.pptx$/i.test(attachment.name) && attachment.encoding === 'base64'
+    ? attachment
+    : undefined;
+}
+
+function stripTemplateReportInput(
+  text: string,
+  attachmentName: string | undefined,
+): string {
+  let minutes = text
+    .trim()
+    .replace(/^\/template-report(?:\s|$)/i, '')
+    .trim();
+  if (attachmentName) {
+    const escapedName = attachmentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    minutes = minutes
+      .replace(new RegExp(`@${escapedName}(?=\\s|$)`, 'gi'), '')
+      .trim();
+  }
+  return minutes;
 }
 
 function previewJson(value: unknown): string {
