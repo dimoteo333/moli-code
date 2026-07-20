@@ -9,8 +9,8 @@ import { pathToFileURL } from 'node:url';
 export const POWERPOINT_TEMPLATE_REPORT_PROMPT = [
   '/template-report',
   '',
-  '아래 줄글 회의록을 첨부한 제출양식에 맞춰 PPTX 보고서로 만들어주세요.',
-  '내용 길이에 따라 1~3페이지로 나누고 결과 파일만 저장해주세요.',
+  '아래 줄글 회의록을 첨부한 제출양식에 맞춰 PPTX 보고서로 만드세요.',
+  '내용 길이에 따라 1~3페이지로 나누고 결과 파일만 저장하세요.',
 ].join('\n');
 
 const coreMinutes = [
