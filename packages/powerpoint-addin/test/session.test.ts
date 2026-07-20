@@ -15,6 +15,14 @@ interface CapturedQuery {
 }
 
 const captured: CapturedQuery[] = [];
+const generatePowerPointReport = vi.hoisted(() =>
+  vi.fn().mockResolvedValue('C:\\reports\\meeting-report.pptx'),
+);
+
+vi.mock('../src/sidecar/report-generator.js', () => ({
+  isReportCommand: (text: string) => /^\/report(?:\s|$)/i.test(text.trim()),
+  generatePowerPointReport,
+}));
 
 vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
   const original = await importOriginal<Record<string, unknown>>();
@@ -30,6 +38,7 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
       const interrupt = vi.fn().mockResolvedValue(undefined);
       captured.push({ prompt, options, interrupt });
       return {
+        initialized: Promise.resolve(),
         interrupt,
         [Symbol.asyncIterator]() {
           return {
@@ -102,9 +111,53 @@ async function tick(): Promise<void> {
 
 beforeEach(() => {
   captured.length = 0;
+  generatePowerPointReport.mockClear();
 });
 
 describe('PowerPoint PaneSession', () => {
+  it('generates /report locally without sending the Markdown to the model', async () => {
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(
+      frame({
+        type: 'user_message',
+        text: '/report @minutes.md',
+        attachments: [
+          {
+            name: 'minutes.md',
+            content: '# 회의록',
+            size: 12,
+            mimeType: 'text/markdown',
+          },
+        ],
+      }),
+    );
+    await tick();
+    await tick();
+    expect(generatePowerPointReport).toHaveBeenCalledOnce();
+    expect(ws.framesOfType('assistant_message')[0].blocks[0].text).toContain(
+      'meeting-report.pptx',
+    );
+    expect(ws.framesOfType('turn_complete')).toMatchObject([
+      { isError: false },
+    ]);
+    expect(captured).toHaveLength(1);
+  });
+
+  it('sends hello_ok after query prewarm is ready', async () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(ws.framesOfType('hello_ok')).toHaveLength(0);
+    await tick();
+    expect(ws.framesOfType('hello_ok')).toHaveLength(1);
+  });
+
+  it('prewarms one query when the pane connects', () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(captured).toHaveLength(1);
+  });
+
   it('feeds attached file contents into the SDK prompt', async () => {
     const ws = new FakeWs();
     const session = makeSession(ws);

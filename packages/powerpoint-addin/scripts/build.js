@@ -86,6 +86,18 @@ await run('esbuild sidecar', () =>
   }),
 );
 
+await run('copy deterministic report engine', () => {
+  const source = fs.readFileSync(
+    path.join(pkgRoot, 'src', 'sidecar', 'report-generator.ps1'),
+  );
+  // Windows PowerShell 5.1 treats BOM-less scripts as the active ANSI code
+  // page. Prefix UTF-8 BOM so Korean labels and the 원신한 font survive.
+  fs.writeFileSync(
+    path.join(dist, 'sidecar', 'report-generator.ps1'),
+    Buffer.concat([Buffer.from([0xef, 0xbb, 0xbf]), source]),
+  );
+});
+
 await run('esbuild taskpane', () =>
   build({
     entryPoints: [path.join(pkgRoot, 'src', 'taskpane', 'index.ts')],

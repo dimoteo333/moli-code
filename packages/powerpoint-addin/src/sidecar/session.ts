@@ -27,6 +27,10 @@ import {
   AttachmentValidationError,
   formatPromptWithAttachments,
 } from './attachments.js';
+import {
+  generatePowerPointReport,
+  isReportCommand,
+} from './report-generator.js';
 import type { Logger } from './logger.js';
 
 export interface SessionEnv {
@@ -106,12 +110,32 @@ export class PaneSession {
     logger.info(
       `Pane session ${this.sessionId} started (host=${hello.host ?? '?'} platform=${hello.platform ?? '?'} sets=${JSON.stringify(hello.requirementSets)})`,
     );
+    this.prewarmQuery();
+  }
+
+  private prewarmQuery(): void {
+    try {
+      const q = this.ensureQuery();
+      void q.initialized.then(
+        () => this.sendHello(),
+        (err) => {
+          this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+          this.sendHello();
+        },
+      );
+    } catch (err) {
+      this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+      this.sendHello();
+    }
+  }
+
+  private sendHello(): void {
     this.send({
       v: PROTOCOL_VERSION,
       type: 'hello_ok',
       sessionId: this.sessionId,
-      version: env.version,
-      model: env.config.model,
+      version: this.env.version,
+      model: this.env.config.model,
     });
   }
 
@@ -221,6 +245,11 @@ export class PaneSession {
       return;
     }
 
+    if (isReportCommand(frame.text)) {
+      void this.handleReportCommand(frame);
+      return;
+    }
+
     try {
       this.ensureQuery();
     } catch (err) {
@@ -250,8 +279,94 @@ export class PaneSession {
     });
   }
 
-  private ensureQuery(): void {
-    if (this.queryInstance) return;
+  private async handleReportCommand(frame: UserMessageFrame): Promise<void> {
+    const attachment = frame.attachments?.find(
+      (item) => /\.md$/i.test(item.name) || item.mimeType === 'text/markdown',
+    );
+    if (!attachment) {
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'error',
+        code: 'REPORT_MARKDOWN_REQUIRED',
+        messageKo: '/report 명령에는 Markdown 회의록 파일을 첨부해야 합니다.',
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: this.turnId,
+        isError: true,
+        errorMessage: 'Markdown 회의록이 없습니다.',
+      });
+      return;
+    }
+
+    const currentTurn = this.turnId;
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'tool_activity',
+      turnId: currentTurn,
+      toolName: 'powerpoint_report',
+      status: 'start',
+      summary: `${attachment.name} → A4 PPTX`,
+    });
+    try {
+      const outputPath = await generatePowerPointReport(
+        attachment,
+        `${this.env.config.workDir}/reports`,
+      );
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'tool_activity',
+        turnId: currentTurn,
+        toolName: 'powerpoint_report',
+        status: 'end',
+        summary: outputPath,
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'assistant_message',
+        turnId: currentTurn,
+        blocks: [
+          {
+            type: 'text',
+            text: `A4 책임자 제출용 PPTX를 생성하고 재열기 검증했습니다.\n${outputPath}`,
+          },
+        ],
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: currentTurn,
+        isError: false,
+      });
+    } catch (err) {
+      this.logger.error('PowerPoint report generation failed', err);
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'tool_activity',
+        turnId: currentTurn,
+        toolName: 'powerpoint_report',
+        status: 'end',
+        isError: true,
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'error',
+        code: 'REPORT_GENERATION_FAILED',
+        messageKo: 'PowerPoint 보고서 생성 또는 재열기 검증에 실패했습니다.',
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: currentTurn,
+        isError: true,
+        errorMessage: String(err),
+      });
+    }
+  }
+
+  private ensureQuery(): Query {
+    if (this.queryInstance) return this.queryInstance;
     const config = this.env.config;
     fs.mkdirSync(config.workDir, { recursive: true });
     const options: QueryOptions = {
@@ -273,6 +388,7 @@ export class PaneSession {
     );
     this.queryInstance = query({ prompt: this.inputQueue, options });
     void this.pumpMessages(this.queryInstance);
+    return this.queryInstance;
   }
 
   private async pumpMessages(q: Query): Promise<void> {

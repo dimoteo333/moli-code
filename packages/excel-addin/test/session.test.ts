@@ -55,6 +55,7 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
       };
       captured.push(instance);
       return {
+        initialized: Promise.resolve(),
         interrupt: instance.interrupt,
         [Symbol.asyncIterator]() {
           return {
@@ -144,16 +145,18 @@ beforeEach(() => {
 // --- tests ------------------------------------------------------------------
 
 describe('PaneSession', () => {
-  it('sends hello_ok on construction', () => {
+  it('sends hello_ok after query prewarm is ready', async () => {
     const ws = new FakeWs();
     makeSession(ws);
+    expect(ws.framesOfType('hello_ok')).toHaveLength(0);
+    await tick();
     expect(ws.sent[0]).toMatchObject({ type: 'hello_ok', version: 'test' });
   });
 
-  it('starts the query lazily and feeds user messages into streaming input', async () => {
+  it('prewarms one query and feeds user messages into its streaming input', async () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
-    expect(captured).toHaveLength(0);
+    expect(captured).toHaveLength(1);
 
     session.onFrame(frame({ type: 'user_message', text: '시트 요약해줘' }));
     expect(captured).toHaveLength(1);
@@ -397,11 +400,11 @@ describe('PaneSession', () => {
     expect(captured[0].interrupt).toHaveBeenCalled();
   });
 
-  it('answers ping with pong without starting a query', () => {
+  it('answers ping with pong without starting an additional query', () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
     session.onFrame(frame({ type: 'ping' }));
     expect(ws.framesOfType('pong')).toHaveLength(1);
-    expect(captured).toHaveLength(0);
+    expect(captured).toHaveLength(1);
   });
 });

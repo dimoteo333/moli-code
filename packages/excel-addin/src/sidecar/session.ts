@@ -124,12 +124,32 @@ export class PaneSession {
     logger.info(
       `Pane session ${this.sessionId} started (host=${hello.host ?? '?'} platform=${hello.platform ?? '?'} sets=${JSON.stringify(hello.requirementSets)})`,
     );
+    this.prewarmQuery();
+  }
+
+  private prewarmQuery(): void {
+    try {
+      const q = this.ensureQuery();
+      void q.initialized.then(
+        () => this.sendHello(),
+        (err) => {
+          this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+          this.sendHello();
+        },
+      );
+    } catch (err) {
+      this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+      this.sendHello();
+    }
+  }
+
+  private sendHello(): void {
     this.send({
       v: PROTOCOL_VERSION,
       type: 'hello_ok',
       sessionId: this.sessionId,
-      version: env.version,
-      model: env.config.model,
+      version: this.env.version,
+      model: this.env.config.model,
     });
   }
 
@@ -234,9 +254,9 @@ export class PaneSession {
     });
   }
 
-  private ensureQuery(): void {
+  private ensureQuery(): Query {
     if (this.queryInstance) {
-      return;
+      return this.queryInstance;
     }
     const config = this.env.config;
     fs.mkdirSync(config.workDir, { recursive: true });
@@ -271,6 +291,7 @@ export class PaneSession {
     );
     this.queryInstance = query({ prompt: this.inputQueue, options });
     void this.pumpMessages(this.queryInstance);
+    return this.queryInstance;
   }
 
   private async pumpMessages(q: Query): Promise<void> {
