@@ -8,7 +8,12 @@ import path from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
 import WebSocket from 'ws';
-import { median, summarizeRun, writeJsonWithHash, writeTextWithHash } from './lib.mjs';
+import {
+  median,
+  summarizeRun,
+  writeJsonWithHash,
+  writeTextWithHash,
+} from './lib.mjs';
 
 const PROTOCOL_VERSION = 1;
 
@@ -41,30 +46,168 @@ function expandedRange(range, rows, cols) {
   return `${single[1].toUpperCase()}${startRow}:${numberToColumn(startColumn + cols - 1)}${startRow + rows - 1}`;
 }
 
+function parseRange(range) {
+  const match = /^\$?([A-Za-z]+)\$?(\d+)(?::\$?([A-Za-z]+)\$?(\d+))?$/.exec(
+    range,
+  );
+  if (!match) {
+    throw new Error(`Unsupported Excel range: ${range}`);
+  }
+  const startRow = Number(match[2]) - 1;
+  const startCol = columnToNumber(match[1]) - 1;
+  const endRow = match[4] ? Number(match[4]) - 1 : startRow;
+  const endCol = match[3] ? columnToNumber(match[3]) - 1 : startCol;
+  if (endRow < startRow || endCol < startCol) {
+    throw new Error(`Unsupported Excel range: ${range}`);
+  }
+  return { startRow, startCol, endRow, endCol };
+}
+
+function cloneMatrix(matrix = []) {
+  return Array.isArray(matrix)
+    ? matrix.map((row) => (Array.isArray(row) ? [...row] : []))
+    : [];
+}
+
+function sheetDimensions(sheet) {
+  const matrices = [sheet.values, sheet.formulas];
+  const rows = Math.max(0, ...matrices.map((matrix) => matrix.length));
+  const cols = Math.max(
+    0,
+    ...matrices.flatMap((matrix) =>
+      matrix.map((row) => (Array.isArray(row) ? row.length : 0)),
+    ),
+  );
+  return { rows, cols };
+}
+
+function usedRangeForSheet(sheet) {
+  if (sheet.usedRange) {
+    const bounds = parseRange(sheet.usedRange);
+    return {
+      usedRange: sheet.usedRange,
+      rows: bounds.endRow - bounds.startRow + 1,
+      cols: bounds.endCol - bounds.startCol + 1,
+    };
+  }
+  const { rows, cols } = sheetDimensions(sheet);
+  return {
+    usedRange:
+      rows > 0 && cols > 0 ? `A1:${numberToColumn(cols)}${rows}` : null,
+    rows,
+    cols,
+  };
+}
+
+function makeSheet(source = {}) {
+  return {
+    values: cloneMatrix(source.values),
+    formulas: cloneMatrix(source.formulas),
+    usedRange:
+      typeof source.usedRange === 'string' ? source.usedRange : undefined,
+  };
+}
+
+function ensureCell(matrix, row, col) {
+  while (matrix.length <= row) {
+    matrix.push([]);
+  }
+  while (matrix[row].length <= col) {
+    matrix[row].push('');
+  }
+}
+
+function writeMatrix(
+  sheet,
+  property,
+  startRow,
+  startCol,
+  input,
+  clearOtherProperty = false,
+) {
+  for (let rowOffset = 0; rowOffset < input.length; rowOffset += 1) {
+    const inputRow = Array.isArray(input[rowOffset]) ? input[rowOffset] : [];
+    for (let colOffset = 0; colOffset < inputRow.length; colOffset += 1) {
+      const row = startRow + rowOffset;
+      const col = startCol + colOffset;
+      ensureCell(sheet[property], row, col);
+      sheet[property][row][col] = inputRow[colOffset];
+      if (clearOtherProperty) {
+        const otherProperty = property === 'values' ? 'formulas' : 'values';
+        ensureCell(sheet[otherProperty], row, col);
+        sheet[otherProperty][row][col] = '';
+      }
+    }
+  }
+}
+
+function expandUsedRange(sheet, endRow, endCol) {
+  const current = usedRangeForSheet(sheet);
+  const rows = Math.max(current.rows, endRow + 1);
+  const cols = Math.max(current.cols, endCol + 1);
+  sheet.usedRange =
+    rows > 0 && cols > 0 ? `A1:${numberToColumn(cols)}${rows}` : undefined;
+}
+
 export class ExcelHarness {
-  constructor() {
+  constructor(seed) {
+    const fallbackSeed = {
+      sheets: { Sheet1: {} },
+      activeSheet: 'Sheet1',
+    };
+    this.seed = structuredClone(seed ?? fallbackSeed);
     this.operations = [];
-    this.sheets = new Set(['Sheet1']);
+    this.runOperations = [];
+    this.reset();
+  }
+
+  reset() {
+    const sheetEntries = Object.entries(this.seed.sheets ?? {});
+    if (sheetEntries.length === 0) {
+      sheetEntries.push(['Sheet1', {}]);
+    }
+    this.sheets = new Map(
+      sheetEntries.map(([name, sheet]) => [name, makeSheet(sheet)]),
+    );
+    this.activeSheet =
+      this.seed.activeSheet && this.sheets.has(this.seed.activeSheet)
+        ? this.seed.activeSheet
+        : sheetEntries[0][0];
+  }
+
+  startRun(runIndex, kind) {
+    this.reset();
+    const run = { runIndex, kind, operations: [] };
+    this.runOperations.push(run);
+    this.operations = run.operations;
+  }
+
+  getSheet(name) {
+    const sheet = this.sheets.get(name);
+    if (!sheet) {
+      throw new Error(`Worksheet not found: ${name}`);
+    }
+    return sheet;
   }
 
   execute(op, args = {}) {
     this.operations.push({ op, args });
-    const sheet = typeof args.sheet === 'string' ? args.sheet : 'Sheet1';
+    const sheetName =
+      typeof args.sheet === 'string' ? args.sheet : this.activeSheet;
     switch (op) {
       case 'get_workbook_overview':
         return {
-          sheets: [...this.sheets].map((name) => ({
+          sheets: [...this.sheets].map(([name, sheet]) => ({
             name,
-            usedRange: null,
-            rows: 0,
-            cols: 0,
+            ...usedRangeForSheet(sheet),
           })),
-          activeSheet: 'Sheet1',
-          selection: 'Sheet1!A1',
+          activeSheet: this.activeSheet,
+          selection: `${this.activeSheet}!A1`,
         };
       case 'add_worksheet': {
         const name = String(args.name ?? 'Sheet');
-        this.sheets.add(name);
+        this.sheets.set(name, makeSheet());
+        this.activeSheet = name;
         return { added: name };
       }
       case 'write_range': {
@@ -72,24 +215,91 @@ export class ExcelHarness {
         const rows = values.length;
         const cols = Array.isArray(values[0]) ? values[0].length : 0;
         const range = expandedRange(String(args.range ?? 'A1'), rows, cols);
-        return { written: `${sheet}!${range}`, rows, cols };
+        const bounds = parseRange(range);
+        const sheet = this.getSheet(sheetName);
+        writeMatrix(
+          sheet,
+          'values',
+          bounds.startRow,
+          bounds.startCol,
+          values,
+          true,
+        );
+        expandUsedRange(sheet, bounds.endRow, bounds.endCol);
+        return { written: `${sheetName}!${range}`, rows, cols };
       }
-      case 'set_formulas':
-        return { written: `${sheet}!${String(args.range ?? 'A1')}` };
+      case 'set_formulas': {
+        const formulas = Array.isArray(args.formulas) ? args.formulas : [];
+        const rows = formulas.length;
+        const cols = Array.isArray(formulas[0]) ? formulas[0].length : 0;
+        const range = expandedRange(String(args.range ?? 'A1'), rows, cols);
+        const bounds = parseRange(range);
+        const sheet = this.getSheet(sheetName);
+        writeMatrix(
+          sheet,
+          'formulas',
+          bounds.startRow,
+          bounds.startCol,
+          formulas,
+          true,
+        );
+        expandUsedRange(sheet, bounds.endRow, bounds.endCol);
+        return { written: `${sheetName}!${range}` };
+      }
       case 'format_range':
-        return { formatted: `${sheet}!${String(args.range ?? 'A1')}` };
-      case 'clear_range':
-        return { cleared: `${sheet}!${String(args.range ?? 'A1')}` };
+        return { formatted: `${sheetName}!${String(args.range ?? 'A1')}` };
+      case 'clear_range': {
+        const range = String(args.range ?? 'A1');
+        const bounds = parseRange(range);
+        const sheet = this.getSheet(sheetName);
+        const applyTo =
+          args.applyTo === 'formats'
+            ? 'Formats'
+            : args.applyTo === 'all'
+              ? 'All'
+              : 'Contents';
+        if (applyTo !== 'Formats') {
+          for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+            for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
+              ensureCell(sheet.values, row, col);
+              ensureCell(sheet.formulas, row, col);
+              sheet.values[row][col] = '';
+              sheet.formulas[row][col] = '';
+            }
+          }
+        }
+        return { cleared: `${sheetName}!${range}`, applyTo };
+      }
       case 'read_range':
-      case 'get_selection':
+      case 'get_selection': {
+        const range = String(args.range ?? 'A1');
+        const bounds = parseRange(range);
+        const sheet = this.getSheet(sheetName);
+        const values = [];
+        const formulas = [];
+        const numberFormat = [];
+        for (let row = bounds.startRow; row <= bounds.endRow; row += 1) {
+          const valueRow = [];
+          const formulaRow = [];
+          const formatRow = [];
+          for (let col = bounds.startCol; col <= bounds.endCol; col += 1) {
+            valueRow.push(sheet.values[row]?.[col] ?? '');
+            formulaRow.push(sheet.formulas[row]?.[col] ?? '');
+            formatRow.push('General');
+          }
+          values.push(valueRow);
+          formulas.push(formulaRow);
+          numberFormat.push(formatRow);
+        }
         return {
-          address: `${sheet}!${String(args.range ?? 'A1')}`,
-          totalRows: 1,
-          totalCols: 1,
-          values: [['']],
-          formulas: [['']],
-          numberFormat: [['General']],
+          address: `${sheetName}!${range}`,
+          totalRows: bounds.endRow - bounds.startRow + 1,
+          totalCols: bounds.endCol - bounds.startCol + 1,
+          values,
+          formulas,
+          numberFormat,
         };
+      }
       case 'find':
         return { matches: [], truncated: false };
       default:
@@ -109,10 +319,17 @@ function metricMedian(runs, key) {
 function connectionInterval(events, from, to) {
   const fromMs = events.find((event) => event.name === from)?.atMs;
   const toMs = events.find((event) => event.name === to)?.atMs;
-  return Number.isFinite(fromMs) && Number.isFinite(toMs) ? toMs - fromMs : undefined;
+  return Number.isFinite(fromMs) && Number.isFinite(toMs)
+    ? toMs - fromMs
+    : undefined;
 }
 
-export function buildBenchmarkManifest({ app, stage, runs, connectionEvents = [] }) {
+export function buildBenchmarkManifest({
+  app,
+  stage,
+  runs,
+  connectionEvents = [],
+}) {
   const metricKeys = [
     'paneToReadyMs',
     'sendToApiMs',
@@ -158,7 +375,9 @@ export function buildBenchmarkManifest({ app, stage, runs, connectionEvents = []
       },
     ],
     runCount: runs.length,
-    warmMedian: Object.fromEntries(metricKeys.map((key) => [key, metricMedian(runs, key)])),
+    warmMedian: Object.fromEntries(
+      metricKeys.map((key) => [key, metricMedian(runs, key)]),
+    ),
     runs,
   };
 }
@@ -181,18 +400,28 @@ function getJson(port, pathname) {
         });
         response.on('end', () => {
           if (response.statusCode !== 200) {
-            reject(new Error(`GET ${pathname} failed with ${response.statusCode}: ${body}`));
+            reject(
+              new Error(
+                `GET ${pathname} failed with ${response.statusCode}: ${body}`,
+              ),
+            );
             return;
           }
           try {
             resolve(JSON.parse(body));
           } catch (error) {
-            reject(new Error(`GET ${pathname} returned invalid JSON: ${error.message}`));
+            reject(
+              new Error(
+                `GET ${pathname} returned invalid JSON: ${error.message}`,
+              ),
+            );
           }
         });
       },
     );
-    request.on('timeout', () => request.destroy(new Error(`GET ${pathname} timed out`)));
+    request.on('timeout', () =>
+      request.destroy(new Error(`GET ${pathname} timed out`)),
+    );
     request.on('error', reject);
   });
 }
@@ -219,6 +448,9 @@ function sendJson(socket, frame) {
 }
 
 export async function runSidecarBenchmark(options) {
+  if (options.app === 'powerpoint' && options.excelFixture) {
+    throw new Error('--excel-fixture is only supported for Excel benchmarks');
+  }
   const tokenBody = await getJson(options.port, '/token');
   if (typeof tokenBody.token !== 'string') {
     throw new Error('Sidecar /token response did not contain a token');
@@ -241,7 +473,7 @@ export async function runSidecarBenchmark(options) {
     }
   }
 
-  const excelHarness = new ExcelHarness();
+  const excelHarness = new ExcelHarness(options.excelFixture);
   const rawFrames = [];
   const connectionEvents = [];
   const runs = [];
@@ -279,6 +511,9 @@ export async function runSidecarBenchmark(options) {
         errors: [],
       };
       runs.push(activeRun);
+      if (options.app === 'excel') {
+        excelHarness.startRun(activeRun.index, activeRun.kind);
+      }
       mark('user_message_sent');
       sendJson(socket, {
         type: 'user_message',
@@ -314,7 +549,11 @@ export async function runSidecarBenchmark(options) {
         return;
       }
       if (frame.type === 'assistant_delta' && activeRun) {
-        if (!activeRun.events.some((event) => event.name === 'first_delta_received')) {
+        if (
+          !activeRun.events.some(
+            (event) => event.name === 'first_delta_received',
+          )
+        ) {
           mark('first_delta_received');
         }
         activeRun.assistantText += frame.text ?? '';
@@ -329,10 +568,15 @@ export async function runSidecarBenchmark(options) {
         return;
       }
       if (frame.type === 'tool_activity') {
-        mark(frame.status === 'start' ? 'office_tool_started' : 'office_tool_finished', {
-          toolName: frame.toolName,
-          isError: frame.isError === true,
-        });
+        mark(
+          frame.status === 'start'
+            ? 'office_tool_started'
+            : 'office_tool_finished',
+          {
+            toolName: frame.toolName,
+            isError: frame.isError === true,
+          },
+        );
         return;
       }
       if (frame.type === 'permission_request') {
@@ -347,7 +591,12 @@ export async function runSidecarBenchmark(options) {
       if (frame.type === 'excel_exec') {
         try {
           const result = excelHarness.execute(frame.op, frame.args);
-          sendJson(socket, { type: 'excel_result', id: frame.id, ok: true, result });
+          sendJson(socket, {
+            type: 'excel_result',
+            id: frame.id,
+            ok: true,
+            result,
+          });
         } catch (error) {
           sendJson(socket, {
             type: 'excel_result',
@@ -400,25 +649,39 @@ export async function runSidecarBenchmark(options) {
     runs,
     connectionEvents,
   });
-  await writeJsonWithHash(path.join(options.outputDir, 'metrics.json'), manifest);
-  await writeJsonWithHash(path.join(options.outputDir, 'raw-frames.json'), rawFrames);
+  await writeJsonWithHash(
+    path.join(options.outputDir, 'metrics.json'),
+    manifest,
+  );
+  await writeJsonWithHash(
+    path.join(options.outputDir, 'raw-frames.json'),
+    rawFrames,
+  );
   if (options.app === 'excel') {
     await writeJsonWithHash(
       path.join(options.outputDir, 'excel-operations.json'),
-      excelHarness.operations,
+      excelHarness.runOperations,
     );
   }
   await writeTextWithHash(path.join(options.outputDir, 'prompt.txt'), prompt);
   return manifest;
 }
 
-const invokedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : '';
+const invokedPath = process.argv[1]
+  ? pathToFileURL(path.resolve(process.argv[1])).href
+  : '';
 if (invokedPath === import.meta.url) {
   const args = parseArgs(process.argv);
   const app = args.app;
   if (app !== 'excel' && app !== 'powerpoint') {
     throw new Error('--app must be excel or powerpoint');
   }
+  if (app === 'powerpoint' && args['excel-fixture']) {
+    throw new Error('--excel-fixture is only supported for Excel benchmarks');
+  }
+  const excelFixture = args['excel-fixture']
+    ? JSON.parse(await fs.readFile(path.resolve(args['excel-fixture']), 'utf8'))
+    : undefined;
   const manifest = await runSidecarBenchmark({
     app,
     stage: args.stage ?? 'stage-00-baseline',
@@ -428,6 +691,7 @@ if (invokedPath === import.meta.url) {
     outputDir: path.resolve(args.output),
     runs: Number(args.runs ?? 4),
     timeoutMs: Number(args.timeout ?? 600000),
+    excelFixture,
   });
   process.stdout.write(
     `${JSON.stringify(
