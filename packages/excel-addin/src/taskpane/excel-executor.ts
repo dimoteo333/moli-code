@@ -1,7 +1,8 @@
 /**
  * Executes `excel_exec` ops from the sidecar against the open workbook via
- * Office.js `Excel.run()`. Every op used here is available in ExcelApi 1.1
- * (Excel 2016 baseline). ES5-only: promise chains, no async/await.
+ * Office.js `Excel.run()`. Legacy operations are available in ExcelApi 1.1;
+ * optional formula fillDown uses ExcelApi 1.9. ES5-only: promise chains,
+ * no async/await.
  */
 
 import type { ExcelOp } from '../shared/messages.js';
@@ -72,7 +73,9 @@ function validate2dArray(value: unknown, what: string): unknown[][] {
   return value as unknown[][];
 }
 
-export function createOfficeExecutor(): ExcelExecutor {
+export function createOfficeExecutor(
+  options: { supportsFillDown?: boolean } = {},
+): ExcelExecutor {
   return {
     exec(op: ExcelOp, args: { [key: string]: unknown }): Promise<unknown> {
       switch (op) {
@@ -83,7 +86,7 @@ export function createOfficeExecutor(): ExcelExecutor {
         case 'write_range':
           return writeRange(args);
         case 'set_formulas':
-          return setFormulas(args);
+          return setFormulas(args, options.supportsFillDown === true);
         case 'get_selection':
           return getSelection();
         case 'clear_range':
@@ -226,9 +229,15 @@ function writeRange(args: RangeArgs & { values?: unknown }): Promise<unknown> {
 
 function setFormulas(
   args: RangeArgs & { formulas?: unknown; fillDown?: unknown },
+  supportsFillDown: boolean,
 ): Promise<unknown> {
   const formulas = validate2dArray(args.formulas, 'formulas');
   if (args.fillDown === true) {
+    if (!supportsFillDown) {
+      throw new Error(
+        "'fillDown' requires ExcelApi 1.9; omit fillDown and provide the full 2D formula array on this host",
+      );
+    }
     const requestedRange = requireRange(args);
     const parsed = parseRange(requestedRange);
     if (!parsed || parsed.endRow <= parsed.startRow) {

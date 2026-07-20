@@ -20,6 +20,27 @@ describe('mock excel_set_formulas fillDown', () => {
     });
   });
 
+  it('preserves quoted sheet and external reference prefixes', async () => {
+    const executor = createMockExecutor();
+    const formula =
+      "=\"A1\"+'Q1 Data'!B2+'[Budget 2026.xlsx]Q1'!C$3+$D4+[Book1.xlsx]Sheet1!E2";
+    await executor.exec('set_formulas', {
+      range: 'A2:A3',
+      formulas: [[formula]],
+      fillDown: true,
+    });
+    await expect(
+      executor.exec('read_range', { range: 'A2:A3' }),
+    ).resolves.toMatchObject({
+      formulas: [
+        [formula],
+        [
+          "=\"A1\"+'Q1 Data'!B3+'[Budget 2026.xlsx]Q1'!C$3+$D5+[Book1.xlsx]Sheet1!E3",
+        ],
+      ],
+    });
+  });
+
   it('rejects invalid dimensions before writing any cell', async () => {
     const executor = createMockExecutor();
     await expect(

@@ -150,20 +150,53 @@ function expandUsedRange(sheet, endRow, endCol) {
 }
 
 function shiftFormulaRows(formula, rowOffset) {
-  return String(formula)
-    .split('"')
-    .map((part, index) =>
-      index % 2 === 1
-        ? part
-        : part.replace(
-            /(^|[^A-Za-z0-9_.])(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)(?![A-Za-z0-9_])/g,
-            (_match, prefix, absoluteColumn, column, absoluteRow, row) =>
-              `${prefix}${absoluteColumn}${column}${absoluteRow}${
-                absoluteRow ? row : Number(row) + rowOffset
-              }`,
-          ),
-    )
-    .join('"');
+  const text = String(formula);
+  let result = '';
+  let index = 0;
+  while (index < text.length) {
+    const current = text[index];
+    if (current === '"' || current === "'") {
+      const quote = current;
+      const start = index++;
+      while (index < text.length) {
+        if (text[index] !== quote) {
+          index += 1;
+          continue;
+        }
+        if (text[index + 1] === quote) {
+          index += 2;
+          continue;
+        }
+        index += 1;
+        break;
+      }
+      result += text.slice(start, index);
+      continue;
+    }
+    if (current === '[') {
+      const close = text.indexOf(']', index + 1);
+      if (close >= 0) {
+        result += text.slice(index, close + 1);
+        index = close + 1;
+        continue;
+      }
+    }
+    const match = /^(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)/.exec(text.slice(index));
+    if (match) {
+      const previous = index > 0 ? text[index - 1] : '';
+      const next = text[index + match[0].length] ?? '';
+      if (!/[A-Za-z0-9_.]/.test(previous) && !/[A-Za-z0-9_!]/.test(next)) {
+        result += `${match[1]}${match[2]}${match[3]}${
+          match[3] ? match[4] : Number(match[4]) + rowOffset
+        }`;
+        index += match[0].length;
+        continue;
+      }
+    }
+    result += current;
+    index += 1;
+  }
+  return result;
 }
 
 export class ExcelHarness {
@@ -645,7 +678,11 @@ export async function runSidecarBenchmark(options) {
           token: tokenBody.token,
           requirementSets:
             options.app === 'excel'
-              ? { 'ExcelApi 1.1': true, 'ExcelApi 1.4': true }
+              ? {
+                  'ExcelApi 1.1': true,
+                  'ExcelApi 1.4': true,
+                  'ExcelApi 1.9': true,
+                }
               : { 'PowerPointApi 1.1': true },
           host: options.app === 'excel' ? 'Excel' : 'PowerPoint',
           platform: 'PC',

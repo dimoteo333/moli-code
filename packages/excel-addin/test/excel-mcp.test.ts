@@ -3,6 +3,7 @@ import {
   buildExcelMcpServer,
   excelSetFormulasDescription,
   excelSetFormulasInput,
+  getExcelSetFormulasDescription,
   excelToolBaseName,
   gatedExec,
   isReadOnlyExcelTool,
@@ -50,6 +51,12 @@ describe('excel_set_formulas contract', () => {
     expect(excelSetFormulasInput.fillDown.safeParse('true').success).toBe(
       false,
     );
+  });
+
+  it('notes when native fill-down is unavailable', () => {
+    expect(getExcelSetFormulasDescription(false)).toContain('ExcelApi 1.9');
+    expect(getExcelSetFormulasDescription(false)).toContain('unavailable');
+    expect(getExcelSetFormulasDescription(true)).not.toContain('unavailable');
   });
 });
 

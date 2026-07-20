@@ -63,6 +63,26 @@ describe('ExcelHarness', () => {
     ]);
   });
 
+  it('preserves quoted sheet and external prefixes while filling formulas', () => {
+    const harness = new ExcelHarness({
+      sheets: { Sheet1: {} },
+      activeSheet: 'Sheet1',
+    });
+    const formula =
+      "=\"A1\"+'Q1 Data'!B2+'[Budget 2026.xlsx]Q1'!C$3+$D4+[Book1.xlsx]Sheet1!E2";
+    harness.execute('set_formulas', {
+      range: 'A2:A3',
+      formulas: [[formula]],
+      fillDown: true,
+    });
+    expect(harness.execute('read_range', { range: 'A2:A3' }).formulas).toEqual([
+      [formula],
+      [
+        "=\"A1\"+'Q1 Data'!B3+'[Budget 2026.xlsx]Q1'!C$3+$D5+[Book1.xlsx]Sheet1!E3",
+      ],
+    ]);
+  });
+
   it('rejects invalid fillDown dimensions without mutating the seed', () => {
     const harness = new ExcelHarness({
       sheets: { Sheet1: { values: [['kept']] } },

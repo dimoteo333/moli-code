@@ -8,6 +8,7 @@ function installExcelMock() {
   const firstRow = { formulas: [] as string[][], autoFill };
   const range = {
     address: 'Sheet1!A2:A4',
+    formulas: [] as string[][],
     getRow: vi.fn(() => firstRow),
     load: vi.fn(),
   };
@@ -34,7 +35,9 @@ afterEach(() => {
 describe('excel_set_formulas fillDown', () => {
   it('writes one formula row then invokes native fillDown on the target', async () => {
     const mock = installExcelMock();
-    const result = await createOfficeExecutor().exec('set_formulas', {
+    const result = await createOfficeExecutor({
+      supportsFillDown: true,
+    }).exec('set_formulas', {
       range: 'A2:A4',
       formulas: [['=B2+$C$1']],
       fillDown: true,
@@ -58,10 +61,40 @@ describe('excel_set_formulas fillDown', () => {
       const mock = installExcelMock();
       await expect(
         Promise.resolve().then(() =>
-          createOfficeExecutor().exec('set_formulas', args),
+          createOfficeExecutor({ supportsFillDown: true }).exec(
+            'set_formulas',
+            args,
+          ),
         ),
       ).rejects.toThrow(text);
       expect(mock.run).not.toHaveBeenCalled();
     },
   );
+
+  it('rejects fillDown below ExcelApi 1.9 before Excel.run', async () => {
+    const mock = installExcelMock();
+    await expect(
+      Promise.resolve().then(() =>
+        createOfficeExecutor({ supportsFillDown: false }).exec('set_formulas', {
+          range: 'A2:A4',
+          formulas: [['=B2']],
+          fillDown: true,
+        }),
+      ),
+    ).rejects.toThrow('ExcelApi 1.9');
+    expect(mock.run).not.toHaveBeenCalled();
+  });
+
+  it('keeps full-array formula writes available below ExcelApi 1.9', async () => {
+    const mock = installExcelMock();
+    await createOfficeExecutor({ supportsFillDown: false }).exec(
+      'set_formulas',
+      {
+        range: 'A2:A4',
+        formulas: [['=B2'], ['=B3'], ['=B4']],
+      },
+    );
+    expect(mock.range.formulas).toEqual([['=B2'], ['=B3'], ['=B4']]);
+    expect(mock.run).toHaveBeenCalledOnce();
+  });
 });

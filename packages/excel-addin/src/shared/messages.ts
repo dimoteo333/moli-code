@@ -30,7 +30,7 @@ export interface HelloFrame {
   v: number;
   type: 'hello';
   token: string;
-  /** e.g. { 'ExcelApi 1.1': true, 'ExcelApi 1.4': false } */
+  /** e.g. { 'ExcelApi 1.1': true, 'ExcelApi 1.9': false } */
   requirementSets: { [set: string]: boolean };
   host?: string;
   platform?: string;

@@ -64,6 +64,12 @@ npm run package:deploy --workspace=packages/excel-addin
 명시적인 복수 행 범위에서만 유효하며, 생략하면 기존 2차원 수식
 배열 동작을 그대로 유지합니다.
 
+`fillDown` 최적화는 Office.js `Range.autoFill` 기능이 있는 **ExcelApi 1.9
+이상**에서만 사용합니다. Excel 2016/기본 ExcelApi 1.1 호스트에서는
+추가 기능 자체는 계속 동작하지만 `fillDown` 요청은 작업장을 변경하기 전에
+명확한 오류로 거부됩니다. 이 경우 `fillDown`을 생략하고 기존 전체 2차원
+수식 배열을 전달하십시오.
+
 이 저장소에서 기록한 로컬 결과는 설치된 **GLM 연결의 진단 근거**일 뿐이며
 Qwen3.6 35B의 처리 시간을 입증하지 않습니다. 실제 행사 전에 Qwen 환경에서
 동일한 파일과 프롬프트로 반드시 한 번 더 실행하여 50초 제한을 확인하십시오.

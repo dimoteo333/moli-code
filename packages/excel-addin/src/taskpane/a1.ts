@@ -80,3 +80,57 @@ export function formatRange(r: {
 export function cellAddress(col: number, row: number): string {
   return colToLetter(col) + row;
 }
+
+/** Shift relative A1 row references while preserving strings and qualifiers. */
+export function shiftFormulaRows(formula: string, rowOffset: number): string {
+  let result = '';
+  let index = 0;
+  while (index < formula.length) {
+    const current = formula.charAt(index);
+    if (current === '"' || current === "'") {
+      const quote = current;
+      const start = index++;
+      while (index < formula.length) {
+        if (formula.charAt(index) !== quote) {
+          index++;
+          continue;
+        }
+        if (formula.charAt(index + 1) === quote) {
+          index += 2;
+          continue;
+        }
+        index++;
+        break;
+      }
+      result += formula.slice(start, index);
+      continue;
+    }
+    if (current === '[') {
+      const close = formula.indexOf(']', index + 1);
+      if (close >= 0) {
+        result += formula.slice(index, close + 1);
+        index = close + 1;
+        continue;
+      }
+    }
+    const match = /^(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)/.exec(
+      formula.slice(index),
+    );
+    if (match) {
+      const previous = index > 0 ? formula.charAt(index - 1) : '';
+      const next = formula.charAt(index + match[0].length);
+      if (!/[A-Za-z0-9_.]/.test(previous) && !/[A-Za-z0-9_!]/.test(next)) {
+        result +=
+          match[1] +
+          match[2] +
+          match[3] +
+          (match[3] ? match[4] : String(parseInt(match[4], 10) + rowOffset));
+        index += match[0].length;
+        continue;
+      }
+    }
+    result += current;
+    index++;
+  }
+  return result;
+}

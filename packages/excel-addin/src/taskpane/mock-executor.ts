@@ -5,7 +5,12 @@
 
 import type { ExcelOp } from '../shared/messages.js';
 import type { ExcelExecutor } from './excel-executor.js';
-import { parseRange, formatRange, cellAddress } from './a1.js';
+import {
+  parseRange,
+  formatRange,
+  cellAddress,
+  shiftFormulaRows,
+} from './a1.js';
 
 interface MockCell {
   v: string | number | boolean | null;
@@ -14,25 +19,6 @@ interface MockCell {
 
 interface MockSheet {
   cells: { [addr: string]: MockCell };
-}
-
-function shiftFormulaRows(formula: string, rowOffset: number): string {
-  return formula
-    .split('"')
-    .map((part, index) =>
-      index % 2 === 1
-        ? part
-        : part.replace(
-            /(^|[^A-Za-z0-9_.])(\$?)([A-Za-z]{1,3})(\$?)([0-9]+)(?![A-Za-z0-9_])/g,
-            (_match, prefix, absoluteColumn, column, absoluteRow, row) =>
-              prefix +
-              absoluteColumn +
-              column +
-              absoluteRow +
-              (absoluteRow ? row : String(Number(row) + rowOffset)),
-          ),
-    )
-    .join('"');
 }
 
 export function createMockExecutor(): ExcelExecutor {
