@@ -8,6 +8,7 @@ import { execFile } from 'node:child_process';
 import {
   access,
   copyFile,
+  link,
   mkdir,
   mkdtemp,
   readFile,
@@ -130,21 +131,43 @@ function parseResult(stdout) {
 }
 
 const windowsDescribe = process.platform === 'win32' ? describe : describe.skip;
-let excelComAvailable = false;
-if (process.platform === 'win32') {
-  try {
-    await execFileAsync('powershell.exe', [
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      "if ([type]::GetTypeFromProgID('Excel.Application')) { exit 0 } else { exit 1 }",
-    ]);
-    excelComAvailable = true;
-  } catch {
-    excelComAvailable = false;
-  }
+
+function parseExcelComProbe(stdout) {
+  const result = stdout.trim();
+  if (result === 'EXCEL_PROGID_PRESENT') return true;
+  if (result === 'EXCEL_PROGID_ABSENT') return false;
+  throw new Error(`EXCEL_COM_PROBE_INVALID:${JSON.stringify(result)}`);
 }
+
+async function probeExcelCom(execute = execFileAsync) {
+  const { stdout } = await execute('powershell.exe', [
+    '-NoProfile',
+    '-NonInteractive',
+    '-Command',
+    "$type = [type]::GetTypeFromProgID('Excel.Application'); if ($null -eq $type) { Write-Output 'EXCEL_PROGID_ABSENT' } else { Write-Output 'EXCEL_PROGID_PRESENT' }",
+  ]);
+  return parseExcelComProbe(stdout);
+}
+
+const excelComAvailable =
+  process.platform === 'win32' ? await probeExcelCom() : false;
 const excelIt = excelComAvailable ? it : it.skip;
+
+describe('Excel COM availability probe', () => {
+  it('skips only for an explicit absent result and propagates probe errors', async () => {
+    expect(parseExcelComProbe('EXCEL_PROGID_PRESENT\n')).toBe(true);
+    expect(parseExcelComProbe('EXCEL_PROGID_ABSENT\n')).toBe(false);
+    expect(() => parseExcelComProbe('')).toThrow(/PROBE_INVALID/);
+    expect(() => parseExcelComProbe('unexpected')).toThrow(/PROBE_INVALID/);
+
+    const probeFailure = new Error('powershell executable missing');
+    await expect(
+      probeExcelCom(async () => {
+        throw probeFailure;
+      }),
+    ).rejects.toBe(probeFailure);
+  });
+});
 
 windowsDescribe('Excel demo operation replay', () => {
   let scratchDirectory;
@@ -331,6 +354,56 @@ windowsDescribe('Excel demo operation replay', () => {
     }
   });
 
+  it('rejects pre-existing output files before any write', async () => {
+    await writeFile(paths.outputWorkbook, 'preserve workbook sentinel', 'utf8');
+
+    await expect(
+      execFileAsync('powershell.exe', replayArguments(paths), {
+        windowsHide: true,
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('OUTPUT_ALREADY_EXISTS:OutputWorkbook'),
+    });
+    expect(await readFile(paths.outputWorkbook, 'utf8')).toBe(
+      'preserve workbook sentinel',
+    );
+
+    await rm(paths.outputWorkbook);
+    await writeFile(
+      paths.verificationPath,
+      'preserve verification sentinel',
+      'utf8',
+    );
+    await expect(
+      execFileAsync('powershell.exe', replayArguments(paths), {
+        windowsHide: true,
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('OUTPUT_ALREADY_EXISTS:VerificationPath'),
+    });
+    expect(await readFile(paths.verificationPath, 'utf8')).toBe(
+      'preserve verification sentinel',
+    );
+  });
+
+  it('rejects a pre-existing hard-link output alias when supported', async () => {
+    try {
+      await link(paths.baseWorkbookPath, paths.outputWorkbook);
+    } catch (error) {
+      if (['EPERM', 'ENOTSUP', 'EOPNOTSUPP'].includes(error.code)) return;
+      throw error;
+    }
+
+    await expect(
+      execFileAsync('powershell.exe', replayArguments(paths), {
+        windowsHide: true,
+      }),
+    ).rejects.toMatchObject({
+      stderr: expect.stringContaining('OUTPUT_ALREADY_EXISTS:OutputWorkbook'),
+    });
+    await expect(access(paths.baseWorkbookPath)).resolves.toBeUndefined();
+  });
+
   it('requires the grouped run array operation-log shape', async () => {
     await writeFile(
       paths.operationsPath,
@@ -350,6 +423,52 @@ windowsDescribe('Excel demo operation replay', () => {
       ),
     });
   });
+
+  excelIt(
+    'detects formula error values through real Excel COM',
+    async () => {
+      const source = await readFile(scriptPath, 'utf8');
+      expect(source).toContain('$xlCellTypeFormulas = -4123');
+      expect(source).toContain('$xlErrors = 16');
+      expect(source).toContain('SpecialCells($xlCellTypeFormulas, $xlErrors)');
+      expect(source).not.toContain('$cell.Text');
+
+      const operations = buildOperations();
+      operations[0].operations.push(
+        {
+          op: 'add_worksheet',
+          args: { name: '오류검증' },
+        },
+        {
+          op: 'set_formulas',
+          args: {
+            sheet: '오류검증',
+            range: 'A1',
+            formulas: [['=1/0']],
+          },
+        },
+      );
+      await writeFile(
+        paths.operationsPath,
+        `${JSON.stringify(operations, null, 2)}\n`,
+        'utf8',
+      );
+
+      await expect(
+        execFileAsync('powershell.exe', replayArguments(paths), {
+          timeout: 120_000,
+          windowsHide: true,
+        }),
+      ).rejects.toMatchObject({
+        stderr: expect.stringContaining('FORMULA_ERRORS_FOUND:1'),
+      });
+      await expect(access(paths.outputWorkbook)).resolves.toBeUndefined();
+      await expect(access(paths.verificationPath)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    },
+    120_000,
+  );
 
   excelIt(
     'recalculates, saves, and reopens the populated workbook through Excel COM',

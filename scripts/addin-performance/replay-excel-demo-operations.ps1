@@ -88,6 +88,14 @@ foreach ($inputPath in @($baseWorkbookFull, $operationsFull, $oracleFull)) {
         throw 'INPUT_OUTPUT_PATH_COLLISION'
     }
 }
+foreach ($output in @(
+    @{ Label = 'OutputWorkbook'; Path = $outputWorkbookFull },
+    @{ Label = 'VerificationPath'; Path = $verificationFull }
+)) {
+    if (Test-Path -LiteralPath $output.Path) {
+        throw "OUTPUT_ALREADY_EXISTS:$($output.Label)"
+    }
+}
 
 $operationLogJson = Get-Content -LiteralPath $operationsFull -Raw -Encoding UTF8
 if (-not $operationLogJson.TrimStart().StartsWith('[')) {
@@ -318,27 +326,27 @@ function Get-FormulaCount($range) {
 }
 
 function Get-FormulaErrorCount($verifiedWorkbook) {
+    $xlCellTypeFormulas = -4123
+    $xlErrors = 16
+    $xlNoCellsFound = -2146827284
     $errorCount = 0
     foreach ($sheet in $verifiedWorkbook.Worksheets) {
         $usedRange = $null
+        $errorCells = $null
         try {
             $usedRange = $sheet.UsedRange
-            for ($row = 1; $row -le [int]$usedRange.Rows.Count; $row++) {
-                for ($column = 1; $column -le [int]$usedRange.Columns.Count; $column++) {
-                    $cell = $null
-                    try {
-                        $cell = $usedRange.Cells.Item($row, $column)
-                        if ([string]$cell.Text -match '^(#REF!|#DIV/0!|#VALUE!|#NAME\?|#N/A)$') {
-                            $errorCount++
-                        }
-                    }
-                    finally {
-                        Release-ComObject $cell
-                    }
+            try {
+                $errorCells = $usedRange.SpecialCells($xlCellTypeFormulas, $xlErrors)
+                $errorCount += [int]$errorCells.Count
+            }
+            catch {
+                if (-not ($_.Exception -is [Runtime.InteropServices.COMException]) -or $_.Exception.HResult -ne $xlNoCellsFound) {
+                    throw
                 }
             }
         }
         finally {
+            Release-ComObject $errorCells
             Release-ComObject $usedRange
         }
     }
