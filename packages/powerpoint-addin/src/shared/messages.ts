@@ -6,12 +6,14 @@
 export const PROTOCOL_VERSION = 1;
 export const WS_PATH = '/ws';
 
-/** A user-selected local text file. Browsers intentionally do not expose its path. */
+/** A user-selected local file. Browsers intentionally do not expose its path. */
 export interface LocalFileAttachment {
   name: string;
   content: string;
   size: number;
   mimeType?: string;
+  /** Omitted means UTF-8, preserving the version 1 text attachment contract. */
+  encoding?: 'utf8' | 'base64';
 }
 
 // Pane → Sidecar
@@ -165,6 +167,23 @@ export interface PongFrame {
   type: 'pong';
 }
 
+export type PerformanceEventName =
+  | 'query_spawn_started'
+  | 'cli_initialized'
+  | 'query_prewarm_failed'
+  | 'user_message_enqueued'
+  | 'first_delta_received'
+  | 'artifact_saved';
+
+export interface PerformanceEventFrame {
+  v: number;
+  type: 'performance_event';
+  name: PerformanceEventName;
+  elapsedMs: number;
+  turnId?: number;
+  detail?: string;
+}
+
 export type SidecarToPaneFrame =
   | HelloOkFrame
   | HelloErrFrame
@@ -176,6 +195,7 @@ export type SidecarToPaneFrame =
   | QuestionRequestFrame
   | TurnCompleteFrame
   | ErrorFrame
+  | PerformanceEventFrame
   | PongFrame;
 
 export type AnyFrame = PaneToSidecarFrame | SidecarToPaneFrame;

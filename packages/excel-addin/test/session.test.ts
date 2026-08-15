@@ -55,6 +55,7 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
       };
       captured.push(instance);
       return {
+        initialized: Promise.resolve(),
         interrupt: instance.interrupt,
         [Symbol.asyncIterator]() {
           return {
@@ -137,6 +138,12 @@ async function tick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function performanceNames(ws: FakeWs): string[] {
+  return (ws.sent as unknown as Array<{ type: string; name?: string }>)
+    .filter((item) => item.type === 'performance_event')
+    .map((item) => item.name ?? '');
+}
+
 beforeEach(() => {
   captured.length = 0;
 });
@@ -144,16 +151,33 @@ beforeEach(() => {
 // --- tests ------------------------------------------------------------------
 
 describe('PaneSession', () => {
-  it('sends hello_ok on construction', () => {
+  it('emits query spawn and CLI readiness before hello_ok', async () => {
     const ws = new FakeWs();
     makeSession(ws);
-    expect(ws.sent[0]).toMatchObject({ type: 'hello_ok', version: 'test' });
+    expect(performanceNames(ws)).toEqual(['query_spawn_started']);
+    await tick();
+    expect(performanceNames(ws)).toEqual([
+      'query_spawn_started',
+      'cli_initialized',
+    ]);
+    expect(ws.sent.at(-1)).toMatchObject({ type: 'hello_ok' });
   });
 
-  it('starts the query lazily and feeds user messages into streaming input', async () => {
+  it('sends hello_ok after query prewarm is ready', async () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(ws.framesOfType('hello_ok')).toHaveLength(0);
+    await tick();
+    expect(ws.framesOfType('hello_ok')[0]).toMatchObject({
+      type: 'hello_ok',
+      version: 'test',
+    });
+  });
+
+  it('prewarms one query and feeds user messages into its streaming input', async () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
-    expect(captured).toHaveLength(0);
+    expect(captured).toHaveLength(1);
 
     session.onFrame(frame({ type: 'user_message', text: '시트 요약해줘' }));
     expect(captured).toHaveLength(1);
@@ -397,11 +421,11 @@ describe('PaneSession', () => {
     expect(captured[0].interrupt).toHaveBeenCalled();
   });
 
-  it('answers ping with pong without starting a query', () => {
+  it('answers ping with pong without starting an additional query', () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
     session.onFrame(frame({ type: 'ping' }));
     expect(ws.framesOfType('pong')).toHaveLength(1);
-    expect(captured).toHaveLength(0);
+    expect(captured).toHaveLength(1);
   });
 });

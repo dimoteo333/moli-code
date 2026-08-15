@@ -5,6 +5,7 @@ import {
   parseRange,
   formatRange,
   cellAddress,
+  shiftFormulaRows,
 } from '../src/taskpane/a1.js';
 
 describe('a1 helpers', () => {
@@ -69,5 +70,11 @@ describe('a1 helpers', () => {
       formatRange({ startCol: 2, startRow: 2, endCol: 2, endRow: 2 }),
     ).toBe('B2');
     expect(cellAddress(28, 5)).toBe('AB5');
+  });
+
+  it('does not rewrite function names ending in digits', () => {
+    expect(shiftFormulaRows('=LOG10(A2)+LOG10   (B2)', 1)).toBe(
+      '=LOG10(A3)+LOG10   (B3)',
+    );
   });
 });

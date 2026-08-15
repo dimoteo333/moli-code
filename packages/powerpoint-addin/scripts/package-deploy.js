@@ -55,9 +55,12 @@ fs.mkdirSync(path.join(deployDir, 'sidecar'), { recursive: true });
 fs.cpSync(path.join(pkgRoot, 'dist', 'web'), path.join(deployDir, 'web'), {
   recursive: true,
 });
-fs.copyFileSync(
-  path.join(pkgRoot, 'dist', 'sidecar', 'index.cjs'),
-  path.join(deployDir, 'sidecar', 'index.cjs'),
+fs.cpSync(
+  path.join(pkgRoot, 'dist', 'sidecar'),
+  path.join(deployDir, 'sidecar'),
+  {
+    recursive: true,
+  },
 );
 fs.cpSync(path.join(pkgRoot, 'manifest'), path.join(deployDir, 'manifest'), {
   recursive: true,

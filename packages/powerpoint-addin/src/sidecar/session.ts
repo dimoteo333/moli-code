@@ -2,6 +2,7 @@
 
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import { performance } from 'node:perf_hooks';
 import type { WebSocket } from 'ws';
 import {
   query,
@@ -19,14 +20,27 @@ import {
   type PaneToSidecarFrame,
   type SidecarToPaneFrame,
   type PaneContentBlock,
+  type LocalFileAttachment,
   type UserMessageFrame,
   type QuestionSpec,
+  type PerformanceEventName,
 } from '../shared/messages.js';
 import type { SidecarConfig } from './config.js';
 import {
   AttachmentValidationError,
   formatPromptWithAttachments,
 } from './attachments.js';
+import {
+  generatePowerPointReport,
+  isReportCommand,
+} from './report-generator.js';
+import { saveTemplateAttachment } from './template-attachment.js';
+import {
+  buildTemplateExtractionPrompt,
+  fallbackTemplateReport,
+  parseTemplateReportOutput,
+} from './template-report-spec.js';
+import { generateTemplateReport } from './template-report-generator.js';
 import type { Logger } from './logger.js';
 
 export interface SessionEnv {
@@ -37,17 +51,21 @@ export interface SessionEnv {
 
 const PERMISSION_TIMEOUT_MS = 300_000;
 const INPUT_PREVIEW_MAX_CHARS = 2_000;
+const TEMPLATE_REPORT_TIMEOUT_MS = 45_000;
+const TEMPLATE_MODEL_BUDGET_MS = 32_000;
+const TEMPLATE_COM_RESERVE_MS = 10_000;
 
 class PushQueue<T> implements AsyncIterable<T> {
   private readonly items: T[] = [];
   private readonly waiters: Array<(r: IteratorResult<T>) => void> = [];
   private closed = false;
 
-  push(item: T): void {
-    if (this.closed) return;
+  push(item: T): boolean {
+    if (this.closed) return false;
     const waiter = this.waiters.shift();
     if (waiter) waiter({ value: item, done: false });
     else this.items.push(item);
+    return true;
   }
 
   end(): void {
@@ -85,17 +103,45 @@ interface PendingPermission {
   questionCount?: number;
 }
 
+interface ActiveTemplateTurn {
+  turnId: number;
+  generation: number;
+  templatePath: string;
+  minutes: string;
+  streamedText: string;
+  finalText: string;
+  modelTimeout: ReturnType<typeof setTimeout> | null;
+  deadlineTimeout: ReturnType<typeof setTimeout> | null;
+  deadlineAtMs: number;
+  phase: 'saving' | 'model' | 'generating';
+  completed: boolean;
+}
+
+interface ActiveModelTurn {
+  turnId: number;
+  generation: number;
+  kind: 'ordinary' | 'template';
+}
+
 export class PaneSession {
   private readonly sessionId = randomUUID();
-  private readonly inputQueue = new PushQueue<SDKUserMessage>();
+  private sdkSessionId = randomUUID();
+  private inputQueue = new PushQueue<SDKUserMessage>();
   private readonly abortController = new AbortController();
   private readonly pendingPermissions = new Map<string, PendingPermission>();
   private readonly sessionAllowedTools = new Set<string>();
   private readonly toolUseNames = new Map<string, string>();
   private queryInstance: Query | null = null;
+  private queryGeneration = 1;
+  private readonly terminatedQueryGenerations = new Set<number>();
+  private activeModelTurn: ActiveModelTurn | null = null;
   private permissionSeq = 0;
   private turnId = 0;
+  private firstDeltaTurn = 0;
   private disposed = false;
+  private activeTemplateTurn: ActiveTemplateTurn | null = null;
+  private activeReportTurn: number | null = null;
+  private readonly sessionStartedAt = performance.now();
 
   constructor(
     private readonly ws: WebSocket,
@@ -106,12 +152,40 @@ export class PaneSession {
     logger.info(
       `Pane session ${this.sessionId} started (host=${hello.host ?? '?'} platform=${hello.platform ?? '?'} sets=${JSON.stringify(hello.requirementSets)})`,
     );
+    this.prewarmQuery();
+  }
+
+  private prewarmQuery(): void {
+    try {
+      const q = this.ensureQuery();
+      const generation = this.queryGeneration;
+      void q.initialized.then(
+        () => {
+          if (generation !== this.queryGeneration) return;
+          this.emitPerformance('cli_initialized');
+          this.sendHello();
+        },
+        (err) => {
+          if (generation !== this.queryGeneration) return;
+          this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+          this.emitPerformance('query_prewarm_failed', undefined, String(err));
+          this.sendHello();
+        },
+      );
+    } catch (err) {
+      this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+      this.emitPerformance('query_prewarm_failed', undefined, String(err));
+      this.sendHello();
+    }
+  }
+
+  private sendHello(): void {
     this.send({
       v: PROTOCOL_VERSION,
       type: 'hello_ok',
       sessionId: this.sessionId,
-      version: env.version,
-      model: env.config.model,
+      version: this.env.version,
+      model: this.env.config.model,
     });
   }
 
@@ -189,12 +263,66 @@ export class PaneSession {
       pending.settle({ allowed: false, message: reason });
     }
     this.pendingPermissions.clear();
+    if (this.activeTemplateTurn) {
+      this.clearTemplateTimers(this.activeTemplateTurn);
+      this.activeTemplateTurn.completed = true;
+      this.activeTemplateTurn = null;
+    }
+    this.activeModelTurn = null;
     this.abortController.abort();
   }
 
   private handleUserMessage(frame: UserMessageFrame): void {
     if (!frame.text || !frame.text.trim()) return;
     this.turnId += 1;
+
+    if (this.activeTemplateTurn) {
+      this.sendTemplateError(
+        this.turnId,
+        'TEMPLATE_REPORT_BUSY',
+        '템플릿 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
+        '템플릿 보고서 생성 중',
+      );
+      return;
+    }
+    if (this.activeReportTurn !== null) {
+      this.sendTemplateError(
+        this.turnId,
+        'REPORT_BUSY',
+        'PowerPoint 보고서를 생성하는 중입니다. 완료 후 다시 요청해 주세요.',
+        'PowerPoint 보고서 생성 중',
+      );
+      return;
+    }
+    if (this.activeModelTurn) {
+      this.sendTemplateError(
+        this.turnId,
+        'MODEL_TURN_BUSY',
+        '이전 모델 요청을 처리하는 중입니다. 완료 후 다시 요청해 주세요.',
+        '모델 요청 처리 중',
+      );
+      return;
+    }
+
+    if (isTemplateReportCommand(frame.text)) {
+      const attachment = onlyPptxAttachment(frame.attachments);
+      const minutes = stripTemplateReportInput(frame.text, attachment?.name);
+      if (!attachment || !minutes) {
+        this.sendTemplateError(
+          this.turnId,
+          !attachment
+            ? 'TEMPLATE_REPORT_PPTX_REQUIRED'
+            : 'TEMPLATE_REPORT_MINUTES_REQUIRED',
+          !attachment
+            ? '/template-report 명령에는 PPTX 템플릿 하나만 첨부해야 합니다.'
+            : '/template-report 명령에는 줄글 회의록을 입력해야 합니다.',
+          !attachment ? 'PPTX 템플릿이 없습니다.' : '회의록 본문이 없습니다.',
+        );
+        return;
+      }
+      void this.handleTemplateReportCommand(this.turnId, attachment, minutes);
+      return;
+    }
 
     let prompt: string;
     try {
@@ -221,6 +349,12 @@ export class PaneSession {
       return;
     }
 
+    if (isReportCommand(frame.text)) {
+      this.activeReportTurn = this.turnId;
+      void this.handleReportCommand(frame, this.turnId);
+      return;
+    }
+
     try {
       this.ensureQuery();
     } catch (err) {
@@ -242,17 +376,288 @@ export class PaneSession {
       return;
     }
 
-    this.inputQueue.push({
+    this.activeModelTurn = {
+      turnId: this.turnId,
+      generation: this.queryGeneration,
+      kind: 'ordinary',
+    };
+    const pushed = this.inputQueue.push({
       type: 'user',
-      session_id: this.sessionId,
+      session_id: this.sdkSessionId,
       message: { role: 'user', content: prompt },
       parent_tool_use_id: null,
     });
+    if (!pushed) {
+      this.activeModelTurn = null;
+      this.sendTemplateError(
+        this.turnId,
+        'AGENT_INPUT_CLOSED',
+        '모델 입력 세션이 종료되었습니다.',
+        '모델 입력 실패',
+      );
+      return;
+    }
+    this.emitPerformance('user_message_enqueued', this.turnId);
   }
 
-  private ensureQuery(): void {
-    if (this.queryInstance) return;
+  private sendTemplateError(
+    turnId: number,
+    code: string,
+    messageKo: string,
+    errorMessage: string,
+  ): void {
+    this.send({ v: PROTOCOL_VERSION, type: 'error', code, messageKo });
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'turn_complete',
+      turnId,
+      isError: true,
+      errorMessage,
+    });
+  }
+
+  private async handleTemplateReportCommand(
+    turnId: number,
+    attachment: LocalFileAttachment,
+    minutes: string,
+  ): Promise<void> {
+    try {
+      this.ensureQuery();
+    } catch (error) {
+      this.logger.error('Failed to start template report session', error);
+      this.sendTemplateError(
+        turnId,
+        'AGENT_START_FAILED',
+        '보고서 추출 모델을 시작하지 못했습니다.',
+        '에이전트 시작 실패',
+      );
+      return;
+    }
+
+    const active: ActiveTemplateTurn = {
+      turnId,
+      generation: this.queryGeneration,
+      templatePath: '',
+      minutes,
+      streamedText: '',
+      finalText: '',
+      modelTimeout: null,
+      deadlineTimeout: null,
+      deadlineAtMs: Date.now() + TEMPLATE_REPORT_TIMEOUT_MS,
+      phase: 'saving',
+      completed: false,
+    };
+    this.activeTemplateTurn = active;
+    active.deadlineTimeout = setTimeout(
+      () => this.deadlineTemplateTurn(active),
+      TEMPLATE_REPORT_TIMEOUT_MS,
+    );
+
+    try {
+      active.templatePath = await saveTemplateAttachment(
+        attachment,
+        this.env.config.workDir,
+      );
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      active.phase = 'model';
+      active.generation = this.queryGeneration;
+      this.activeModelTurn = {
+        turnId,
+        generation: this.queryGeneration,
+        kind: 'template',
+      };
+      const pushed = this.inputQueue.push({
+        type: 'user',
+        session_id: this.sdkSessionId,
+        message: {
+          role: 'user',
+          content: buildTemplateExtractionPrompt(minutes),
+        },
+        parent_tool_use_id: null,
+      });
+      if (!pushed) throw new Error('AGENT_INPUT_CLOSED');
+      const modelBudget = Math.min(
+        TEMPLATE_MODEL_BUDGET_MS,
+        this.remainingTemplateMs(active) - TEMPLATE_COM_RESERVE_MS,
+      );
+      if (modelBudget <= 0) {
+        this.fallbackSlowTemplateModel(active);
+        return;
+      }
+      active.modelTimeout = setTimeout(
+        () => this.fallbackSlowTemplateModel(active),
+        modelBudget,
+      );
+      this.emitPerformance('user_message_enqueued', turnId);
+    } catch (error) {
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      active.completed = true;
+      this.clearTemplateTimers(active);
+      if (this.activeModelTurn?.turnId === turnId) {
+        this.activeModelTurn = null;
+      }
+      this.logger.error('Template attachment storage failed', error);
+      this.sendTemplateError(
+        turnId,
+        (error as { code?: string }).code ?? 'TEMPLATE_REPORT_INPUT_FAILED',
+        'PPTX 템플릿을 안전하게 저장하지 못했습니다.',
+        String(error),
+      );
+      if (this.activeTemplateTurn === active) this.activeTemplateTurn = null;
+    }
+  }
+
+  private deadlineTemplateTurn(active: ActiveTemplateTurn): void {
+    if (this.activeTemplateTurn !== active || active.completed) {
+      return;
+    }
+    this.clearTemplateTimers(active);
+    active.completed = true;
+    this.activeTemplateTurn = null;
+    if (
+      this.activeModelTurn?.turnId === active.turnId &&
+      this.activeModelTurn.generation === active.generation
+    ) {
+      this.activeModelTurn = null;
+    }
+    this.sendTemplateError(
+      active.turnId,
+      'TEMPLATE_REPORT_TIMEOUT',
+      '보고서 구조화가 45초를 초과해 중단되었습니다.',
+      '템플릿 보고서 시간 초과',
+    );
+    if (active.phase === 'model') this.replaceCurrentQuery(true);
+  }
+
+  private remainingTemplateMs(active: ActiveTemplateTurn): number {
+    return Math.max(0, active.deadlineAtMs - Date.now());
+  }
+
+  private clearTemplateTimers(active: ActiveTemplateTurn): void {
+    if (active.modelTimeout) clearTimeout(active.modelTimeout);
+    if (active.deadlineTimeout) clearTimeout(active.deadlineTimeout);
+    active.modelTimeout = null;
+    active.deadlineTimeout = null;
+  }
+
+  private fallbackSlowTemplateModel(active: ActiveTemplateTurn): void {
+    if (
+      this.activeTemplateTurn !== active ||
+      active.completed ||
+      active.phase !== 'model'
+    ) {
+      return;
+    }
+    if (active.modelTimeout) clearTimeout(active.modelTimeout);
+    active.modelTimeout = null;
+    if (
+      this.activeModelTurn?.turnId === active.turnId &&
+      this.activeModelTurn.generation === active.generation
+    ) {
+      this.activeModelTurn = null;
+    }
+    active.phase = 'generating';
+    this.replaceCurrentQuery(true);
+    void this.finishTemplateTurn(active, true);
+  }
+
+  private async handleReportCommand(
+    frame: UserMessageFrame,
+    currentTurn: number,
+  ): Promise<void> {
+    const attachment = frame.attachments?.find(
+      (item) => /\.md$/i.test(item.name) || item.mimeType === 'text/markdown',
+    );
+    if (!attachment) {
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'error',
+        code: 'REPORT_MARKDOWN_REQUIRED',
+        messageKo: '/report 명령에는 Markdown 회의록 파일을 첨부해야 합니다.',
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: this.turnId,
+        isError: true,
+        errorMessage: 'Markdown 회의록이 없습니다.',
+      });
+      if (this.activeReportTurn === currentTurn) this.activeReportTurn = null;
+      return;
+    }
+
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'tool_activity',
+      turnId: currentTurn,
+      toolName: 'powerpoint_report',
+      status: 'start',
+      summary: `${attachment.name} → A4 PPTX`,
+    });
+    try {
+      const outputPath = await generatePowerPointReport(
+        attachment,
+        `${this.env.config.workDir}/reports`,
+        this.env.config.workDir,
+      );
+      this.emitPerformance('artifact_saved', currentTurn, outputPath);
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'tool_activity',
+        turnId: currentTurn,
+        toolName: 'powerpoint_report',
+        status: 'end',
+        summary: outputPath,
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'assistant_message',
+        turnId: currentTurn,
+        blocks: [
+          {
+            type: 'text',
+            text: `A4 책임자 제출용 PPTX를 생성하고 재열기 검증했습니다.\n${outputPath}`,
+          },
+        ],
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: currentTurn,
+        isError: false,
+      });
+    } catch (err) {
+      this.logger.error('PowerPoint report generation failed', err);
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'tool_activity',
+        turnId: currentTurn,
+        toolName: 'powerpoint_report',
+        status: 'end',
+        isError: true,
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'error',
+        code: 'REPORT_GENERATION_FAILED',
+        messageKo: 'PowerPoint 보고서 생성 또는 재열기 검증에 실패했습니다.',
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: currentTurn,
+        isError: true,
+        errorMessage: String(err),
+      });
+    } finally {
+      if (this.activeReportTurn === currentTurn) this.activeReportTurn = null;
+    }
+  }
+
+  private ensureQuery(): Query {
+    if (this.queryInstance) return this.queryInstance;
     const config = this.env.config;
+    const generation = this.queryGeneration;
     fs.mkdirSync(config.workDir, { recursive: true });
     const options: QueryOptions = {
       cwd: config.workDir,
@@ -261,38 +666,167 @@ export class PaneSession {
       permissionMode: 'default',
       excludeTools: config.excludeTools,
       includePartialMessages: true,
-      sessionId: this.sessionId,
+      sessionId: this.sdkSessionId,
       abortController: this.abortController,
       canUseTool: (toolName, input, { signal }) =>
-        this.handleCanUseTool(toolName, input, signal),
+        generation === this.queryGeneration
+          ? this.handleCanUseTool(toolName, input, signal)
+          : Promise.resolve({ behavior: 'deny', message: 'STALE_QUERY' }),
       timeout: { canUseTool: PERMISSION_TIMEOUT_MS },
       stderr: (message) => this.logger.debug(`cli stderr: ${message}`),
     };
     this.logger.info(
       `Starting agent session ${this.sessionId} (cli=${config.cliPath ?? '<auto>'} cwd=${config.workDir})`,
     );
+    this.emitPerformance('query_spawn_started');
     this.queryInstance = query({ prompt: this.inputQueue, options });
-    void this.pumpMessages(this.queryInstance);
+    void this.pumpMessages(this.queryInstance, this.queryGeneration);
+    return this.queryInstance;
   }
 
-  private async pumpMessages(q: Query): Promise<void> {
+  private replaceCurrentQuery(interruptStale: boolean): void {
+    const staleQuery = this.queryInstance;
+    this.inputQueue.end();
+    this.queryInstance = null;
+    this.inputQueue = new PushQueue<SDKUserMessage>();
+    this.sdkSessionId = randomUUID();
+    this.queryGeneration += 1;
+    if (interruptStale) {
+      staleQuery?.interrupt().catch((error) => {
+        this.logger.error('Template report timeout interrupt failed', error);
+      });
+    }
     try {
-      for await (const message of q) this.handleSdkMessage(message);
-    } catch (err) {
-      if (!this.disposed) {
-        this.logger.error('SDK message pump failed', err);
-        this.send({
-          v: PROTOCOL_VERSION,
-          type: 'error',
-          code: 'AGENT_ERROR',
-          messageKo:
-            '에이전트 세션이 종료되었습니다. 작업창을 새로고침해 주세요.',
-        });
-      }
+      const replacement = this.ensureQuery();
+      const generation = this.queryGeneration;
+      void replacement.initialized.then(
+        () => {
+          if (generation === this.queryGeneration) {
+            this.emitPerformance('cli_initialized');
+          }
+        },
+        (error) => {
+          if (generation === this.queryGeneration) {
+            this.logger.warn(
+              `Replacement session prewarm failed: ${String(error)}`,
+            );
+            this.emitPerformance(
+              'query_prewarm_failed',
+              undefined,
+              String(error),
+            );
+          }
+        },
+      );
+    } catch (error) {
+      this.logger.error('Failed to replace timed-out agent session', error);
     }
   }
 
-  private handleSdkMessage(message: SDKMessage): void {
+  private async pumpMessages(q: Query, generation: number): Promise<void> {
+    let failure: unknown;
+    try {
+      for await (const message of q) {
+        if (generation !== this.queryGeneration) return;
+        await this.handleSdkMessage(message, generation);
+      }
+    } catch (err) {
+      failure = err;
+    } finally {
+      await this.handlePumpTermination(generation, failure);
+    }
+  }
+
+  private async handlePumpTermination(
+    generation: number,
+    failure: unknown,
+  ): Promise<void> {
+    if (
+      this.disposed ||
+      generation !== this.queryGeneration ||
+      this.terminatedQueryGenerations.has(generation)
+    ) {
+      return;
+    }
+    this.terminatedQueryGenerations.add(generation);
+    if (failure) this.logger.error('SDK message pump failed', failure);
+    else this.logger.warn('SDK message pump ended unexpectedly');
+
+    const activeTemplate = this.activeTemplateTurn;
+    if (
+      activeTemplate &&
+      !activeTemplate.completed &&
+      activeTemplate.generation === generation
+    ) {
+      if (activeTemplate.phase === 'model') {
+        if (activeTemplate.modelTimeout) {
+          clearTimeout(activeTemplate.modelTimeout);
+          activeTemplate.modelTimeout = null;
+        }
+        if (
+          this.activeModelTurn?.kind === 'template' &&
+          this.activeModelTurn.generation === generation
+        ) {
+          this.activeModelTurn = null;
+        }
+        activeTemplate.phase = 'generating';
+        this.replaceCurrentQuery(false);
+        await this.finishTemplateTurn(activeTemplate, true);
+        return;
+      }
+      if (activeTemplate.phase === 'saving') {
+        activeTemplate.completed = true;
+        this.activeTemplateTurn = null;
+        this.activeModelTurn = null;
+        this.sendTemplateError(
+          activeTemplate.turnId,
+          'AGENT_ERROR',
+          '보고서 추출 모델 세션이 예기치 않게 종료되었습니다.',
+          '모델 세션 종료',
+        );
+        this.replaceCurrentQuery(false);
+        return;
+      }
+      // The COM generation path owns exactly-once completion.
+      this.replaceCurrentQuery(false);
+      return;
+    }
+
+    const activeModel = this.activeModelTurn;
+    if (
+      activeModel?.kind === 'ordinary' &&
+      activeModel.generation === generation
+    ) {
+      this.activeModelTurn = null;
+      this.sendTemplateError(
+        activeModel.turnId,
+        'AGENT_ERROR',
+        '모델 세션이 예기치 않게 종료되었습니다. 요청을 다시 보내 주세요.',
+        '모델 세션 종료',
+      );
+      this.replaceCurrentQuery(false);
+      return;
+    }
+
+    this.replaceCurrentQuery(false);
+  }
+
+  private async handleSdkMessage(
+    message: SDKMessage,
+    generation: number,
+  ): Promise<void> {
+    if (generation !== this.queryGeneration) return;
+    const active = this.activeTemplateTurn;
+    if (
+      active &&
+      !active.completed &&
+      active.phase === 'model' &&
+      active.generation === generation
+    ) {
+      const consumed = await this.handleTemplateSdkMessage(message, active);
+      if (consumed) return;
+    }
+    const responseTurnId = this.activeModelTurn?.turnId ?? this.turnId;
     switch (message.type) {
       case 'stream_event': {
         if (message.parent_tool_use_id) return;
@@ -301,10 +835,14 @@ export class PaneSession {
           event.type === 'content_block_delta' &&
           event.delta.type === 'text_delta'
         ) {
+          if (this.firstDeltaTurn !== responseTurnId) {
+            this.firstDeltaTurn = responseTurnId;
+            this.emitPerformance('first_delta_received', responseTurnId);
+          }
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_delta',
-            turnId: this.turnId,
+            turnId: responseTurnId,
             text: event.delta.text,
           });
         } else if (
@@ -316,7 +854,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'thinking',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               text: thinking,
             });
           }
@@ -334,7 +872,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'tool_activity',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               toolName: block.name,
               status: 'start',
               summary: previewJson(block.input),
@@ -345,7 +883,7 @@ export class PaneSession {
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_message',
-            turnId: this.turnId,
+            turnId: responseTurnId,
             blocks,
           });
         }
@@ -361,7 +899,7 @@ export class PaneSession {
             this.send({
               v: PROTOCOL_VERSION,
               type: 'tool_activity',
-              turnId: this.turnId,
+              turnId: responseTurnId,
               toolName,
               status: 'end',
               isError: block.is_error === true,
@@ -370,11 +908,14 @@ export class PaneSession {
         }
         break;
       }
-      case 'result':
+      case 'result': {
+        const completedTurn = this.activeModelTurn;
+        if (!completedTurn || completedTurn.generation !== generation) return;
+        this.activeModelTurn = null;
         this.send({
           v: PROTOCOL_VERSION,
           type: 'turn_complete',
-          turnId: this.turnId,
+          turnId: completedTurn.turnId,
           isError: message.is_error,
           errorMessage: message.is_error
             ? ((message as { error?: { message?: string } }).error?.message ??
@@ -382,11 +923,127 @@ export class PaneSession {
             : undefined,
         });
         break;
+      }
       case 'system':
         this.logger.debug(`system message: ${message.subtype}`);
         break;
       default:
         break;
+    }
+  }
+
+  private async handleTemplateSdkMessage(
+    message: SDKMessage,
+    active: ActiveTemplateTurn,
+  ): Promise<boolean> {
+    switch (message.type) {
+      case 'stream_event': {
+        if (message.parent_tool_use_id) return true;
+        const event = message.event;
+        if (
+          event.type === 'content_block_delta' &&
+          event.delta.type === 'text_delta'
+        ) {
+          active.streamedText += event.delta.text;
+          if (this.firstDeltaTurn !== active.turnId) {
+            this.firstDeltaTurn = active.turnId;
+            this.emitPerformance('first_delta_received', active.turnId);
+          }
+        }
+        return true;
+      }
+      case 'assistant': {
+        if (message.parent_tool_use_id) return true;
+        const text = message.message.content
+          .filter(
+            (block): block is Extract<typeof block, { type: 'text' }> =>
+              block.type === 'text',
+          )
+          .map((block) => block.text)
+          .join('\n');
+        if (text) active.finalText = text;
+        return true;
+      }
+      case 'user':
+        return true;
+      case 'result':
+        if (
+          this.activeModelTurn?.kind === 'template' &&
+          this.activeModelTurn.turnId === active.turnId &&
+          this.activeModelTurn.generation === active.generation
+        ) {
+          this.activeModelTurn = null;
+        }
+        active.phase = 'generating';
+        await this.finishTemplateTurn(active, message.is_error);
+        return true;
+      case 'system':
+        return false;
+      default:
+        return true;
+    }
+  }
+
+  private async finishTemplateTurn(
+    active: ActiveTemplateTurn,
+    modelFailed: boolean,
+  ): Promise<void> {
+    if (active.completed || this.activeTemplateTurn !== active) return;
+    active.phase = 'generating';
+    if (active.modelTimeout) {
+      clearTimeout(active.modelTimeout);
+      active.modelTimeout = null;
+    }
+    try {
+      const raw = active.finalText || active.streamedText;
+      const spec = modelFailed
+        ? fallbackTemplateReport(active.minutes)
+        : parseTemplateReportOutput(raw, active.minutes);
+      const outputPath = await generateTemplateReport(
+        active.templatePath,
+        spec,
+        `${this.env.config.workDir}/reports`,
+        this.env.config.workDir,
+        this.remainingTemplateMs(active),
+      );
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      this.emitPerformance('artifact_saved', active.turnId, outputPath);
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'assistant_message',
+        turnId: active.turnId,
+        blocks: [
+          {
+            type: 'text',
+            text: `템플릿 양식을 적용한 PPTX 보고서를 만들었습니다.\n${outputPath}`,
+          },
+        ],
+      });
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId: active.turnId,
+        isError: false,
+      });
+    } catch (error) {
+      if (active.completed || this.activeTemplateTurn !== active) return;
+      if (/REPORT_GENERATION_TIMEOUT/.test(String(error))) {
+        this.deadlineTemplateTurn(active);
+        return;
+      }
+      this.logger.error('Template report generation failed', error);
+      this.sendTemplateError(
+        active.turnId,
+        'TEMPLATE_REPORT_GENERATION_FAILED',
+        '템플릿 PPTX 보고서를 생성하거나 검증하지 못했습니다.',
+        String(error),
+      );
+    } finally {
+      if (this.activeTemplateTurn === active) {
+        this.clearTemplateTimers(active);
+        active.completed = true;
+        this.activeTemplateTurn = null;
+      }
     }
   }
 
@@ -445,6 +1102,12 @@ export class PaneSession {
     input: Record<string, unknown>,
     signal: AbortSignal,
   ): Promise<PermissionResult> {
+    if (this.activeTemplateTurn) {
+      return Promise.resolve({
+        behavior: 'deny',
+        message: 'TEMPLATE_REPORT_TOOL_DISABLED',
+      });
+    }
     return this.requestPanePermission(toolName, input, signal).then(
       (decision) =>
         decision.allowed
@@ -468,11 +1131,58 @@ export class PaneSession {
       this.logger.error('WS send failed', err);
     }
   }
+
+  private emitPerformance(
+    name: PerformanceEventName,
+    turnId?: number,
+    detail?: string,
+  ): void {
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'performance_event',
+      name,
+      elapsedMs:
+        Math.round((performance.now() - this.sessionStartedAt) * 1000) / 1000,
+      ...(turnId === undefined ? {} : { turnId }),
+      ...(detail === undefined ? {} : { detail }),
+    });
+  }
 }
 
 function baseToolName(toolName: string): string {
   const idx = toolName.lastIndexOf('__');
   return idx >= 0 ? toolName.slice(idx + 2) : toolName;
+}
+
+function isTemplateReportCommand(text: string): boolean {
+  return /^\/template-report(?:\s|$)/i.test(text.trim());
+}
+
+function onlyPptxAttachment(
+  attachments: LocalFileAttachment[] | undefined,
+): LocalFileAttachment | undefined {
+  if (attachments?.length !== 1) return undefined;
+  const attachment = attachments[0];
+  return /\.pptx$/i.test(attachment.name) && attachment.encoding === 'base64'
+    ? attachment
+    : undefined;
+}
+
+function stripTemplateReportInput(
+  text: string,
+  attachmentName: string | undefined,
+): string {
+  let minutes = text
+    .trim()
+    .replace(/^\/template-report(?:\s|$)/i, '')
+    .trim();
+  if (attachmentName) {
+    const escapedName = attachmentName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    minutes = minutes
+      .replace(new RegExp(`@${escapedName}(?=\\s|$)`, 'gi'), '')
+      .trim();
+  }
+  return minutes;
 }
 
 function previewJson(value: unknown): string {

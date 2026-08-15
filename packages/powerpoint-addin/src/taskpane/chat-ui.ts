@@ -7,14 +7,12 @@
 import { STRINGS, toolLabel } from './strings.ko.js';
 import { renderMarkdownInto } from './markdown.js';
 import type { LocalFileAttachment } from '../shared/messages.js';
-import {
-  MAX_ATTACHED_FILES,
-  MAX_TOTAL_FILE_CHARS,
-} from '../shared/attachment-limits.js';
+import { MAX_ATTACHED_FILES } from '../shared/attachment-limits.js';
 import {
   FILE_PICKER_ACCEPT,
+  attachmentSelectionError,
   attachmentReference,
-  readLocalTextFile,
+  readLocalFile,
 } from './file-attachments.js';
 
 export interface ChatUiCallbacks {
@@ -234,23 +232,6 @@ export function createChatUi(
     renderAttachments();
   }
 
-  function attachmentChars(): number {
-    let total = 0;
-    for (let i = 0; i < attachments.length; i++) {
-      total += attachments[i].content.length;
-    }
-    return total;
-  }
-
-  function replacedAttachmentChars(name: string): number {
-    for (let i = 0; i < attachments.length; i++) {
-      if (sameFileName(attachments[i].name, name)) {
-        return attachments[i].content.length;
-      }
-    }
-    return 0;
-  }
-
   function showFileError(err: unknown): void {
     const code = err instanceof Error ? err.message : '';
     if (code === 'FILE_TOO_LARGE') {
@@ -285,15 +266,16 @@ export function createChatUi(
         return;
       }
       const file = files[index++];
-      readLocalTextFile(file).then(
+      readLocalFile(file).then(
         (attachment) => {
-          if (
-            attachmentChars() -
-              replacedAttachmentChars(attachment.name) +
-              attachment.content.length >
-            MAX_TOTAL_FILE_CHARS
-          ) {
+          const selectionError = attachmentSelectionError(
+            attachments,
+            attachment,
+          );
+          if (selectionError === 'ATTACHMENTS_TOO_LARGE') {
             api.addSystemNote(STRINGS.totalTooLarge);
+          } else if (selectionError) {
+            api.addSystemNote(STRINGS.tooManyFiles);
           } else {
             addAttachment(attachment);
           }

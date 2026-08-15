@@ -3,6 +3,8 @@ export const MAX_ATTACHED_FILES = 5;
 export const MAX_FILE_BYTES = 256 * 1024;
 export const MAX_FILE_CHARS = 256 * 1024;
 export const MAX_TOTAL_FILE_CHARS = 512 * 1024;
+export const MAX_TEMPLATE_BYTES = 10 * 1024 * 1024;
+export const MAX_WEBSOCKET_PAYLOAD_BYTES = 16 * 1024 * 1024;
 
 export function attachmentReference(name: string): string {
   return '@' + name;
