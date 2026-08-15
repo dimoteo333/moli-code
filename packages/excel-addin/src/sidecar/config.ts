@@ -8,8 +8,11 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createRequire } from 'node:module';
+import { z } from 'zod';
 
 export const DEFAULT_PORT = 39215;
+
+export type ProductEdition = 'standard' | 'global';
 
 export interface SidecarConfig {
   port: number;
@@ -28,6 +31,12 @@ export interface SidecarConfig {
   /** Model override; empty → CLI default. */
   model?: string;
   logLevel: 'debug' | 'info' | 'warn' | 'error';
+  /** Product edition that controls the available tool experience. */
+  edition: ProductEdition;
+  /** Optional Global profile catalog, resolved relative to config.json. */
+  profileCatalogPath?: string;
+  /** Global tool IDs enabled for this installation. */
+  enabledGlobalTools: string[];
 }
 
 interface RawConfig {
@@ -42,6 +51,12 @@ interface RawConfig {
   model?: string;
   logLevel?: string;
 }
+
+const configSchema = z.object({
+  edition: z.enum(['standard', 'global']).default('standard'),
+  profileCatalogPath: z.string().min(1).optional(),
+  enabledGlobalTools: z.array(z.string().min(1)).default([]),
+});
 
 export function defaultInstallDir(): string {
   if (process.platform === 'win32' && process.env['LOCALAPPDATA']) {
@@ -100,6 +115,7 @@ export function loadConfig(configPath: string): SidecarConfig {
   }
   const root = path.dirname(configPath);
   const workDir = raw.workDir ?? 'workspace';
+  const editionConfig = configSchema.parse(raw);
 
   return {
     port: raw.port ?? DEFAULT_PORT,
@@ -119,6 +135,11 @@ export function loadConfig(configPath: string): SidecarConfig {
     excludeTools: raw.excludeTools ?? ['ShellTool', 'web_fetch', 'web_search'],
     model: raw.model,
     logLevel: normalizeLogLevel(raw.logLevel),
+    edition: editionConfig.edition,
+    profileCatalogPath: editionConfig.profileCatalogPath
+      ? resolveMaybeRelative(editionConfig.profileCatalogPath, root)
+      : undefined,
+    enabledGlobalTools: [...new Set(editionConfig.enabledGlobalTools)],
   };
 }
 

@@ -127,6 +127,8 @@ function makeSession(ws: FakeWs) {
         workDir: `${process.env['TMPDIR'] ?? '/tmp'}/moli-excel-test-workspace`,
         excludeTools: [],
         logLevel: 'error',
+        edition: 'standard',
+        enabledGlobalTools: [],
       },
     },
     new Logger({ minLevel: 'error' }),

@@ -38,4 +38,70 @@ describe('loadConfig', () => {
     );
     expect(config.port).toBe(DEFAULT_PORT);
   });
+
+  it('defaults legacy configuration to the Standard edition', () => {
+    const configPath = writeConfig('{}');
+
+    expect(loadConfig(configPath)).toMatchObject({
+      edition: 'standard',
+      enabledGlobalTools: [],
+      profileCatalogPath: undefined,
+    });
+  });
+
+  it('loads explicit Global edition settings', () => {
+    const configPath = writeConfig(
+      JSON.stringify({
+        edition: 'global',
+        enabledGlobalTools: ['accounting-report'],
+      }),
+    );
+
+    expect(loadConfig(configPath)).toMatchObject({
+      edition: 'global',
+      enabledGlobalTools: ['accounting-report'],
+    });
+  });
+
+  it('rejects an unknown product edition', () => {
+    const configPath = writeConfig(JSON.stringify({ edition: 'enterprise' }));
+
+    expect(() => loadConfig(configPath)).toThrow();
+  });
+
+  it('rejects non-string Global tool IDs', () => {
+    const configPath = writeConfig(
+      JSON.stringify({ enabledGlobalTools: ['accounting-report', 42] }),
+    );
+
+    expect(() => loadConfig(configPath)).toThrow();
+  });
+
+  it('deduplicates Global tool IDs in their first-seen order', () => {
+    const configPath = writeConfig(
+      JSON.stringify({
+        enabledGlobalTools: [
+          'accounting-report',
+          'financial-analysis',
+          'accounting-report',
+          'financial-analysis',
+        ],
+      }),
+    );
+
+    expect(loadConfig(configPath).enabledGlobalTools).toEqual([
+      'accounting-report',
+      'financial-analysis',
+    ]);
+  });
+
+  it('resolves the profile catalog path relative to config.json', () => {
+    const configPath = writeConfig(
+      JSON.stringify({ profileCatalogPath: 'catalogs/global.json' }),
+    );
+
+    expect(loadConfig(configPath).profileCatalogPath).toBe(
+      path.join(path.dirname(configPath), 'catalogs', 'global.json'),
+    );
+  });
 });
