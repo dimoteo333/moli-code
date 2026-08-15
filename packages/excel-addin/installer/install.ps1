@@ -9,6 +9,8 @@
 #   -UseCatalog      공유 폴더 카탈로그 방식 사이드로딩 (관리자 필요)
 #   -Machine         인증서를 LocalMachine 루트에 설치 (관리자 필요, 확인창 없음)
 #   -NoAutoStart     로그온 자동 시작 작업을 만들지 않음
+#   -Edition ...     Standard 또는 Global 제품 에디션
+#   -PlanOnly        검증된 설치 계획만 JSON으로 출력하고 종료
 
 [CmdletBinding()]
 param(
@@ -16,7 +18,13 @@ param(
     [int]$Port = 39215,
     [switch]$UseCatalog,
     [switch]$Machine,
-    [switch]$NoAutoStart
+    [switch]$NoAutoStart,
+    [ValidateSet('Standard', 'Global')]
+    [string]$Edition,
+    [switch]$PlanOnly,
+    # 테스트 전용: 입력을 사용할 수 없는 호스트를 재현한다.
+    [Parameter(DontShow = $true)]
+    [switch]$NonInteractiveHost
 )
 
 $ErrorActionPreference = 'Stop'
@@ -27,13 +35,64 @@ $Version = '0.5.0'
 
 # deploy 루트 = installer\ 의 상위 폴더
 $Payload = Split-Path -Parent $PSScriptRoot
+$CatalogRelativePath = 'profiles/product-profiles.json'
+$CatalogPath = Join-Path $Payload 'profiles\product-profiles.json'
+$ManifestTemplatePath = Join-Path $Payload 'manifest\manifest.template.xml'
+
+# Catalog, edition, icon paths, defaults, and the in-memory manifest are all
+# validated before install files, certificates, registry, or tasks are touched.
+Import-Module (Join-Path $PSScriptRoot 'product-profile.psm1') -Force
+$ProductCatalog = Get-MoliProductProfileCatalog -CatalogPath $CatalogPath
+
+if (-not $PSBoundParameters.ContainsKey('Edition')) {
+    if ($NonInteractiveHost) {
+        throw 'Edition is required in a noninteractive host. Pass -Edition Standard or -Edition Global.'
+    }
+
+    while ($true) {
+        Write-Host '설치할 제품을 선택하세요:'
+        Write-Host "  1. $($ProductCatalog.editions[0].menuLabel)"
+        Write-Host "  2. $($ProductCatalog.editions[1].menuLabel)"
+        $choice = Read-Host '선택 [1-2]'
+        if ($null -eq $choice) {
+            throw 'Edition input is unavailable. Pass -Edition Standard or -Edition Global.'
+        }
+        if ($choice -eq '1') {
+            $Edition = 'Standard'
+            break
+        }
+        if ($choice -eq '2') {
+            $Edition = 'Global'
+            break
+        }
+        Write-Warning '1 또는 2를 입력하세요.'
+    }
+}
+
+$ResolvedInstall = Resolve-MoliInstallPlan `
+    -Catalog $ProductCatalog `
+    -Edition $Edition `
+    -InstallDir $InstallDir `
+    -Port $Port `
+    -Version $Version `
+    -AddinId $AddinId `
+    -ManifestTemplatePath $ManifestTemplatePath `
+    -ProfileCatalogPath $CatalogRelativePath
+$InstallPlan = $ResolvedInstall.Plan
+$RenderedManifest = $ResolvedInstall.ManifestXml
+
+if ($PlanOnly) {
+    $planJson = $InstallPlan | ConvertTo-Json -Depth 10 -Compress
+    Write-Output "MOLI_INSTALL_PLAN=$planJson"
+    return
+}
 
 Write-Host "=== 몰리 코드 Excel 추가 기능 설치 ($Version) ===" -ForegroundColor Cyan
 Write-Host "설치 위치: $InstallDir"
 Write-Host "포트: $Port"
 
 # ---------------------------------------------------------------- 0. 검증
-foreach ($required in @('web\taskpane.html', 'sidecar\index.cjs', 'manifest\manifest.template.xml')) {
+foreach ($required in @('web\taskpane.html', 'sidecar\index.cjs', 'manifest\manifest.template.xml', 'profiles\product-profiles.json')) {
     if (-not (Test-Path (Join-Path $Payload $required))) {
         throw "배포 파일이 없습니다: $required — 압축을 모두 푼 뒤 installer\install.ps1을 실행하세요."
     }
@@ -57,7 +116,7 @@ if ($running) {
 foreach ($dir in @($InstallDir, "$InstallDir\certs", "$InstallDir\logs", "$InstallDir\workspace", "$InstallDir\manifest")) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
-foreach ($dir in @('web', 'sidecar', 'cli', 'installer')) {
+foreach ($dir in @('web', 'sidecar', 'cli', 'installer', 'profiles')) {
     $src = Join-Path $Payload $dir
     if (Test-Path $src) {
         Copy-Item -Recurse -Force $src $InstallDir
@@ -123,15 +182,16 @@ $config = [ordered]@{
     workDir        = 'workspace'
     excludeTools   = @('ShellTool', 'web_fetch', 'web_search')
     logLevel       = 'info'
+    edition        = $InstallPlan.edition
+    profileCatalogPath = $InstallPlan.profileCatalogPath
+    enabledGlobalTools = @($InstallPlan.enabledGlobalTools)
 }
 $config | ConvertTo-Json | Set-Content -Encoding UTF8 "$InstallDir\config.json"
 
 # ---------------------------------------------------------------- 4. 매니페스트
 Write-Host '[4/6] 매니페스트 생성...'
-$manifest = Get-Content (Join-Path $Payload 'manifest\manifest.template.xml') -Raw -Encoding UTF8
-$manifest = $manifest -replace '\{\{PORT\}\}', "$Port" -replace '\{\{VERSION\}\}', $Version
 $manifestPath = "$InstallDir\manifest\manifest.xml"
-Set-Content -Path $manifestPath -Value $manifest -Encoding UTF8
+Set-Content -Path $manifestPath -Value $RenderedManifest -Encoding UTF8
 
 # ---------------------------------------------------------------- 5. 사이드로딩 등록
 Write-Host '[5/6] Excel 사이드로딩 등록...'

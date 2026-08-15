@@ -10,10 +10,10 @@
   <Version>{{VERSION}}</Version>
   <ProviderName>Moli Team</ProviderName>
   <DefaultLocale>ko-KR</DefaultLocale>
-  <DisplayName DefaultValue="몰리 코드 for Excel"/>
-  <Description DefaultValue="폐쇄망에서 동작하는 Excel용 몰리 코드 AI 어시스턴트. 워크북을 읽고, 쓰고, 분석합니다."/>
-  <IconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
-  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
+  <DisplayName DefaultValue="{{DISPLAY_NAME}}"/>
+  <Description DefaultValue="{{DESCRIPTION}}"/>
+  <IconUrl DefaultValue="https://localhost:{{PORT}}/{{APP_ICON_32}}"/>
+  <HighResolutionIconUrl DefaultValue="https://localhost:{{PORT}}/{{APP_ICON_80}}"/>
 
   <AppDomains>
     <AppDomain>https://localhost:{{PORT}}</AppDomain>
@@ -76,9 +76,9 @@
     </Hosts>
     <Resources>
       <bt:Images>
-        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-16.png"/>
-        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-32.png"/>
-        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/assets/ribbon-80.png"/>
+        <bt:Image id="MoliCode.Icon16" DefaultValue="https://localhost:{{PORT}}/{{RIBBON_ICON_16}}"/>
+        <bt:Image id="MoliCode.Icon32" DefaultValue="https://localhost:{{PORT}}/{{RIBBON_ICON_32}}"/>
+        <bt:Image id="MoliCode.Icon80" DefaultValue="https://localhost:{{PORT}}/{{RIBBON_ICON_80}}"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="MoliCode.Taskpane.Url" DefaultValue="https://localhost:{{PORT}}/taskpane.html"/>
