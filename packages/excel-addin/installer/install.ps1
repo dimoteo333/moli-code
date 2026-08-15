@@ -49,10 +49,20 @@ if (-not $PSBoundParameters.ContainsKey('Edition')) {
         throw 'Edition is required in a noninteractive host. Pass -Edition Standard or -Edition Global.'
     }
 
+    $StandardProfile = @($ProductCatalog.editions) |
+        Where-Object { $_.id -ceq 'standard' } |
+        Select-Object -First 1
+    $GlobalProfile = @($ProductCatalog.editions) |
+        Where-Object { $_.id -ceq 'global' } |
+        Select-Object -First 1
+    if ($null -eq $StandardProfile -or $null -eq $GlobalProfile) {
+        throw 'Interactive edition selection requires exact "standard" and "global" catalog IDs.'
+    }
+
     while ($true) {
         Write-Host '설치할 제품을 선택하세요:'
-        Write-Host "  1. $($ProductCatalog.editions[0].menuLabel)"
-        Write-Host "  2. $($ProductCatalog.editions[1].menuLabel)"
+        Write-Host "  1. $($StandardProfile.menuLabel)"
+        Write-Host "  2. $($GlobalProfile.menuLabel)"
         $choice = Read-Host '선택 [1-2]'
         if ($null -eq $choice) {
             throw 'Edition input is unavailable. Pass -Edition Standard or -Edition Global.'
@@ -116,7 +126,7 @@ if ($running) {
 foreach ($dir in @($InstallDir, "$InstallDir\certs", "$InstallDir\logs", "$InstallDir\workspace", "$InstallDir\manifest")) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
-foreach ($dir in @('web', 'sidecar', 'cli', 'installer', 'profiles')) {
+foreach ($dir in @('web', 'sidecar', 'cli', 'installer')) {
     $src = Join-Path $Payload $dir
     if (Test-Path $src) {
         Copy-Item -Recurse -Force $src $InstallDir
@@ -168,30 +178,16 @@ if ($Machine) {
 
 # ---------------------------------------------------------------- 3. config.json
 Write-Host '[3/6] 설정 파일 작성...'
-$cliPath = $null
-if (Test-Path "$InstallDir\cli\moli-code.exe") {
-    $cliPath = "$InstallDir\cli\moli-code.exe"
-} elseif (Test-Path "$InstallDir\cli\cli.js") {
-    $cliPath = "$InstallDir\cli\cli.js"
-}
-$config = [ordered]@{
-    port           = $Port
-    certPfxPath    = 'certs/localhost.pfx'
-    certPassphrase = $passphrase
-    cliPath        = $cliPath
-    workDir        = 'workspace'
-    excludeTools   = @('ShellTool', 'web_fetch', 'web_search')
-    logLevel       = 'info'
-    edition        = $InstallPlan.edition
-    profileCatalogPath = $InstallPlan.profileCatalogPath
-    enabledGlobalTools = @($InstallPlan.enabledGlobalTools)
-}
-$config | ConvertTo-Json | Set-Content -Encoding UTF8 "$InstallDir\config.json"
+Invoke-MoliFileDeployment `
+    -PayloadPath $Payload `
+    -Plan $InstallPlan `
+    -RenderedManifest $RenderedManifest `
+    -Port $Port `
+    -CertPassphrase $passphrase
 
 # ---------------------------------------------------------------- 4. 매니페스트
-Write-Host '[4/6] 매니페스트 생성...'
+Write-Host '[4/6] 매니페스트 생성 완료.'
 $manifestPath = "$InstallDir\manifest\manifest.xml"
-Set-Content -Path $manifestPath -Value $RenderedManifest -Encoding UTF8
 
 # ---------------------------------------------------------------- 5. 사이드로딩 등록
 Write-Host '[5/6] Excel 사이드로딩 등록...'

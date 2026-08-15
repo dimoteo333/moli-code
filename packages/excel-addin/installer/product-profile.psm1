@@ -116,6 +116,29 @@ function Assert-MoliRelativeIconPath {
     }
 }
 
+function Test-MoliJsonObject {
+    param([Parameter(Mandatory = $false)]$Value)
+
+    return $Value -is [System.Collections.IDictionary] -or
+        $Value -is [System.Management.Automation.PSCustomObject]
+}
+
+function Test-MoliJsonNumber {
+    param([Parameter(Mandatory = $false)]$Value)
+
+    return $Value -is [byte] -or
+        $Value -is [sbyte] -or
+        $Value -is [int16] -or
+        $Value -is [uint16] -or
+        $Value -is [int32] -or
+        $Value -is [uint32] -or
+        $Value -is [int64] -or
+        $Value -is [uint64] -or
+        $Value -is [single] -or
+        $Value -is [double] -or
+        $Value -is [decimal]
+}
+
 function Assert-MoliOptionalObjectSettings {
     param(
         [Parameter(Mandatory = $true)]$Agent,
@@ -124,16 +147,18 @@ function Assert-MoliOptionalObjectSettings {
 
     if (Test-MoliProperty -Object $Agent -Name 'modelConfig') {
         $modelConfig = $Agent.modelConfig
-        if ($null -eq $modelConfig -or $modelConfig -is [string] -or $modelConfig -is [System.Array]) {
+        if (-not (Test-MoliJsonObject -Value $modelConfig)) {
             throw "Invalid product profile catalog: $AgentContext.modelConfig must be an object."
         }
         if (Test-MoliProperty -Object $modelConfig -Name 'model') {
-            Assert-MoliNonEmptyString -Value $modelConfig.model -Context "$AgentContext.modelConfig.model"
+            if ($modelConfig.model -isnot [string]) {
+                throw "Invalid product profile catalog: $AgentContext.modelConfig.model must be a string."
+            }
         }
         foreach ($numericName in @('temp', 'top_p')) {
             if (Test-MoliProperty -Object $modelConfig -Name $numericName) {
                 $numericValue = $modelConfig.$numericName
-                if ($numericValue -is [string] -or $numericValue -is [bool] -or $numericValue -isnot [ValueType]) {
+                if (-not (Test-MoliJsonNumber -Value $numericValue)) {
                     throw "Invalid product profile catalog: $AgentContext.modelConfig.$numericName must be numeric."
                 }
             }
@@ -142,13 +167,13 @@ function Assert-MoliOptionalObjectSettings {
 
     if (Test-MoliProperty -Object $Agent -Name 'runConfig') {
         $runConfig = $Agent.runConfig
-        if ($null -eq $runConfig -or $runConfig -is [string] -or $runConfig -is [System.Array]) {
+        if (-not (Test-MoliJsonObject -Value $runConfig)) {
             throw "Invalid product profile catalog: $AgentContext.runConfig must be an object."
         }
         foreach ($numericName in @('max_time_minutes', 'max_turns')) {
             if (Test-MoliProperty -Object $runConfig -Name $numericName) {
                 $numericValue = $runConfig.$numericName
-                if ($numericValue -is [string] -or $numericValue -is [bool] -or $numericValue -isnot [ValueType]) {
+                if (-not (Test-MoliJsonNumber -Value $numericValue)) {
                     throw "Invalid product profile catalog: $AgentContext.runConfig.$numericName must be numeric."
                 }
             }
@@ -342,4 +367,65 @@ function Resolve-MoliInstallPlan {
     }
 }
 
-Export-ModuleMember -Function Get-MoliProductProfileCatalog, Resolve-MoliInstallPlan
+function Invoke-MoliFileDeployment {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)][string]$PayloadPath,
+        [Parameter(Mandatory = $true)]$Plan,
+        [Parameter(Mandatory = $true)][string]$RenderedManifest,
+        [Parameter(Mandatory = $true)][int]$Port,
+        [Parameter(Mandatory = $true)][string]$CertPassphrase
+    )
+
+    # Recheck this focused write boundary before its first mutation. The
+    # installer supplies a resolved plan; direct callers cannot skip the
+    # edition, catalog-path, or rendered-manifest checks.
+    if ($Plan.edition -cnotin @('standard', 'global')) {
+        throw 'File deployment requires a resolved Standard or Global install plan.'
+    }
+    if ($Plan.profileCatalogPath -cne 'profiles/product-profiles.json') {
+        throw 'File deployment requires profileCatalogPath profiles/product-profiles.json.'
+    }
+    Assert-MoliNonEmptyString -Value $Plan.installDir -Context 'install plan installDir'
+    if ($RenderedManifest -match '\{\{[^{}]+\}\}') {
+        throw "Unresolved manifest placeholder: $($Matches[0])"
+    }
+    try {
+        $null = [xml]$RenderedManifest
+    } catch {
+        throw "Rendered manifest is not valid XML: $($_.Exception.Message)"
+    }
+    $profileCatalogSource = Join-Path $PayloadPath 'profiles\product-profiles.json'
+    if (-not (Test-Path -LiteralPath $profileCatalogSource -PathType Leaf)) {
+        throw "Product profile catalog was not found in the payload: $profileCatalogSource"
+    }
+
+    $installDir = $Plan.installDir
+    foreach ($dir in @($installDir, "$installDir\manifest")) {
+        New-Item -ItemType Directory -Force -Path $dir | Out-Null
+    }
+    Copy-Item -LiteralPath (Join-Path $PayloadPath 'profiles') -Recurse -Force -Destination $installDir
+
+    $cliPath = $null
+    if (Test-Path -LiteralPath "$installDir\cli\moli-code.exe" -PathType Leaf) {
+        $cliPath = "$installDir\cli\moli-code.exe"
+    } elseif (Test-Path -LiteralPath "$installDir\cli\cli.js" -PathType Leaf) {
+        $cliPath = "$installDir\cli\cli.js"
+    }
+    $config = [ordered]@{
+        port               = $Port
+        certPfxPath        = 'certs/localhost.pfx'
+        certPassphrase     = $CertPassphrase
+        cliPath            = $cliPath
+        workDir            = 'workspace'
+        excludeTools       = @('ShellTool', 'web_fetch', 'web_search')
+        logLevel           = 'info'
+        edition            = $Plan.edition
+        profileCatalogPath = $Plan.profileCatalogPath
+        enabledGlobalTools = @($Plan.enabledGlobalTools)
+    }
+    $config | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $installDir 'config.json') -Encoding UTF8
+    Set-Content -LiteralPath (Join-Path $installDir 'manifest\manifest.xml') -Value $RenderedManifest -Encoding UTF8
+}
+
+Export-ModuleMember -Function Get-MoliProductProfileCatalog, Resolve-MoliInstallPlan, Invoke-MoliFileDeployment

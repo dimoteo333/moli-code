@@ -111,6 +111,13 @@ describe('edition-aware PowerShell installer', () => {
     >;
   }
 
+  function getGlobalToolAgent(
+    catalog: Record<string, unknown>,
+  ): Record<string, unknown> {
+    const globalTools = catalog.globalTools as Array<Record<string, unknown>>;
+    return globalTools[0].agent as Record<string, unknown>;
+  }
+
   function renderManifest(
     payload: ReturnType<typeof copyPlanPayload>,
     edition: 'Standard' | 'Global',
@@ -156,6 +163,52 @@ Write-Output ('MOLI_MANIFEST_BASE64=' + [Convert]::ToBase64String($bytes))
     return Buffer.from(encoded!.slice(prefix.length), 'base64').toString(
       'utf8',
     );
+  }
+
+  function deployEditionFiles(
+    payload: ReturnType<typeof copyPlanPayload>,
+    edition: 'Standard' | 'Global',
+    installDir: string,
+  ): SpawnSyncReturns<string> {
+    const runnerPath = path.join(
+      path.dirname(payload.installerPath),
+      'deploy-files.test.ps1',
+    );
+    fs.writeFileSync(
+      runnerPath,
+      `param(
+  [string]$PayloadPath,
+  [string]$CatalogPath,
+  [string]$TemplatePath,
+  [string]$Edition,
+  [string]$InstallDir
+)
+$ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'product-profile.psm1') -Force
+$catalog = Get-MoliProductProfileCatalog -CatalogPath $CatalogPath
+$resolved = Resolve-MoliInstallPlan -Catalog $catalog -Edition $Edition -InstallDir $InstallDir -Port 39215 -Version '0.5.0' -AddinId '51ef4b60-29f7-442c-99b4-93419c6e68e2' -ManifestTemplatePath $TemplatePath
+Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -RenderedManifest $resolved.ManifestXml -Port 39215 -CertPassphrase 'test-passphrase'
+`,
+      'utf8',
+    );
+    return runInstaller(runnerPath, [
+      '-PayloadPath',
+      path.dirname(path.dirname(payload.installerPath)),
+      '-CatalogPath',
+      payload.catalogPath,
+      '-TemplatePath',
+      payload.manifestPath,
+      '-Edition',
+      edition,
+      '-InstallDir',
+      installDir,
+    ]);
+  }
+
+  function readPowerShellJson(filePath: string): Record<string, unknown> {
+    return JSON.parse(
+      fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/u, ''),
+    ) as Record<string, unknown>;
   }
 
   it('emits the Standard plan without creating the requested install directory', () => {
@@ -247,6 +300,36 @@ Write-Output ('MOLI_MANIFEST_BASE64=' + [Convert]::ToBase64String($bytes))
     expect(fs.existsSync(installDir)).toBe(false);
   });
 
+  it.each([
+    { choice: '1', edition: 'standard' },
+    { choice: '2', edition: 'global' },
+  ])(
+    'keeps interactive choice $choice ID-stable when catalog editions are reordered',
+    ({ choice, edition }) => {
+      const payload = copyPlanPayload();
+      const catalog = loadCatalog(payload.catalogPath);
+      const editions = catalog.editions as Array<Record<string, unknown>>;
+      catalog.editions = [...editions].reverse();
+      fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+      const installDir = path.join(
+        path.dirname(payload.installerPath),
+        `interactive-${edition}`,
+      );
+
+      const result = runInstaller(
+        payload.installerPath,
+        makePlanArgs(installDir),
+        `${choice}\r\n`,
+      );
+
+      expectSuccess(result);
+      expect(result.stdout).toContain('1. Molicode');
+      expect(result.stdout).toContain('2. Molicode for Global');
+      expect(parsePlan(result.stdout).edition).toBe(edition);
+      expect(fs.existsSync(installDir)).toBe(false);
+    },
+  );
+
   it('fails clearly when the edition is omitted in a noninteractive host', () => {
     const parentRoot = makeTemporaryRoot();
     const installDir = path.join(parentRoot, 'noninteractive-install');
@@ -336,6 +419,53 @@ Write-Output ('MOLI_MANIFEST_BASE64=' + [Convert]::ToBase64String($bytes))
     },
   );
 
+  it.each([
+    { field: 'modelConfig', value: 42 },
+    { field: 'modelConfig', value: true },
+    { field: 'modelConfig', value: null },
+    { field: 'modelConfig', value: [] },
+    { field: 'runConfig', value: 42 },
+    { field: 'runConfig', value: true },
+    { field: 'runConfig', value: null },
+    { field: 'runConfig', value: [] },
+  ])('rejects non-object $field value $value', ({ field, value }) => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    getGlobalToolAgent(catalog)[field] = value;
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+    const installDir = path.join(path.dirname(payload.installerPath), 'output');
+
+    const result = runInstaller(
+      payload.installerPath,
+      makePlanArgs(installDir, 'Global'),
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toMatch(
+      new RegExp(`${field}.+must be an object`, 'iu'),
+    );
+    expect(fs.existsSync(installDir)).toBe(false);
+  });
+
+  it('accepts optional agent settings with the same field types as the runtime schema', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    const agent = getGlobalToolAgent(catalog);
+    agent.modelConfig = { model: '', temp: 0.25, top_p: 1 };
+    agent.runConfig = { max_time_minutes: 0.5, max_turns: -1 };
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+    const installDir = path.join(path.dirname(payload.installerPath), 'output');
+
+    const result = runInstaller(
+      payload.installerPath,
+      makePlanArgs(installDir, 'Global'),
+    );
+
+    expectSuccess(result);
+    expect(parsePlan(result.stdout).edition).toBe('global');
+    expect(fs.existsSync(installDir)).toBe(false);
+  });
+
   it('XML-escapes profile text while validating the manifest plan', () => {
     const payload = copyPlanPayload();
     const catalog = loadCatalog(payload.catalogPath);
@@ -410,6 +540,64 @@ Write-Output ('MOLI_MANIFEST_BASE64=' + [Convert]::ToBase64String($bytes))
     );
     expect(manifest).not.toMatch(/\{\{[^{}]+\}\}/u);
     expect(fs.existsSync(installDir)).toBe(false);
+  });
+
+  it('deploys the selected profile catalog, config, and rendered manifest through the production file function', () => {
+    const payload = copyPlanPayload();
+    const installDir = makeTemporaryRoot('moli-installer-output-');
+
+    const result = deployEditionFiles(payload, 'Standard', installDir);
+
+    expectSuccess(result);
+    expect(
+      readPowerShellJson(path.join(installDir, 'config.json')),
+    ).toMatchObject({
+      edition: 'standard',
+      profileCatalogPath: 'profiles/product-profiles.json',
+      enabledGlobalTools: [],
+    });
+    expect(
+      readPowerShellJson(
+        path.join(installDir, 'profiles', 'product-profiles.json'),
+      ),
+    ).toEqual(loadCatalog(payload.catalogPath));
+    const manifest = fs.readFileSync(
+      path.join(installDir, 'manifest', 'manifest.xml'),
+      'utf8',
+    );
+    expect(manifest).toContain('DisplayName DefaultValue="Molicode"');
+    expect(manifest).toContain(
+      'IconUrl DefaultValue="https://localhost:39215/assets/icon-32.png"',
+    );
+    expect(manifest).not.toMatch(/\{\{[^{}]+\}\}/u);
+  });
+
+  it('replaces Standard config and manifest with Global in the same install root', () => {
+    const payload = copyPlanPayload();
+    const installDir = makeTemporaryRoot('moli-installer-output-');
+    expectSuccess(deployEditionFiles(payload, 'Standard', installDir));
+
+    const result = deployEditionFiles(payload, 'Global', installDir);
+
+    expectSuccess(result);
+    expect(
+      readPowerShellJson(path.join(installDir, 'config.json')),
+    ).toMatchObject({
+      edition: 'global',
+      profileCatalogPath: 'profiles/product-profiles.json',
+      enabledGlobalTools: ['accounting-report'],
+    });
+    const manifest = fs.readFileSync(
+      path.join(installDir, 'manifest', 'manifest.xml'),
+      'utf8',
+    );
+    expect(manifest).toContain(
+      'DisplayName DefaultValue="Molicode for Global"',
+    );
+    expect(manifest).toContain(
+      'IconUrl DefaultValue="https://localhost:39215/assets/global-icon-32.png"',
+    );
+    expect(manifest).not.toMatch(/\{\{[^{}]+\}\}/u);
   });
 
   it('rejects an unresolved manifest placeholder before mutation', () => {
