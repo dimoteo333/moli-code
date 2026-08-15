@@ -30,7 +30,7 @@ export interface HelloFrame {
   v: number;
   type: 'hello';
   token: string;
-  /** e.g. { 'ExcelApi 1.1': true, 'ExcelApi 1.4': false } */
+  /** e.g. { 'ExcelApi 1.1': true, 'ExcelApi 1.9': false } */
   requirementSets: { [set: string]: boolean };
   host?: string;
   platform?: string;
@@ -177,6 +177,23 @@ export interface PongFrame {
   type: 'pong';
 }
 
+export type PerformanceEventName =
+  | 'query_spawn_started'
+  | 'cli_initialized'
+  | 'query_prewarm_failed'
+  | 'user_message_enqueued'
+  | 'first_delta_received'
+  | 'artifact_saved';
+
+export interface PerformanceEventFrame {
+  v: number;
+  type: 'performance_event';
+  name: PerformanceEventName;
+  elapsedMs: number;
+  turnId?: number;
+  detail?: string;
+}
+
 export type SidecarToPaneFrame =
   | HelloOkFrame
   | HelloErrFrame
@@ -188,6 +205,7 @@ export type SidecarToPaneFrame =
   | ExcelExecFrame
   | TurnCompleteFrame
   | ErrorFrame
+  | PerformanceEventFrame
   | PongFrame;
 
 export type AnyFrame = PaneToSidecarFrame | SidecarToPaneFrame;
