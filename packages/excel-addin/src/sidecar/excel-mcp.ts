@@ -3,8 +3,8 @@
  *
  * Each tool handler forwards the call over the pane WebSocket (RpcManager →
  * excel_exec frame); the pane executes it via Office.js `Excel.run()` and
- * answers with excel_result. All v1 tools only require ExcelApi 1.1
- * (Excel 2016 baseline).
+ * answers with excel_result. Legacy v1 operations require ExcelApi 1.1;
+ * excel_set_formulas fillDown additionally requires ExcelApi 1.9.
  */
 
 import { z } from 'zod';
@@ -14,6 +14,7 @@ import {
   type McpSdkServerConfigWithInstance,
 } from '@dobby/moli-code-sdk';
 import type { ExcelOp } from '../shared/messages.js';
+import { supportsNativeFillDown } from '../shared/excel-capabilities.js';
 import type { RpcManager } from './rpc.js';
 
 /** Tools that never modify the workbook — auto-approved without prompting. */
@@ -108,6 +109,33 @@ const rangeParam = z
 
 const cellValue = z.union([z.string(), z.number(), z.boolean(), z.null()]);
 
+export const excelSetFormulasDescription =
+  "Set formulas in a range. The 2D array dimensions must match the range. Formulas start with '=', e.g. '=SUM(A1:A10)'. Non-formula strings are written as literal values. To fill a repeated multi-row range efficiently, set fillDown=true and provide exactly one formula row matching the target column count; Excel writes the first row and fills it down natively.";
+
+export function getExcelSetFormulasDescription(
+  fillDownAvailable: boolean,
+): string {
+  return fillDownAvailable
+    ? excelSetFormulasDescription
+    : `${excelSetFormulasDescription} Native fillDown is unavailable on this host because it requires ExcelApi 1.9; omit fillDown and send the full 2D formula array.`;
+}
+
+export const excelSetFormulasInput = {
+  sheet: sheetParam,
+  range: rangeParam,
+  formulas: z
+    .array(z.array(z.string()))
+    .describe(
+      '2D array of formula strings; exactly one row when fillDown=true.',
+    ),
+  fillDown: z
+    .boolean()
+    .optional()
+    .describe(
+      'Fill the first formula row down an explicit multi-row target range.',
+    ),
+};
+
 export function buildExcelMcpServer(
   rpc: RpcManager,
   gate: PermissionGate,
@@ -156,14 +184,8 @@ export function buildExcelMcpServer(
       ),
       tool(
         'excel_set_formulas',
-        "Set formulas in a range. The 2D array dimensions must match the range. Formulas start with '=', e.g. '=SUM(A1:A10)'. Non-formula strings are written as literal values.",
-        {
-          sheet: sheetParam,
-          range: rangeParam,
-          formulas: z
-            .array(z.array(z.string()))
-            .describe('2D array of formula strings.'),
-        },
+        getExcelSetFormulasDescription(supportsNativeFillDown(requirementSets)),
+        excelSetFormulasInput,
         async (args) =>
           gatedExec(rpc, gate, 'excel_set_formulas', 'set_formulas', args),
       ),

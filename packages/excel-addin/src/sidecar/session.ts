@@ -10,6 +10,7 @@
 
 import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs';
+import { performance } from 'node:perf_hooks';
 import type { WebSocket } from 'ws';
 import {
   query,
@@ -27,6 +28,7 @@ import {
   type PaneToSidecarFrame,
   type SidecarToPaneFrame,
   type PaneContentBlock,
+  type PerformanceEventName,
 } from '../shared/messages.js';
 import type { SidecarConfig } from './config.js';
 import { RpcManager } from './rpc.js';
@@ -109,7 +111,9 @@ export class PaneSession {
   private queryInstance: Query | null = null;
   private permissionSeq = 0;
   private turnId = 0;
+  private firstDeltaTurn = 0;
   private disposed = false;
+  private readonly sessionStartedAt = performance.now();
 
   constructor(
     private readonly ws: WebSocket,
@@ -124,12 +128,40 @@ export class PaneSession {
     logger.info(
       `Pane session ${this.sessionId} started (host=${hello.host ?? '?'} platform=${hello.platform ?? '?'} sets=${JSON.stringify(hello.requirementSets)})`,
     );
+    this.prewarmQuery();
+  }
+
+  private prewarmQuery(): void {
+    try {
+      const q = this.ensureQuery();
+      void q.initialized.then(
+        () => {
+          this.emitPerformance('cli_initialized');
+          this.sendHello();
+        },
+        (err) => {
+          if (this.queryInstance === q) {
+            this.queryInstance = null;
+          }
+          this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+          this.emitPerformance('query_prewarm_failed', undefined, String(err));
+          this.sendHello();
+        },
+      );
+    } catch (err) {
+      this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
+      this.emitPerformance('query_prewarm_failed', undefined, String(err));
+      this.sendHello();
+    }
+  }
+
+  private sendHello(): void {
     this.send({
       v: PROTOCOL_VERSION,
       type: 'hello_ok',
       sessionId: this.sessionId,
-      version: env.version,
-      model: env.config.model,
+      version: this.env.version,
+      model: this.env.config.model,
     });
   }
 
@@ -204,39 +236,79 @@ export class PaneSession {
     if (!text || !text.trim()) {
       return;
     }
-    this.turnId += 1;
+    const turnId = ++this.turnId;
+    let q: Query;
     try {
-      this.ensureQuery();
+      q = this.ensureQuery();
     } catch (err) {
-      // e.g. CLI executable not found — report instead of crashing.
-      this.logger.error('Failed to start agent session', err);
-      this.send({
-        v: PROTOCOL_VERSION,
-        type: 'error',
-        code: 'AGENT_START_FAILED',
-        messageKo:
-          '에이전트를 시작할 수 없습니다. 몰리 CLI 설치 상태를 확인해 주세요. (로그: logs/sidecar.log)',
-      });
-      this.send({
-        v: PROTOCOL_VERSION,
-        type: 'turn_complete',
-        turnId: this.turnId,
-        isError: true,
-        errorMessage: '에이전트 시작 실패',
-      });
+      this.reportAgentStartFailure(turnId, err);
       return;
     }
-    this.inputQueue.push({
-      type: 'user',
-      session_id: this.sessionId,
-      message: { role: 'user', content: text },
-      parent_tool_use_id: null,
+    this.enqueueAfterInitialization(q, text, turnId, true);
+  }
+
+  private enqueueAfterInitialization(
+    q: Query,
+    text: string,
+    turnId: number,
+    retryOnFailure: boolean,
+  ): void {
+    void q.initialized.then(
+      () => {
+        if (this.disposed) {
+          return;
+        }
+        this.inputQueue.push({
+          type: 'user',
+          session_id: this.sessionId,
+          message: { role: 'user', content: text },
+          parent_tool_use_id: null,
+        });
+        this.emitPerformance('user_message_enqueued', turnId);
+      },
+      (err) => {
+        if (this.queryInstance === q) {
+          this.queryInstance = null;
+        }
+        if (this.disposed) {
+          return;
+        }
+        if (retryOnFailure) {
+          try {
+            const replacement = this.ensureQuery();
+            this.enqueueAfterInitialization(replacement, text, turnId, false);
+          } catch (replacementErr) {
+            this.reportAgentStartFailure(turnId, replacementErr);
+          }
+          return;
+        }
+        this.reportAgentStartFailure(turnId, err);
+      },
+    );
+  }
+
+  private reportAgentStartFailure(turnId: number, err: unknown): void {
+    // e.g. CLI executable not found — report instead of crashing.
+    this.logger.error('Failed to start agent session', err);
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'error',
+      code: 'AGENT_START_FAILED',
+      messageKo:
+        '에이전트를 시작할 수 없습니다. 몰리 CLI 설치 상태를 확인해 주세요. (로그: logs/sidecar.log)',
+    });
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'turn_complete',
+      turnId,
+      isError: true,
+      errorMessage: '에이전트 시작 실패',
     });
   }
 
-  private ensureQuery(): void {
+  private ensureQuery(): Query {
     if (this.queryInstance) {
-      return;
+      return this.queryInstance;
     }
     const config = this.env.config;
     fs.mkdirSync(config.workDir, { recursive: true });
@@ -269,8 +341,10 @@ export class PaneSession {
     this.logger.info(
       `Starting agent session ${this.sessionId} (cli=${config.cliPath ?? '<auto>'} cwd=${config.workDir})`,
     );
+    this.emitPerformance('query_spawn_started');
     this.queryInstance = query({ prompt: this.inputQueue, options });
     void this.pumpMessages(this.queryInstance);
+    return this.queryInstance;
   }
 
   private async pumpMessages(q: Query): Promise<void> {
@@ -303,6 +377,10 @@ export class PaneSession {
           event.type === 'content_block_delta' &&
           event.delta.type === 'text_delta'
         ) {
+          if (this.firstDeltaTurn !== this.turnId) {
+            this.firstDeltaTurn = this.turnId;
+            this.emitPerformance('first_delta_received', this.turnId);
+          }
           this.send({
             v: PROTOCOL_VERSION,
             type: 'assistant_delta',
@@ -461,6 +539,22 @@ export class PaneSession {
     } catch (err) {
       this.logger.error('WS send failed', err);
     }
+  }
+
+  private emitPerformance(
+    name: PerformanceEventName,
+    turnId?: number,
+    detail?: string,
+  ): void {
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'performance_event',
+      name,
+      elapsedMs:
+        Math.round((performance.now() - this.sessionStartedAt) * 1000) / 1000,
+      ...(turnId === undefined ? {} : { turnId }),
+      ...(detail === undefined ? {} : { detail }),
+    });
   }
 }
 

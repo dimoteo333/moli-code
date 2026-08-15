@@ -5,7 +5,12 @@
 
 import type { ExcelOp } from '../shared/messages.js';
 import type { ExcelExecutor } from './excel-executor.js';
-import { parseRange, formatRange, cellAddress } from './a1.js';
+import {
+  parseRange,
+  formatRange,
+  cellAddress,
+  shiftFormulaRows,
+} from './a1.js';
 
 interface MockCell {
   v: string | number | boolean | null;
@@ -85,6 +90,7 @@ export function createMockExecutor(): ExcelExecutor {
       applyTo?: string;
       name?: string;
       query?: string;
+      fillDown?: boolean;
     };
     switch (op) {
       case 'get_workbook_overview': {
@@ -149,16 +155,46 @@ export function createMockExecutor(): ExcelExecutor {
         if (!p2) {
           throw new Error('InvalidArgument: range');
         }
-        for (let r2 = 0; r2 < grid.length; r2++) {
-          for (let c2 = 0; c2 < grid[r2].length; c2++) {
+        let rowsToWrite = grid;
+        if (op === 'set_formulas' && a.fillDown === true) {
+          const targetRows = p2.endRow - p2.startRow + 1;
+          const targetCols = p2.endCol - p2.startCol + 1;
+          if (targetRows <= 1) {
+            throw new Error(
+              "'fillDown' requires an explicit multi-row target range",
+            );
+          }
+          if (grid.length !== 1) {
+            throw new Error("'fillDown' formulas must contain exactly one row");
+          }
+          if (grid[0].length !== targetCols) {
+            throw new Error(
+              "'fillDown' formula column count must match the target range column count",
+            );
+          }
+          rowsToWrite = Array.from({ length: targetRows }, (_, rowOffset) =>
+            grid[0].map((formula) =>
+              shiftFormulaRows(String(formula), rowOffset),
+            ),
+          );
+        }
+        for (let r2 = 0; r2 < rowsToWrite.length; r2++) {
+          for (let c2 = 0; c2 < rowsToWrite[r2].length; c2++) {
             const addr = cellAddress(p2.startCol + c2, p2.startRow + r2);
             t2.sheet.cells[addr] =
               op === 'write_range'
-                ? { v: grid[r2][c2] as MockCell['v'], f: '' }
-                : { v: '(계산값)', f: String(grid[r2][c2]) };
+                ? { v: rowsToWrite[r2][c2] as MockCell['v'], f: '' }
+                : { v: '(계산값)', f: String(rowsToWrite[r2][c2]) };
           }
         }
-        return { written: a.range, rows: grid.length, cols: grid[0].length };
+        return {
+          written: a.range,
+          rows: rowsToWrite.length,
+          cols: rowsToWrite[0].length,
+          ...(op === 'set_formulas' && a.fillDown === true
+            ? { fillDown: true }
+            : {}),
+        };
       }
       case 'get_selection':
         // Same shape as the Office executor: address + current cell data.

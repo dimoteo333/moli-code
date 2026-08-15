@@ -19,6 +19,7 @@ interface CapturedQuery {
 }
 
 const captured: CapturedQuery[] = [];
+let initializationFailure: Error | null = null;
 
 vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
   const original = await importOriginal<Record<string, unknown>>();
@@ -55,6 +56,9 @@ vi.mock('@dobby/moli-code-sdk', async (importOriginal) => {
       };
       captured.push(instance);
       return {
+        initialized: initializationFailure
+          ? Promise.reject(initializationFailure)
+          : Promise.resolve(),
         interrupt: instance.interrupt,
         [Symbol.asyncIterator]() {
           return {
@@ -137,23 +141,83 @@ async function tick(): Promise<void> {
   await new Promise((resolve) => setTimeout(resolve, 0));
 }
 
+function performanceNames(ws: FakeWs): string[] {
+  return (ws.sent as unknown as Array<{ type: string; name?: string }>)
+    .filter((item) => item.type === 'performance_event')
+    .map((item) => item.name ?? '');
+}
+
 beforeEach(() => {
   captured.length = 0;
+  initializationFailure = null;
 });
 
 // --- tests ------------------------------------------------------------------
 
 describe('PaneSession', () => {
-  it('sends hello_ok on construction', () => {
+  it('emits query spawn and CLI readiness before hello_ok', async () => {
     const ws = new FakeWs();
     makeSession(ws);
-    expect(ws.sent[0]).toMatchObject({ type: 'hello_ok', version: 'test' });
+    expect(performanceNames(ws)).toEqual(['query_spawn_started']);
+    await tick();
+    expect(performanceNames(ws)).toEqual([
+      'query_spawn_started',
+      'cli_initialized',
+    ]);
+    expect(ws.sent.at(-1)).toMatchObject({ type: 'hello_ok' });
   });
 
-  it('starts the query lazily and feeds user messages into streaming input', async () => {
+  it('sends hello_ok after query prewarm is ready', async () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+    expect(ws.framesOfType('hello_ok')).toHaveLength(0);
+    await tick();
+    expect(ws.framesOfType('hello_ok')[0]).toMatchObject({
+      type: 'hello_ok',
+      version: 'test',
+    });
+  });
+
+  it('retries a message sent before prewarm initialization fails', async () => {
+    initializationFailure = new Error('prewarm failed');
     const ws = new FakeWs();
     const session = makeSession(ws);
-    expect(captured).toHaveLength(0);
+    session.onFrame(frame({ type: 'user_message', text: '다시 시도해줘' }));
+
+    initializationFailure = null;
+    await tick();
+    expect(performanceNames(ws)).toContain('query_prewarm_failed');
+    expect(ws.framesOfType('hello_ok')).toHaveLength(1);
+    expect(captured).toHaveLength(2);
+    const iterator = captured[1].prompt[Symbol.asyncIterator]();
+    await expect(iterator.next()).resolves.toMatchObject({
+      done: false,
+      value: { message: { content: '다시 시도해줘' } },
+    });
+  });
+
+  it('stops after one replacement query also fails to initialize', async () => {
+    initializationFailure = new Error('initialization unavailable');
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    session.onFrame(frame({ type: 'user_message', text: '한 번만 재시도' }));
+
+    await tick();
+    await tick();
+
+    expect(captured).toHaveLength(2);
+    expect(ws.framesOfType('error')).toContainEqual(
+      expect.objectContaining({ code: 'AGENT_START_FAILED' }),
+    );
+    expect(ws.framesOfType('turn_complete')).toContainEqual(
+      expect.objectContaining({ turnId: 1, isError: true }),
+    );
+  });
+
+  it('prewarms one query and feeds user messages into its streaming input', async () => {
+    const ws = new FakeWs();
+    const session = makeSession(ws);
+    expect(captured).toHaveLength(1);
 
     session.onFrame(frame({ type: 'user_message', text: '시트 요약해줘' }));
     expect(captured).toHaveLength(1);
@@ -397,11 +461,11 @@ describe('PaneSession', () => {
     expect(captured[0].interrupt).toHaveBeenCalled();
   });
 
-  it('answers ping with pong without starting a query', () => {
+  it('answers ping with pong without starting an additional query', () => {
     const ws = new FakeWs();
     const session = makeSession(ws);
     session.onFrame(frame({ type: 'ping' }));
     expect(ws.framesOfType('pong')).toHaveLength(1);
-    expect(captured).toHaveLength(0);
+    expect(captured).toHaveLength(1);
   });
 });

@@ -7,6 +7,10 @@ import {
   PROTOCOL_VERSION,
   type SidecarToPaneFrame,
 } from '../shared/messages.js';
+import {
+  EXCEL_API_VERSIONS,
+  supportsNativeFillDown,
+} from '../shared/excel-capabilities.js';
 import { createWsClient, type WsClient } from './ws-client.js';
 import {
   createChatUi,
@@ -17,8 +21,6 @@ import { createPermissionQueue } from './permission-ui.js';
 import { createOfficeExecutor, type ExcelExecutor } from './excel-executor.js';
 import { createMockExecutor } from './mock-executor.js';
 import { STRINGS } from './strings.ko.js';
-
-const EXCEL_API_VERSIONS = ['1.1', '1.2', '1.3', '1.4'];
 
 function isMockMode(): boolean {
   return window.location.search.indexOf('mock=1') >= 0;
@@ -212,21 +214,35 @@ function start(
 
 function boot(): void {
   if (isMockMode()) {
-    start(createMockExecutor(), { 'ExcelApi 1.1': true }, 'mock');
+    start(
+      createMockExecutor(),
+      { 'ExcelApi 1.1': true, 'ExcelApi 1.9': true },
+      'mock',
+    );
     return;
   }
   if (typeof Office !== 'undefined' && Office.onReady) {
     Office.onReady((info) => {
+      const requirementSets = detectRequirementSets();
       start(
-        createOfficeExecutor(),
-        detectRequirementSets(),
+        createOfficeExecutor({
+          supportsFillDown: supportsNativeFillDown(requirementSets),
+        }),
+        requirementSets,
         String(info.platform || ''),
       );
     });
   } else if (typeof Office !== 'undefined') {
     // Very old office.js: fall back to Office.initialize.
     Office.initialize = function () {
-      start(createOfficeExecutor(), detectRequirementSets(), 'legacy');
+      const requirementSets = detectRequirementSets();
+      start(
+        createOfficeExecutor({
+          supportsFillDown: supportsNativeFillDown(requirementSets),
+        }),
+        requirementSets,
+        'legacy',
+      );
     };
   } else {
     // office.js failed to load — run detached so the failure is visible.
