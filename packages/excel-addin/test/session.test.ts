@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { SDKMessage, SDKUserMessage } from '@dobby/moli-code-sdk';
+import { fileURLToPath } from 'node:url';
 import {
   PROTOCOL_VERSION,
   parseFrame,
@@ -7,6 +8,7 @@ import {
   type HelloFrame,
   type SidecarToPaneFrame,
 } from '../src/shared/messages.js';
+import type { SidecarConfig } from '../src/sidecar/config.js';
 
 // --- SDK mock -------------------------------------------------------------
 
@@ -113,23 +115,32 @@ const hello: HelloFrame = {
   uiLocale: 'ko-KR',
 };
 
-function makeSession(ws: FakeWs) {
+const PRODUCT_PROFILE_CATALOG_PATH = fileURLToPath(
+  new URL('../profiles/product-profiles.json', import.meta.url),
+);
+
+function makeConfig(overrides: Partial<SidecarConfig> = {}): SidecarConfig {
+  return {
+    port: 39215,
+    certPfxPath: '/dev/null',
+    certPassphrase: '',
+    workDir: `${process.env['TMPDIR'] ?? '/tmp'}/moli-excel-test-workspace`,
+    excludeTools: [],
+    logLevel: 'error',
+    edition: 'standard',
+    enabledGlobalTools: [],
+    ...overrides,
+  };
+}
+
+function makeSession(ws: FakeWs, config = makeConfig()) {
   return new PaneSession(
     ws as never,
     hello,
     {
       port: 39215,
       version: 'test',
-      config: {
-        port: 39215,
-        certPfxPath: '/dev/null',
-        certPassphrase: '',
-        workDir: `${process.env['TMPDIR'] ?? '/tmp'}/moli-excel-test-workspace`,
-        excludeTools: [],
-        logLevel: 'error',
-        edition: 'standard',
-        enabledGlobalTools: [],
-      },
+      config,
     },
     new Logger({ minLevel: 'error' }),
   );
@@ -157,6 +168,67 @@ beforeEach(() => {
 // --- tests ------------------------------------------------------------------
 
 describe('PaneSession', () => {
+  it('omits SDK agents for a legacy Standard session', () => {
+    const ws = new FakeWs();
+    makeSession(ws);
+
+    expect(captured).toHaveLength(1);
+    expect(captured[0].options).not.toHaveProperty('agents');
+  });
+
+  it('registers the enabled Global accounting specialist without changing excluded tools', () => {
+    const ws = new FakeWs();
+    makeSession(
+      ws,
+      makeConfig({
+        edition: 'global',
+        profileCatalogPath: PRODUCT_PROFILE_CATALOG_PATH,
+        enabledGlobalTools: ['accounting-report'],
+        excludeTools: ['ShellTool'],
+      }),
+    );
+
+    expect(captured).toHaveLength(1);
+    expect(captured[0].options).toMatchObject({
+      agents: [expect.objectContaining({ name: 'global-accounting-report' })],
+      excludeTools: ['ShellTool'],
+    });
+    expect(captured[0].options['excludeTools']).not.toContain('task');
+  });
+
+  it.each([
+    {
+      name: 'Global edition',
+      config: { edition: 'global' } as const,
+    },
+    {
+      name: 'enabled Global tools',
+      config: { enabledGlobalTools: ['accounting-report'] },
+    },
+  ])(
+    'reports an invalid product profile for $name without starting or retrying a query',
+    async ({ config: overrides }) => {
+      const ws = new FakeWs();
+      const config = makeConfig(overrides);
+      const session = makeSession(ws, config);
+
+      expect(captured).toHaveLength(0);
+      expect(ws.framesOfType('error')).toContainEqual(
+        expect.objectContaining({
+          code: 'PRODUCT_PROFILE_INVALID',
+          messageKo: expect.any(String),
+        }),
+      );
+
+      // A profile failure is terminal for this pane even if its config object
+      // is changed afterward; the pane must not re-resolve and start a query.
+      config.profileCatalogPath = PRODUCT_PROFILE_CATALOG_PATH;
+      session.onFrame(frame({ type: 'user_message', text: '보고서 만들어줘' }));
+      await tick();
+      expect(captured).toHaveLength(0);
+    },
+  );
+
   it('emits query spawn and CLI readiness before hello_ok', async () => {
     const ws = new FakeWs();
     makeSession(ws);
