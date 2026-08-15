@@ -13,7 +13,7 @@
  * Build machine needs internet once (node.exe download, cached); the deploy
  * zip itself installs with zero network access.
  *
- * Usage: node scripts/package-deploy.js [--skip-node] [--node-version vX.Y.Z]
+ * Usage: node scripts/package-deploy.js [--skip-node] [--no-archive] [--node-version vX.Y.Z]
  */
 
 import { execFileSync, spawnSync } from 'node:child_process';
@@ -32,6 +32,7 @@ const version = JSON.parse(
 ).version;
 
 const skipNode = process.argv.includes('--skip-node');
+const noArchive = process.argv.includes('--no-archive');
 const nodeVersionArgIdx = process.argv.indexOf('--node-version');
 // Match scripts/build_sea.sh: default to the build machine's Node version.
 const nodeVersion =
@@ -60,6 +61,9 @@ fs.copyFileSync(
   path.join(deployDir, 'sidecar', 'index.cjs'),
 );
 fs.cpSync(path.join(pkgRoot, 'manifest'), path.join(deployDir, 'manifest'), {
+  recursive: true,
+});
+fs.cpSync(path.join(pkgRoot, 'profiles'), path.join(deployDir, 'profiles'), {
   recursive: true,
 });
 fs.cpSync(path.join(pkgRoot, 'installer'), path.join(deployDir, 'installer'), {
@@ -95,29 +99,35 @@ if (!skipNode) {
   );
 }
 
-step('zip');
 const zipName = `moli-excel-addin-${version}-offline.zip`;
 const zipPath = path.join(pkgRoot, zipName);
-fs.rmSync(zipPath, { force: true });
-let zipRes = spawnSync('zip', ['-qr', zipPath, 'deploy'], {
-  cwd: pkgRoot,
-  stdio: 'inherit',
-});
-if (zipRes.status !== 0 && process.platform === 'win32') {
-  // Windows has no zip CLI, but bsdtar (bundled since Windows 10 1803)
-  // infers zip format from the -a flag and the .zip extension.
-  // Relative archive path: bsdtar parses "C:\..." as a remote host.
-  zipRes = spawnSync('tar', ['-a', '-c', '-f', zipName, 'deploy'], {
+if (noArchive) {
+  // A stale archive would contradict the explicit no-archive package result.
+  fs.rmSync(zipPath, { force: true });
+  console.log('[package] --no-archive: skipped zip/tar creation');
+} else {
+  step('zip');
+  fs.rmSync(zipPath, { force: true });
+  let zipRes = spawnSync('zip', ['-qr', zipPath, 'deploy'], {
     cwd: pkgRoot,
     stdio: 'inherit',
   });
-}
-if (zipRes.status !== 0) {
-  console.warn(
-    '[package] zip failed or unavailable; deploy/ folder is still complete',
-  );
-} else {
-  const mb = (fs.statSync(zipPath).size / 1024 / 1024).toFixed(1);
-  console.log(`[package] ${zipName} (${mb} MB)`);
+  if (zipRes.status !== 0 && process.platform === 'win32') {
+    // Windows has no zip CLI, but bsdtar (bundled since Windows 10 1803)
+    // infers zip format from the -a flag and the .zip extension.
+    // Relative archive path: bsdtar parses "C:\..." as a remote host.
+    zipRes = spawnSync('tar', ['-a', '-c', '-f', zipName, 'deploy'], {
+      cwd: pkgRoot,
+      stdio: 'inherit',
+    });
+  }
+  if (zipRes.status !== 0) {
+    console.warn(
+      '[package] zip failed or unavailable; deploy/ folder is still complete',
+    );
+  } else {
+    const mb = (fs.statSync(zipPath).size / 1024 / 1024).toFixed(1);
+    console.log(`[package] ${zipName} (${mb} MB)`);
+  }
 }
 console.log(`[package] deploy folder: ${deployDir}`);
