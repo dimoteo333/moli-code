@@ -5,6 +5,18 @@ import type { ProductEdition } from './config.js';
 
 const nonEmptyString = z.string().min(1);
 
+const ACCOUNTING_REPORT_ID = 'accounting-report';
+const ACCOUNTING_TOOL_ALLOWLIST = [
+  'mcp__excel__excel_get_workbook_overview',
+  'mcp__excel__excel_read_range',
+  'mcp__excel__excel_find',
+  'mcp__excel__excel_get_selection',
+  'mcp__excel__excel_add_worksheet',
+  'mcp__excel__excel_write_range',
+  'mcp__excel__excel_set_formulas',
+  'mcp__excel__excel_format_range',
+];
+
 const productProfileCatalogSchema = z.object({
   schemaVersion: z.literal(1),
   editions: z.array(
@@ -98,6 +110,7 @@ export function loadProductProfileCatalog(
     catalog.globalTools.map((globalTool) => globalTool.id),
     'Global tool',
   );
+  assertAccountingReportAllowlist(catalog);
 
   const knownGlobalToolIds = new Set(
     catalog.globalTools.map((globalTool) => globalTool.id),
@@ -168,6 +181,30 @@ function assertUniqueIds(ids: readonly string[], kind: string): void {
     }
     uniqueIds.add(id);
   }
+}
+
+function assertAccountingReportAllowlist(catalog: ProductProfileCatalog): void {
+  const accountingReport = catalog.globalTools.find(
+    (globalTool) => globalTool.id === ACCOUNTING_REPORT_ID,
+  );
+  if (
+    accountingReport &&
+    !hasExactToolOrder(accountingReport.agent.tools, ACCOUNTING_TOOL_ALLOWLIST)
+  ) {
+    throw new ProductProfileError(
+      'Accounting-report tools must exactly match the approved Excel allowlist in order.',
+    );
+  }
+}
+
+function hasExactToolOrder(
+  actual: readonly string[],
+  expected: readonly string[],
+): boolean {
+  return (
+    actual.length === expected.length &&
+    actual.every((toolName, index) => toolName === expected[index])
+  );
 }
 
 function formatError(error: unknown): string {

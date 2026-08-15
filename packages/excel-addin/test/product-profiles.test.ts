@@ -105,6 +105,19 @@ describe('product profiles', () => {
     );
   });
 
+  it('rejects accounting-report tools outside the approved allowlist', () => {
+    const rawCatalog = loadRawCatalog();
+    const globalTools = rawCatalog.globalTools as Array<
+      Record<string, unknown>
+    >;
+    const accountingAgent = globalTools[0].agent as Record<string, unknown>;
+    accountingAgent.tools = [...ACCOUNTING_TOOL_ALLOWLIST, 'ShellTool'];
+
+    expect(() => loadProductProfileCatalog(writeCatalog(rawCatalog))).toThrow(
+      ProductProfileError,
+    );
+  });
+
   it('isolates valid Global tool IDs when Standard configuration is tampered', () => {
     const catalog = loadProductProfileCatalog(CATALOG_PATH);
 
