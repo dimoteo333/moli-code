@@ -63,9 +63,13 @@ if (-not $PSBoundParameters.ContainsKey('Edition')) {
         Write-Host '설치할 제품을 선택하세요:'
         Write-Host "  1. $($StandardProfile.menuLabel)"
         Write-Host "  2. $($GlobalProfile.menuLabel)"
-        $choice = Read-Host '선택 [1-2]'
+        try {
+            $choice = Read-Host '선택 [1-2]'
+        } catch {
+            throw '비대화형 PowerShell에서는 제품 에디션을 선택할 수 없습니다. -Edition Standard 또는 -Edition Global을 지정하세요.'
+        }
         if ($null -eq $choice) {
-            throw 'Edition input is unavailable. Pass -Edition Standard or -Edition Global.'
+            throw '제품 에디션 입력을 사용할 수 없습니다. -Edition Standard 또는 -Edition Global을 지정하세요.'
         }
         if ($choice -eq '1') {
             $Edition = 'Standard'
@@ -261,12 +265,6 @@ if ($healthy) {
 } else {
     Write-Warning "사이드카가 아직 응답하지 않습니다. 로그 확인: $InstallDir\logs\sidecar.log"
 }
-Write-Host '다음 순서로 사용을 시작하세요:'
-Write-Host '  1. 실행 중인 Excel을 모두 닫고 다시 시작합니다.'
-if ($UseCatalog) {
-    Write-Host '  2. 삽입 > 내 추가 기능 > [공유 폴더] 탭 > "몰리 코드 for Excel" 선택'
-} else {
-    Write-Host '  2. 삽입 > 내 추가 기능 > [개발자] 탭(또는 목록) > "몰리 코드 for Excel" 선택'
-    Write-Host '     (개발자 탭이 보이지 않으면 -UseCatalog 옵션으로 다시 설치해 보세요. 관리자 권한 필요)'
+foreach ($line in Get-MoliPostInstallGuidance -Plan $InstallPlan -UseCatalog:$UseCatalog) {
+    Write-Host $line
 }
-Write-Host "  3. 문제 발생 시 로그: $InstallDir\logs\sidecar.log"

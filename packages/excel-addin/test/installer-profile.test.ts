@@ -4,6 +4,10 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  loadProductProfileCatalog,
+  ProductProfileError,
+} from '../src/sidecar/product-profiles.js';
 
 const PACKAGE_ROOT = fileURLToPath(new URL('..', import.meta.url));
 const INSTALLER_PATH = path.join(PACKAGE_ROOT, 'installer', 'install.ps1');
@@ -118,6 +122,25 @@ describe('edition-aware PowerShell installer', () => {
     return globalTools[0].agent as Record<string, unknown>;
   }
 
+  function expectCatalogRejectedByBothValidators(
+    payload: ReturnType<typeof copyPlanPayload>,
+  ): void {
+    expect(() => loadProductProfileCatalog(payload.catalogPath)).toThrow(
+      ProductProfileError,
+    );
+
+    const installDir = path.join(path.dirname(payload.installerPath), 'output');
+    const result = runInstaller(
+      payload.installerPath,
+      makePlanArgs(installDir, 'Global'),
+    );
+    expect(
+      result.status,
+      `PowerShell validator unexpectedly accepted the catalog.\nstdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
+    ).not.toBe(0);
+    expect(fs.existsSync(installDir)).toBe(false);
+  }
+
   function renderManifest(
     payload: ReturnType<typeof copyPlanPayload>,
     edition: 'Standard' | 'Global',
@@ -205,6 +228,58 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     ]);
   }
 
+  function getPostInstallGuidance(
+    payload: ReturnType<typeof copyPlanPayload>,
+    edition: 'Standard' | 'Global',
+    installDir: string,
+    useCatalog: boolean,
+  ): string[] {
+    const runnerPath = path.join(
+      path.dirname(payload.installerPath),
+      'post-install-guidance.test.ps1',
+    );
+    fs.writeFileSync(
+      runnerPath,
+      `param(
+  [string]$CatalogPath,
+  [string]$TemplatePath,
+  [string]$Edition,
+  [string]$InstallDir,
+  [switch]$UseCatalog
+)
+$ErrorActionPreference = 'Stop'
+Import-Module (Join-Path $PSScriptRoot 'product-profile.psm1') -Force
+$catalog = Get-MoliProductProfileCatalog -CatalogPath $CatalogPath
+$resolved = Resolve-MoliInstallPlan -Catalog $catalog -Edition $Edition -InstallDir $InstallDir -Port 39215 -Version '0.5.0' -AddinId '51ef4b60-29f7-442c-99b4-93419c6e68e2' -ManifestTemplatePath $TemplatePath
+$lines = @(Get-MoliPostInstallGuidance -Plan $resolved.Plan -UseCatalog:$UseCatalog)
+$json = ConvertTo-Json -InputObject $lines -Compress
+$bytes = [Text.Encoding]::UTF8.GetBytes($json)
+Write-Output ('MOLI_GUIDANCE_BASE64=' + [Convert]::ToBase64String($bytes))
+`,
+      'utf8',
+    );
+    const result = runInstaller(runnerPath, [
+      '-CatalogPath',
+      payload.catalogPath,
+      '-TemplatePath',
+      payload.manifestPath,
+      '-Edition',
+      edition,
+      '-InstallDir',
+      installDir,
+      ...(useCatalog ? ['-UseCatalog'] : []),
+    ]);
+    expectSuccess(result);
+    const prefix = 'MOLI_GUIDANCE_BASE64=';
+    const encoded = result.stdout
+      .split(/\r?\n/u)
+      .find((line) => line.startsWith(prefix));
+    expect(encoded, `stdout:\n${result.stdout}`).toBeDefined();
+    return JSON.parse(
+      Buffer.from(encoded!.slice(prefix.length), 'base64').toString('utf8'),
+    ) as string[];
+  }
+
   function readPowerShellJson(filePath: string): Record<string, unknown> {
     return JSON.parse(
       fs.readFileSync(filePath, 'utf8').replace(/^\uFEFF/u, ''),
@@ -284,6 +359,98 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     expect(fs.existsSync(installDir)).toBe(false);
   });
 
+  it('accepts the shipped catalog in both runtime and PowerShell validators', () => {
+    const payload = copyPlanPayload();
+    const installDir = path.join(path.dirname(payload.installerPath), 'output');
+
+    expect(() => loadProductProfileCatalog(payload.catalogPath)).not.toThrow();
+    const result = runInstaller(
+      payload.installerPath,
+      makePlanArgs(installDir, 'Global'),
+    );
+
+    expectSuccess(result);
+    expect(parsePlan(result.stdout).edition).toBe('global');
+    expect(fs.existsSync(installDir)).toBe(false);
+  });
+
+  it('rejects widened accounting tools in both validators', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    const agent = getGlobalToolAgent(catalog);
+    agent.tools = [...(agent.tools as string[]), 'ShellTool'];
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
+  it('rejects whitespace-only required strings in both validators', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    getGlobalToolAgent(catalog).description = ' \t ';
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
+  it.each([
+    '/assets/icon-32.png',
+    'assets/../icon-32.png',
+    'https://example.test/icon-32.png',
+    'assets\\icon-32.png',
+    'C:/assets/icon-32.png',
+    'icons/icon-32.png',
+    'assets//icon-32.png',
+  ])('rejects unsafe icon path %s in both validators', (unsafeIconPath) => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    const editions = catalog.editions as Array<Record<string, unknown>>;
+    const icons = editions[0].icons as Record<string, unknown>;
+    icons.app32 = unsafeIconPath;
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
+  it('rejects duplicate Global agent names in both validators', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    const globalTools = catalog.globalTools as Array<Record<string, unknown>>;
+    for (const id of ['future-report-one', 'future-report-two']) {
+      const futureTool = structuredClone(globalTools[0]);
+      futureTool.id = id;
+      (futureTool.agent as Record<string, unknown>).name =
+        'future-report-agent';
+      globalTools.push(futureTool);
+    }
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
+  it('rejects an altered accounting-report agent name in both validators', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    getGlobalToolAgent(catalog).name = 'renamed-accounting-report';
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
+  it('rejects a replacement ID claiming the reserved accounting agent name in both validators', () => {
+    const payload = copyPlanPayload();
+    const catalog = loadCatalog(payload.catalogPath);
+    const globalTools = catalog.globalTools as Array<Record<string, unknown>>;
+    globalTools[0].id = 'replacement-accounting';
+    const agent = getGlobalToolAgent(catalog);
+    agent.tools = [...(agent.tools as string[]), 'ShellTool'];
+    const editions = catalog.editions as Array<Record<string, unknown>>;
+    editions[1].defaultGlobalTools = ['replacement-accounting'];
+    fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+    expectCatalogRejectedByBothValidators(payload);
+  });
+
   it('retries an invalid interactive choice and selects Global from stdin', () => {
     const parentRoot = makeTemporaryRoot();
     const installDir = path.join(parentRoot, 'interactive-install');
@@ -341,6 +508,30 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     expect(result.status).not.toBe(0);
     expect(`${result.stdout}\n${result.stderr}`).toMatch(
       /edition.+required.+noninteractive/iu,
+    );
+    expect(fs.existsSync(installDir)).toBe(false);
+  });
+
+  it('fails with Korean edition guidance in a real PowerShell NonInteractive host', () => {
+    const parentRoot = makeTemporaryRoot();
+    const installDir = path.join(parentRoot, 'real-noninteractive-install');
+    const result = spawnSync(
+      'powershell.exe',
+      [
+        '-NoProfile',
+        '-NonInteractive',
+        '-ExecutionPolicy',
+        'Bypass',
+        '-File',
+        INSTALLER_PATH,
+        ...makePlanArgs(installDir),
+      ],
+      { encoding: 'utf8' },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(`${result.stdout}\n${result.stderr}`).toContain(
+      '비대화형 PowerShell에서는 제품 에디션을 선택할 수 없습니다. -Edition Standard 또는 -Edition Global을 지정하세요.',
     );
     expect(fs.existsSync(installDir)).toBe(false);
   });
@@ -433,18 +624,8 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     const catalog = loadCatalog(payload.catalogPath);
     getGlobalToolAgent(catalog)[field] = value;
     fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
-    const installDir = path.join(path.dirname(payload.installerPath), 'output');
 
-    const result = runInstaller(
-      payload.installerPath,
-      makePlanArgs(installDir, 'Global'),
-    );
-
-    expect(result.status).not.toBe(0);
-    expect(`${result.stdout}\n${result.stderr}`).toMatch(
-      new RegExp(`${field}.+must be an object`, 'iu'),
-    );
-    expect(fs.existsSync(installDir)).toBe(false);
+    expectCatalogRejectedByBothValidators(payload);
   });
 
   it('accepts optional agent settings with the same field types as the runtime schema', () => {
@@ -456,6 +637,7 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
     const installDir = path.join(path.dirname(payload.installerPath), 'output');
 
+    expect(() => loadProductProfileCatalog(payload.catalogPath)).not.toThrow();
     const result = runInstaller(
       payload.installerPath,
       makePlanArgs(installDir, 'Global'),
@@ -599,6 +781,38 @@ Invoke-MoliFileDeployment -PayloadPath $PayloadPath -Plan $resolved.Plan -Render
     );
     expect(manifest).not.toMatch(/\{\{[^{}]+\}\}/u);
   });
+
+  it.each([
+    {
+      edition: 'Standard' as const,
+      displayName: 'Molicode',
+      useCatalog: false,
+    },
+    {
+      edition: 'Global' as const,
+      displayName: 'Molicode for Global',
+      useCatalog: true,
+    },
+  ])(
+    'uses the selected $edition plan displayName in post-install guidance',
+    ({ edition, displayName, useCatalog }) => {
+      const payload = copyPlanPayload();
+      const installDir = path.join(
+        path.dirname(payload.installerPath),
+        'output',
+      );
+
+      const guidance = getPostInstallGuidance(
+        payload,
+        edition,
+        installDir,
+        useCatalog,
+      ).join('\n');
+
+      expect(guidance).toContain(`"${displayName}" 선택`);
+      expect(guidance).not.toContain('"몰리 코드 for Excel" 선택');
+    },
+  );
 
   it('rejects an unresolved manifest placeholder before mutation', () => {
     const payload = copyPlanPayload();

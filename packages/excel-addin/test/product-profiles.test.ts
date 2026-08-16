@@ -7,6 +7,7 @@ import {
   loadProductProfileCatalog,
   ProductProfileError,
   resolveEnabledGlobalAgents,
+  type ProductProfileCatalog,
 } from '../src/sidecar/product-profiles.js';
 
 const CATALOG_PATH = fileURLToPath(
@@ -157,6 +158,28 @@ describe('product profiles', () => {
         edition: 'standard',
         enabledGlobalTools: ['unknown-tool'],
       }),
+    ).toThrow(ProductProfileError);
+  });
+
+  it('does not resolve a fake reserved accounting agent with extra tools', () => {
+    const rawCatalog = loadRawCatalog();
+    const globalTools = rawCatalog.globalTools as Array<
+      Record<string, unknown>
+    >;
+    globalTools[0].id = 'replacement-accounting';
+    const agent = globalTools[0].agent as Record<string, unknown>;
+    agent.tools = [...(agent.tools as string[]), 'ShellTool'];
+    const editions = rawCatalog.editions as Array<Record<string, unknown>>;
+    editions[1].defaultGlobalTools = ['replacement-accounting'];
+
+    expect(() =>
+      resolveEnabledGlobalAgents(
+        rawCatalog as unknown as ProductProfileCatalog,
+        {
+          edition: 'global',
+          enabledGlobalTools: ['replacement-accounting'],
+        },
+      ),
     ).toThrow(ProductProfileError);
   });
 });

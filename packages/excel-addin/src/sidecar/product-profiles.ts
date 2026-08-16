@@ -3,9 +3,19 @@ import type { SubagentConfig } from '@dobby/moli-code-sdk';
 import { z } from 'zod';
 import type { ProductEdition } from './config.js';
 
-const nonEmptyString = z.string().min(1);
+const nonEmptyString = z.string().refine((value) => /\S/u.test(value), {
+  message: 'Required strings must contain a non-whitespace character.',
+});
+
+const safeIconPath = z
+  .string()
+  .regex(
+    /^assets\/(?:[A-Za-z0-9][A-Za-z0-9._-]*)(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)*$/u,
+    'Icon paths must be normalized relative paths under assets/.',
+  );
 
 const ACCOUNTING_REPORT_ID = 'accounting-report';
+const ACCOUNTING_REPORT_AGENT_NAME = 'global-accounting-report';
 const ACCOUNTING_TOOL_ALLOWLIST = [
   'mcp__excel__excel_get_workbook_overview',
   'mcp__excel__excel_read_range',
@@ -26,13 +36,13 @@ const productProfileCatalogSchema = z.object({
       displayName: nonEmptyString,
       description: nonEmptyString,
       icons: z.object({
-        app16: nonEmptyString,
-        app32: nonEmptyString,
-        app64: nonEmptyString,
-        app80: nonEmptyString,
-        ribbon16: nonEmptyString,
-        ribbon32: nonEmptyString,
-        ribbon80: nonEmptyString,
+        app16: safeIconPath,
+        app32: safeIconPath,
+        app64: safeIconPath,
+        app80: safeIconPath,
+        ribbon16: safeIconPath,
+        ribbon32: safeIconPath,
+        ribbon80: safeIconPath,
       }),
       defaultGlobalTools: z.array(nonEmptyString),
     }),
@@ -110,7 +120,7 @@ export function loadProductProfileCatalog(
     catalog.globalTools.map((globalTool) => globalTool.id),
     'Global tool',
   );
-  assertAccountingReportAllowlist(catalog);
+  assertGlobalToolConstraints(catalog);
 
   const knownGlobalToolIds = new Set(
     catalog.globalTools.map((globalTool) => globalTool.id),
@@ -136,6 +146,8 @@ export function resolveEnabledGlobalAgents(
   catalog: ProductProfileCatalog,
   settings: GlobalAgentSettings,
 ): SubagentConfig[] {
+  assertGlobalToolConstraints(catalog);
+
   const globalToolsById = new Map(
     catalog.globalTools.map((globalTool) => [globalTool.id, globalTool]),
   );
@@ -195,6 +207,38 @@ function assertAccountingReportAllowlist(catalog: ProductProfileCatalog): void {
       'Accounting-report tools must exactly match the approved Excel allowlist in order.',
     );
   }
+}
+
+function assertGlobalToolConstraints(catalog: ProductProfileCatalog): void {
+  const agentNames = new Set<string>();
+  for (const globalTool of catalog.globalTools) {
+    const agentName = globalTool.agent.name;
+    if (agentNames.has(agentName)) {
+      throw new ProductProfileError(
+        `Duplicate Global agent name "${agentName}".`,
+      );
+    }
+    agentNames.add(agentName);
+
+    if (
+      globalTool.id === ACCOUNTING_REPORT_ID &&
+      agentName !== ACCOUNTING_REPORT_AGENT_NAME
+    ) {
+      throw new ProductProfileError(
+        `Global tool "${ACCOUNTING_REPORT_ID}" must use agent name "${ACCOUNTING_REPORT_AGENT_NAME}".`,
+      );
+    }
+    if (
+      globalTool.id !== ACCOUNTING_REPORT_ID &&
+      agentName === ACCOUNTING_REPORT_AGENT_NAME
+    ) {
+      throw new ProductProfileError(
+        `Agent name "${ACCOUNTING_REPORT_AGENT_NAME}" is reserved for Global tool "${ACCOUNTING_REPORT_ID}".`,
+      );
+    }
+  }
+
+  assertAccountingReportAllowlist(catalog);
 }
 
 function hasExactToolOrder(

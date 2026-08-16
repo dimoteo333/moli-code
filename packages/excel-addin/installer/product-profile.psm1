@@ -1,4 +1,4 @@
-Set-StrictMode -Version Latest
+﻿Set-StrictMode -Version Latest
 
 $script:RequiredIconFields = @(
     'app16',
@@ -8,6 +8,18 @@ $script:RequiredIconFields = @(
     'ribbon16',
     'ribbon32',
     'ribbon80'
+)
+$script:AccountingReportId = 'accounting-report'
+$script:AccountingReportAgentName = 'global-accounting-report'
+$script:AccountingToolAllowlist = @(
+    'mcp__excel__excel_get_workbook_overview',
+    'mcp__excel__excel_read_range',
+    'mcp__excel__excel_find',
+    'mcp__excel__excel_get_selection',
+    'mcp__excel__excel_add_worksheet',
+    'mcp__excel__excel_write_range',
+    'mcp__excel__excel_set_formulas',
+    'mcp__excel__excel_format_range'
 )
 
 function Test-MoliProperty {
@@ -99,6 +111,19 @@ function Assert-MoliUniqueIds {
     }
 }
 
+function Assert-MoliUniqueAgentNames {
+    param(
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]]$Names
+    )
+
+    $seen = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
+    foreach ($name in $Names) {
+        if (-not $seen.Add($name)) {
+            throw "Invalid product profile catalog: duplicate Global agent name `"$name`"."
+        }
+    }
+}
+
 function Assert-MoliRelativeIconPath {
     param(
         [Parameter(Mandatory = $false)]$Value,
@@ -106,13 +131,28 @@ function Assert-MoliRelativeIconPath {
     )
 
     Assert-MoliNonEmptyString -Value $Value -Context $Context
-    $segments = $Value -split '/'
-    $isSafe = $Value -cmatch '^[A-Za-z0-9][A-Za-z0-9._/-]*$' -and
-        $Value -notmatch '//' -and
-        -not ($segments -contains '.') -and
-        -not ($segments -contains '..')
+    $isSafe = $Value -cmatch '^assets/(?:[A-Za-z0-9][A-Za-z0-9._-]*)(?:/[A-Za-z0-9][A-Za-z0-9._-]*)*$'
     if (-not $isSafe) {
-        throw "Invalid product profile catalog: $Context must be a safe relative icon path."
+        throw "Invalid product profile catalog: $Context must be a safe normalized relative icon path under assets/."
+    }
+}
+
+function Assert-MoliAccountingToolAllowlist {
+    param(
+        [Parameter(Mandatory = $true)][string]$ToolId,
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][System.Array]$Tools
+    )
+
+    if ($ToolId -cne $script:AccountingReportId) {
+        return
+    }
+    if ($Tools.Count -ne $script:AccountingToolAllowlist.Count) {
+        throw 'Invalid product profile catalog: accounting-report tools must exactly match the approved Excel allowlist in order.'
+    }
+    for ($index = 0; $index -lt $Tools.Count; $index++) {
+        if ($Tools[$index] -cne $script:AccountingToolAllowlist[$index]) {
+            throw 'Invalid product profile catalog: accounting-report tools must exactly match the approved Excel allowlist in order.'
+        }
     }
 }
 
@@ -233,6 +273,7 @@ function Get-MoliProductProfileCatalog {
     Assert-MoliUniqueIds -Ids $editionIds -Kind 'edition'
 
     $globalToolIds = @()
+    $globalAgentNames = @()
     for ($toolIndex = 0; $toolIndex -lt $globalTools.Count; $toolIndex++) {
         $globalTool = $globalTools[$toolIndex]
         $toolContext = "globalTools[$toolIndex]"
@@ -248,13 +289,23 @@ function Get-MoliProductProfileCatalog {
             $value = Get-MoliRequiredProperty -Object $agent -Name $name -Context "$toolContext.agent"
             Assert-MoliNonEmptyString -Value $value -Context "$toolContext.agent.$name"
         }
+        $agentName = $agent.name
+        $globalAgentNames += $agentName
+        if ($toolId -ceq $script:AccountingReportId -and $agentName -cne $script:AccountingReportAgentName) {
+            throw "Invalid product profile catalog: Global tool `"$($script:AccountingReportId)`" must use agent name `"$($script:AccountingReportAgentName)`"."
+        }
+        if ($toolId -cne $script:AccountingReportId -and $agentName -ceq $script:AccountingReportAgentName) {
+            throw "Invalid product profile catalog: agent name `"$($script:AccountingReportAgentName)`" is reserved for Global tool `"$($script:AccountingReportId)`"."
+        }
         foreach ($name in @('tools', 'systemPromptLines')) {
             [System.Array]$values = Get-MoliRequiredArray -Object $agent -Name $name -Context "$toolContext.agent" -NonEmpty
             Assert-MoliStringArray -Values $values -Context "$toolContext.agent.$name" -NonEmpty
         }
+        Assert-MoliAccountingToolAllowlist -ToolId $toolId -Tools $agent.tools
         Assert-MoliOptionalObjectSettings -Agent $agent -AgentContext "$toolContext.agent"
     }
     Assert-MoliUniqueIds -Ids $globalToolIds -Kind 'Global tool'
+    Assert-MoliUniqueAgentNames -Names $globalAgentNames
 
     $knownGlobalToolIds = New-Object 'System.Collections.Generic.HashSet[string]' ([System.StringComparer]::Ordinal)
     foreach ($toolId in $globalToolIds) {
@@ -428,4 +479,31 @@ function Invoke-MoliFileDeployment {
     Set-Content -LiteralPath (Join-Path $installDir 'manifest\manifest.xml') -Value $RenderedManifest -Encoding UTF8
 }
 
-Export-ModuleMember -Function Get-MoliProductProfileCatalog, Resolve-MoliInstallPlan, Invoke-MoliFileDeployment
+function Get-MoliPostInstallGuidance {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory = $true)]$Plan,
+        [switch]$UseCatalog
+    )
+
+    Assert-MoliNonEmptyString -Value $Plan.displayName -Context 'install plan displayName'
+
+    $addInLocation = if ($UseCatalog) {
+        '[공유 폴더] 탭'
+    } else {
+        '[개발자] 탭(또는 목록)'
+    }
+    $guidance = @(
+        '다음 순서로 사용을 시작하세요:',
+        '  1. 실행 중인 Excel을 모두 닫고 다시 시작합니다.',
+        "  2. 삽입 > 내 추가 기능 > $addInLocation > `"$($Plan.displayName)`" 선택"
+    )
+    if (-not $UseCatalog) {
+        $guidance += '     (개발자 탭이 보이지 않으면 -UseCatalog 옵션으로 다시 설치해 보세요. 관리자 권한 필요)'
+    }
+    $guidance += "  3. 문제 발생 시 로그: $($Plan.installDir)\logs\sidecar.log"
+
+    return $guidance
+}
+
+Export-ModuleMember -Function Get-MoliProductProfileCatalog, Resolve-MoliInstallPlan, Invoke-MoliFileDeployment, Get-MoliPostInstallGuidance

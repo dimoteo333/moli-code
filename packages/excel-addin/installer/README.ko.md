@@ -1,6 +1,6 @@
-# 몰리 코드 for Excel — 폐쇄망 설치 안내
+# Molicode Excel 추가 기능 — 폐쇄망 설치 안내
 
-Excel 2016 이상(Windows)에서 동작하는 몰리 코드 AI 어시스턴트 작업창 추가 기능입니다.
+Excel 2016 이상(Windows)에서 동작하는 Molicode AI 어시스턴트 작업창 추가 기능입니다.
 모든 자산(office.js 포함)이 로컬에 포함되어 있어 **외부 인터넷 연결 없이** 동작합니다.
 
 ## 구성
@@ -23,7 +23,7 @@ powershell -ExecutionPolicy Bypass -File .\installer\install.ps1
 ```
 
 3. 설치 중 **Windows 보안 확인창**이 뜨면 [예]를 누릅니다 (localhost HTTPS 인증서 신뢰).
-4. Excel을 다시 시작한 뒤 **삽입 > 내 추가 기능**에서 "몰리 코드 for Excel"을 선택합니다.
+4. Excel을 다시 시작한 뒤 **삽입 > 내 추가 기능**에서 설치 때 선택한 제품 이름("Molicode" 또는 "Molicode for Global")을 선택합니다.
 
 설치를 시작하면 변경 전에 설치할 에디션을 선택합니다.
 
