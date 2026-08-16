@@ -38,6 +38,11 @@ import {
   excelToolBaseName,
 } from './excel-mcp.js';
 import type { Logger } from './logger.js';
+import {
+  loadProductProfileCatalog,
+  ProductProfileError,
+  resolveEnabledGlobalAgents,
+} from './product-profiles.js';
 
 export interface SessionEnv {
   port: number;
@@ -100,6 +105,10 @@ interface PendingPermission {
   toolName: string;
 }
 
+type ProductProfileResolution =
+  | { agents: NonNullable<QueryOptions['agents']> }
+  | { error: ProductProfileError };
+
 export class PaneSession {
   private readonly sessionId = randomUUID();
   private readonly rpc: RpcManager;
@@ -113,6 +122,7 @@ export class PaneSession {
   private turnId = 0;
   private firstDeltaTurn = 0;
   private disposed = false;
+  private productProfileResolution: ProductProfileResolution | null = null;
   private readonly sessionStartedAt = performance.now();
 
   constructor(
@@ -143,12 +153,26 @@ export class PaneSession {
           if (this.queryInstance === q) {
             this.queryInstance = null;
           }
+          if (this.reportProductProfileFailure(err)) {
+            this.emitPerformance(
+              'query_prewarm_failed',
+              undefined,
+              String(err),
+            );
+            this.sendHello();
+            return;
+          }
           this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
           this.emitPerformance('query_prewarm_failed', undefined, String(err));
           this.sendHello();
         },
       );
     } catch (err) {
+      if (this.reportProductProfileFailure(err)) {
+        this.emitPerformance('query_prewarm_failed', undefined, String(err));
+        this.sendHello();
+        return;
+      }
       this.logger.warn(`Agent session prewarm failed: ${String(err)}`);
       this.emitPerformance('query_prewarm_failed', undefined, String(err));
       this.sendHello();
@@ -241,6 +265,9 @@ export class PaneSession {
     try {
       q = this.ensureQuery();
     } catch (err) {
+      if (this.reportProductProfileFailure(err, turnId)) {
+        return;
+      }
       this.reportAgentStartFailure(turnId, err);
       return;
     }
@@ -278,8 +305,14 @@ export class PaneSession {
             const replacement = this.ensureQuery();
             this.enqueueAfterInitialization(replacement, text, turnId, false);
           } catch (replacementErr) {
+            if (this.reportProductProfileFailure(replacementErr, turnId)) {
+              return;
+            }
             this.reportAgentStartFailure(turnId, replacementErr);
           }
+          return;
+        }
+        if (this.reportProductProfileFailure(err, turnId)) {
           return;
         }
         this.reportAgentStartFailure(turnId, err);
@@ -306,11 +339,70 @@ export class PaneSession {
     });
   }
 
+  private reportProductProfileFailure(err: unknown, turnId?: number): boolean {
+    if (!(err instanceof ProductProfileError)) {
+      return false;
+    }
+    this.logger.error('Invalid product profile', err);
+    this.send({
+      v: PROTOCOL_VERSION,
+      type: 'error',
+      code: 'PRODUCT_PROFILE_INVALID',
+      messageKo: `제품 프로필 구성이 올바르지 않습니다. ${err.message}`,
+    });
+    if (turnId !== undefined) {
+      this.send({
+        v: PROTOCOL_VERSION,
+        type: 'turn_complete',
+        turnId,
+        isError: true,
+        errorMessage: '제품 프로필 구성 오류',
+      });
+    }
+    return true;
+  }
+
+  private resolveProductProfileAgents(): NonNullable<QueryOptions['agents']> {
+    if (this.productProfileResolution) {
+      if ('error' in this.productProfileResolution) {
+        throw this.productProfileResolution.error;
+      }
+      return this.productProfileResolution.agents;
+    }
+
+    const { edition, enabledGlobalTools, profileCatalogPath } = this.env.config;
+    try {
+      let agents: NonNullable<QueryOptions['agents']>;
+      if (!profileCatalogPath) {
+        if (edition !== 'standard' || enabledGlobalTools.length > 0) {
+          throw new ProductProfileError(
+            'A product profile catalog path is required for Global tools.',
+          );
+        }
+        agents = [];
+      } else {
+        const catalog = loadProductProfileCatalog(profileCatalogPath);
+        agents = resolveEnabledGlobalAgents(catalog, {
+          edition,
+          enabledGlobalTools,
+        });
+      }
+      this.productProfileResolution = { agents };
+      return agents;
+    } catch (err) {
+      if (err instanceof ProductProfileError) {
+        this.productProfileResolution = { error: err };
+      }
+      throw err;
+    }
+  }
+
   private ensureQuery(): Query {
     if (this.queryInstance) {
       return this.queryInstance;
     }
     const config = this.env.config;
+    const agents = this.resolveProductProfileAgents();
     fs.mkdirSync(config.workDir, { recursive: true });
 
     const options: QueryOptions = {
@@ -319,6 +411,7 @@ export class PaneSession {
       model: config.model,
       permissionMode: 'default',
       excludeTools: config.excludeTools,
+      ...(agents.length > 0 ? { agents } : {}),
       includePartialMessages: true,
       sessionId: this.sessionId,
       abortController: this.abortController,

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "editions": [
+    {
+      "id": "standard",
+      "menuLabel": "Molicode",
+      "displayName": "Molicode",
+      "description": "Offline Molicode AI assistant for Excel.",
+      "icons": {
+        "app16": "assets/icon-16.png",
+        "app32": "assets/icon-32.png",
+        "app64": "assets/icon-64.png",
+        "app80": "assets/icon-80.png",
+        "ribbon16": "assets/ribbon-16.png",
+        "ribbon32": "assets/ribbon-32.png",
+        "ribbon80": "assets/ribbon-80.png"
+      },
+      "defaultGlobalTools": []
+    },
+    {
+      "id": "global",
+      "menuLabel": "Molicode for Global",
+      "displayName": "Molicode for Global",
+      "description": "Offline Molicode for Global AI assistant for Excel with specialized accounting reporting.",
+      "icons": {
+        "app16": "assets/global-icon-16.png",
+        "app32": "assets/global-icon-32.png",
+        "app64": "assets/global-icon-64.png",
+        "app80": "assets/global-icon-80.png",
+        "ribbon16": "assets/global-ribbon-16.png",
+        "ribbon32": "assets/global-ribbon-32.png",
+        "ribbon80": "assets/global-ribbon-80.png"
+      },
+      "defaultGlobalTools": ["accounting-report"]
+    }
+  ],
+  "globalTools": [
+    {
+      "id": "accounting-report",
+      "agent": {
+        "name": "global-accounting-report",
+        "description": "Use proactively for accounting, ledger, financial close, reconciliation, expense, trial-balance, or financial-summary report requests in the open Excel workbook.",
+        "tools": [
+          "mcp__excel__excel_get_workbook_overview",
+          "mcp__excel__excel_read_range",
+          "mcp__excel__excel_find",
+          "mcp__excel__excel_get_selection",
+          "mcp__excel__excel_add_worksheet",
+          "mcp__excel__excel_write_range",
+          "mcp__excel__excel_set_formulas",
+          "mcp__excel__excel_format_range"
+        ],
+        "systemPromptLines": [
+          "You are the Molicode for Global accounting-report specialist operating on the open Excel workbook.",
+          "Inspect the workbook and identify the accounting source sheet and range before proposing or performing writes.",
+          "If required columns, reporting period, currency, or accounting basis are ambiguous, do not write anything; return one precise clarification question to the parent agent.",
+          "Never invent, estimate, silently repair, or overwrite source accounting values.",
+          "Create a new worksheet named 회계보고서. If it exists, use 회계보고서 (2), then (3), increasing until an unused name is found.",
+          "Include report scope and as-of metadata, primary totals, account or category summaries, anomalous or incomplete entries, reconciliation results, and source sheet/range references.",
+          "Use Excel formulas instead of copied constants whenever the result can remain traceable to source cells.",
+          "Apply readable accounting number formats, headings, and exception emphasis.",
+          "Preserve the workbook language when identifiable; otherwise use the user's language.",
+          "Leave every existing worksheet unchanged. All writes require the normal Excel permission flow.",
+          "Return completion details or the exact clarification/blocker to the parent agent."
+        ]
+      }
+    }
+  ]
+}

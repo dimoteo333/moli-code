@@ -43,6 +43,71 @@ npm run package:deploy --workspace=packages/excel-addin
 빌드 머신에서 node.exe(win-x64)를 한 번 내려받아 동봉하므로, zip 자체는
 폐쇄망에서 네트워크 없이 설치됩니다. 설치 방법은 `installer/README.ko.md` 참고.
 
+## Standard / Global 에디션
+
+설치 프로그램은 하나의 추가 기능 ID와 설치 경로를 Standard와 Global이 함께
+사용합니다. 따라서 두 에디션을 동시에 설치할 수 없으며, 같은 경로에 다른
+에디션을 다시 설치하면 기존 에디션의 매니페스트와 설정을 새 에디션으로
+교체합니다.
+
+`install.ps1`를 인수 없이 실행하면 변경을 시작하기 전에 다음 메뉴에서 제품을
+선택합니다.
+
+```text
+설치할 제품을 선택하세요:
+  1. Molicode
+  2. Molicode for Global
+선택 [1-2]:
+```
+
+무인 설치에는 다음처럼 에디션을 명시합니다. 대소문자는 구분하지 않지만 값은
+`Standard` 또는 `Global`이어야 합니다.
+
+```powershell
+.\installer\install.ps1 -Edition Standard
+.\installer\install.ps1 -Edition Global
+```
+
+설치를 미리 점검할 때는 `-PlanOnly`를 사용합니다. 이는 실제 설치와 같은
+프로필 검증·매니페스트 렌더링 경로를 사용하지만 파일, 인증서, 레지스트리,
+작업 스케줄러를 변경하지 않고 `MOLI_INSTALL_PLAN=` JSON 한 줄만 출력합니다.
+
+```powershell
+.\installer\install.ps1 -PlanOnly -Edition Standard
+.\installer\install.ps1 -PlanOnly -Edition Global
+```
+
+Global은 별도 작업창 버튼이 아니라 자연어 요청으로 동작합니다. 회계, 원장,
+결산, 조정, 비용, 시산표 또는 재무 요약 보고서를 요청하면 주 에이전트가
+`global-accounting-report` 전문 에이전트를 사용할 수 있습니다. Standard에는 이
+전문 에이전트가 등록되거나 노출되지 않습니다.
+
+Global 회계 보고서는 먼저 원본 시트와 범위를 살펴봅니다. 필수 열, 보고 기간,
+통화 또는 회계 기준이 모호하면 쓰기 전에 정확한 확인 질문 하나를 하고, 값을
+추정·발명·자동 보정하지 않습니다. 기존 원본 값이나 시트는 덮어쓰지 않으며,
+보고서는 새 `회계보고서` 시트에 만듭니다. 같은 이름이 있으면
+`회계보고서 (2)`, `회계보고서 (3)`처럼 비어 있는 다음 이름을 사용합니다. 모든
+워크북 쓰기는 기존 작업창의 [허용] / [항상 허용] 승인 절차를 그대로 거칩니다.
+
+설치된 사이드카의 `config.json`에는 다음 에디션 설정이 기록됩니다.
+
+```json
+{
+  "edition": "global",
+  "profileCatalogPath": "profiles/product-profiles.json",
+  "enabledGlobalTools": ["accounting-report"]
+}
+```
+
+Standard에서는 `edition`이 `standard`이고 `enabledGlobalTools`는 빈 배열입니다.
+`profileCatalogPath`는 `config.json`을 기준으로 해석됩니다. 제품 프로필 카탈로그는
+`profiles/product-profiles.json`이며, 향후 Global 전용 전문 에이전트는 이 카탈로그에
+새 `globalTools` 항목으로 추가하고 기본 활성화가 필요하면 Global 에디션의
+`defaultGlobalTools` 배열에 해당 ID를 추가합니다.
+
+`deploy/`, 오프라인 zip, 데모 통합 문서 및 실행 중 생성된 보고서는 모두 빌드 또는
+런타임 산출물입니다. 이 저장소에는 저장하거나 Git에 커밋하지 않습니다.
+
 ## 주의 (IE11 / Excel 2016)
 
 - 작업창 코드는 **ES5**로 다운레벨됩니다(esbuild → swc → es-check 게이트).
