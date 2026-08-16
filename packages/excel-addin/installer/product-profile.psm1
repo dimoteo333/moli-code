@@ -241,7 +241,7 @@ function Get-MoliProductProfileCatalog {
     }
 
     $schemaVersion = Get-MoliRequiredProperty -Object $catalog -Name 'schemaVersion' -Context 'catalog'
-    if ($schemaVersion -ne 1 -or $schemaVersion -is [string]) {
+    if (-not (Test-MoliJsonNumber -Value $schemaVersion) -or $schemaVersion -ne 1) {
         throw 'Invalid product profile catalog: schemaVersion must be 1.'
     }
 

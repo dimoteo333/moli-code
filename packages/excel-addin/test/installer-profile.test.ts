@@ -374,6 +374,22 @@ Write-Output ('MOLI_GUIDANCE_BASE64=' + [Convert]::ToBase64String($bytes))
     expect(fs.existsSync(installDir)).toBe(false);
   });
 
+  it.each([
+    { label: 'Boolean true', value: true },
+    { label: 'an empty array', value: [] },
+    { label: 'a single-item array', value: [1] },
+  ])(
+    'rejects schemaVersion encoded as $label in both validators',
+    ({ value }) => {
+      const payload = copyPlanPayload();
+      const catalog = loadCatalog(payload.catalogPath);
+      catalog.schemaVersion = value;
+      fs.writeFileSync(payload.catalogPath, JSON.stringify(catalog));
+
+      expectCatalogRejectedByBothValidators(payload);
+    },
+  );
+
   it('rejects widened accounting tools in both validators', () => {
     const payload = copyPlanPayload();
     const catalog = loadCatalog(payload.catalogPath);
